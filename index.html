@@ -562,16 +562,43 @@
   }
 
   /* ---- list pills ---- */
-  .list-pills{gap:7px;margin-bottom:16px;}
+  .list-pills{gap:8px;margin-bottom:16px;}
   .list-pills button{
-    font-size:12.5px;font-weight:600;padding:8px 15px;
+    font-size:14.5px;font-weight:600;padding:11px 17px;
     background:var(--s2);border:1px solid var(--line);color:var(--muted);
+    display:inline-flex;align-items:center;gap:7px;
   }
+  .list-pills button .pill-ico{font-size:17px;line-height:1;}
   .list-pills button.active{
     background:var(--text);color:var(--ink);border-color:transparent;
     box-shadow:0 4px 14px rgba(0,0,0,.4);
   }
   .list-pills button.add-list{background:transparent;color:var(--faint);}
+
+  /* ---- FAB + add-task sheet ---- */
+  .fab{
+    position:fixed;right:18px;bottom:22px;z-index:60;
+    width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;
+    font-size:32px;line-height:1;font-weight:400;
+    display:flex;align-items:center;justify-content:center;padding-bottom:4px;
+    box-shadow:0 8px 24px rgba(0,0,0,.5), 0 2px 8px rgba(255,111,145,.35);
+  }
+  .fab:active{transform:scale(.94);}
+  .sheet-bg{
+    position:fixed;inset:0;z-index:70;background:rgba(10,6,14,.62);
+    display:none;align-items:flex-end;justify-content:center;
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  }
+  .sheet-bg.show{display:flex;}
+  .sheet{
+    width:100%;max-width:460px;max-height:88vh;overflow-y:auto;
+    background:linear-gradient(180deg,#2b2333,#211b28);
+    border:1px solid var(--line-2);border-bottom:none;
+    border-radius:22px 22px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px));
+    animation:sheetUp .22s ease-out;
+  }
+  @keyframes sheetUp{from{transform:translateY(40px);opacity:.4;}to{transform:translateY(0);opacity:1;}}
 
   /* ---- hero ---- */
   .hero-card{
@@ -887,7 +914,7 @@
 <header>
   <h1>💞 Us</h1>
   <div class="sub">Tasks, points, and reasons to smile</div>
-  <div class="sub">Build 11 · redesigned</div>
+  <div class="sub">Build 12 · Rae edition</div>
 </header>
 
 <main>
@@ -932,25 +959,9 @@
 
   <!-- TASKS VIEW -->
   <div class="view active" id="view-tasks">
-    <div class="card checkin-card" id="checkinCard">
-      <h2>Daily check-in</h2>
-      <div id="checkinBody"></div>
-    </div>
-
-    <div class="list-pills" id="listSwitcher"></div>
-    <div class="card" id="newListCard" style="display:none;">
-      <h2>New list</h2>
-      <div class="row2">
-        <input type="text" id="newListName" placeholder="List name (e.g. Groceries)">
-        <input type="text" id="newListVerb" placeholder="Completion word (e.g. Bought)">
-      </div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:8px;">
-        <input type="checkbox" id="newListPriceBased" style="width:auto;"> This is a shopping list — auto-tier items by price (Easy/Tough/Boujie)
-      </label>
-      <div class="row2" style="margin-top:8px;">
-        <button class="ghost" id="cancelListBtn">Cancel</button>
-        <button class="primary" id="createListBtn">Create list</button>
-      </div>
+    <div class="card quest-card">
+      <h2>Couple Quest</h2>
+      <div id="questBody"></div>
     </div>
 
     <div class="card">
@@ -963,12 +974,46 @@
       <div class="badge-row" id="badgeRow"></div>
     </div>
 
-    <div class="card quest-card">
-      <h2>Couple Quest</h2>
-      <div id="questBody"></div>
+    <div class="list-pills" id="listSwitcher"></div>
+    <div class="card" id="newListCard" style="display:none;">
+      <h2>New list</h2>
+      <div class="row2">
+        <input type="text" id="newListName" placeholder="List name (e.g. Groceries)">
+        <input type="text" id="newListVerb" placeholder="Completion word (e.g. Bought)">
+      </div>
+      <div class="row2" style="margin-top:8px;">
+        <input type="text" id="newListEmoji" placeholder="Icon (e.g. 🧺)" maxlength="4">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:8px;">
+        <input type="checkbox" id="newListPriceBased" style="width:auto;"> This is a shopping list — auto-tier items by price (Easy/Tough/Boujie)
+      </label>
+      <div class="row2" style="margin-top:8px;">
+        <button class="ghost" id="cancelListBtn">Cancel</button>
+        <button class="primary" id="createListBtn">Create list</button>
+      </div>
     </div>
 
     <div class="card">
+      <h2 id="openTasksHeader">Open tasks</h2>
+      <div id="openTasks"></div>
+    </div>
+
+    <div class="card">
+      <h2 id="doneTasksHeader">Completed</h2>
+      <div id="doneTasks"></div>
+    </div>
+
+    <div class="card checkin-card" id="checkinCard">
+      <h2>Daily check-in</h2>
+      <div id="checkinBody"></div>
+    </div>
+
+    <button id="fabAdd" class="fab" title="Add a task" aria-label="Add a task">+</button>
+  </div>
+
+  <!-- ADD TASK SHEET -->
+  <div class="sheet-bg" id="addTaskSheet">
+    <div class="sheet">
       <h2>Add a task</h2>
       <form class="add-task" id="taskForm">
         <input type="text" id="taskTitle" placeholder="e.g. Do the dishes" required>
@@ -1003,18 +1048,11 @@
           <option value="daily">Repeats daily</option>
           <option value="weekly">Repeats weekly</option>
         </select>
-        <button type="submit" class="primary">Add task</button>
+        <div class="row2">
+          <button type="button" class="ghost" id="sheetCancel">Cancel</button>
+          <button type="submit" class="primary">Add task</button>
+        </div>
       </form>
-    </div>
-
-    <div class="card">
-      <h2 id="openTasksHeader">Open tasks</h2>
-      <div id="openTasks"></div>
-    </div>
-
-    <div class="card">
-      <h2 id="doneTasksHeader">Completed</h2>
-      <div id="doneTasks"></div>
     </div>
   </div>
 
@@ -1129,6 +1167,9 @@
     <button class="ghost" id="exportBtn" style="width:100%;">Copy my data</button>
     <textarea id="syncBox" placeholder="Paste their code here to import..."></textarea>
     <button class="ghost" id="importBtn" style="width:100%;margin-top:6px;">Import</button>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+    <p style="font-size:12px;color:var(--muted);"><strong>Phone owner.</strong> <span id="deviceOwnerLabel">Not set yet.</span> Daily codes only show on their owner's phone. Only change this if it's genuinely wrong.</p>
+    <button class="ghost" id="deviceOwnerBtn" style="width:100%;">Change phone owner</button>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);">Lists look empty or wrong? This wipes this phone's data and reloads the starter lists (IKEA list, M&amp;R to-dos, and the RÖoDaY bucket list with your 4 trophies).</p>
     <button class="ghost" id="resetBtn" style="width:100%;">Reset &amp; reload starter lists</button>
@@ -1324,9 +1365,9 @@
       ],
       currentUser: "p1",
       lists: [
-        {id:"list-todo", name:"To Do", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
-        {id:"list-buy", name:"To Buy", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}},
-        {id:"list-exp", name:"To Experience", verb:"Lived", priceBased:false, experienceBased:true, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}}
+        {id:"list-todo", name:"To Do", emoji:"✅", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
+        {id:"list-buy", name:"To Buy", emoji:"🛒", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}},
+        {id:"list-exp", name:"To Experience", emoji:"🎟️", verb:"Lived", priceBased:false, experienceBased:true, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}}
       ],
       currentList: "list-todo",
       speechTurn: "p1",
@@ -1361,8 +1402,8 @@
   state.people.forEach(function(p){ ensurePerson(state, p.id); });
   if(!state.lists || state.lists.length===0){
     state.lists = [
-      {id:"list-todo", name:"To Do", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
-      {id:"list-buy", name:"To Buy", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}}
+      {id:"list-todo", name:"To Do", emoji:"✅", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
+      {id:"list-buy", name:"To Buy", emoji:"🛒", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}}
     ];
   }
   if(!state.lists.some(function(l){return l.id==="list-exp";})){
@@ -1560,6 +1601,12 @@
           if(r.name==="Partner does one chore for you") r.name = "Your love does one chore for you";
           if(r.name==="Partner cooks your favorite meal") r.name = "Your love cooks your favorite meal";
         });
+        // migrate old saves: give lists their icons
+        if(parsed.lists) parsed.lists.forEach(function(l){
+          if(!l.emoji){
+            l.emoji = l.id==="list-todo" ? "✅" : l.id==="list-buy" ? "🛒" : l.id==="list-exp" ? "🎟️" : "📋";
+          }
+        });
         return parsed;
       }
     }catch(e){}
@@ -1580,6 +1627,21 @@
   function storageKB(){
     try{ return Math.round((localStorage.getItem(STORAGE_KEY)||"").length/1024); }
     catch(e){ return 0; }
+  }
+
+  // ---------- device owner ----------
+  // Stored OUTSIDE the synced state on purpose: it never travels through
+  // Copy my data / Import, so each phone keeps its own answer. Daily codes
+  // only render on their owner's phone — getting the other code means talking.
+  var DEVICE_OWNER_KEY = "us-device-owner-v1";
+  function deviceOwner(){
+    try{ return localStorage.getItem(DEVICE_OWNER_KEY); }catch(e){ return null; }
+  }
+  function setDeviceOwner(id){
+    try{ localStorage.setItem(DEVICE_OWNER_KEY, id); }catch(e){}
+  }
+  function clearDeviceOwner(){
+    try{ localStorage.removeItem(DEVICE_OWNER_KEY); }catch(e){}
   }
 
   function otherPerson(id){
@@ -1678,7 +1740,7 @@
     wrap.innerHTML = "";
     state.lists.forEach(function(l){
       var b = document.createElement("button");
-      b.textContent = l.name;
+      b.innerHTML = '<span class="pill-ico">'+escapeHtml(l.emoji||"📋")+'</span>'+escapeHtml(l.name);
       if(l.id === state.currentList) b.classList.add("active");
       b.addEventListener("click", function(){
         state.currentList = l.id;
@@ -1702,6 +1764,7 @@
     document.getElementById("newListCard").style.display = "none";
     document.getElementById("newListName").value = "";
     document.getElementById("newListVerb").value = "";
+    document.getElementById("newListEmoji").value = "";
     document.getElementById("newListPriceBased").checked = false;
   });
 
@@ -1710,8 +1773,9 @@
     var verb = document.getElementById("newListVerb").value.trim() || "Done";
     if(!name) return;
     var priceBased = document.getElementById("newListPriceBased").checked;
+    var emoji = document.getElementById("newListEmoji").value.trim() || "📋";
     var newList = {
-      id: uid(), name: name, verb: verb,
+      id: uid(), name: name, verb: verb, emoji: emoji,
       priceBased: priceBased,
       tierLabels: priceBased ? {easy:"Easy", medium:"Tough", hard:"Boujie"} : {easy:"Easy", medium:"Medium", hard:"Hard"}
     };
@@ -1719,6 +1783,7 @@
     state.currentList = newList.id;
     document.getElementById("newListName").value = "";
     document.getElementById("newListVerb").value = "";
+    document.getElementById("newListEmoji").value = "";
     document.getElementById("newListPriceBased").checked = false;
     document.getElementById("newListCard").style.display = "none";
     save();
@@ -2234,6 +2299,18 @@
     return panel;
   }
 
+  // ---------- add-task sheet (FAB) ----------
+  var addSheet = document.getElementById("addTaskSheet");
+  function openAddSheet(){
+    renderTaskListOptions(); // sync the list dropdown with whichever list is open
+    addSheet.classList.add("show");
+    setTimeout(function(){ document.getElementById("taskTitle").focus(); }, 180);
+  }
+  function closeAddSheet(){ addSheet.classList.remove("show"); }
+  document.getElementById("fabAdd").addEventListener("click", openAddSheet);
+  document.getElementById("sheetCancel").addEventListener("click", closeAddSheet);
+  addSheet.addEventListener("click", function(e){ if(e.target === addSheet) closeAddSheet(); });
+
   document.getElementById("taskForm").addEventListener("submit", function(e){
     e.preventDefault();
     var title = document.getElementById("taskTitle").value.trim();
@@ -2249,6 +2326,7 @@
       document.getElementById("taskTitle").value = "";
       document.getElementById("taskEmoji").value = "";
       save(); renderAll();
+      closeAddSheet();
       toast("Added to your bucket list ✨");
       return;
     }
@@ -2290,6 +2368,7 @@
     document.getElementById("taskUnitPrice").value = "";
     document.getElementById("taskQuantity").value = "1";
     save(); renderAll();
+    closeAddSheet();
     toast("Task added ✅");
   });
 
@@ -2559,7 +2638,42 @@
       body.appendChild(warn);
     }
 
-    // your code, to read out to your partner
+    // ---- device gate: codes only render on their owner's phone ----
+    var owner = deviceOwner();
+    if(!owner){
+      var pick = document.createElement("div");
+      pick.className = "code-hint";
+      pick.innerHTML = "<strong>Whose phone is this?</strong> Daily codes only appear on their owner's phone — that way getting the other code means actually talking. Pick once per phone.";
+      body.appendChild(pick);
+      var prow = document.createElement("div");
+      prow.className = "row2";
+      state.people.forEach(function(p){
+        var pb = document.createElement("button");
+        pb.className = "primary";
+        pb.style.flex = "1";
+        pb.textContent = personName(p.id) + "'s phone";
+        pb.addEventListener("click", function(){
+          setDeviceOwner(p.id);
+          toast("Got it — this is " + personName(p.id) + "'s phone 📱");
+          renderAll();
+        });
+        prow.appendChild(pb);
+      });
+      body.appendChild(prow);
+      return;
+    }
+    if(me !== owner){
+      var lockNote = document.createElement("div");
+      lockNote.className = "code-hint";
+      lockNote.innerHTML = "🔒 This is <strong>" + escapeHtml(personName(owner)) + "'s</strong> phone, so " +
+        escapeHtml(personName(me)) + "'s daily code stays hidden here — it only shows on " +
+        escapeHtml(personName(me)) + "'s own phone. No peeking, that's the whole point. " +
+        "Switch back to " + escapeHtml(personName(owner)) + " to check in.";
+      body.appendChild(lockNote);
+      return;
+    }
+
+    // your code, to read out to your love — only on your own phone
     var codeBox = document.createElement("div");
     codeBox.className = "code-display";
     codeBox.innerHTML = '<div class="code-label">Your code for ' + personName(partner) + ' today</div>' +
@@ -3547,6 +3661,19 @@
     toast("PIN removed");
   });
 
+  function renderDeviceOwnerLabel(){
+    var el = document.getElementById("deviceOwnerLabel");
+    if(!el) return;
+    var o = deviceOwner();
+    el.textContent = o ? "This is " + personName(o) + "'s phone." : "Not set yet — pick in the Daily check-in card.";
+  }
+  document.getElementById("deviceOwnerBtn").addEventListener("click", function(){
+    if(!confirm("Really change whose phone this is? Codes will show for the new owner instead.")) return;
+    clearDeviceOwner();
+    renderAll();
+    toast("Pick the owner again in the Daily check-in card");
+  });
+
   document.getElementById("resetBtn").addEventListener("click", function(){
     if(!confirm("Wipe this phone's data and reload the starter lists?")) return;
     try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
@@ -3572,6 +3699,7 @@
     drawWheel();
     renderNotes();
     renderDailyQuestion();
+    renderDeviceOwnerLabel();
   }
 
   randomQuote();
