@@ -1,0 +1,3603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#17131c">
+<title>Us — Tasks & Rewards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1c1520;
+    --card:#2a1f2c;
+    --card2:#332536;
+    --pink:#ff6f91;
+    --pink-dim:#c94f70;
+    --gold:#ffc857;
+    --purple:#9d7fd6;
+    --teal:#5fd6c4;
+    --text:#f4ecf3;
+    --muted:#b8a8bd;
+    --border:#443a49;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(circle at 20% 0%, #3a2438 0%, var(--bg) 55%);
+    color:var(--text);
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  header{
+    padding:28px 20px 16px;
+    text-align:center;
+  }
+  header h1{
+    margin:0;
+    font-size:26px;
+    letter-spacing:0.5px;
+  }
+  header .sub{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:4px;
+  }
+  .switcher{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin:16px auto 0;
+    max-width:420px;
+  }
+  .switcher button{
+    flex:1;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--muted);
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .switcher button.active{
+    background:linear-gradient(135deg,var(--pink),var(--pink-dim));
+    color:white;
+    border-color:transparent;
+  }
+  .list-pills{
+    display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;
+  }
+  .list-pills button{
+    padding:7px 13px;border-radius:999px;border:1px solid var(--border);
+    background:var(--card2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;
+    white-space:nowrap;
+  }
+  .list-pills button.active{
+    background:linear-gradient(135deg,var(--purple),var(--teal));color:white;border-color:transparent;
+  }
+  .list-pills button.add-list{
+    background:transparent;border-style:dashed;color:var(--muted);
+  }
+  main{
+    max-width:460px;
+    margin:0 auto;
+    padding:0 16px;
+  }
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin:20px 0 14px;
+    overflow-x:auto;
+  }
+  .tabs button{
+    white-space:nowrap;
+    padding:8px 14px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--muted);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .tabs button.active{
+    background:var(--card2);
+    color:var(--text);
+    border-color:var(--purple);
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    margin:0 0 12px;
+    font-size:15px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+  }
+  .stat-row{
+    display:flex;
+    gap:10px;
+  }
+  .stat{
+    flex:1;
+    background:var(--card2);
+    border-radius:14px;
+    padding:12px;
+    text-align:center;
+  }
+  .stat .num{
+    font-size:22px;
+    font-weight:700;
+    color:var(--gold);
+  }
+  .stat .label{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .badge-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+  }
+  .badge-pill{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--card2);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:12px;
+  }
+  .badge-pill.at-risk{
+    border-color:var(--pink);
+    color:var(--pink);
+  }
+  .task{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px;
+    border-radius:14px;
+    background:var(--card2);
+    margin-bottom:8px;
+  }
+  .task.done{opacity:0.5;}
+  .task .check{
+    width:26px;height:26px;border-radius:8px;
+    border:2px solid var(--purple);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;flex-shrink:0;font-size:14px;
+  }
+  .task.done .check{background:var(--purple);}
+  .task .info{flex:1;min-width:0;}
+  .task .title{font-size:14px;font-weight:600;}
+  .task .meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .diff-tag{
+    font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;
+    text-transform:uppercase;
+  }
+  .diff-easy{background:#2c4b3c;color:#7ee2a8;}
+  .diff-medium{background:#4b3d1e;color:var(--gold);}
+  .diff-hard{background:#4b1e2b;color:var(--pink);}
+  .del-btn{
+    background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;
+  }
+  form.add-task{
+    display:flex;flex-direction:column;gap:8px;
+  }
+  input, select, textarea{
+    background:var(--card2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  .row2{display:flex;gap:8px;}
+  .row2 > *{flex:1;}
+  button.primary{
+    background:linear-gradient(135deg,var(--pink),var(--purple));
+    color:white;border:none;border-radius:12px;padding:11px;
+    font-weight:700;font-size:14px;cursor:pointer;
+  }
+  button.ghost{
+    background:transparent;border:1px solid var(--border);color:var(--muted);
+    border-radius:12px;padding:10px;font-size:13px;cursor:pointer;
+  }
+  .empty{
+    text-align:center;color:var(--muted);font-size:13px;padding:20px 0;
+  }
+  .lb-row{
+    display:flex;align-items:center;gap:10px;padding:10px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .lb-row:last-child{border-bottom:none;}
+  .lb-rank{
+    width:24px;height:24px;border-radius:50%;background:var(--card2);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+  }
+  .lb-name{flex:1;font-size:14px;font-weight:600;}
+  .lb-pts{font-size:14px;font-weight:700;color:var(--teal);}
+  .wheel-wrap{
+    position:relative;width:260px;height:260px;margin:10px auto;
+  }
+  #wheelCanvas{
+    transition: transform 4s cubic-bezier(.17,.67,.16,1.01);
+  }
+  .wheel-pointer{
+    position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+    width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;
+    border-top:20px solid var(--gold);z-index:5;
+  }
+  .reward-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 12px;background:var(--card2);border-radius:12px;margin-bottom:8px;
+  }
+  .reward-item .left{display:flex;align-items:center;gap:10px;font-size:14px;}
+  .tier-tag{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700;text-transform:uppercase;}
+  .tier-common{background:#2c3e4b;color:#8fc6ff;}
+  .tier-uncommon{background:#3e2c4b;color:#c99bff;}
+  .tier-rare{background:#4b3a1e;color:var(--gold);}
+  .note{
+    background:var(--card2);border-radius:14px;padding:12px;margin-bottom:10px;
+  }
+  .note .from{font-size:11px;color:var(--pink);font-weight:700;margin-bottom:4px;}
+  .note .text{font-size:14px;line-height:1.4;}
+  .note .date{font-size:10px;color:var(--muted);margin-top:6px;}
+  .quote-box{
+    text-align:center;padding:18px;background:linear-gradient(135deg,#3a2438,#2a1f2c);
+    border-radius:16px;border:1px solid var(--border);
+  }
+  .quote-box .q{font-size:15px;font-style:italic;line-height:1.5;}
+  .quote-box .a{font-size:12px;color:var(--muted);margin-top:8px;}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--card2);border:1px solid var(--purple);color:var(--text);
+    padding:12px 20px;border-radius:14px;font-size:13px;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+    opacity:0;pointer-events:none;transition:opacity .3s ease, transform .3s ease;
+    z-index:50;max-width:80%;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(0,0,0,0.6);
+    display:none;align-items:center;justify-content:center;z-index:60;padding:20px;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:var(--card);border:1px solid var(--border);border-radius:18px;
+    padding:22px;max-width:340px;width:100%;text-align:center;
+  }
+  .modal .emoji{font-size:44px;margin-bottom:10px;}
+  .modal h3{margin:0 0 6px;font-size:18px;}
+  .modal p{color:var(--muted);font-size:13px;margin:0 0 16px;}
+  .small-link{
+    display:block;text-align:center;color:var(--muted);font-size:12px;margin-top:10px;
+    text-decoration:underline;cursor:pointer;
+  }
+  details.sync summary{cursor:pointer;color:var(--muted);font-size:13px;}
+  details.sync textarea{width:100%;margin-top:10px;height:80px;font-size:11px;}
+
+  .quest-card{
+    background:linear-gradient(135deg,#3a2e46,#2a2036);
+    border:1px solid var(--purple);
+  }
+  .quest-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+  .quest-desc{font-size:13px;color:var(--muted);margin-bottom:12px;}
+  .quest-parts{display:flex;gap:8px;margin-bottom:10px;}
+  .quest-part{
+    flex:1;background:var(--card2);border:1px solid var(--border);border-radius:12px;
+    padding:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;
+  }
+  .quest-part.checked{border-color:var(--teal);background:#1e3d38;color:var(--teal);}
+  .quest-none{font-size:13px;color:var(--muted);text-align:center;padding:6px 0;}
+  .fair-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px;}
+  .fair-bar{
+    display:flex;height:14px;border-radius:999px;overflow:hidden;background:var(--card2);margin-bottom:14px;
+  }
+  .fair-bar .a{background:var(--pink);}
+  .fair-bar .b{background:var(--teal);}
+  .repeat-tag{
+    font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;
+    background:#2c3e4b;color:#8fc6ff;text-transform:uppercase;
+  }
+  .daily-q-card{
+    background:linear-gradient(135deg,#2c3e4b,#2a1f2c);
+    border:1px solid var(--teal);
+  }
+  .daily-q-card .q{font-size:15px;font-weight:600;line-height:1.4;}
+  .daily-q-card .hint{font-size:12px;color:var(--muted);margin-top:8px;}
+
+  .price-fields{display:flex;flex-direction:column;gap:8px;}
+  .tier-preview{font-size:12px;color:var(--teal);margin-top:-2px;}
+  .price-tag{font-size:11px;color:var(--gold);font-weight:700;}
+  .task-wrap{margin-bottom:10px;}
+  .task-wrap .task{margin-bottom:0;}
+  .task-actions{display:flex;flex-direction:column;gap:4px;}
+  .alt-panel{background:var(--card2);border-radius:12px;padding:2px 12px 10px;margin-top:4px;font-size:12px;}
+  .alt-panel summary{cursor:pointer;color:var(--muted);padding:8px 0;list-style:none;}
+  .alt-panel summary::-webkit-details-marker{display:none;}
+  .alt-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
+  .alt-info a{color:var(--text);text-decoration:underline;font-size:12px;}
+  .alt-price{font-size:11px;color:var(--muted);margin-top:2px;}
+  .alt-add-form{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
+  .alt-add-form input,.alt-add-form select{flex:1;min-width:70px;font-size:11px;padding:6px 8px;}
+  .alt-add-form button{white-space:nowrap;}
+  .edit-form{background:var(--card2);border:1px dashed var(--purple);border-radius:12px;padding:10px 12px;margin-top:4px;}
+  .edit-form select,.edit-form input{width:100%;margin-bottom:6px;font-size:13px;}
+
+  .exp-card{
+    background:linear-gradient(135deg,#2a2036,#332536);
+    border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;
+    display:flex;gap:12px;align-items:flex-start;
+  }
+  .exp-card .exp-emoji{font-size:26px;flex-shrink:0;line-height:1.2;}
+  .exp-card .exp-body{flex:1;min-width:0;}
+  .exp-card .exp-title{font-size:15px;font-weight:700;}
+  .exp-card .exp-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+  .exp-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+  .exp-actions button{
+    font-size:12px;padding:7px 12px;border-radius:10px;border:1px solid var(--border);
+    background:var(--card2);color:var(--text);cursor:pointer;font-weight:600;
+  }
+  .exp-actions button.go{
+    background:linear-gradient(135deg,var(--gold),#e0952f);color:#2a1f2c;border-color:transparent;
+  }
+  .trophy-card{
+    background:linear-gradient(135deg,#4b3a1e,#2a2036);
+    border:1px solid var(--gold);
+  }
+  .trophy-card .exp-title{color:var(--gold);}
+  .trophy-meta{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;}
+  .trophy-photo{
+    width:100%;border-radius:12px;margin-top:10px;display:block;
+  }
+  .trophy-count{
+    text-align:center;font-size:13px;color:var(--gold);font-weight:700;margin-bottom:12px;
+  }
+  .speech-turn{
+    text-align:center;font-size:12px;color:var(--muted);
+    background:var(--card2);border-radius:12px;padding:10px;margin-bottom:12px;
+  }
+  .speech-turn strong{color:var(--pink);}
+  .modal.wide{max-width:380px;text-align:left;}
+  .modal.wide h3{text-align:center;}
+  .modal.wide label{
+    display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;font-weight:600;
+  }
+  .modal.wide input,.modal.wide select{width:100%;font-size:14px;}
+  .modal.wide .row2 input{width:100%;}
+  .photo-preview{
+    width:100%;border-radius:12px;margin-top:8px;display:none;
+  }
+  .required-note{
+    background:#4b1e2b;border:1px solid var(--pink);border-radius:12px;
+    padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:10px;line-height:1.5;
+  }
+
+  /* ----- daily hero ----- */
+  .hero{
+    max-width:460px;margin:0 auto 4px;padding:0 16px;
+  }
+  .hero-card{
+    background:linear-gradient(135deg,#3a2438,#2a2036);
+    border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px;margin-bottom:14px;
+  }
+  .hero-greet{font-size:17px;font-weight:700;margin-bottom:8px;}
+  .hero-quote{font-size:14px;font-style:italic;line-height:1.5;color:var(--text);}
+  .hero-author{font-size:11px;color:var(--muted);margin-top:6px;}
+  .hero-cue{
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
+    font-size:13px;line-height:1.5;
+  }
+  .hero-cue .cue-label{
+    font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--teal);
+    font-weight:700;margin-bottom:4px;
+  }
+  .sign-picker{
+    margin-top:10px;font-size:11px;color:var(--muted);
+  }
+  .sign-picker select{font-size:11px;padding:5px 8px;margin-left:6px;}
+
+  /* ----- check-in ----- */
+  .checkin-card{
+    background:linear-gradient(135deg,#2c3e4b,#2a2036);
+    border:1px solid var(--teal);
+  }
+  .checkin-card.warning{
+    background:linear-gradient(135deg,#4b3a1e,#2a2036);
+    border-color:var(--gold);
+  }
+  .checkin-card.locked{
+    background:linear-gradient(135deg,#1e3d38,#2a2036);
+    border-color:var(--teal);
+  }
+  .code-display{
+    text-align:center;background:var(--card2);border-radius:14px;padding:14px;margin:10px 0;
+  }
+  .code-display .code-label{font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .code-display .code-value{
+    font-size:34px;font-weight:800;letter-spacing:8px;color:var(--gold);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .code-hint{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+  .countdown{
+    text-align:center;font-size:12px;color:var(--muted);margin-top:8px;
+  }
+  .countdown strong{color:var(--pink);}
+  .pending-pill{
+    font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;
+    background:#4b3a1e;color:var(--gold);text-transform:uppercase;
+  }
+  .bricked-pill{
+    font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;
+    background:#4b1e2b;color:var(--pink);text-transform:uppercase;
+  }
+  .task.pending{border:1px dashed var(--gold);}
+  .task.bricked{border:1px solid var(--pink);opacity:.85;}
+  .code-input-row{display:flex;gap:8px;}
+  .code-input-row input{
+    flex:1;font-size:20px;text-align:center;letter-spacing:6px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .streak-flame{color:var(--gold);}
+  .miss-log{
+    font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;
+    border-top:1px solid var(--border);line-height:1.6;
+  }
+
+/* ══════════════════════════════════════════════════════════
+   REDESIGN LAYER — typography, depth, and product imagery
+   ══════════════════════════════════════════════════════════ */
+  :root{
+    --ink:#17131c;
+    --s1:#211b28;
+    --s2:#2b2333;
+    --s3:#362c40;
+    --line:rgba(255,255,255,.07);
+    --line-2:rgba(255,255,255,.14);
+    --text:#f5f0f4;
+    --muted:#b0a4ba;
+    --faint:#877c92;
+    --rose:#ff6b8a;
+    --rose-deep:#d94a6b;
+    --gold:#f0c14b;
+    --jade:#4fd1b5;
+    --plum:#a67ee0;
+    /* Fraunces/Inter load from Google Fonts; the rest of each stack is what
+       iOS and Android already ship, so the design still holds up offline. */
+    --display:'Fraunces','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    --ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    --sh-1:0 1px 2px rgba(0,0,0,.4);
+    --sh-2:0 4px 16px rgba(0,0,0,.35);
+    --sh-3:0 12px 40px rgba(0,0,0,.45);
+  }
+  body{
+    font-family:var(--ui);
+    background:
+      radial-gradient(1000px 520px at 12% -8%, #3d2740 0%, transparent 62%),
+      radial-gradient(760px 420px at 92% 4%, #24303f 0%, transparent 58%),
+      var(--ink);
+    background-attachment:fixed;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    letter-spacing:-0.005em;
+  }
+
+  /* ---- header ---- */
+  header{padding:34px 20px 8px;}
+  header h1{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:40px;
+    letter-spacing:-0.02em;
+    line-height:1;
+  }
+  header .sub{font-size:12.5px;color:var(--faint);letter-spacing:0;margin-top:8px;}
+
+  /* ---- surfaces ---- */
+  .card{
+    background:linear-gradient(180deg, var(--s1) 0%, #1e1825 100%);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:18px;
+    margin-bottom:14px;
+    box-shadow:var(--sh-2);
+    position:relative;
+  }
+  /* hairline highlight along the top edge = real depth, not flat fill */
+  .card::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:1px;border-radius:20px 20px 0 0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);
+  }
+  .card h2{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:17px;
+    text-transform:none;      /* kill the shouty all-caps */
+    letter-spacing:-0.01em;
+    color:var(--text);
+    margin:0 0 14px;
+  }
+
+  /* ---- person switcher ---- */
+  .switcher{gap:10px;}
+  .switcher button{
+    font-family:var(--ui);font-weight:600;font-size:14px;
+    background:var(--s2);border:1px solid var(--line);color:var(--muted);
+    border-radius:16px;padding:12px;box-shadow:var(--sh-1);
+  }
+  .switcher button.active{
+    background:linear-gradient(140deg,var(--rose),var(--rose-deep));
+    color:#fff;box-shadow:0 6px 18px rgba(217,74,107,.34);
+  }
+
+  /* ---- tabs ---- */
+  .tabs{gap:8px;margin:22px 0 16px;}
+  .tabs button{
+    font-size:13px;font-weight:600;padding:9px 15px;
+    border:1px solid var(--line);color:var(--faint);background:transparent;
+  }
+  .tabs button.active{
+    background:var(--s3);color:var(--text);border-color:var(--line-2);
+    box-shadow:var(--sh-1);
+  }
+
+  /* ---- list pills ---- */
+  .list-pills{gap:7px;margin-bottom:16px;}
+  .list-pills button{
+    font-size:12.5px;font-weight:600;padding:8px 15px;
+    background:var(--s2);border:1px solid var(--line);color:var(--muted);
+  }
+  .list-pills button.active{
+    background:var(--text);color:var(--ink);border-color:transparent;
+    box-shadow:0 4px 14px rgba(0,0,0,.4);
+  }
+  .list-pills button.add-list{background:transparent;color:var(--faint);}
+
+  /* ---- hero ---- */
+  .hero-card{
+    background:linear-gradient(165deg,#3a2540 0%,#241d2c 62%);
+    border:1px solid var(--line-2);border-radius:22px;padding:20px;
+    box-shadow:var(--sh-3);
+  }
+  .hero-greet{
+    font-family:var(--display);font-weight:600;font-size:25px;
+    letter-spacing:-0.02em;margin-bottom:12px;
+  }
+  .hero-quote{
+    font-family:var(--display);font-style:italic;font-weight:400;
+    font-size:16.5px;line-height:1.5;color:#ece3ea;
+  }
+  .hero-author{font-size:11.5px;color:var(--faint);margin-top:8px;letter-spacing:.02em;}
+  .hero-cue{border-top:1px solid var(--line);margin-top:16px;padding-top:14px;font-size:13.5px;line-height:1.55;color:#ded3e0;}
+  .hero-cue .cue-label{
+    font-family:var(--ui);font-size:9.5px;font-weight:800;
+    letter-spacing:.14em;color:var(--jade);margin-bottom:6px;
+  }
+
+  /* ---- stats: rings, not flat numerals ---- */
+  .stat-row{gap:11px;}
+  .stat{
+    background:linear-gradient(180deg,var(--s2),#251e2d);
+    border:1px solid var(--line);border-radius:16px;padding:15px 10px;
+    box-shadow:var(--sh-1);
+  }
+  .stat .num{
+    font-family:var(--display);font-weight:700;font-size:27px;
+    color:var(--text);letter-spacing:-0.02em;line-height:1;
+  }
+  .stat .label{
+    font-size:9.5px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--faint);margin-top:7px;
+  }
+  .stat.gold .num{color:var(--gold);}
+  .stat.jade .num{color:var(--jade);}
+
+  /* ---- badges ---- */
+  .badge-pill{
+    background:var(--s3);border:1px solid var(--line-2);
+    font-size:11.5px;font-weight:600;padding:7px 13px;box-shadow:var(--sh-1);
+  }
+  .badge-pill.at-risk{border-color:var(--rose);color:var(--rose);background:rgba(255,107,138,.09);}
+
+  /* ---- generic task rows ---- */
+  .task{
+    background:linear-gradient(180deg,var(--s2),#261f2e);
+    border:1px solid var(--line);border-radius:16px;padding:14px;
+    box-shadow:var(--sh-1);gap:12px;
+  }
+  .task .check{
+    width:24px;height:24px;border-radius:50%;
+    border:2px solid var(--line-2);background:transparent;transition:all .16s ease;
+  }
+  .task .check:hover{border-color:var(--jade);}
+  .task.done .check{background:var(--jade);border-color:var(--jade);color:var(--ink);font-weight:800;}
+  .task .title{font-size:14.5px;font-weight:600;letter-spacing:-0.01em;line-height:1.35;}
+  .task .meta{font-size:11px;color:var(--faint);margin-top:5px;}
+  .diff-tag,.repeat-tag,.pending-pill,.bricked-pill,.tier-tag{
+    font-size:9.5px;letter-spacing:.07em;padding:3px 8px;border-radius:6px;font-weight:800;
+  }
+  .diff-easy{background:rgba(79,209,181,.14);color:var(--jade);}
+  .diff-medium{background:rgba(240,193,75,.14);color:var(--gold);}
+  .diff-hard{background:rgba(255,107,138,.15);color:var(--rose);}
+  .price-tag{color:var(--muted);font-weight:600;}
+
+  /* ══ TO BUY — image-forward product cards ══ */
+  .buy-card{
+    display:flex;gap:14px;align-items:stretch;
+    background:linear-gradient(180deg,var(--s2),#251e2d);
+    border:1px solid var(--line);border-radius:18px;
+    padding:13px;margin-bottom:11px;box-shadow:var(--sh-2);
+    position:relative;overflow:hidden;
+  }
+  .buy-card.done{opacity:.5;}
+  .buy-thumb{
+    width:86px;height:86px;flex-shrink:0;border-radius:13px;
+    background:#fff;                     /* IKEA shots are on white */
+    overflow:hidden;position:relative;
+    box-shadow:0 2px 10px rgba(0,0,0,.35);
+  }
+  .buy-thumb img{width:100%;height:100%;object-fit:contain;display:block;}
+  /* elegant fallback when the photo can't load (offline / URL moved) */
+  .buy-thumb .fallback{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#faf8f5,#e9e4dc);
+  }
+  .buy-thumb .fallback svg{width:100%;height:100%;display:block;}
+  .buy-body{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .buy-price{
+    font-family:var(--display);font-weight:700;font-size:24px;
+    letter-spacing:-0.025em;line-height:1;color:var(--text);
+  }
+  .buy-price .cents{font-size:15px;opacity:.65;}
+  .buy-name{
+    font-size:14px;font-weight:600;color:#ece3ef;line-height:1.3;margin-top:7px;
+  }
+  .buy-brand{
+    font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--faint);margin-top:4px;
+  }
+  .buy-sub{font-size:10.5px;color:var(--faint);margin-top:5px;}
+
+  /* alternatives: a slim footer welded onto the card, not a competing card */
+  .task-wrap{margin-bottom:12px;}
+  .task-wrap .buy-card{margin-bottom:0;}
+  .task-wrap.has-alts .buy-card{border-radius:18px 18px 0 0;border-bottom:none;}
+  .alt-panel{
+    background:rgba(0,0,0,.16);
+    border:1px solid var(--line);
+    border-top:1px dashed var(--line-2);
+    border-radius:0 0 18px 18px;
+    margin:0;
+    padding:0 14px 10px;
+    box-shadow:var(--sh-2);
+  }
+  .alt-panel summary{
+    font-size:11px;font-weight:600;color:var(--faint);padding:9px 0 4px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .alt-panel summary:hover{color:var(--muted);}
+  .alt-panel summary svg{width:12px;height:12px;flex-shrink:0;}
+  .alt-panel[open] summary{color:var(--muted);}
+  .alt-add-form{gap:5px;margin-top:7px;padding-top:7px;}
+  .alt-add-form input,.alt-add-form select{font-size:10.5px;padding:6px 8px;border-radius:9px;}
+  .buy-tags{display:flex;align-items:center;gap:7px;margin-top:9px;flex-wrap:wrap;}
+  .buy-check{
+    width:26px;height:26px;border-radius:50%;border:2px solid var(--line-2);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    flex-shrink:0;align-self:flex-start;transition:all .16s ease;
+  }
+  .buy-check:hover{border-color:var(--jade);}
+  .buy-card.done .buy-check{background:var(--jade);border-color:var(--jade);}
+  .buy-actions{display:flex;flex-direction:column;gap:6px;align-items:center;}
+  .icon-btn{
+    background:transparent;border:none;color:var(--faint);cursor:pointer;
+    padding:3px;line-height:0;border-radius:6px;transition:color .15s ease;
+  }
+  .icon-btn:hover{color:var(--text);}
+  .icon-btn svg{width:15px;height:15px;display:block;}
+
+  /* ---- alternatives ---- */
+  .alt-panel{
+    background:rgba(255,255,255,.03);border:1px solid var(--line);
+    border-radius:14px;padding:0 13px 11px;margin-top:-4px;margin-bottom:11px;
+  }
+  .alt-panel summary{font-size:12px;font-weight:600;color:var(--muted);padding:11px 0;}
+  .alt-row{border-top:1px solid var(--line);padding:11px 0;}
+  .alt-info a{font-size:12.5px;font-weight:600;text-decoration:none;border-bottom:1px solid var(--line-2);}
+  .alt-price{font-family:var(--display);font-weight:600;font-size:14px;color:var(--gold);margin-top:4px;}
+  .tier-common{background:rgba(79,209,181,.14);color:var(--jade);}
+  .tier-uncommon{background:rgba(166,126,224,.16);color:var(--plum);}
+  .tier-rare{background:rgba(240,193,75,.15);color:var(--gold);}
+
+  /* ---- buttons ---- */
+  button.primary{
+    font-family:var(--ui);font-weight:700;font-size:14px;border-radius:14px;padding:13px;
+    background:linear-gradient(140deg,var(--rose),var(--rose-deep));
+    box-shadow:0 6px 18px rgba(217,74,107,.3);letter-spacing:-0.01em;
+  }
+  button.ghost{
+    border:1px solid var(--line-2);color:var(--muted);border-radius:13px;
+    font-weight:600;font-size:13px;background:rgba(255,255,255,.03);
+  }
+  input,select,textarea{
+    background:rgba(0,0,0,.26);border:1px solid var(--line-2);
+    border-radius:12px;padding:12px 13px;font-size:14px;font-family:var(--ui);
+    color:var(--text);
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plum);}
+  input::placeholder,textarea::placeholder{color:var(--faint);}
+
+  /* ---- experiences / trophy album ---- */
+  .exp-card{
+    background:linear-gradient(180deg,var(--s2),#251e2d);
+    border:1px solid var(--line);border-radius:18px;padding:16px;
+    box-shadow:var(--sh-2);
+  }
+  .exp-card .exp-emoji{font-size:23px;}
+  .exp-card .exp-title{
+    font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:-0.015em;
+  }
+  .exp-card .exp-sub{font-size:11px;color:var(--faint);margin-top:4px;letter-spacing:.02em;}
+  .trophy-card{
+    background:
+      radial-gradient(120% 90% at 0% 0%, rgba(240,193,75,.14) 0%, transparent 55%),
+      linear-gradient(180deg,#2d2431,#231c29);
+    border:1px solid rgba(240,193,75,.32);
+    box-shadow:0 8px 26px rgba(0,0,0,.4);
+  }
+  .trophy-card .exp-title{color:var(--gold);font-size:19px;}
+  .trophy-meta{
+    font-family:var(--display);font-size:12.5px;color:#c9bcd0;
+    margin-top:8px;line-height:1.75;
+  }
+  .trophy-photo{
+    border-radius:14px;margin-top:12px;
+    box-shadow:0 6px 20px rgba(0,0,0,.45);
+    border:1px solid rgba(255,255,255,.1);
+  }
+  .trophy-count{
+    font-family:var(--display);font-size:15px;font-weight:600;
+    color:var(--gold);letter-spacing:-0.01em;margin-bottom:14px;
+  }
+  .exp-actions button{
+    font-size:11.5px;font-weight:600;padding:8px 13px;border-radius:11px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line-2);color:var(--muted);
+  }
+  .exp-actions button.go{
+    background:linear-gradient(140deg,var(--gold),#d19a24);color:#2a1f14;
+    border-color:transparent;box-shadow:0 4px 14px rgba(240,193,75,.26);
+  }
+
+  /* ---- check-in ---- */
+  .checkin-card{background:linear-gradient(165deg,#1f3038,#221b29);border-color:rgba(79,209,181,.34);}
+  .checkin-card.warning{background:linear-gradient(165deg,#3a3020,#231c29);border-color:rgba(240,193,75,.42);}
+  .checkin-card.locked{background:linear-gradient(165deg,#1c3630,#221b29);border-color:rgba(79,209,181,.45);}
+  .code-display{
+    background:rgba(0,0,0,.32);border:1px solid var(--line);
+    border-radius:16px;padding:17px;
+  }
+  .code-display .code-label{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
+  .code-display .code-value{
+    font-family:var(--display);font-weight:700;font-size:40px;
+    letter-spacing:.16em;color:var(--gold);margin-top:8px;
+  }
+  .code-hint{font-size:12.5px;line-height:1.55;color:var(--muted);}
+  .countdown{font-size:11.5px;color:var(--faint);}
+
+  /* ---- notes / quotes ---- */
+  .note{
+    background:linear-gradient(180deg,var(--s2),#261f2e);
+    border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:var(--sh-1);
+  }
+  .note .from{font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--rose);}
+  .note .text{font-family:var(--display);font-size:14.5px;line-height:1.55;margin-top:7px;}
+  .note .date{font-size:10px;color:var(--faint);margin-top:9px;}
+  .quote-box{
+    background:linear-gradient(160deg,#3a2540,#241d2c);
+    border:1px solid var(--line-2);border-radius:18px;padding:22px;
+  }
+  .quote-box .q{font-family:var(--display);font-style:italic;font-size:16px;line-height:1.5;}
+  .daily-q-card{background:linear-gradient(165deg,#20323c,#221b29);border-color:rgba(79,209,181,.34);}
+  .daily-q-card .q{font-family:var(--display);font-weight:600;font-size:17px;line-height:1.45;letter-spacing:-0.015em;}
+
+  /* ---- quest ---- */
+  .quest-card{background:linear-gradient(165deg,#332a44,#241d2c);border-color:rgba(166,126,224,.36);}
+  .quest-title{font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:-0.015em;}
+  .quest-desc{font-size:12.5px;color:var(--muted);}
+  .quest-part{
+    border-radius:14px;font-size:12px;font-weight:600;padding:12px;
+    background:rgba(0,0,0,.22);border:1px solid var(--line-2);color:var(--muted);
+  }
+  .quest-part.checked{background:rgba(79,209,181,.14);border-color:var(--jade);color:var(--jade);}
+
+  /* ---- leaderboard ---- */
+  .lb-row{border-bottom:1px solid var(--line);padding:13px 0;}
+  .lb-rank{
+    background:var(--s3);border:1px solid var(--line-2);
+    font-family:var(--display);font-weight:700;font-size:12px;width:26px;height:26px;
+  }
+  .lb-name{font-size:14px;font-weight:600;}
+  .lb-pts{font-family:var(--display);font-weight:700;font-size:17px;color:var(--gold);}
+  .fair-bar{height:9px;border-radius:99px;background:rgba(0,0,0,.3);}
+  .fair-bar .a{background:linear-gradient(90deg,var(--rose),var(--rose-deep));}
+  .fair-bar .b{background:linear-gradient(90deg,var(--jade),#3aa892);}
+  .fair-label{font-size:11.5px;color:var(--faint);}
+
+  /* ---- rewards ---- */
+  .reward-item{
+    background:linear-gradient(180deg,var(--s2),#261f2e);
+    border:1px solid var(--line);border-radius:14px;padding:13px 15px;
+  }
+  .reward-item .left{font-size:13.5px;font-weight:500;}
+
+  /* ---- misc polish ---- */
+  .empty{color:var(--faint);font-size:13px;font-style:italic;}
+  .modal{
+    background:linear-gradient(180deg,#2b2333,#211b28);
+    border:1px solid var(--line-2);border-radius:22px;box-shadow:var(--sh-3);
+  }
+  .modal h3{font-family:var(--display);font-weight:600;font-size:21px;letter-spacing:-0.015em;}
+  .toast{
+    background:linear-gradient(180deg,#332a3c,#251e2d);
+    border:1px solid var(--line-2);border-radius:15px;font-size:13px;font-weight:600;
+    box-shadow:var(--sh-3);
+  }
+  .speech-turn{
+    background:rgba(0,0,0,.24);border:1px solid var(--line);
+    border-radius:14px;font-size:12.5px;color:var(--muted);
+  }
+  details.sync summary{font-size:13px;font-weight:600;color:var(--faint);}
+  hr{border-color:var(--line)!important;}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" style="display:none;position:fixed;inset:0;z-index:200;background:var(--bg);align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:320px;width:100%;text-align:center;">
+    <div style="font-size:42px;margin-bottom:10px;">💞</div>
+    <h3 style="margin:0 0 6px;">Us</h3>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;" id="lockPrompt">Enter your 4-digit PIN</p>
+    <input type="password" id="lockInput" inputmode="numeric" maxlength="4"
+      style="width:100%;font-size:26px;text-align:center;letter-spacing:10px;font-family:ui-monospace,monospace;">
+    <button class="primary" id="lockBtn" style="width:100%;margin-top:12px;">Unlock</button>
+    <div id="lockErr" style="color:var(--pink);font-size:12px;margin-top:10px;min-height:16px;"></div>
+  </div>
+</div>
+
+<header>
+  <h1>💞 Us</h1>
+  <div class="sub">Tasks, points, and reasons to smile</div>
+  <div class="sub">Build 11 · redesigned</div>
+</header>
+
+<main>
+  <div class="switcher" id="userSwitcher"></div>
+
+  <div class="hero" style="padding:0;margin-top:16px;">
+    <div class="hero-card">
+      <div class="hero-greet" id="heroGreet"></div>
+      <div class="hero-quote" id="heroQuote"></div>
+      <div class="hero-author" id="heroAuthor"></div>
+      <div class="hero-cue">
+        <div class="cue-label" id="cueLabel">Today's considerate cue</div>
+        <div id="heroCue"></div>
+        <div class="sign-picker">
+          Star sign flavor:
+          <select id="signPicker">
+            <option value="">Off</option>
+            <option value="Aries">Aries</option>
+            <option value="Taurus">Taurus</option>
+            <option value="Gemini">Gemini</option>
+            <option value="Cancer">Cancer</option>
+            <option value="Leo">Leo</option>
+            <option value="Virgo">Virgo</option>
+            <option value="Libra">Libra</option>
+            <option value="Scorpio">Scorpio</option>
+            <option value="Sagittarius">Sagittarius</option>
+            <option value="Capricorn">Capricorn</option>
+            <option value="Aquarius">Aquarius</option>
+            <option value="Pisces">Pisces</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button data-tab="tasks" class="active">Tasks</button>
+    <button data-tab="rewards">Rewards</button>
+    <button data-tab="board">Leaderboard</button>
+    <button data-tab="notes">Notes</button>
+  </div>
+
+  <!-- TASKS VIEW -->
+  <div class="view active" id="view-tasks">
+    <div class="card checkin-card" id="checkinCard">
+      <h2>Daily check-in</h2>
+      <div id="checkinBody"></div>
+    </div>
+
+    <div class="list-pills" id="listSwitcher"></div>
+    <div class="card" id="newListCard" style="display:none;">
+      <h2>New list</h2>
+      <div class="row2">
+        <input type="text" id="newListName" placeholder="List name (e.g. Groceries)">
+        <input type="text" id="newListVerb" placeholder="Completion word (e.g. Bought)">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:8px;">
+        <input type="checkbox" id="newListPriceBased" style="width:auto;"> This is a shopping list — auto-tier items by price (Easy/Tough/Boujie)
+      </label>
+      <div class="row2" style="margin-top:8px;">
+        <button class="ghost" id="cancelListBtn">Cancel</button>
+        <button class="primary" id="createListBtn">Create list</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Your stats</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="num" id="statPersonal">0</div><div class="label">Points</div></div>
+        <div class="stat jade"><div class="num" id="statThoughtful">0</div><div class="label">Thoughtful</div></div>
+        <div class="stat gold"><div class="num" id="statStreak">0</div><div class="label">Day Streak</div></div>
+      </div>
+      <div class="badge-row" id="badgeRow"></div>
+    </div>
+
+    <div class="card quest-card">
+      <h2>Couple Quest</h2>
+      <div id="questBody"></div>
+    </div>
+
+    <div class="card">
+      <h2>Add a task</h2>
+      <form class="add-task" id="taskForm">
+        <input type="text" id="taskTitle" placeholder="e.g. Do the dishes" required>
+        <select id="taskList"></select>
+        <div class="row2">
+          <select id="taskAssignee"></select>
+          <div id="difficultyFieldWrap" style="flex:1;">
+            <select id="taskDifficulty" style="width:100%;">
+              <option value="easy">Easy · 5 pts</option>
+              <option value="medium" selected>Medium · 10 pts</option>
+              <option value="hard">Hard · 20 pts</option>
+            </select>
+          </div>
+        </div>
+        <div id="priceFieldsWrap" class="price-fields" style="display:none;">
+          <input type="url" id="taskLink" placeholder="Link (optional)">
+          <div class="row2">
+            <input type="number" id="taskUnitPrice" placeholder="Price per item" min="0" step="0.01">
+            <select id="taskCurrency">
+              <option value="USD" selected>USD</option>
+              <option value="EGP">EGP</option>
+            </select>
+          </div>
+          <input type="number" id="taskQuantity" placeholder="Quantity" min="1" value="1">
+          <div class="tier-preview" id="tierPreview"></div>
+        </div>
+        <div id="expFieldsWrap" style="display:none;">
+          <input type="text" id="taskEmoji" placeholder="Trophy icon (e.g. 🏔️)" maxlength="4" style="width:100%;">
+        </div>
+        <select id="taskRepeat">
+          <option value="none" selected>One-time task</option>
+          <option value="daily">Repeats daily</option>
+          <option value="weekly">Repeats weekly</option>
+        </select>
+        <button type="submit" class="primary">Add task</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 id="openTasksHeader">Open tasks</h2>
+      <div id="openTasks"></div>
+    </div>
+
+    <div class="card">
+      <h2 id="doneTasksHeader">Completed</h2>
+      <div id="doneTasks"></div>
+    </div>
+  </div>
+
+  <!-- REWARDS VIEW -->
+  <div class="view" id="view-rewards">
+    <div class="card">
+      <h2>Spin the wheel</h2>
+      <p style="color:var(--muted);font-size:13px;margin-top:-4px;">Every 5 tasks you complete earns a spin. Common rewards are easy to land, big ones are rare.</p>
+      <div class="stat-row" style="margin-bottom:10px;">
+        <div class="stat"><div class="num" id="spinsAvailable">0</div><div class="label">Spins ready</div></div>
+        <div class="stat"><div class="num" id="tasksToNextSpin">5</div><div class="label">Tasks to next spin</div></div>
+      </div>
+      <div class="wheel-wrap">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheelCanvas" width="260" height="260"></canvas>
+      </div>
+      <button class="primary" id="spinBtn" style="width:100%;margin-top:8px;">Spin!</button>
+    </div>
+
+    <div class="card" id="rewardRequestsCard" style="display:none;">
+      <h2>Requests</h2>
+      <p style="color:var(--muted);font-size:13px;margin-top:-4px;">Reward ideas waiting on the other person to sign off before they hit the wheel.</p>
+      <div id="rewardRequestList"></div>
+    </div>
+
+    <div class="card">
+      <h2>Reward pool</h2>
+      <div id="rewardList"></div>
+      <form id="rewardForm" style="display:flex;gap:8px;margin-top:10px;">
+        <input type="text" id="rewardName" placeholder="Propose a reward..." style="flex:1;">
+        <select id="rewardTier">
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+        </select>
+        <button type="submit" class="ghost">Propose</button>
+      </form>
+      <p style="color:var(--muted);font-size:12px;margin-top:6px;margin-bottom:0;">New rewards need a thumbs-up from the other person before they join the wheel.</p>
+    </div>
+
+    <div class="card">
+      <h2>Rewards won</h2>
+      <div id="wonList"></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD VIEW -->
+  <div class="view" id="view-board">
+    <div class="card">
+      <h2 id="monthLabel">This month · Power Couple progress</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="num" id="monthCompleted">0</div><div class="label">Completed</div></div>
+        <div class="stat"><div class="num" id="monthAssigned">0</div><div class="label">Assigned</div></div>
+        <div class="stat"><div class="num" id="monthPct">0%</div><div class="label">On pace</div></div>
+      </div>
+      <div id="powerCoupleStatus" style="margin-top:12px;font-size:13px;color:var(--muted);text-align:center;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Fairness overview</h2>
+      <div class="fair-label"><span>Tasks owned</span><span id="fairAssignedNums"></span></div>
+      <div class="fair-bar" id="fairAssignedBar"></div>
+      <div class="fair-label"><span>Tasks actually done</span><span id="fairCompletedNums"></span></div>
+      <div class="fair-bar" id="fairCompletedBar"></div>
+    </div>
+
+    <div class="card">
+      <h2>Most Thoughtful leaderboard (this month)</h2>
+      <div id="thoughtfulBoard"></div>
+    </div>
+
+    <div class="card">
+      <h2>Task points leaderboard (all time)</h2>
+      <div id="pointsBoard"></div>
+    </div>
+  </div>
+
+  <!-- NOTES VIEW -->
+  <div class="view" id="view-notes">
+    <div class="card daily-q-card">
+      <h2>Today's Question</h2>
+      <div class="q" id="dailyQuestionText"></div>
+      <div class="hint">Same question on both your phones today — talk about it together 💬</div>
+    </div>
+
+    <div class="card">
+      <h2>Quote of the moment</h2>
+      <div class="quote-box">
+        <div class="q" id="quoteText">"Loading..."</div>
+        <div class="a" id="quoteAuthor"></div>
+      </div>
+      <button class="ghost" id="newQuoteBtn" style="width:100%;margin-top:10px;">New quote</button>
+    </div>
+
+    <div class="card">
+      <h2>Leave a note</h2>
+      <form id="noteForm">
+        <textarea id="noteText" placeholder="Say something nice..." required style="width:100%;"></textarea>
+        <button type="submit" class="primary" style="width:100%;margin-top:8px;">Send note</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Notes to you</h2>
+      <div id="notesList"></div>
+    </div>
+  </div>
+
+  <details class="sync">
+    <summary>Sync between two phones (tap to expand)</summary>
+    <p style="font-size:12px;color:var(--muted);"><strong>Do this once to pair.</strong> Tap "Copy my data", send it to your person, and have them paste it into Import on their phone. This gives you both the same secret, which is what makes your daily codes line up. After that, re-sync whenever you want to share progress.</p>
+    <button class="ghost" id="exportBtn" style="width:100%;">Copy my data</button>
+    <textarea id="syncBox" placeholder="Paste their code here to import..."></textarea>
+    <button class="ghost" id="importBtn" style="width:100%;margin-top:6px;">Import</button>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+    <p style="font-size:12px;color:var(--muted);">Lists look empty or wrong? This wipes this phone's data and reloads the starter lists (IKEA list, M&amp;R to-dos, and the RÖoDaY bucket list with your 4 trophies).</p>
+    <button class="ghost" id="resetBtn" style="width:100%;">Reset &amp; reload starter lists</button>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+    <p style="font-size:12px;color:var(--muted);"><strong>Device PIN.</strong> Locks this app on <em>this phone</em> so someone picking it up can't read your lists. It does not protect the web address itself — treat the URL as the real secret and don't share it.</p>
+    <div class="row2">
+      <input type="text" id="pinSet" inputmode="numeric" maxlength="4" placeholder="4-digit PIN">
+      <button class="ghost" id="pinSaveBtn">Set PIN</button>
+    </div>
+    <button class="ghost" id="pinClearBtn" style="width:100%;margin-top:6px;">Remove PIN</button>
+  </details>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="emoji" id="modalEmoji">🎉</div>
+    <h3 id="modalTitle">Nice!</h3>
+    <p id="modalText"></p>
+    <button class="primary" id="modalClose" style="width:100%;">Sweet</button>
+  </div>
+</div>
+
+<!-- Experience completion modal -->
+<div class="modal-bg" id="expModalBg">
+  <div class="modal wide">
+    <div class="emoji" id="expModalEmoji" style="text-align:center;">🥂</div>
+    <h3 id="expModalTitle">Cross it off</h3>
+    <label>Date you did it</label>
+    <input type="date" id="expDate">
+    <label>Bar / restaurant for the shot 🥃</label>
+    <input type="text" id="expVenue" placeholder="Somewhere new...">
+    <label>Who gave the speech?</label>
+    <select id="expSpeaker"></select>
+    <label>Photo or video from the day (optional)</label>
+    <input type="file" id="expPhoto" accept="image/*,video/*">
+    <img class="photo-preview" id="expPhotoPreview" alt="preview">
+    <div class="row2" style="margin-top:16px;">
+      <button class="ghost" id="expCancel">Cancel</button>
+      <button class="primary" id="expConfirm">Cross it off 🏆</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-a-new-dream modal (required after each completion) -->
+<div class="modal-bg" id="newDreamModalBg">
+  <div class="modal wide">
+    <div class="emoji" style="text-align:center;">✨</div>
+    <h3>Add a new dream</h3>
+    <div class="required-note" id="dreamRequiredNote">
+      House rule: every time you cross one off, a new one goes on. What's next for you two?
+    </div>
+    <label>The dream</label>
+    <input type="text" id="newDreamTitle" placeholder="e.g. Northern lights in Iceland">
+    <label>Trophy icon</label>
+    <input type="text" id="newDreamEmoji" placeholder="🏆" maxlength="4" value="🏆">
+    <div class="row2" style="margin-top:16px;">
+      <button class="ghost" id="newDreamSkip">Later</button>
+      <button class="primary" id="newDreamAdd">Add it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "us-tasks-rewards-v1";
+
+  var DEFAULT_REWARDS = [
+    {id:"r1", name:"Free drink of choice", tier:"common", emoji:"🥤"},
+    {id:"r2", name:'"Void plans" card', tier:"common", emoji:"🃏"},
+    {id:"r3", name:"Choose the movie tonight", tier:"common", emoji:"🎬"},
+    {id:"r4", name:"Your love does one chore for you", tier:"common", emoji:"🧹"},
+    {id:"r5", name:"10-minute massage", tier:"uncommon", emoji:"💆"},
+    {id:"r6", name:"Your love cooks your favorite meal", tier:"uncommon", emoji:"🍝"},
+    {id:"r7", name:"Surprise dessert run", tier:"uncommon", emoji:"🍰"},
+    {id:"r8", name:"Fancy date night, their treat", tier:"rare", emoji:"🍷"},
+    {id:"r9", name:"Weekend getaway", tier:"rare", emoji:"🏖️"}
+  ];
+
+  var TIER_WEIGHTS = {common:60, uncommon:30, rare:10};
+
+  var QUOTES = [
+    {q:"The best thing to hold onto in life is each other.", a:"Audrey Hepburn"},
+    {q:"A successful relationship requires falling in love many times, always with the same person.", a:"Mignon McLaughlin"},
+    {q:"You are my today and all of my tomorrows.", a:"Leo Christopher"},
+    {q:"In all the world, there is no heart for me like yours.", a:"Maya Angelou"},
+    {q:"Love isn't something you find. Love is something that finds you.", a:"Loretta Young"},
+    {q:"Small, consistent kindness beats grand gestures.", a:"Unknown"},
+    {q:"The greatest thing you'll ever learn is just to love and be loved in return.", a:"Nature Boy"},
+    {q:"We're the same kind of crazy, and that's why it works.", a:"Unknown"},
+    {q:"To love and be loved is to feel the sun from both sides.", a:"David Viscott"},
+    {q:"Every day I don't tell you how much you mean to me is a day wasted.", a:"Unknown"}
+  ];
+
+  var DAILY_QUESTIONS = [
+    "What's one small thing I did this week that made you feel loved?",
+    "What's a habit of mine you secretly appreciate?",
+    "If we had a free Saturday with no plans, what would you want to do?",
+    "What's something you're stressed about that I could help carry?",
+    "What's a memory of us you find yourself thinking about lately?",
+    "Is there a chore or task that's been quietly bothering you?",
+    "What's one thing I could do more of to make your week easier?",
+    "What's a goal you have for the next few months, big or small?",
+    "What made you laugh recently?",
+    "What's something new you'd like us to try together?",
+    "When did you feel most proud of me recently?",
+    "What's one way I could show up better for you this week?",
+    "What's a small tradition you'd like us to start?",
+    "What's something you appreciate about how we handle disagreements?",
+    "If you could plan our next date night, what would it look like?"
+  ];
+
+  var QUEST_SUGGESTIONS = [
+    {title:"Deep-clean the kitchen together", desc:"Tackle it side by side this weekend."},
+    {title:"Meal-prep Sunday", desc:"Plan and cook the week's meals as a team."},
+    {title:"Plan next month's date night", desc:"Each of you picks one idea, then agree on one together."},
+    {title:"Declutter one shared space", desc:"Closet, junk drawer, garage — pick one and finish it together."},
+    {title:"No-phones dinner, 3 nights this week", desc:"Both of you unplug during dinner."},
+    {title:"Tackle the errands list in one afternoon", desc:"Split it up, knock it all out the same day."},
+    {title:"Write each other a letter", desc:"Old-school — no texting, an actual letter each."},
+    {title:"Plan a mini home date", desc:"Pick a theme, cook or order in, no screens."}
+  ];
+
+  function todayISO(d){
+    d = d || new Date();
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }
+  function monthKey(d){
+    d = d || new Date();
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  }
+  function dayOfYear(d){
+    d = d || new Date();
+    var start = new Date(d.getFullYear(),0,0);
+    var diff = d - start;
+    return Math.floor(diff / 86400000);
+  }
+  function addDaysISO(days){
+    return todayISO(new Date(Date.now() + days*86400000));
+  }
+  function uid(){
+    return Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+  }
+
+  // ---------- price / currency helpers ----------
+  var RATES_TO_USD = {EGP: 1/50.19, USD: 1}; // approx market rate, Aug 2026
+
+  function toUSD(amount, currency){
+    var rate = RATES_TO_USD[currency];
+    if(rate === undefined) rate = 1;
+    return amount * rate;
+  }
+
+  function computeTierFromTotal(unitPrice, quantity, currency){
+    var total = (unitPrice||0) * (quantity||1);
+    var usd = toUSD(total, currency||"USD");
+    if(usd <= 75) return "easy";
+    if(usd <= 250) return "medium";
+    return "hard";
+  }
+
+  function formatMoney(amount, currency){
+    currency = currency || "USD";
+    if(currency === "USD"){
+      var rounded = Math.round(amount*100)/100;
+      var str = (rounded % 1 === 0) ? rounded.toLocaleString() : rounded.toFixed(2);
+      return "$" + str;
+    }
+    var formatted = Math.round(amount).toLocaleString();
+    var usd = Math.round(toUSD(amount, currency));
+    return currency + " " + formatted + " (~$" + usd + ")";
+  }
+
+  function taskTotal(t){
+    if(t.breakdown && t.breakdown.length){
+      return t.breakdown.reduce(function(s,b){ return s + b.price*b.qty; }, 0);
+    }
+    return (t.unitPrice||0) * (t.quantity||1);
+  }
+
+  function escapeAttr(s){
+    return String(s==null ? "" : s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function defaultState(){
+    return {
+      people: [
+        {id:"p1", name:"Moody"},
+        {id:"p2", name:"Rae"}
+      ],
+      currentUser: "p1",
+      lists: [
+        {id:"list-todo", name:"To Do", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
+        {id:"list-buy", name:"To Buy", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}},
+        {id:"list-exp", name:"To Experience", verb:"Lived", priceBased:false, experienceBased:true, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}}
+      ],
+      currentList: "list-todo",
+      speechTurn: "p1",
+      pairSecret: null,
+      lockins: {},      // personId -> { "YYYY-MM-DD": true }
+      missedDays: [],   // [{date, count}]
+      signs: {},        // personId -> star sign (optional flavor)
+      tasks: [],
+      points: {}, // personId -> {personal, thoughtful, totalCompleted, spinsAvailable, spinsUsedTowardNext}
+      streaks: {}, // personId -> {current, lastDate}
+      dailyCompletions: {}, // personId -> {date: count}
+      monthly: {}, // "YYYY-MM" -> {assigned, completed, badgeAwarded}
+      badges: {}, // personId -> [{key,label,at}]
+      powerCoupleBadge: {held:false, sinceMonth:null},
+      rewards: DEFAULT_REWARDS.slice(),
+      rewardsWon: [], // {personId, rewardId, name, tier, date}
+      rewardRequests: [], // {id, name, tier, emoji, proposedBy, date}
+      notes: [], // {fromId, toId, text, date}
+      quest: {active: null, completedCount: 0} // active: {title, desc, contributions:{personId:bool}, startedAt}
+    };
+  }
+
+  function ensurePerson(state, id){
+    if(!state.points[id]) state.points[id] = {personal:0, thoughtful:0, totalCompleted:0, spinsAvailable:0, progressToSpin:0};
+    if(!state.streaks[id]) state.streaks[id] = {current:0, lastDate:null};
+    if(!state.badges[id]) state.badges[id] = [];
+  }
+
+  var openEditIds = {};
+
+  var state = load();
+  state.people.forEach(function(p){ ensurePerson(state, p.id); });
+  if(!state.lists || state.lists.length===0){
+    state.lists = [
+      {id:"list-todo", name:"To Do", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
+      {id:"list-buy", name:"To Buy", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}}
+    ];
+  }
+  if(!state.lists.some(function(l){return l.id==="list-exp";})){
+    state.lists.push({id:"list-exp", name:"To Experience", verb:"Lived", priceBased:false, experienceBased:true, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}});
+  }
+  if(!state.speechTurn) state.speechTurn = "p1";
+  if(!state.pairSecret){
+    state.pairSecret = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+  if(!state.lockins) state.lockins = {};
+  if(!state.missedDays) state.missedDays = [];
+  if(!state.signs) state.signs = {};
+  state.lists.forEach(function(l){
+    if(l.priceBased===undefined) l.priceBased = false;
+    if(l.experienceBased===undefined) l.experienceBased = false;
+    if(!l.tierLabels) l.tierLabels = {easy:"Easy",medium:"Medium",hard:"Hard"};
+  });
+  if(!state.currentList) state.currentList = state.lists[0].id;
+  state.tasks.forEach(function(t){
+    if(!t.listId) t.listId = state.lists[0].id;
+    if(t.quantity===undefined) t.quantity = 1;
+    if(t.unitPrice===undefined) t.unitPrice = 0;
+    if(t.currency===undefined) t.currency = "EGP";
+    if(t.link===undefined) t.link = null;
+    if(!t.alternatives) t.alternatives = [];
+  });
+  seedInitialData();
+
+  function seedInitialData(){
+    // Build 10: re-seed the shopping list so product photos are attached
+    if(state.seededUsV3 && !state.seededImgV4){
+      var rm = state.tasks.filter(function(t){ return t.listId === "list-buy"; }).length;
+      state.tasks = state.tasks.filter(function(t){ return t.listId !== "list-buy"; });
+      var mkI = monthKey();
+      if(state.monthly[mkI]) state.monthly[mkI].assigned = Math.max(0, state.monthly[mkI].assigned - rm);
+      state.seededUsV3 = false;
+    }
+    if(state.seededExpV2 && !state.seededUsV3){
+      // upgrade: re-price the shopping list against IKEA US
+      var removed = state.tasks.filter(function(t){ return t.listId === "list-buy"; }).length;
+      state.tasks = state.tasks.filter(function(t){ return t.listId !== "list-buy"; });
+      var mkFix = monthKey();
+      if(state.monthly[mkFix]) state.monthly[mkFix].assigned = Math.max(0, state.monthly[mkFix].assigned - removed);
+      state.seededExpV2 = false;
+      state.reseededUs = true;
+    }
+    if(state.seededUsV3) return;
+    var mk = monthKey();
+    if(!state.monthly[mk]) state.monthly[mk] = {assigned:0, completed:0, badgeAwarded:false};
+
+    // idempotence guard: never duplicate a list that already has content
+    // (protects against upgrading from any older build)
+    var hasTodo = state.tasks.some(function(t){ return t.listId === "list-todo"; });
+    var hasBuy  = state.tasks.some(function(t){ return t.listId === "list-buy"; });
+    var hasExp  = state.tasks.some(function(t){ return t.listId === "list-exp"; });
+
+    function addBuyItem(title, unitPrice, quantity, link, alternatives, breakdown, image, kind, brand){
+      var total = breakdown
+        ? breakdown.reduce(function(s,b){ return s + b.price*b.qty; }, 0)
+        : unitPrice * quantity;
+      state.tasks.push({
+        id: uid(), title: title, assignedTo: "p1",
+        difficulty: computeTierFromTotal(total, 1, "USD"), status:"open",
+        createdMonth: mk, completedBy:null, completedAt:null, repeat:"none", lastCompletedAt:null,
+        listId:"list-buy", link: link, unitPrice: unitPrice, currency:"USD", quantity: quantity,
+        alternatives: alternatives || [], breakdown: breakdown || null, image: image || null,
+        kind: kind || "towel", brand: brand || null
+      });
+      state.monthly[mk].assigned++;
+    }
+
+    function addExperience(title, emoji, doneDateISO){
+      state.tasks.push({
+        id: uid(), title: title, assignedTo: "both", difficulty:"hard",
+        status: doneDateISO ? "done" : "open",
+        createdMonth: mk, completedBy: doneDateISO ? "both" : null,
+        completedAt: doneDateISO ? (doneDateISO + "T12:00:00.000Z") : null,
+        repeat:"none", lastCompletedAt:null,
+        listId:"list-exp", link:null, unitPrice:0, currency:"USD", quantity:1, alternatives:[],
+        emoji: emoji, venue:null, speakerId:null, photo:null
+      });
+    }
+    function addTodoItem(title, assignedTo, difficulty, repeat){
+      state.tasks.push({
+        id: uid(), title: title, assignedTo: assignedTo, difficulty: difficulty||"medium", status:"open",
+        createdMonth: mk, completedBy:null, completedAt:null, repeat: repeat||"none", lastCompletedAt:null,
+        listId:"list-todo", link:null, unitPrice:0, currency:"EGP", quantity:1, alternatives:[]
+      });
+      state.monthly[mk].assigned++;
+    }
+
+    // IKEA List for W&H — live IKEA US pricing (Aug 2026)
+    if(!hasBuy){
+    addBuyItem("6 bath towels", 6.99, 6,
+      "https://www.ikea.com/us/en/p/vagsjoen-bath-towel-light-beige-10494609/",
+      [
+        {name:"LUDDVIAL bath towel, white (22x47\", budget)", link:"https://www.ikea.com/us/en/cat/bath-towels-20523/", unitPrice:2.99, currency:"USD", quantity:6},
+        {name:"SALVIKEN bath towel, anthracite (4.7★)", link:"https://www.ikea.com/us/en/cat/bath-towels-20523/", unitPrice:9.99, currency:"USD", quantity:6},
+        {name:"BROKGLIM bath towel, white (premium)", link:"https://www.ikea.com/us/en/cat/bath-towels-20523/", unitPrice:17.99, currency:"USD", quantity:6}
+      ], null,
+      "https://www.ikea.com/us/en/images/products/vagsjoen-bath-towel-light-beige__0933953_pe792303_s5.jpg", "towel", "VÅGSJÖN · light beige");
+    addBuyItem("4 hand towels", 4.99, 4,
+      "https://www.ikea.com/us/en/p/slanhoestmal-hand-towel-black-light-beige-stripe-90576031/", null, null,
+      "https://www.ikea.com/us/en/images/products/slanhoestmal-hand-towel-black-light-beige-stripe__1255925_pe924798_s5.jpg", "hand", "SLÅNHÖSTMAL · black/beige stripe");
+    addBuyItem("2 bath mats", 9.99, 2,
+      "https://www.ikea.com/us/en/p/fjaellkattfot-bath-mat-beige-90579992/", null, null,
+      "https://www.ikea.com/us/en/images/products/fjaellkattfot-bath-mat-beige__1271852_pe929611_s5.jpg", "mat", 'FJÄLLKATTFOT · beige, 20x31"');
+    addBuyItem("Fitted sheets", 0, 4,
+      "https://www.ikea.com/us/en/p/dvala-fitted-sheet-white-10357235/", null,
+      [{label:"King", price:19.99, qty:1},{label:"Queen", price:14.99, qty:1},{label:"Twin", price:9.99, qty:2}],
+      "https://www.ikea.com/us/en/images/products/dvala-fitted-sheet-white__0604085_pe681026_s5.jpg", "fitted", "DVALA · white");
+    addBuyItem("Flat sheets", 0, 4,
+      "https://www.ikea.com/us/en/p/dvala-flat-sheet-white-30577458/", null,
+      [{label:"King", price:19.99, qty:1},{label:"Queen", price:14.99, qty:1},{label:"Twin", price:9.99, qty:2}],
+      "https://www.ikea.com/us/en/images/products/dvala-flat-sheet-white__1279649_pe931459_s5.jpg", "flat", "DVALA · white");
+    addBuyItem("6 pillowcases", 0, 3,
+      "https://www.ikea.com/us/en/p/dvala-pillowcase-white-20357254/", null,
+      [{label:"Queen 2-pack", price:11.99, qty:3}],
+      "https://www.ikea.com/us/en/images/products/dvala-pillowcase-white__0605346_pe681719_s5.jpg", "pillow", "DVALA · white, 2 per pack");
+    addBuyItem("Duvet inserts", 0, 4,
+      "https://www.ikea.com/us/en/p/smasporre-duvet-insert-light-warm-80457019/", null,
+      [{label:"King", price:49.99, qty:1},{label:"Full/Queen", price:39.99, qty:1},{label:"Twin", price:34.99, qty:2}],
+      "https://www.ikea.com/us/en/images/products/smasporre-duvet-insert-light-warm__0776667_pe758187_s5.jpg", "duvet", "SMÅSPORRE · light warm");
+    addBuyItem("Duvet covers", 0, 4,
+      "https://www.ikea.com/us/en/p/solfibbla-duvet-cover-and-pillowcase-s-white-beige-stripe-10610963/", null,
+      [{label:"King", price:49.99, qty:1},{label:"Full/Queen", price:39.99, qty:1},{label:"Twin", price:29.99, qty:2}],
+      "https://www.ikea.com/us/en/images/products/solfibbla-duvet-cover-and-pillowcase-s-white-beige-stripe__1435764_pe983931_s5.jpg", "cover", "SOLFIBBLA · white/beige stripe");
+    }
+
+    // ⛓️ RÖoDaY 2 DO ⛓️ — the shared bucket list
+    if(!hasExp){
+    addExperience("Tattoos", "🖋️", "2026-05-21");
+    addExperience("Stretch class", "🧘", "2026-06-20");
+    addExperience("Volunteer", "🤝", "2026-06-26");
+    addExperience("Egypt", "🐫", "2026-07-26");
+    addExperience("Tahoe", "🏔️", null);
+    addExperience("Australia", "🦘", null);
+    // NOTE: two private items from your original list are intentionally NOT baked in here,
+    // so this file stays safe to put on a public host. Add them in the app — anything you
+    // add lives only in your phone's storage, never in the hosted file.
+    addExperience("Half marathon", "🏃", null);
+    addExperience("Hyrox", "💪", null);
+    addExperience("Heavy metal concert", "🤘", null);
+    addExperience("Camping", "🏕️", null);
+    addExperience("Muay Thai class or other martial arts", "🥊", null);
+    addExperience("Month of sobriety", "🌱", null);
+    addExperience("Meet Rae's family (baby Auggie and Georgia)", "👨‍👩‍👧", null);
+    }
+
+    // M&R Ticky Tick List — seeded into "To Do"
+    if(!hasTodo){
+    addTodoItem("Buy book for August", "p1", "easy");
+    addTodoItem("Gym everyday (Moody)", "p1", "easy", "daily");
+    addTodoItem("Gym everyday (R)", "p2", "easy", "daily");
+    addTodoItem("Stairmaster 20 min, 3x/week (Moody)", "p1", "medium", "weekly");
+    addTodoItem("Stairmaster 20 min, 3x/week (R)", "p2", "medium", "weekly");
+    addTodoItem("Plan next trippy trip", "p1", "medium");
+    addTodoItem("Create Amazon list for 200 Brannan", "p1", "easy");
+    addTodoItem("Buy sex toys for play (his x her)", "p1", "easy");
+    addTodoItem("Add shading to tattoos", "p1", "medium");
+    addTodoItem("Buy murder mystery packet for next date night", "p1", "easy");
+    addTodoItem("Create 1, 5, & 10 year plans/goals list", "p1", "hard");
+    addTodoItem("M to sell clothes (make space for R)", "p1", "medium");
+    addTodoItem("Buy new bedding", "p1", "easy");
+    addTodoItem("Create art wall", "p1", "medium");
+    addTodoItem("Schedule next volunteer sesh", "p1", "easy");
+    addTodoItem("Schedule Hyrox class (1x/week)?", "p1", "easy", "weekly");
+    addTodoItem("Plan weekend to meet R's fam", "p1", "medium");
+    addTodoItem("Buy indoor plants", "p1", "easy");
+    addTodoItem("M to take down all pics of randos in 200 Brannan", "p1", "easy");
+    addTodoItem("Pick dates for month-long sobriety / no refined sugar / DD (8/10–8/31)?", "p1", "medium");
+    addTodoItem("M to update shared calendar with upcoming travel", "p1", "easy");
+    addTodoItem("Create shared photo album", "p1", "easy");
+    addTodoItem("Pray together", "p1", "easy");
+    addTodoItem("Teach R how to DJ", "p1", "medium");
+    }
+
+    state.seededIkeaV1 = true;
+    state.seededExpV2 = true;
+    state.seededUsV3 = true;
+    state.seededImgV4 = true;
+    save();
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        var d = defaultState();
+        for(var k in d){ if(!(k in parsed)) parsed[k] = d[k]; }
+        // migrate old saves: "Partner" was never romantic enough
+        if(parsed.people) parsed.people.forEach(function(p){ if(p.name==="Partner") p.name = "Rae"; });
+        if(parsed.rewards) parsed.rewards.forEach(function(r){
+          if(r.name==="Partner does one chore for you") r.name = "Your love does one chore for you";
+          if(r.name==="Partner cooks your favorite meal") r.name = "Your love cooks your favorite meal";
+        });
+        return parsed;
+      }
+    }catch(e){}
+    return defaultState();
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+  function saveOrThrow(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+  function storageKB(){
+    try{ return Math.round((localStorage.getItem(STORAGE_KEY)||"").length/1024); }
+    catch(e){ return 0; }
+  }
+
+  function otherPerson(id){
+    var p = state.people.find(function(x){return x.id !== id;});
+    return p ? p.id : null;
+  }
+  function personName(id){
+    var p = state.people.find(function(x){return x.id === id;});
+    return p ? p.name : "?";
+  }
+  function listById(id){
+    return state.lists.find(function(l){return l.id===id;});
+  }
+  function listVerb(id){
+    var l = listById(id);
+    return l ? l.verb : "Done";
+  }
+
+  // ---------- toast / modal ----------
+  var toastEl = document.getElementById("toast");
+  var toastTimer = null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2600);
+  }
+  var modalBg = document.getElementById("modalBg");
+  function showModal(emoji, title, text){
+    document.getElementById("modalEmoji").textContent = emoji;
+    document.getElementById("modalTitle").textContent = title;
+    document.getElementById("modalText").textContent = text;
+    modalBg.classList.add("show");
+  }
+  document.getElementById("modalClose").addEventListener("click", function(){
+    modalBg.classList.remove("show");
+  });
+
+  // ---------- tabs ----------
+  document.querySelectorAll(".tabs button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".tabs button").forEach(function(b){b.classList.remove("active");});
+      btn.classList.add("active");
+      document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active");});
+      document.getElementById("view-"+btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  // ---------- user switcher ----------
+  function renderSwitcher(){
+    var wrap = document.getElementById("userSwitcher");
+    wrap.innerHTML = "";
+    state.people.forEach(function(p){
+      var b = document.createElement("button");
+      b.textContent = p.name;
+      if(p.id === state.currentUser) b.classList.add("active");
+      b.addEventListener("click", function(){
+        state.currentUser = p.id;
+        save();
+        renderAll();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  // ---------- difficulty points ----------
+  var DIFF_POINTS = {easy:5, medium:10, hard:20};
+
+  // ---------- task rendering ----------
+  function renderAssigneeOptions(){
+    var sel = document.getElementById("taskAssignee");
+    sel.innerHTML = "";
+    state.people.forEach(function(p){
+      var o = document.createElement("option");
+      o.value = p.id; o.textContent = "For " + p.name;
+      sel.appendChild(o);
+    });
+  }
+
+  function renderTaskListOptions(){
+    var sel = document.getElementById("taskList");
+    if(!sel) return;
+    sel.innerHTML = "";
+    state.lists.forEach(function(l){
+      var o = document.createElement("option");
+      o.value = l.id; o.textContent = l.name;
+      if(l.id === state.currentList) o.selected = true;
+      sel.appendChild(o);
+    });
+    onTaskListChanged();
+  }
+
+  function renderListSwitcher(){
+    var wrap = document.getElementById("listSwitcher");
+    if(!wrap) return;
+    wrap.innerHTML = "";
+    state.lists.forEach(function(l){
+      var b = document.createElement("button");
+      b.textContent = l.name;
+      if(l.id === state.currentList) b.classList.add("active");
+      b.addEventListener("click", function(){
+        state.currentList = l.id;
+        document.getElementById("newListCard").style.display = "none";
+        save();
+        renderAll();
+      });
+      wrap.appendChild(b);
+    });
+    var addBtn = document.createElement("button");
+    addBtn.className = "add-list";
+    addBtn.textContent = "+ New list";
+    addBtn.addEventListener("click", function(){
+      var card = document.getElementById("newListCard");
+      card.style.display = (card.style.display === "none") ? "block" : "none";
+    });
+    wrap.appendChild(addBtn);
+  }
+
+  document.getElementById("cancelListBtn").addEventListener("click", function(){
+    document.getElementById("newListCard").style.display = "none";
+    document.getElementById("newListName").value = "";
+    document.getElementById("newListVerb").value = "";
+    document.getElementById("newListPriceBased").checked = false;
+  });
+
+  document.getElementById("createListBtn").addEventListener("click", function(){
+    var name = document.getElementById("newListName").value.trim();
+    var verb = document.getElementById("newListVerb").value.trim() || "Done";
+    if(!name) return;
+    var priceBased = document.getElementById("newListPriceBased").checked;
+    var newList = {
+      id: uid(), name: name, verb: verb,
+      priceBased: priceBased,
+      tierLabels: priceBased ? {easy:"Easy", medium:"Tough", hard:"Boujie"} : {easy:"Easy", medium:"Medium", hard:"Hard"}
+    };
+    state.lists.push(newList);
+    state.currentList = newList.id;
+    document.getElementById("newListName").value = "";
+    document.getElementById("newListVerb").value = "";
+    document.getElementById("newListPriceBased").checked = false;
+    document.getElementById("newListCard").style.display = "none";
+    save();
+    renderAll();
+    toast('"' + name + '" list created');
+  });
+
+  function onTaskListChanged(){
+    var listId = document.getElementById("taskList").value;
+    var list = listById(listId);
+    if(!list) return;
+    var isPriceBased = !!list.priceBased;
+    var isExp = !!list.experienceBased;
+    document.getElementById("priceFieldsWrap").style.display = (isPriceBased && !isExp) ? "flex" : "none";
+    document.getElementById("difficultyFieldWrap").style.display = (isPriceBased || isExp) ? "none" : "block";
+    document.getElementById("expFieldsWrap").style.display = isExp ? "block" : "none";
+    document.getElementById("taskAssignee").style.display = isExp ? "none" : "block";
+    document.getElementById("taskRepeat").style.display = isExp ? "none" : "block";
+    var labels = list.tierLabels || {easy:"Easy",medium:"Medium",hard:"Hard"};
+    var diffSel = document.getElementById("taskDifficulty");
+    diffSel.options[0].textContent = labels.easy + " · 5 pts";
+    diffSel.options[1].textContent = labels.medium + " · 10 pts";
+    diffSel.options[2].textContent = labels.hard + " · 20 pts";
+    updateTierPreview();
+  }
+
+  function updateTierPreview(){
+    var wrap = document.getElementById("priceFieldsWrap");
+    var pv = document.getElementById("tierPreview");
+    if(!wrap || wrap.style.display === "none"){ if(pv) pv.textContent = ""; return; }
+    var unitPrice = parseFloat(document.getElementById("taskUnitPrice").value) || 0;
+    var qty = parseInt(document.getElementById("taskQuantity").value,10) || 1;
+    var currency = document.getElementById("taskCurrency").value;
+    var listId = document.getElementById("taskList").value;
+    var list = listById(listId);
+    var tier = computeTierFromTotal(unitPrice, qty, currency);
+    var label = (list && list.tierLabels) ? list.tierLabels[tier] : tier;
+    var total = unitPrice*qty;
+    pv.textContent = unitPrice>0 ? ("Total: "+formatMoney(total, currency)+" → "+label) : "";
+  }
+
+  document.getElementById("taskList").addEventListener("change", onTaskListChanged);
+  ["taskUnitPrice","taskQuantity","taskCurrency"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", updateTierPreview);
+    document.getElementById(id).addEventListener("change", updateTierPreview);
+  });
+
+  function renderTasks(){
+    var open = document.getElementById("openTasks");
+    var done = document.getElementById("doneTasks");
+    open.innerHTML = ""; done.innerHTML = "";
+    var listId = state.currentList;
+    var verb = listVerb(listId);
+    var listObj = listById(listId);
+
+    if(listObj && listObj.experienceBased){
+      renderExperienceList();
+      return;
+    }
+    document.getElementById("openTasksHeader").textContent = (listObj ? listObj.name : "Open") + " — open";
+    document.getElementById("doneTasksHeader").textContent = verb;
+
+    var inList = state.tasks.filter(function(t){ return t.listId === listId; });
+    var openTasks = inList.filter(function(t){return t.status==="open";});
+    var doneTasks = inList.filter(function(t){return t.status==="done";}).slice().reverse().slice(0,15);
+
+    if(openTasks.length===0){
+      open.innerHTML = '<div class="empty">Nothing here yet. Add one above 🎯</div>';
+    }
+    openTasks.forEach(function(t){
+      open.appendChild(taskRow(t));
+    });
+
+    if(doneTasks.length===0){
+      done.innerHTML = '<div class="empty">Nothing '+verb.toLowerCase()+' yet.</div>';
+    }
+    doneTasks.forEach(function(t){
+      done.appendChild(taskRow(t));
+    });
+  }
+
+  // small inline icon set — replaces the emoji/✕/✎ chrome
+  var ICON = {
+    edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+    link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3h7v7"/><path d="M21 3l-9 9"/><path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>'
+  };
+
+  // Hand-drawn product illustrations. These show instantly and are what you see
+  // if the live IKEA photo can't load (offline, or the URL moves).
+  var PRODUCT_ART = {
+    towel: function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+      '<rect x="20" y="14" width="60" height="72" rx="7" fill="'+c1+'"/>'+
+      '<rect x="20" y="14" width="60" height="72" rx="7" fill="none" stroke="rgba(0,0,0,.09)"/>'+
+      '<rect x="20" y="34" width="60" height="5" fill="'+c2+'"/>'+
+      '<rect x="20" y="44" width="60" height="3" fill="'+c2+'" opacity=".65"/>'+
+      '<rect x="20" y="61" width="60" height="5" fill="'+c2+'"/>'+
+      '<path d="M50 14v72" stroke="rgba(0,0,0,.07)" stroke-width="1.5"/></svg>'; },
+    mat: function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+      '<rect x="12" y="30" width="76" height="42" rx="9" fill="'+c1+'"/>'+
+      '<rect x="12" y="30" width="76" height="42" rx="9" fill="none" stroke="rgba(0,0,0,.09)"/>'+
+      '<g stroke="'+c2+'" stroke-width="2" opacity=".55">'+
+      '<path d="M22 40v22"/><path d="M34 40v22"/><path d="M46 40v22"/><path d="M58 40v22"/><path d="M70 40v22"/></g></svg>'; },
+    fitted: function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+      '<rect x="10" y="30" width="80" height="40" rx="10" fill="'+c1+'"/>'+
+      '<path d="M10 44h80" stroke="'+c2+'" stroke-width="2.5" opacity=".5"/>'+
+      '<rect x="10" y="30" width="80" height="40" rx="10" fill="none" stroke="rgba(0,0,0,.1)"/>'+
+      '<path d="M22 30v40M78 30v40" stroke="rgba(0,0,0,.06)" stroke-width="1.5"/></svg>'; },
+    flat: function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+      '<path d="M14 34h72v34a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6Z" fill="'+c1+'"/>'+
+      '<path d="M14 34h72v9H14Z" fill="'+c2+'" opacity=".45"/>'+
+      '<path d="M14 34h72v34a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6Z" fill="none" stroke="rgba(0,0,0,.1)"/></svg>'; },
+    pillow: function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+      '<rect x="14" y="32" width="72" height="38" rx="14" fill="'+c1+'"/>'+
+      '<rect x="14" y="32" width="72" height="38" rx="14" fill="none" stroke="rgba(0,0,0,.1)"/>'+
+      '<path d="M26 40c6 6 6 14 0 22" stroke="'+c2+'" stroke-width="2" fill="none" opacity=".5"/>'+
+      '<path d="M74 40c-6 6-6 14 0 22" stroke="'+c2+'" stroke-width="2" fill="none" opacity=".5"/></svg>'; },
+    duvet: function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+      '<rect x="12" y="24" width="76" height="54" rx="12" fill="'+c1+'"/>'+
+      '<g stroke="'+c2+'" stroke-width="1.6" opacity=".45">'+
+      '<path d="M12 42h76"/><path d="M12 60h76"/><path d="M37 24v54"/><path d="M63 24v54"/></g>'+
+      '<rect x="12" y="24" width="76" height="54" rx="12" fill="none" stroke="rgba(0,0,0,.1)"/></svg>'; },
+    cover: function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+      '<rect x="12" y="24" width="76" height="54" rx="12" fill="'+c1+'"/>'+
+      '<g fill="'+c2+'" opacity=".55">'+
+      '<rect x="12" y="34" width="76" height="4"/><rect x="12" y="46" width="76" height="4"/>'+
+      '<rect x="12" y="58" width="76" height="4"/></g>'+
+      '<rect x="12" y="24" width="76" height="54" rx="12" fill="none" stroke="rgba(0,0,0,.1)"/></svg>'; }
+  };
+
+  var PRODUCT_STYLE = {
+    towel:  ["#e8ddcd","#b9a689"],
+    hand:   ["#e6ddd0","#3a3a3a"],
+    mat:    ["#e5dccc","#c0ac8e"],
+    fitted: ["#f4f2ee","#cfcbc2"],
+    flat:   ["#f4f2ee","#cfcbc2"],
+    pillow: ["#f5f3ef","#d2cec5"],
+    duvet:  ["#f7f5f1","#d8d4cb"],
+    cover:  ["#f4f1ea","#c9b795"]
+  };
+
+  function productArt(kind){
+    var style = PRODUCT_STYLE[kind] || ["#ded6e2","#a596ad"];
+    var fn = PRODUCT_ART[kind] || PRODUCT_ART[kind === "hand" ? "towel" : "towel"];
+    if(kind === "hand") fn = PRODUCT_ART.towel;
+    return fn(style[0], style[1]);
+  }
+
+  function iconBtn(svg, label, onClick){
+    var b = document.createElement("button");
+    b.className = "icon-btn";
+    b.type = "button";
+    b.setAttribute("aria-label", label);
+    b.innerHTML = svg;
+    b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function splitPrice(amount){
+    var whole = Math.floor(amount);
+    var cents = Math.round((amount - whole)*100);
+    return {whole:whole.toLocaleString(), cents:String(cents).padStart(2,"0")};
+  }
+
+  // Image-forward product card: photo + price lead, name is secondary.
+  function buyCard(t, list){
+    var wrap = document.createElement("div");
+    wrap.className = "task-wrap";
+
+    var card = document.createElement("div");
+    card.className = "buy-card" + (t.status==="done" ? " done" : "") +
+      (t.pendingLock ? " pending" : "") + (t.bricked ? " bricked" : "");
+
+    // ---- thumbnail (real IKEA photo, with a designed fallback) ----
+    var thumb = document.createElement("div");
+    thumb.className = "buy-thumb";
+    var fb = document.createElement("div");
+    fb.className = "fallback";
+    fb.innerHTML = productArt(t.kind || "towel");
+    thumb.appendChild(fb);
+    if(t.image){
+      var img = document.createElement("img");
+      img.loading = "lazy";
+      img.alt = t.title;
+      img.style.opacity = "0";
+      img.style.transition = "opacity .25s ease";
+      img.addEventListener("load", function(){ img.style.opacity = "1"; fb.style.display = "none"; });
+      img.addEventListener("error", function(){ img.remove(); });
+      img.src = t.image;
+      thumb.appendChild(img);
+    }
+    if(t.link){
+      var a = document.createElement("a");
+      a.href = t.link; a.target = "_blank"; a.rel = "noopener";
+      a.style.cssText = "position:absolute;inset:0;z-index:2;";
+      a.setAttribute("aria-label","Open product page");
+      thumb.appendChild(a);
+    }
+    card.appendChild(thumb);
+
+    // ---- body: price first, then name ----
+    var body = document.createElement("div");
+    body.className = "buy-body";
+
+    var total = taskTotal(t);
+    var price = document.createElement("div");
+    price.className = "buy-price";
+    if(total > 0){
+      var p = splitPrice(total);
+      price.innerHTML = "$" + p.whole + '<span class="cents">.' + p.cents + "</span>";
+    } else {
+      price.textContent = "—";
+    }
+    body.appendChild(price);
+
+    var name = document.createElement("div");
+    name.className = "buy-name";
+    name.textContent = t.title;
+    body.appendChild(name);
+
+    if(t.brand){
+      var brand = document.createElement("div");
+      brand.className = "buy-brand";
+      brand.textContent = t.brand;
+      body.appendChild(brand);
+    }
+
+    if(t.breakdown && t.breakdown.length){
+      var sub = document.createElement("div");
+      sub.className = "buy-sub";
+      sub.textContent = t.breakdown.map(function(b){ return b.qty+"× "+b.label; }).join("  ·  ");
+      body.appendChild(sub);
+    } else if(t.quantity > 1 && t.unitPrice){
+      var sub2 = document.createElement("div");
+      sub2.className = "buy-sub";
+      sub2.textContent = t.quantity + " × $" + t.unitPrice.toFixed(2) + " each";
+      body.appendChild(sub2);
+    }
+
+    var tags = document.createElement("div");
+    tags.className = "buy-tags";
+    var tierLabel = (list.tierLabels && list.tierLabels[t.difficulty]) || t.difficulty;
+    tags.innerHTML = '<span class="diff-tag diff-'+t.difficulty+'">'+escapeHtml(tierLabel)+'</span>';
+    if(t.pendingLock) tags.innerHTML += '<span class="pending-pill">needs code</span>';
+    if(t.bricked) tags.innerHTML += '<span class="bricked-pill">bricked</span>';
+    if(t.status === "done"){
+      var vb = listVerb(t.listId).toLowerCase();
+      tags.innerHTML += '<span class="buy-sub" style="margin:0;">'+escapeHtml(vb) +
+        (t.completedBy && t.completedBy !== t.assignedTo ? " by "+escapeHtml(personName(t.completedBy)) : "") + '</span>';
+    } else {
+      tags.innerHTML += '<span class="buy-sub" style="margin:0;">for '+escapeHtml(personName(t.assignedTo))+'</span>';
+    }
+    body.appendChild(tags);
+    card.appendChild(body);
+
+    // ---- right rail: check + actions ----
+    var rail = document.createElement("div");
+    rail.className = "buy-actions";
+    var check = document.createElement("div");
+    check.className = "buy-check";
+    if(t.status === "done") check.innerHTML = '<span style="color:var(--ink);width:14px;height:14px;display:block;">'+ICON.check+'</span>';
+    check.addEventListener("click", function(){ if(t.status==="open") completeTask(t.id); });
+    rail.appendChild(check);
+    if(t.status === "open"){
+      rail.appendChild(iconBtn(ICON.edit, "Edit", function(){
+        if(openEditIds[t.id]) delete openEditIds[t.id]; else openEditIds[t.id] = true;
+        renderAll();
+      }));
+      rail.appendChild(iconBtn(ICON.trash, "Remove", function(){
+        state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
+        delete openEditIds[t.id];
+        save(); renderAll();
+      }));
+    }
+    card.appendChild(rail);
+    wrap.appendChild(card);
+
+    var alts = buildAltPanel(t, list);
+    if(alts){ wrap.classList.add("has-alts"); wrap.appendChild(alts); }
+    if(t.status === "open" && openEditIds[t.id]) wrap.appendChild(buildEditForm(t, list));
+    return wrap;
+  }
+
+  function taskRow(t){
+    var list = listById(t.listId) || {tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}, verb:"Done", priceBased:false};
+    if(list.priceBased) return buyCard(t, list);
+
+    var wrap = document.createElement("div");
+    wrap.className = "task-wrap";
+
+    var row = document.createElement("div");
+    row.className = "task" + (t.status==="done" ? " done" : "") +
+      (t.pendingLock ? " pending" : "") + (t.bricked ? " bricked" : "");
+    var check = document.createElement("div");
+    check.className = "check";
+    check.textContent = t.status==="done" ? "✓" : "";
+    check.addEventListener("click", function(){
+      if(t.status==="open"){ completeTask(t.id); }
+    });
+    var info = document.createElement("div");
+    info.className = "info";
+    var title = document.createElement("div");
+    title.className = "title";
+    if(t.link){
+      var a = document.createElement("a");
+      a.href = t.link; a.target = "_blank"; a.rel = "noopener";
+      a.style.color = "inherit"; a.style.textDecoration = "underline";
+      a.textContent = t.title;
+      title.appendChild(a);
+      title.appendChild(document.createTextNode(" 🔗"));
+    } else {
+      title.textContent = t.title;
+    }
+    var meta = document.createElement("div");
+    meta.className = "meta";
+    var tierLabel = (list.tierLabels && list.tierLabels[t.difficulty]) || t.difficulty;
+    var diffTag = '<span class="diff-tag diff-'+t.difficulty+'">'+escapeHtml(tierLabel)+'</span>';
+    var repeatTag = (t.repeat && t.repeat!=="none") ? ' <span class="repeat-tag">🔁 '+t.repeat+'</span>' : '';
+    var priceTag = "";
+    var totalP = taskTotal(t);
+    if(totalP > 0){
+      var qtyNote = "";
+      if(t.breakdown && t.breakdown.length){
+        qtyNote = " · " + t.breakdown.map(function(b){ return b.qty+"×"+b.label; }).join(", ");
+      } else if(t.quantity > 1){
+        qtyNote = " · ×" + t.quantity;
+      }
+      priceTag = ' <span class="price-tag">'+formatMoney(totalP, t.currency||"USD")+escapeHtml(qtyNote)+'</span>';
+    }
+    var verb = listVerb(t.listId).toLowerCase();
+    var assignText = "For " + personName(t.assignedTo);
+    if(t.status==="done"){
+      assignText += t.completedBy !== t.assignedTo ? (" · " + verb + " by " + personName(t.completedBy) + " 💛") : (" · " + verb);
+    } else if(t.lastCompletedAt){
+      var daysSince = Math.floor((Date.now() - new Date(t.lastCompletedAt).getTime()) / 86400000);
+      assignText += daysSince<=0 ? (" · " + verb + " today") : (" · last " + verb + " " + daysSince + "d ago");
+    }
+    var statusTag = "";
+    if(t.pendingLock){
+      statusTag = ' <span class="pending-pill">⏳ needs code</span>';
+    } else if(t.bricked){
+      statusTag = ' <span class="bricked-pill">💔 bricked</span>';
+    } else if(t.locked && t.status === "done"){
+      statusTag = ' <span class="repeat-tag">🔐 locked in</span>';
+    }
+    meta.innerHTML = diffTag + repeatTag + statusTag + priceTag + " &nbsp; " + assignText;
+    info.appendChild(title); info.appendChild(meta);
+
+    var actions = document.createElement("div");
+    actions.className = "task-actions";
+    if(t.status==="open"){
+      actions.appendChild(iconBtn(ICON.edit, "Edit", function(){
+        if(openEditIds[t.id]) delete openEditIds[t.id]; else openEditIds[t.id] = true;
+        renderAll();
+      }));
+      actions.appendChild(iconBtn(ICON.trash, "Remove", function(){
+        state.tasks = state.tasks.filter(function(x){return x.id !== t.id;});
+        delete openEditIds[t.id];
+        save(); renderAll();
+      }));
+    }
+
+    row.appendChild(check); row.appendChild(info); row.appendChild(actions);
+    wrap.appendChild(row);
+
+    if(t.status==="open" && openEditIds[t.id]){
+      wrap.appendChild(buildEditForm(t, list));
+    }
+
+    return wrap;
+  }
+
+  function buildEditForm(t, list){
+    var box = document.createElement("div");
+    box.className = "edit-form";
+    var assigneeOptions = state.people.map(function(p){
+      return '<option value="'+p.id+'"'+(p.id===t.assignedTo?' selected':'')+'>'+escapeHtml(p.name)+'</option>';
+    }).join('');
+
+    var fieldsHtml;
+    if(list.priceBased){
+      fieldsHtml = '<input type="url" class="edit-link" placeholder="Link" value="'+escapeAttr(t.link||"")+'">' +
+        '<div class="row2">' +
+          '<input type="number" class="edit-price" min="0" step="0.01" placeholder="Price" value="'+(t.unitPrice||"")+'">' +
+          '<select class="edit-currency"><option value="USD"'+((t.currency||"USD")==="USD"?" selected":"")+'>USD</option><option value="EGP"'+(t.currency==="EGP"?" selected":"")+'>EGP</option></select>' +
+        '</div>' +
+        '<input type="number" class="edit-qty" min="1" placeholder="Quantity" value="'+(t.quantity||1)+'">';
+    } else {
+      var labels = list.tierLabels || {easy:"Easy",medium:"Medium",hard:"Hard"};
+      fieldsHtml = '<select class="edit-difficulty">' +
+        '<option value="easy"'+(t.difficulty==="easy"?" selected":"")+'>'+escapeHtml(labels.easy)+' · 5 pts</option>' +
+        '<option value="medium"'+(t.difficulty==="medium"?" selected":"")+'>'+escapeHtml(labels.medium)+' · 10 pts</option>' +
+        '<option value="hard"'+(t.difficulty==="hard"?" selected":"")+'>'+escapeHtml(labels.hard)+' · 20 pts</option>' +
+        '</select>';
+    }
+
+    var altAdder = "";
+    if(list.priceBased){
+      altAdder = '<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-2);">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:7px;">Add another option</div>' +
+        '<input type="text" class="alt-name" placeholder="e.g. BROKGLIM towel (nicer)">' +
+        '<input type="url" class="alt-link" placeholder="Link">' +
+        '<div class="row2"><input type="number" class="alt-price-input" min="0" step="0.01" placeholder="Price each">' +
+        '<input type="number" class="alt-qty" min="1" placeholder="Qty" value="'+(t.quantity||1)+'"></div>' +
+        '<button type="button" class="ghost alt-add-btn" style="width:100%;margin-top:6px;">Add option</button></div>';
+    }
+
+    box.innerHTML = '<div style="margin-bottom:8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);">Edit item</div>' +
+      '<select class="edit-assignee">'+assigneeOptions+'</select>' +
+      fieldsHtml +
+      '<div class="row2" style="margin-top:8px;"><button type="button" class="ghost edit-cancel">Cancel</button><button type="button" class="primary edit-save">Save</button></div>' +
+      altAdder;
+
+    box.querySelector(".edit-cancel").addEventListener("click", function(){
+      delete openEditIds[t.id];
+      renderAll();
+    });
+    box.querySelector(".edit-save").addEventListener("click", function(){
+      t.assignedTo = box.querySelector(".edit-assignee").value;
+      if(list.priceBased){
+        t.link = box.querySelector(".edit-link").value.trim() || null;
+        var newPrice = parseFloat(box.querySelector(".edit-price").value) || 0;
+        var newQty = parseInt(box.querySelector(".edit-qty").value,10) || 1;
+        if(t.breakdown && t.breakdown.length && newPrice > 0){ t.breakdown = null; }
+        t.unitPrice = newPrice;
+        t.currency = box.querySelector(".edit-currency").value;
+        t.quantity = newQty;
+        t.difficulty = computeTierFromTotal(taskTotal(t), 1, t.currency);
+      } else {
+        t.difficulty = box.querySelector(".edit-difficulty").value;
+      }
+      delete openEditIds[t.id];
+      save();
+      renderAll();
+      toast("Task updated");
+    });
+
+    var addBtn = box.querySelector(".alt-add-btn");
+    if(addBtn){
+      addBtn.addEventListener("click", function(){
+        var nm = box.querySelector(".alt-name").value.trim();
+        var pr = parseFloat(box.querySelector(".alt-price-input").value);
+        var qt = parseInt(box.querySelector(".alt-qty").value,10) || 1;
+        if(!nm || isNaN(pr)){ toast("Needs a name and a price"); return; }
+        if(!t.alternatives) t.alternatives = [];
+        t.alternatives.push({
+          name:nm, link:box.querySelector(".alt-link").value.trim(),
+          unitPrice:pr, currency:"USD", quantity:qt
+        });
+        save(); renderAll();
+        toast("Option added — tap the swap strip to use it");
+      });
+    }
+
+    return box;
+  }
+
+  function buildAltPanel(t, list){
+    var altCount = (t.alternatives||[]).length;
+    if(altCount === 0) return null;   // no strip until there's actually something to swap to
+    var panel = document.createElement("details");
+    panel.className = "alt-panel";
+    var summary = document.createElement("summary");
+    var swapIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg>';
+    summary.innerHTML = swapIcon + "<span>" + altCount +
+      " other option" + (altCount>1?"s":"") + " — tap to swap price</span>";
+    panel.appendChild(summary);
+
+    var body = document.createElement("div");
+    body.className = "alt-body";
+
+    (t.alternatives||[]).forEach(function(alt, idx){
+      var altRow = document.createElement("div");
+      altRow.className = "alt-row";
+      var totalAlt = alt.breakdown && alt.breakdown.length
+        ? alt.breakdown.reduce(function(s,b){ return s + b.price*b.qty; }, 0)
+        : (alt.unitPrice||0) * (alt.quantity||1);
+      var tier = computeTierFromTotal(totalAlt, 1, alt.currency||"USD");
+      var lbl = (list.tierLabels && list.tierLabels[tier]) || tier;
+      var rarityClass = tier==="easy" ? "common" : (tier==="medium" ? "uncommon" : "rare");
+      altRow.innerHTML = '<div class="alt-info">' +
+        '<a href="'+escapeAttr(alt.link||"#")+'" target="_blank" rel="noopener">'+escapeHtml(alt.name)+'</a>' +
+        ' <span class="tier-tag tier-'+rarityClass+'">'+escapeHtml(lbl)+'</span>' +
+        '<div class="alt-price">'+formatMoney(totalAlt, alt.currency||"EGP")+'</div>' +
+        '</div>';
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ghost";
+      btn.textContent = "Use this";
+      btn.addEventListener("click", function(){
+        var prevAlt = {name:t.title, link:t.link, unitPrice:t.unitPrice, currency:t.currency,
+                       quantity:t.quantity, breakdown:t.breakdown, brand:t.brand, image:t.image};
+        t.title = alt.name; t.link = alt.link; t.unitPrice = alt.unitPrice; t.currency = alt.currency||"USD"; t.quantity = alt.quantity||t.quantity||1;
+        t.breakdown = alt.breakdown || null;
+        t.brand = alt.brand || null;          // keep the brand line honest about what's selected
+        t.image = alt.image || null;          // fall back to the illustration if the option has no photo
+        t.difficulty = computeTierFromTotal(taskTotal(t), 1, t.currency);
+        t.alternatives.splice(idx, 1, prevAlt);
+        save(); renderAll();
+        toast("Swapped to " + alt.name);
+      });
+      altRow.appendChild(btn);
+      body.appendChild(altRow);
+    });
+
+    var hint = document.createElement("div");
+    hint.style.cssText = "font-size:10px;color:var(--faint);padding-top:8px;border-top:1px solid var(--line);margin-top:2px;";
+    hint.textContent = "Swapping updates the price, link and tier together. Use the pencil to add more options.";
+    body.appendChild(hint);
+
+    panel.appendChild(body);
+    return panel;
+  }
+
+  document.getElementById("taskForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var title = document.getElementById("taskTitle").value.trim();
+    if(!title) return;
+    var assignee = document.getElementById("taskAssignee").value;
+    var repeat = document.getElementById("taskRepeat").value;
+    var listId = document.getElementById("taskList").value || state.currentList;
+    var list = listById(listId);
+    var isPriceBased = list && list.priceBased;
+
+    if(list && list.experienceBased){
+      addExperienceTask(title, document.getElementById("taskEmoji").value.trim() || "🏆");
+      document.getElementById("taskTitle").value = "";
+      document.getElementById("taskEmoji").value = "";
+      save(); renderAll();
+      toast("Added to your bucket list ✨");
+      return;
+    }
+
+    var diff, link = null, unitPrice = 0, currency = "EGP", quantity = 1;
+    if(isPriceBased){
+      link = document.getElementById("taskLink").value.trim() || null;
+      unitPrice = parseFloat(document.getElementById("taskUnitPrice").value) || 0;
+      currency = document.getElementById("taskCurrency").value;
+      quantity = parseInt(document.getElementById("taskQuantity").value,10) || 1;
+      diff = computeTierFromTotal(unitPrice, quantity, currency);
+    } else {
+      diff = document.getElementById("taskDifficulty").value;
+    }
+
+    state.tasks.push({
+      id: uid(),
+      title: title,
+      assignedTo: assignee,
+      difficulty: diff,
+      status: "open",
+      createdMonth: monthKey(),
+      completedBy: null,
+      completedAt: null,
+      repeat: repeat,
+      lastCompletedAt: null,
+      listId: listId,
+      link: link,
+      unitPrice: unitPrice,
+      currency: currency,
+      quantity: quantity,
+      alternatives: []
+    });
+    var mk = monthKey();
+    if(!state.monthly[mk]) state.monthly[mk] = {assigned:0, completed:0, badgeAwarded:false};
+    state.monthly[mk].assigned++;
+    document.getElementById("taskTitle").value = "";
+    document.getElementById("taskLink").value = "";
+    document.getElementById("taskUnitPrice").value = "";
+    document.getElementById("taskQuantity").value = "1";
+    save(); renderAll();
+    toast("Task added ✅");
+  });
+
+  // ================= DAILY HERO (greeting, quote, considerate cue) =================
+  // Rae gets a different sweet name every day — never "Partner".
+  var PET_NAMES = [
+    "Buttercup","Banana Bread","Sugar Muffin","Cinnamon Roll","Honey Bun",
+    "Cupcake","Peach Cobbler","Snickerdoodle","Shortcake","Marshmallow",
+    "Brown Sugar","Butterscotch","Tiramisu","Crème Brûlée","Choc-Chip Cookie",
+    "Pumpkin Pie","Mochi","Jellybean","Angel Cake","Waffles",
+    "Sticky Toffee","Macaron","Custard Tart","Lemon Drop","Brownie"
+  ];
+  var PET_NAME_FOR = "p2"; // Rae
+  function dailyPetName(){
+    return PET_NAMES[(dayOfYear() + hashStr(todayISO())) % PET_NAMES.length];
+  }
+  function greetName(id){
+    return id === PET_NAME_FOR ? dailyPetName() : personName(id);
+  }
+
+  var GREETINGS = [
+    "Morning, {me} ☀️",
+    "Hey {me} 👋",
+    "New day, {me}",
+    "Let's go, {me} ⚡",
+    "Good to see you, {me}",
+    "Fresh start, {me} 🌤️"
+  ];
+
+  // Real, actionable ways to be considerate toward your partner today.
+  var CONSIDERATE_CUES = [
+    "Ask {p} what's the heaviest thing on their plate today — then take one piece of it.",
+    "Say thank you for something {p} does so routinely it usually goes unnoticed.",
+    "Text {p} something mid-day that isn't logistics.",
+    "When {p} tells you about their day, resist fixing it. Just listen first.",
+    "Do the chore {p} hates most before they get to it.",
+    "Ask {p} how they'd like to be supported this week — don't assume you know.",
+    "Put your phone in another room for the first 20 minutes you're both home.",
+    "Tell {p} one specific thing you admired about them recently.",
+    "Notice what {p} did today without being asked, and name it out loud.",
+    "If something's been bugging you, bring it up gently today instead of letting it sit.",
+    "Let {p} pick tonight — the food, the show, the plan. No negotiating.",
+    "Ask {p} about something they're excited about and actually go deep on it.",
+    "Handle one thing you know {p} has been quietly dreading.",
+    "Give {p} an hour completely to themselves, no guilt attached.",
+    "Remember something {p} mentioned in passing and follow up on it.",
+    "Apologize for the small thing you brushed off earlier this week.",
+    "Ask {p} what would make tomorrow easier for them, then do that thing.",
+    "Compliment {p} on effort, not just outcome.",
+    "Be the one who starts the hard conversation today.",
+    "Do something for {p} that takes 5 minutes but saves them 30."
+  ];
+
+  var SIGN_FLAVOR = {
+    Aries:"Aries fire — channel it into doing, not debating.",
+    Taurus:"Taurus steadiness — slow and warm wins today.",
+    Gemini:"Gemini chatter — talk less, ask more.",
+    Cancer:"Cancer softness — lead with care today.",
+    Leo:"Leo warmth — turn the spotlight on them.",
+    Virgo:"Virgo precision — notice the small stuff.",
+    Libra:"Libra balance — check the scales are even.",
+    Scorpio:"Scorpio depth — go past the surface question.",
+    Sagittarius:"Sagittarius restlessness — bring them along.",
+    Capricorn:"Capricorn drive — soften the edges today.",
+    Aquarius:"Aquarius independence — close the distance a little.",
+    Pisces:"Pisces intuition — trust what you're sensing."
+  };
+
+  function renderHero(){
+    var me = state.currentUser;
+    var partner = otherPerson(me);
+    var d = dayOfYear();
+    // deterministic per person + per day, so it's stable all day and differs between partners
+    var seed = hashStr(me + "|" + todayISO());
+
+    document.getElementById("heroGreet").textContent =
+      GREETINGS[seed % GREETINGS.length].replace("{me}", greetName(me));
+
+    var q = QUOTES[(seed + d) % QUOTES.length];
+    document.getElementById("heroQuote").textContent = '"' + q.q + '"';
+    document.getElementById("heroAuthor").textContent = "— " + q.a;
+
+    var cue = CONSIDERATE_CUES[(seed + d*7) % CONSIDERATE_CUES.length]
+      .replace(/\{p\}/g, personName(partner));
+    var sign = state.signs[me];
+    var label = document.getElementById("cueLabel");
+    if(sign && SIGN_FLAVOR[sign]){
+      label.textContent = sign + " · today's considerate cue";
+      cue = SIGN_FLAVOR[sign] + " " + cue;
+    } else {
+      label.textContent = "Today's considerate cue";
+    }
+    document.getElementById("heroCue").textContent = cue;
+
+    var picker = document.getElementById("signPicker");
+    if(picker) picker.value = sign || "";
+  }
+
+  document.getElementById("signPicker").addEventListener("change", function(){
+    state.signs[state.currentUser] = this.value || null;
+    save();
+    renderHero();
+  });
+
+  // ================= POSITIVE REINFORCEMENT =================
+  var PRAISE_SELF = [
+    "Knocked it out. +{p}",
+    "That's one less thing on your plate. +{p}",
+    "Look at you go. +{p}",
+    "Done and dusted. +{p}",
+    "Momentum looks good on you. +{p}",
+    "Handled. +{p}",
+    "Chipping away at it. +{p}",
+    "That's how it gets done. +{p}",
+    "One more off the pile. +{p}",
+    "Quietly crushing it. +{p}"
+  ];
+  var PRAISE_HELPED = [
+    "You took that off {name}'s plate. +{p} thoughtful 💛",
+    "{name} didn't even have to ask. +{p} thoughtful 💛",
+    "That's love in action. +{p} thoughtful 💛",
+    "You showed up for {name}. +{p} thoughtful 💛",
+    "Small thing, big deal. +{p} thoughtful 💛",
+    "{name} is going to notice this one. +{p} thoughtful 💛",
+    "Carrying the load together. +{p} thoughtful 💛",
+    "This is the good stuff. +{p} thoughtful 💛"
+  ];
+  var PRAISE_HARD = [
+    "That was the heavy one. +{p} 💪",
+    "You went after the hard thing first. +{p} 💪",
+    "Big one down. +{p} 💪"
+  ];
+  var STREAK_CHEERS = {
+    2:"Two days running 🔥",
+    3:"Three-day streak — it's becoming a habit 🔥",
+    5:"Five days straight. Unstoppable 🔥",
+    7:"A full week 🔥🔥",
+    10:"Ten days. Seriously 🔥",
+    14:"Two solid weeks 🔥🔥",
+    21:"Three weeks — this is just who you are now 🔥",
+    30:"Thirty days. Legendary 🏆"
+  };
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function praiseFor(t, actor, pts, helped){
+    var pool = helped ? PRAISE_HELPED : (t.difficulty === "hard" ? PRAISE_HARD : PRAISE_SELF);
+    return pick(pool)
+      .replace("{p}", pts)
+      .replace("{name}", personName(t.assignedTo));
+  }
+
+  // ================= DAILY CHECK-IN / BRICKING =================
+  var BRICK_PENALTY = 15;
+
+  function hashStr(str){
+    var h = 0;
+    for(var i=0;i<str.length;i++){
+      h = ((h<<5) - h) + str.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h);
+  }
+
+  // Deterministic per-person, per-day code. Both phones derive the same value
+  // from the shared pairSecret, so no server is needed.
+  function dailyCodeFor(personId, dateISO){
+    return String(hashStr(state.pairSecret + "|" + personId + "|" + dateISO) % 10000).padStart(4, "0");
+  }
+
+  function isLockedIn(personId, dateISO){
+    return !!(state.lockins[personId] && state.lockins[personId][dateISO]);
+  }
+
+  function pendingTasksFor(personId, dateISO){
+    return state.tasks.filter(function(t){
+      return t.pendingLock && t.lockOwner === personId &&
+             (dateISO ? t.completedDate === dateISO : true);
+    });
+  }
+
+  // Runs on load: anything left unconfirmed from a previous day gets bricked.
+  function processBricks(){
+    var today = todayISO();
+    var stale = state.tasks.filter(function(t){
+      return t.pendingLock && t.completedDate && t.completedDate < today;
+    });
+    if(stale.length === 0) return null;
+
+    var byDate = {};
+    stale.forEach(function(t){
+      // revoke the points that were provisionally awarded
+      var owner = t.lockOwner;
+      if(owner && state.points[owner]){
+        var bucket = t.awardedType === "thoughtful" ? "thoughtful" : "personal";
+        state.points[owner][bucket] = Math.max(0, state.points[owner][bucket] - (t.awardedPoints||0));
+        state.points[owner].totalCompleted = Math.max(0, state.points[owner].totalCompleted - 1);
+        state.points[owner].progressToSpin = Math.max(0, (state.points[owner].progressToSpin||0) - 1);
+      }
+      // the task itself is bricked — back to open, flagged
+      t.pendingLock = false;
+      t.status = "open";
+      t.bricked = true;
+      t.brickedDate = t.completedDate;
+      t.completedBy = null;
+      t.completedAt = null;
+      t.awardedPoints = 0;
+
+      byDate[t.completedDate] = (byDate[t.completedDate]||0) + 1;
+      t.completedDate = null;
+      t.lockOwner = null;
+    });
+
+    // both partners eat the penalty — the point is that *communication* failed
+    var days = Object.keys(byDate);
+    state.people.forEach(function(p){
+      ensurePerson(state, p.id);
+      state.points[p.id].personal = Math.max(0, state.points[p.id].personal - BRICK_PENALTY*days.length);
+      state.streaks[p.id].current = 0;
+      state.streaks[p.id].lastDate = null;
+    });
+    days.forEach(function(d){
+      if(!state.missedDays.some(function(m){ return m.date === d; })){
+        state.missedDays.push({date:d, count:byDate[d]});
+      }
+    });
+    state.missedDays.sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+
+    save();
+    return {days:days, total:stale.length};
+  }
+
+  function msToMidnight(){
+    var now = new Date();
+    var mid = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 0, 0);
+    return mid - now;
+  }
+
+  function formatCountdown(ms){
+    var totalMin = Math.floor(ms/60000);
+    var h = Math.floor(totalMin/60), m = totalMin%60;
+    if(h > 0) return h + "h " + m + "m";
+    return m + "m";
+  }
+
+  function renderCheckin(){
+    var card = document.getElementById("checkinCard");
+    var body = document.getElementById("checkinBody");
+    if(!body) return;
+    var me = state.currentUser;
+    var partner = otherPerson(me);
+    var today = todayISO();
+    var myCode = dailyCodeFor(me, today);
+    var partnerCode = dailyCodeFor(partner, today);
+    var pending = pendingTasksFor(me, today);
+    var locked = isLockedIn(me, today);
+
+    card.className = "card checkin-card" + (locked ? " locked" : (pending.length ? " warning" : ""));
+    body.innerHTML = "";
+
+    if(!state.paired){
+      var warn = document.createElement("div");
+      warn.className = "required-note";
+      warn.innerHTML = "⚠️ <strong>Not paired yet.</strong> Your two phones need to swap data once so your codes match. " +
+        "Open <em>Sync between two phones</em> at the bottom, tap <em>Copy my data</em>, send it to " +
+        escapeHtml(personName(partner)) + ", and have them paste it into Import. Until then the codes below won't line up.";
+      body.appendChild(warn);
+    }
+
+    // your code, to read out to your partner
+    var codeBox = document.createElement("div");
+    codeBox.className = "code-display";
+    codeBox.innerHTML = '<div class="code-label">Your code for ' + personName(partner) + ' today</div>' +
+      '<div class="code-value">' + myCode + '</div>';
+    body.appendChild(codeBox);
+
+    if(locked){
+      var done = document.createElement("div");
+      done.className = "code-hint";
+      done.innerHTML = "✅ <strong>You two connected today.</strong> Everything you checked off is locked in and safe.";
+      body.appendChild(done);
+      if(pending.length){
+        var extra = document.createElement("div");
+        extra.className = "code-hint";
+        extra.textContent = pending.length + " task(s) completed after locking in — enter " + personName(partner) + "'s code again to secure those too.";
+        body.appendChild(extra);
+      } else {
+        return;
+      }
+    }
+
+    var hint = document.createElement("div");
+    hint.className = "code-hint";
+    if(pending.length){
+      hint.innerHTML = "You've got <strong>" + pending.length + " unconfirmed " +
+        (pending.length===1?"task":"tasks") + "</strong>. Talk to " + personName(partner) +
+        ", get their 4-digit code, and enter it below before midnight — otherwise they brick and you both lose " +
+        BRICK_PENALTY + " points and your streaks.";
+    } else {
+      hint.innerHTML = "Nothing pending yet. Whatever you check off today needs " + personName(partner) +
+        "'s code before midnight to count.";
+    }
+    body.appendChild(hint);
+
+    var row = document.createElement("div");
+    row.className = "code-input-row";
+    var input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.maxLength = 4;
+    input.placeholder = "••••";
+    input.id = "partnerCodeInput";
+    var btn = document.createElement("button");
+    btn.className = "primary";
+    btn.textContent = "Lock in";
+    btn.addEventListener("click", function(){
+      var val = input.value.trim();
+      if(val !== partnerCode){
+        toast("That's not " + personName(partner) + "'s code for today");
+        input.value = "";
+        return;
+      }
+      lockInDay(me, today);
+    });
+    row.appendChild(input); row.appendChild(btn);
+    body.appendChild(row);
+
+    var cd = document.createElement("div");
+    cd.className = "countdown";
+    cd.innerHTML = "⏳ <strong>" + formatCountdown(msToMidnight()) + "</strong> until midnight";
+    body.appendChild(cd);
+
+    if(state.missedDays.length){
+      var log = document.createElement("div");
+      log.className = "miss-log";
+      var recent = state.missedDays.slice(0,3).map(function(m){
+        return "• " + new Date(m.date+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}) +
+          " — " + m.count + " bricked";
+      }).join("<br>");
+      log.innerHTML = "<strong>Missed connections:</strong><br>" + recent;
+      body.appendChild(log);
+    }
+  }
+
+  function lockInDay(personId, dateISO){
+    if(!state.lockins[personId]) state.lockins[personId] = {};
+    state.lockins[personId][dateISO] = true;
+    var secured = pendingTasksFor(personId, dateISO);
+    secured.forEach(function(t){
+      t.pendingLock = false;
+      t.locked = true;
+    });
+    save();
+    renderAll();
+    var partner = otherPerson(personId);
+    if(secured.length){
+      showModal("🔐", "Locked in",
+        secured.length + " " + (secured.length===1?"task is":"tasks are") +
+        " safe. You and " + personName(partner) + " talked today — that's the whole point.");
+    } else {
+      toast("Checked in with " + personName(partner) + " ✅");
+    }
+  }
+
+  function addExperienceTask(title, emoji){
+    state.tasks.push({
+      id: uid(), title: title, assignedTo:"both", difficulty:"hard", status:"open",
+      createdMonth: monthKey(), completedBy:null, completedAt:null, repeat:"none", lastCompletedAt:null,
+      listId:"list-exp", link:null, unitPrice:0, currency:"USD", quantity:1, alternatives:[],
+      emoji: emoji || "🏆", venue:null, speakerId:null, photo:null
+    });
+  }
+
+  // ---------- experience list ----------
+  var EXP_POINTS = 100;
+  var pendingExpId = null;
+
+  function renderExperienceList(){
+    var open = document.getElementById("openTasks");
+    var done = document.getElementById("doneTasks");
+    open.innerHTML = ""; done.innerHTML = "";
+
+    var all = state.tasks.filter(function(t){ return t.listId === "list-exp"; });
+    var openExp = all.filter(function(t){ return t.status !== "done"; });
+    var doneExp = all.filter(function(t){ return t.status === "done"; })
+      .slice().sort(function(a,b){ return new Date(a.completedAt) - new Date(b.completedAt); });
+
+    document.getElementById("openTasksHeader").textContent = "The list — " + openExp.length + " to go";
+    document.getElementById("doneTasksHeader").textContent = "🏆 Trophy case";
+
+    var turn = document.createElement("div");
+    turn.className = "speech-turn";
+    turn.innerHTML = "🥃 Next one you cross off: <strong>" + escapeHtml(personName(state.speechTurn)) + "</strong> gives the speech";
+    open.appendChild(turn);
+
+    if(openExp.length === 0){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "Nothing left on the list — time to dream bigger ✨";
+      open.appendChild(e);
+    }
+    openExp.forEach(function(t){ open.appendChild(experienceCard(t, false)); });
+
+    if(doneExp.length === 0){
+      done.innerHTML = '<div class="empty">No trophies yet — go live something 🥂</div>';
+      return;
+    }
+    var count = document.createElement("div");
+    count.className = "trophy-count";
+    count.textContent = doneExp.length + " " + (doneExp.length===1?"memory":"memories") + " made together";
+    done.appendChild(count);
+    doneExp.slice().reverse().forEach(function(t){ done.appendChild(experienceCard(t, true)); });
+  }
+
+  function experienceCard(t, isDone){
+    var card = document.createElement("div");
+    card.className = "exp-card" + (isDone ? " trophy-card" : "");
+
+    var em = document.createElement("div");
+    em.className = "exp-emoji";
+    em.textContent = isDone ? (t.emoji || "🏆") : (t.emoji || "•");
+    card.appendChild(em);
+
+    var body = document.createElement("div");
+    body.className = "exp-body";
+
+    var title = document.createElement("div");
+    title.className = "exp-title";
+    title.textContent = t.title;
+    body.appendChild(title);
+
+    if(isDone){
+      var meta = document.createElement("div");
+      meta.className = "trophy-meta";
+      var bits = [];
+      if(t.completedAt){
+        var d = new Date(t.completedAt);
+        bits.push("✓ " + d.toLocaleDateString(undefined, {month:"long", day:"numeric", year:"numeric"}));
+      }
+      if(t.venue) bits.push("🥃 " + escapeHtml(t.venue));
+      if(t.speakerId) bits.push("🎤 Speech by " + escapeHtml(personName(t.speakerId)));
+      meta.innerHTML = bits.join("<br>");
+      body.appendChild(meta);
+
+      if(t.photo){
+        if(t.photoType === "video"){
+          var vid = document.createElement("video");
+          vid.src = t.photo; vid.controls = true; vid.className = "trophy-photo";
+          body.appendChild(vid);
+        } else {
+          var img = document.createElement("img");
+          img.src = t.photo; img.className = "trophy-photo"; img.alt = t.title;
+          body.appendChild(img);
+        }
+      }
+
+      var actions = document.createElement("div");
+      actions.className = "exp-actions";
+      var addPhotoBtn = document.createElement("button");
+      addPhotoBtn.textContent = t.photo ? "Change photo" : "＋ Add photo";
+      addPhotoBtn.addEventListener("click", function(){ attachPhotoTo(t.id); });
+      actions.appendChild(addPhotoBtn);
+      if(t.photo){
+        var rmBtn = document.createElement("button");
+        rmBtn.textContent = "Remove photo";
+        rmBtn.addEventListener("click", function(){
+          t.photo = null; t.photoType = null;
+          save(); renderAll();
+          toast("Photo removed");
+        });
+        actions.appendChild(rmBtn);
+      }
+      body.appendChild(actions);
+    } else {
+      var sub = document.createElement("div");
+      sub.className = "exp-sub";
+      sub.textContent = "Together only · " + EXP_POINTS + " pts each";
+      body.appendChild(sub);
+
+      var actions2 = document.createElement("div");
+      actions2.className = "exp-actions";
+      var goBtn = document.createElement("button");
+      goBtn.className = "go";
+      goBtn.textContent = "🥂 We did it";
+      goBtn.addEventListener("click", function(){ openExpModal(t.id); });
+      actions2.appendChild(goBtn);
+      var delBtn = document.createElement("button");
+      delBtn.textContent = "Remove";
+      delBtn.addEventListener("click", function(){
+        state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
+        save(); renderAll();
+      });
+      actions2.appendChild(delBtn);
+      body.appendChild(actions2);
+    }
+
+    card.appendChild(body);
+    return card;
+  }
+
+  // ---- photo handling (downscaled so localStorage survives) ----
+  function readAndCompress(file, cb){
+    if(file.type && file.type.indexOf("video") === 0){
+      if(file.size > 3.5 * 1024 * 1024){
+        toast("Video too large — try a photo or a short clip");
+        return;
+      }
+      var vr = new FileReader();
+      vr.onload = function(){ cb(vr.result, "video"); };
+      vr.readAsDataURL(file);
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var maxDim = 900;
+        var w = img.width, h = img.height;
+        if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else if(h >= w && h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        cb(canvas.toDataURL("image/jpeg", 0.72), "image");
+      };
+      img.onerror = function(){ toast("Couldn't read that image"); };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function attachPhotoTo(taskId){
+    var input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*,video/*";
+    input.addEventListener("change", function(){
+      var f = input.files && input.files[0];
+      if(!f) return;
+      readAndCompress(f, function(dataUrl, kind){
+        var t = state.tasks.find(function(x){ return x.id === taskId; });
+        if(!t) return;
+        var prevPhoto = t.photo, prevType = t.photoType;
+        t.photo = dataUrl; t.photoType = kind;
+        try{
+          saveOrThrow();
+          renderAll();
+          toast("Memory saved 📸");
+        }catch(err){
+          t.photo = prevPhoto; t.photoType = prevType;
+          save();
+          renderAll();
+          showModal("💾","Out of photo storage",
+            "This phone's browser storage is full (~"+storageKB()+" KB used). Remove a photo from an older trophy to make room, or export your data from the sync panel.");
+        }
+      });
+    });
+    input.click();
+  }
+
+  // ---- completion modal ----
+  var expModalBg = document.getElementById("expModalBg");
+  var pendingPhotoData = null, pendingPhotoType = null;
+
+  function openExpModal(taskId){
+    var t = state.tasks.find(function(x){ return x.id === taskId; });
+    if(!t) return;
+    pendingExpId = taskId;
+    pendingPhotoData = null; pendingPhotoType = null;
+    document.getElementById("expModalEmoji").textContent = t.emoji || "🥂";
+    document.getElementById("expModalTitle").textContent = t.title;
+    document.getElementById("expDate").value = todayISO();
+    document.getElementById("expVenue").value = "";
+    document.getElementById("expPhoto").value = "";
+    document.getElementById("expPhotoPreview").style.display = "none";
+    var sel = document.getElementById("expSpeaker");
+    sel.innerHTML = "";
+    state.people.forEach(function(p){
+      var o = document.createElement("option");
+      o.value = p.id;
+      o.textContent = p.name + (p.id === state.speechTurn ? "  (their turn)" : "");
+      if(p.id === state.speechTurn) o.selected = true;
+      sel.appendChild(o);
+    });
+    expModalBg.classList.add("show");
+  }
+
+  document.getElementById("expPhoto").addEventListener("change", function(){
+    var f = this.files && this.files[0];
+    if(!f) return;
+    readAndCompress(f, function(dataUrl, kind){
+      pendingPhotoData = dataUrl; pendingPhotoType = kind;
+      var pv = document.getElementById("expPhotoPreview");
+      if(kind === "image"){ pv.src = dataUrl; pv.style.display = "block"; }
+      else { pv.style.display = "none"; toast("Video attached"); }
+    });
+  });
+
+  document.getElementById("expCancel").addEventListener("click", function(){
+    expModalBg.classList.remove("show");
+    pendingExpId = null;
+  });
+
+  document.getElementById("expConfirm").addEventListener("click", function(){
+    var t = state.tasks.find(function(x){ return x.id === pendingExpId; });
+    if(!t) return;
+    var dateVal = document.getElementById("expDate").value || todayISO();
+    t.status = "done";
+    t.completedBy = "both";
+    t.completedAt = dateVal + "T12:00:00.000Z";
+    t.venue = document.getElementById("expVenue").value.trim() || null;
+    t.speakerId = document.getElementById("expSpeaker").value;
+    if(pendingPhotoData){ t.photo = pendingPhotoData; t.photoType = pendingPhotoType; }
+
+    // both partners get the big reward
+    state.people.forEach(function(p){
+      ensurePerson(state, p.id);
+      state.points[p.id].personal += EXP_POINTS;
+      state.points[p.id].totalCompleted++;
+      state.points[p.id].progressToSpin = (state.points[p.id].progressToSpin||0) + 1;
+      if(state.points[p.id].progressToSpin >= 5){
+        state.points[p.id].progressToSpin -= 5;
+        state.points[p.id].spinsAvailable = (state.points[p.id].spinsAvailable||0) + 1;
+      }
+      awardBadge(p.id, "exp-" + t.id, (t.emoji||"🏆") + " " + t.title);
+    });
+
+    // speech duty alternates
+    state.speechTurn = otherPerson(t.speakerId) || state.speechTurn;
+
+    try{ saveOrThrow(); }
+    catch(err){
+      t.photo = null; t.photoType = null;
+      save();
+      toast("Trophy saved — but storage was full, so the photo didn't stick");
+    }
+    expModalBg.classList.remove("show");
+    pendingExpId = null;
+    renderAll();
+
+    var doneCount = state.tasks.filter(function(x){ return x.listId==="list-exp" && x.status==="done"; }).length;
+    document.getElementById("dreamRequiredNote").textContent =
+      "That's " + doneCount + " down. House rule: every time you cross one off, a new one goes on. What's next for you two?";
+    document.getElementById("newDreamTitle").value = "";
+    document.getElementById("newDreamEmoji").value = "🏆";
+    document.getElementById("newDreamModalBg").classList.add("show");
+  });
+
+  document.getElementById("newDreamAdd").addEventListener("click", function(){
+    var title = document.getElementById("newDreamTitle").value.trim();
+    if(!title){ toast("Give the new dream a name"); return; }
+    addExperienceTask(title, document.getElementById("newDreamEmoji").value.trim() || "🏆");
+    document.getElementById("newDreamModalBg").classList.remove("show");
+    save(); renderAll();
+    toast("New dream on the list ✨");
+  });
+
+  document.getElementById("newDreamSkip").addEventListener("click", function(){
+    document.getElementById("newDreamModalBg").classList.remove("show");
+    toast("Don't forget — one comes off, one goes on");
+  });
+
+  function awardBadge(personId, key, label){
+    ensurePerson(state, personId);
+    var already = state.badges[personId].some(function(b){return b.key===key;});
+    if(already) return false;
+    state.badges[personId].push({key:key, label:label, at:new Date().toISOString()});
+    return true;
+  }
+
+  function completeTask(taskId){
+    var t = state.tasks.find(function(x){return x.id===taskId;});
+    if(!t || t.status!=="open") return;
+    var actor = state.currentUser;
+    t.status = "done";
+    t.completedBy = actor;
+    t.completedAt = new Date().toISOString();
+
+    ensurePerson(state, actor);
+    var pts = DIFF_POINTS[t.difficulty] || 10;
+    var helped = (actor !== t.assignedTo);
+    var today0 = todayISO();
+
+    t.bricked = false;
+    t.awardedPoints = pts;
+    t.awardedType = helped ? "thoughtful" : "personal";
+    t.completedDate = today0;
+    t.lockOwner = actor;
+    // if you've already checked in with your partner today, it's locked immediately
+    if(isLockedIn(actor, today0)){
+      t.pendingLock = false;
+      t.locked = true;
+    } else {
+      t.pendingLock = true;
+      t.locked = false;
+    }
+
+    if(helped){
+      state.points[actor].thoughtful += pts;
+    } else {
+      state.points[actor].personal += pts;
+    }
+    toast(praiseFor(t, actor, pts, helped));
+
+    // completion counters (count toward spins regardless of who it's for)
+    state.points[actor].totalCompleted++;
+    state.points[actor].progressToSpin = (state.points[actor].progressToSpin||0) + 1;
+    if(state.points[actor].progressToSpin >= 5){
+      state.points[actor].progressToSpin -= 5;
+      state.points[actor].spinsAvailable = (state.points[actor].spinsAvailable||0) + 1;
+      setTimeout(function(){ showModal("🎡","Spin unlocked!", personName(actor)+" earned a spin of the rewards wheel for hitting 5 completed tasks."); }, 300);
+    }
+
+    // streaks
+    var st = state.streaks[actor];
+    var today = todayISO();
+    var yesterday = todayISO(new Date(Date.now()-86400000));
+    if(st.lastDate !== today){
+      if(st.lastDate === yesterday){ st.current++; } else { st.current = 1; }
+      st.lastDate = today;
+    }
+    var streakMilestones = [3,7,14,30];
+    streakMilestones.forEach(function(m){
+      if(st.current === m){
+        if(awardBadge(actor, "streak-"+m, m+"-day streak")){
+          setTimeout(function(){ showModal("🔥", m+"-Day Streak!", personName(actor)+" has completed tasks "+m+" days in a row."); }, 350);
+        }
+      }
+    });
+    if(STREAK_CHEERS[st.current]){
+      setTimeout(function(){ toast(STREAK_CHEERS[st.current]); }, 2700);
+    }
+
+    // multi-task-in-a-day bonus
+    if(!state.dailyCompletions[actor]) state.dailyCompletions[actor] = {};
+    state.dailyCompletions[actor][today] = (state.dailyCompletions[actor][today]||0) + 1;
+    if(state.dailyCompletions[actor][today] === 2){
+      state.points[actor].personal += 5;
+      toast("Overachiever bonus: +5 pts for 2 tasks today!");
+    }
+
+    // monthly tally toward Power Couple badge
+    var mk = monthKey();
+    if(!state.monthly[mk]) state.monthly[mk] = {assigned:0, completed:0, badgeAwarded:false};
+    state.monthly[mk].completed++;
+
+    // repeating tasks: reset to open, log freshness, and queue the next occurrence
+    if(t.repeat === "daily" || t.repeat === "weekly"){
+      t.status = "open";
+      t.lastCompletedAt = t.completedAt;
+      var nextDate = addDaysISO(t.repeat === "daily" ? 1 : 7);
+      var nextMk = nextDate.slice(0,7);
+      if(!state.monthly[nextMk]) state.monthly[nextMk] = {assigned:0, completed:0, badgeAwarded:false};
+      state.monthly[nextMk].assigned++;
+    }
+
+    save();
+    checkPowerCouple();
+    renderAll();
+  }
+
+  function checkPowerCouple(){
+    var mk = monthKey();
+    var m = state.monthly[mk];
+    if(!m || m.assigned === 0) return;
+    if(m.completed >= m.assigned && !m.badgeAwarded){
+      m.badgeAwarded = true;
+      state.powerCoupleBadge = {held:true, sinceMonth: state.powerCoupleBadge.sinceMonth || mk};
+      save();
+      setTimeout(function(){ showModal("👑","Power Couple!", "You two completed every task assigned this month. Keep it up next month to keep the crown."); }, 300);
+    }
+  }
+
+  // ---------- badges row ----------
+  function renderBadges(){
+    var row = document.getElementById("badgeRow");
+    row.innerHTML = "";
+    var uid_ = state.currentUser;
+    ensurePerson(state, uid_);
+    var badges = state.badges[uid_] || [];
+    if(badges.length === 0 && !state.powerCoupleBadge.held){
+      row.innerHTML = '<div class="empty" style="padding:0;">No badges yet — complete tasks to earn some.</div>';
+      return;
+    }
+    badges.forEach(function(b){
+      var pill = document.createElement("div");
+      pill.className = "badge-pill";
+      pill.textContent = "🏅 " + b.label;
+      row.appendChild(pill);
+    });
+    if(state.powerCoupleBadge.held){
+      var pc = document.createElement("div");
+      var mk = monthKey();
+      var atRisk = state.monthly[mk] && state.monthly[mk].assigned > 0 && state.monthly[mk].completed < state.monthly[mk].assigned;
+      pc.className = "badge-pill" + (atRisk ? " at-risk" : "");
+      pc.textContent = "👑 Power Couple" + (atRisk ? " (at risk)" : "");
+      row.appendChild(pc);
+    }
+  }
+
+  // ---------- stats ----------
+  function renderStats(){
+    var uid_ = state.currentUser;
+    ensurePerson(state, uid_);
+    var p = state.points[uid_];
+    document.getElementById("statPersonal").textContent = p.personal;
+    document.getElementById("statThoughtful").textContent = p.thoughtful;
+    document.getElementById("statStreak").textContent = state.streaks[uid_].current;
+    document.getElementById("spinsAvailable").textContent = p.spinsAvailable || 0;
+    document.getElementById("tasksToNextSpin").textContent = 5 - (p.progressToSpin||0);
+    document.getElementById("spinBtn").disabled = !(p.spinsAvailable > 0);
+    document.getElementById("spinBtn").style.opacity = (p.spinsAvailable>0) ? "1":"0.5";
+  }
+
+  // ---------- monthly / power couple view ----------
+  function renderMonth(){
+    var mk = monthKey();
+    var m = state.monthly[mk] || {assigned:0, completed:0};
+    var monthName = new Date().toLocaleString('default', { month: 'long' });
+    document.getElementById("monthLabel").textContent = monthName + " · Power Couple progress";
+    document.getElementById("monthCompleted").textContent = m.completed;
+    document.getElementById("monthAssigned").textContent = m.assigned;
+    var pct = m.assigned > 0 ? Math.round((m.completed/m.assigned)*100) : 0;
+    document.getElementById("monthPct").textContent = pct + "%";
+    var statusEl = document.getElementById("powerCoupleStatus");
+    if(m.assigned === 0){
+      statusEl.textContent = "Add tasks this month to work toward the badge.";
+    } else if(m.completed >= m.assigned){
+      statusEl.textContent = "👑 Power Couple badge earned for " + monthName + "!";
+    } else {
+      statusEl.textContent = (m.assigned - m.completed) + " task(s) left to earn the Power Couple badge this month.";
+    }
+  }
+
+  function renderLeaderboards(){
+    var thoughtfulWrap = document.getElementById("thoughtfulBoard");
+    var pointsWrap = document.getElementById("pointsBoard");
+    thoughtfulWrap.innerHTML = ""; pointsWrap.innerHTML = "";
+
+    var ranked = state.people.slice().sort(function(a,b){
+      return (state.points[b.id]?.thoughtful||0) - (state.points[a.id]?.thoughtful||0);
+    });
+    ranked.forEach(function(p, i){
+      thoughtfulWrap.appendChild(lbRow(i+1, p.name, (state.points[p.id]?.thoughtful||0)));
+    });
+
+    var rankedPts = state.people.slice().sort(function(a,b){
+      return (state.points[b.id]?.personal||0) - (state.points[a.id]?.personal||0);
+    });
+    rankedPts.forEach(function(p, i){
+      pointsWrap.appendChild(lbRow(i+1, p.name, (state.points[p.id]?.personal||0)));
+    });
+  }
+
+  function renderFairness(){
+    var a = state.people[0], b = state.people[1];
+    if(!a || !b) return;
+
+    var counts = {};
+    state.people.forEach(function(p){ counts[p.id] = 0; });
+    state.tasks.forEach(function(t){ if(counts[t.assignedTo]!==undefined) counts[t.assignedTo]++; });
+    var totalOwned = counts[a.id] + counts[b.id];
+    var ownedPctA = totalOwned ? Math.round((counts[a.id]/totalOwned)*100) : 50;
+
+    var doneCounts = {};
+    state.people.forEach(function(p){ doneCounts[p.id] = (state.points[p.id] && state.points[p.id].totalCompleted) || 0; });
+    var totalDone = doneCounts[a.id] + doneCounts[b.id];
+    var donePctA = totalDone ? Math.round((doneCounts[a.id]/totalDone)*100) : 50;
+
+    document.getElementById("fairAssignedNums").textContent = a.name+" "+counts[a.id]+" · "+b.name+" "+counts[b.id];
+    document.getElementById("fairAssignedBar").innerHTML =
+      '<div class="a" style="width:'+ownedPctA+'%"></div><div class="b" style="width:'+(100-ownedPctA)+'%"></div>';
+
+    document.getElementById("fairCompletedNums").textContent = a.name+" "+doneCounts[a.id]+" · "+b.name+" "+doneCounts[b.id];
+    document.getElementById("fairCompletedBar").innerHTML =
+      '<div class="a" style="width:'+donePctA+'%"></div><div class="b" style="width:'+(100-donePctA)+'%"></div>';
+  }
+
+  function renderQuest(){
+    var wrap = document.getElementById("questBody");
+    if(!wrap) return;
+    wrap.innerHTML = "";
+    var q = state.quest.active;
+    if(!q){
+      wrap.innerHTML = '<div class="quest-none">No active quest right now. Pick one to tackle together:</div>' +
+        '<select id="questPicker" style="width:100%;margin-bottom:8px;">' +
+        QUEST_SUGGESTIONS.map(function(s,i){ return '<option value="'+i+'">'+s.title+'</option>'; }).join('') +
+        '</select><button class="primary" id="startQuestBtn" style="width:100%;">Start quest</button>';
+      document.getElementById("startQuestBtn").addEventListener("click", function(){
+        var idx = parseInt(document.getElementById("questPicker").value,10);
+        var s = QUEST_SUGGESTIONS[idx];
+        var contributions = {};
+        state.people.forEach(function(p){ contributions[p.id] = false; });
+        state.quest.active = {title:s.title, desc:s.desc, contributions:contributions, startedAt:new Date().toISOString()};
+        save(); renderQuest();
+      });
+      return;
+    }
+    var html = '<div class="quest-title">'+escapeHtml(q.title)+'</div>' +
+      '<div class="quest-desc">'+escapeHtml(q.desc)+'</div>' +
+      '<div class="quest-parts">' +
+      state.people.map(function(p){
+        var done = !!q.contributions[p.id];
+        return '<div class="quest-part'+(done?' checked':'')+'" data-person="'+p.id+'">'+(done?'✓ ':'')+escapeHtml(p.name)+"'s part</div>";
+      }).join('') +
+      '</div>';
+    wrap.innerHTML = html;
+    wrap.querySelectorAll(".quest-part").forEach(function(el){
+      el.addEventListener("click", function(){ toggleQuestPart(el.getAttribute("data-person")); });
+    });
+  }
+
+  function toggleQuestPart(personId){
+    var q = state.quest.active;
+    if(!q) return;
+    q.contributions[personId] = !q.contributions[personId];
+    var allDone = state.people.every(function(p){ return q.contributions[p.id]; });
+    if(allDone){
+      var badgeKey = "team-player-" + (state.quest.completedCount||0);
+      state.people.forEach(function(p){
+        ensurePerson(state, p.id);
+        state.points[p.id].personal += 25;
+        awardBadge(p.id, badgeKey, "Team Player");
+      });
+      state.quest.completedCount = (state.quest.completedCount||0) + 1;
+      state.quest.active = null;
+      save();
+      renderAll();
+      showModal("🤝","Quest complete!","You both finished it together — +25 bonus points each.");
+      return;
+    }
+    save();
+    renderAll();
+  }
+
+  function renderDailyQuestion(){
+    var el = document.getElementById("dailyQuestionText");
+    if(!el) return;
+    var idx = dayOfYear() % DAILY_QUESTIONS.length;
+    el.textContent = DAILY_QUESTIONS[idx];
+  }
+
+  function lbRow(rank, name, pts){
+    var row = document.createElement("div");
+    row.className = "lb-row";
+    row.innerHTML = '<div class="lb-rank">'+rank+'</div><div class="lb-name">'+name+'</div><div class="lb-pts">'+pts+'</div>';
+    return row;
+  }
+
+  // ---------- rewards ----------
+  var emojiByTier = {common:"🎈", uncommon:"✨", rare:"🌟"};
+
+  function renderRewards(){
+    var wrap = document.getElementById("rewardList");
+    wrap.innerHTML = "";
+    state.rewards.forEach(function(r){
+      var item = document.createElement("div");
+      item.className = "reward-item";
+      item.innerHTML = '<div class="left"><span>'+r.emoji+'</span><span>'+r.name+'</span></div>'+
+        '<span class="tier-tag tier-'+r.tier+'">'+r.tier+'</span>';
+      wrap.appendChild(item);
+    });
+
+    renderRewardRequests();
+
+    var won = document.getElementById("wonList");
+    won.innerHTML = "";
+    if(state.rewardsWon.length===0){
+      won.innerHTML = '<div class="empty">No spins yet.</div>';
+    }
+    state.rewardsWon.slice().reverse().slice(0,20).forEach(function(w){
+      var row = document.createElement("div");
+      row.className = "reward-item";
+      var d = new Date(w.date);
+      row.innerHTML = '<div class="left"><span>'+w.emoji+'</span><span>'+w.name+' <span style="color:var(--muted);font-size:11px;">— '+personName(w.personId)+'</span></span></div>'+
+        '<span style="color:var(--muted);font-size:11px;">'+d.toLocaleDateString()+'</span>';
+      won.appendChild(row);
+    });
+  }
+
+  function renderRewardRequests(){
+    var card = document.getElementById("rewardRequestsCard");
+    var wrap = document.getElementById("rewardRequestList");
+    wrap.innerHTML = "";
+    var reqs = state.rewardRequests || [];
+    if(reqs.length===0){
+      card.style.display = "none";
+      return;
+    }
+    card.style.display = "";
+    reqs.slice().reverse().forEach(function(r){
+      var row = document.createElement("div");
+      row.className = "reward-item";
+      row.style.flexWrap = "wrap";
+      var canDecide = state.currentUser !== r.proposedBy;
+      var actionsHtml;
+      if(canDecide){
+        actionsHtml = '<button type="button" class="ghost req-approve" data-id="'+r.id+'" style="padding:4px 10px;font-size:12px;">Approve</button>'+
+          '<button type="button" class="ghost req-decline" data-id="'+r.id+'" style="padding:4px 10px;font-size:12px;">Decline</button>';
+      } else {
+        actionsHtml = '<span class="pending-pill">awaiting '+personName(otherPerson(r.proposedBy))+'</span>'+
+          '<button type="button" class="ghost req-cancel" data-id="'+r.id+'" style="padding:4px 10px;font-size:12px;">Cancel</button>';
+      }
+      row.innerHTML = '<div class="left"><span>'+r.emoji+'</span><span>'+r.name+' <span style="color:var(--muted);font-size:11px;">— proposed by '+personName(r.proposedBy)+'</span></span></div>'+
+        '<div style="display:flex;gap:6px;align-items:center;">'+
+        '<span class="tier-tag tier-'+r.tier+'">'+r.tier+'</span>'+actionsHtml+'</div>';
+      wrap.appendChild(row);
+    });
+
+    wrap.querySelectorAll(".req-approve").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.dataset.id;
+        var idx = state.rewardRequests.findIndex(function(r){return r.id===id;});
+        if(idx<0) return;
+        var r = state.rewardRequests[idx];
+        state.rewards.push({id:r.id, name:r.name, tier:r.tier, emoji:r.emoji});
+        state.rewardRequests.splice(idx,1);
+        save(); renderRewards(); drawWheel();
+        toast("Added \""+r.name+"\" to the wheel");
+      });
+    });
+    wrap.querySelectorAll(".req-decline").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.dataset.id;
+        var idx = state.rewardRequests.findIndex(function(r){return r.id===id;});
+        if(idx<0) return;
+        var r = state.rewardRequests[idx];
+        state.rewardRequests.splice(idx,1);
+        save(); renderRewards();
+        toast("Declined \""+r.name+"\"");
+      });
+    });
+    wrap.querySelectorAll(".req-cancel").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.dataset.id;
+        var idx = state.rewardRequests.findIndex(function(r){return r.id===id;});
+        if(idx<0) return;
+        state.rewardRequests.splice(idx,1);
+        save(); renderRewards();
+        toast("Request withdrawn");
+      });
+    });
+  }
+
+  document.getElementById("rewardForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var name = document.getElementById("rewardName").value.trim();
+    if(!name) return;
+    var tier = document.getElementById("rewardTier").value;
+    if(!state.rewardRequests) state.rewardRequests = [];
+    state.rewardRequests.push({id:uid(), name:name, tier:tier, emoji:emojiByTier[tier], proposedBy:state.currentUser, date:new Date().toISOString()});
+    document.getElementById("rewardName").value = "";
+    save(); renderRewards();
+    toast("Sent \""+name+"\" to "+personName(otherPerson(state.currentUser))+" for approval");
+  });
+
+  // ---------- wheel ----------
+  var wheelRotation = 0;
+  function weightedRewardList(){
+    // build list with per-item weight = tier weight / count of items in that tier
+    var byTier = {common:[], uncommon:[], rare:[]};
+    state.rewards.forEach(function(r){ if(byTier[r.tier]) byTier[r.tier].push(r); });
+    var list = [];
+    Object.keys(byTier).forEach(function(tier){
+      var items = byTier[tier];
+      if(items.length===0) return;
+      var weightEach = TIER_WEIGHTS[tier] / items.length;
+      items.forEach(function(r){ list.push({reward:r, weight:weightEach}); });
+    });
+    return list;
+  }
+
+  var WHEEL_COLORS = ["#ff6f91","#9d7fd6","#5fd6c4","#ffc857","#c94f70","#7fb2d6","#e08fd6","#8fd67f"];
+
+  function drawWheel(){
+    var canvas = document.getElementById("wheelCanvas");
+    var ctx = canvas.getContext("2d");
+    var list = weightedRewardList();
+    var cx = 130, cy = 130, r = 120;
+    ctx.clearRect(0,0,260,260);
+    if(list.length===0){
+      ctx.fillStyle = "#332536";
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+      return;
+    }
+    var total = list.reduce(function(s,i){return s+i.weight;},0);
+    var start = 0;
+    list.forEach(function(item, idx){
+      var slice = (item.weight/total) * Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,r,start,start+slice);
+      ctx.closePath();
+      ctx.fillStyle = WHEEL_COLORS[idx % WHEEL_COLORS.length];
+      ctx.fill();
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.rotate(start + slice/2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#1c1520";
+      ctx.font = "bold 11px sans-serif";
+      var label = item.reward.emoji;
+      ctx.fillText(label, r-14, 4);
+      ctx.restore();
+      start += slice;
+    });
+    canvas._list = list;
+  }
+
+  document.getElementById("spinBtn").addEventListener("click", function(){
+    var uid_ = state.currentUser;
+    var p = state.points[uid_];
+    if(!p || !(p.spinsAvailable>0)) return;
+    var list = document.getElementById("wheelCanvas")._list || weightedRewardList();
+    if(list.length===0){ toast("Add some rewards first!"); return; }
+
+    var total = list.reduce(function(s,i){return s+i.weight;},0);
+    var r = Math.random()*total;
+    var acc = 0, chosen = list[0].reward;
+    var chosenIdx = 0;
+    for(var i=0;i<list.length;i++){
+      acc += list[i].weight;
+      if(r <= acc){ chosen = list[i].reward; chosenIdx = i; break; }
+    }
+
+    // figure target angle for chosenIdx segment center, add spins
+    var start=0, segStart=0, segEnd=0;
+    for(var j=0;j<list.length;j++){
+      var slice = (list[j].weight/total)*Math.PI*2;
+      if(j===chosenIdx){ segStart=start; segEnd=start+slice; }
+      start += slice;
+    }
+    var segCenter = (segStart+segEnd)/2;
+    var degCenter = segCenter * 180/Math.PI;
+    // pointer is at top (0deg = 3 o'clock in canvas draw, but pointer visually at top -90deg offset)
+    var targetDeg = 360*5 + (270 - degCenter);
+    var canvas = document.getElementById("wheelCanvas");
+    canvas.style.transform = "rotate("+targetDeg+"deg)";
+
+    p.spinsAvailable--;
+    setTimeout(function(){
+      state.rewardsWon.push({personId:uid_, rewardId:chosen.id, name:chosen.name, tier:chosen.tier, emoji:chosen.emoji, date:new Date().toISOString()});
+      save();
+      renderRewards();
+      renderStats();
+      var tierLabel = chosen.tier==="rare" ? "RARE WIN! 🌟" : (chosen.tier==="uncommon" ? "Nice pull! ✨" : "You got:");
+      showModal(chosen.emoji, tierLabel, chosen.name);
+    }, 4100);
+    save();
+  });
+
+  // ---------- notes / quotes ----------
+  function renderNotes(){
+    var wrap = document.getElementById("notesList");
+    wrap.innerHTML = "";
+    var mine = state.notes.filter(function(n){return n.toId===state.currentUser;}).slice().reverse();
+    if(mine.length===0){
+      wrap.innerHTML = '<div class="empty">No notes yet — ask '+personName(otherPerson(state.currentUser))+' to leave you one 💌</div>';
+    }
+    mine.forEach(function(n){
+      var d = document.createElement("div");
+      d.className = "note";
+      var date = new Date(n.date);
+      d.innerHTML = '<div class="from">From '+personName(n.fromId)+'</div>'+
+        '<div class="text">'+escapeHtml(n.text)+'</div>'+
+        '<div class="date">'+date.toLocaleString()+'</div>';
+      wrap.appendChild(d);
+    });
+  }
+
+  function escapeHtml(s){
+    var d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  document.getElementById("noteForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var text = document.getElementById("noteText").value.trim();
+    if(!text) return;
+    var to = otherPerson(state.currentUser);
+    state.notes.push({fromId:state.currentUser, toId:to, text:text, date:new Date().toISOString()});
+    document.getElementById("noteText").value = "";
+    save();
+    toast("Note sent to " + personName(to) + " 💌");
+  });
+
+  function randomQuote(){
+    var q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+    document.getElementById("quoteText").textContent = '"' + q.q + '"';
+    document.getElementById("quoteAuthor").textContent = "— " + q.a;
+  }
+  document.getElementById("newQuoteBtn").addEventListener("click", randomQuote);
+
+  // ---------- sync export/import ----------
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    state.paired = true;
+    save();
+    var code = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    var box = document.getElementById("syncBox");
+    box.value = code;
+    box.select();
+    try{ document.execCommand("copy"); toast("Copied! Send this to your person."); }
+    catch(e){ toast("Code ready below — copy it manually."); }
+    renderCheckin();
+  });
+  document.getElementById("importBtn").addEventListener("click", function(){
+    var val = document.getElementById("syncBox").value.trim();
+    if(!val) return;
+    try{
+      var imported = JSON.parse(decodeURIComponent(escape(atob(val))));
+      state = imported;
+      state.people.forEach(function(p){ ensurePerson(state, p.id); });
+      state.paired = true;
+      save();
+      renderAll();
+      toast("Paired & synced ✅");
+    }catch(e){
+      toast("That code didn't look right.");
+    }
+  });
+
+  // ---------- device PIN (local screen lock, not URL protection) ----------
+  function applyLock(){
+    var pin = state.devicePin;
+    if(!pin) return;
+    var screen = document.getElementById("lockScreen");
+    screen.style.display = "flex";
+    var input = document.getElementById("lockInput");
+    input.focus();
+    function attempt(){
+      if(input.value === pin){
+        screen.style.display = "none";
+        document.getElementById("lockErr").textContent = "";
+        input.value = "";
+      } else {
+        document.getElementById("lockErr").textContent = "Wrong PIN";
+        input.value = "";
+      }
+    }
+    document.getElementById("lockBtn").addEventListener("click", attempt);
+    input.addEventListener("keydown", function(e){ if(e.key === "Enter") attempt(); });
+  }
+
+  document.getElementById("pinSaveBtn").addEventListener("click", function(){
+    var v = document.getElementById("pinSet").value.trim();
+    if(!/^\d{4}$/.test(v)){ toast("PIN must be 4 digits"); return; }
+    state.devicePin = v;
+    save();
+    document.getElementById("pinSet").value = "";
+    toast("PIN set for this device 🔒");
+  });
+  document.getElementById("pinClearBtn").addEventListener("click", function(){
+    state.devicePin = null;
+    save();
+    toast("PIN removed");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(!confirm("Wipe this phone's data and reload the starter lists?")) return;
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    location.reload();
+  });
+
+  // ---------- render all ----------
+  function renderAll(){
+    renderSwitcher();
+    renderHero();
+    renderCheckin();
+    renderListSwitcher();
+    renderAssigneeOptions();
+    renderTaskListOptions();
+    renderTasks();
+    renderBadges();
+    renderStats();
+    renderMonth();
+    renderLeaderboards();
+    renderFairness();
+    renderQuest();
+    renderRewards();
+    drawWheel();
+    renderNotes();
+    renderDailyQuestion();
+  }
+
+  randomQuote();
+  applyLock();
+
+  // brick anything left unconfirmed from previous days, then render
+  var brickResult = processBricks();
+  renderAll();
+  if(brickResult){
+    setTimeout(function(){
+      showModal("💔", "Tasks bricked",
+        brickResult.total + " task" + (brickResult.total===1?"":"s") +
+        " went unconfirmed past midnight, so " + (brickResult.total===1?"it":"they") +
+        " didn't count. You both lost " + (BRICK_PENALTY*brickResult.days.length) +
+        " points and your streaks reset. Trade codes before midnight next time.");
+    }, 500);
+  }
+
+  // keep the midnight countdown honest while the app is open
+  setInterval(function(){
+    if(document.getElementById("view-tasks").classList.contains("active")){
+      renderCheckin();
+    }
+  }, 60000);
+
+})();
+</script>
+</body>
+</html>
