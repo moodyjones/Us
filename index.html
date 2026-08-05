@@ -575,6 +575,43 @@
   }
   .list-pills button.add-list{background:transparent;color:var(--faint);}
 
+  /* ---- trip photo cards ---- */
+  .trip-card{
+    position:relative;height:150px;border-radius:18px;overflow:hidden;
+    margin-bottom:10px;border:1px solid var(--line);
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  .trip-bg{
+    position:absolute;inset:0;
+    background:linear-gradient(135deg,#4a3560,#241d2c);
+    background-size:cover;background-position:center;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .trip-fallback{font-size:44px;opacity:.5;}
+  .trip-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,14,.04) 32%,rgba(10,6,14,.82));}
+  .trip-info{position:absolute;left:15px;bottom:12px;z-index:2;max-width:70%;}
+  .trip-dest{font-size:21px;font-weight:800;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.55);line-height:1.15;}
+  .trip-dates{font-size:12.5px;color:rgba(255,255,255,.88);margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.5);}
+  .trip-actions{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:7px;}
+  .trip-check{
+    width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.75);cursor:pointer;
+    background:rgba(15,10,20,.45);color:#fff;font-size:17px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);
+  }
+  .trip-check:active{background:var(--teal);border-color:var(--teal);color:#0c2b25;}
+  .trip-del{
+    width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
+    background:rgba(15,10,20,.45);color:rgba(255,255,255,.8);
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);
+  }
+  .trip-del svg{width:15px;height:15px;}
+  .trip-badge{
+    position:absolute;top:12px;left:13px;z-index:2;
+    background:rgba(95,214,196,.92);color:#0c2b25;
+    font-size:11px;font-weight:800;border-radius:999px;padding:4px 11px;
+  }
+  .trip-card.done .trip-bg{filter:saturate(.55) brightness(.75);}
+
   /* ---- shopping category headers ---- */
   .buy-cat-header{
     display:flex;align-items:center;gap:8px;
@@ -927,7 +964,7 @@
 <header>
   <h1>💞 WeDO</h1>
   <div class="sub">Do stuff Together, To Get There ❤️</div>
-  <div class="sub">Build 15 · Rae edition</div>
+  <div class="sub">Build 16 · Rae edition</div>
 </header>
 
 <main>
@@ -1055,6 +1092,13 @@
         </div>
         <div id="expFieldsWrap" style="display:none;">
           <input type="text" id="taskEmoji" placeholder="Trophy icon (e.g. 🏔️)" maxlength="4" style="width:100%;">
+        </div>
+        <div id="tripFieldsWrap" style="display:none;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:2px 0 6px;">When?</div>
+          <div class="row2">
+            <input type="date" id="tripStart" aria-label="Trip start date">
+            <input type="date" id="tripEnd" aria-label="Trip end date">
+          </div>
         </div>
         <select id="taskRepeat">
           <option value="none" selected>One-time task</option>
@@ -1204,6 +1248,19 @@
     <h3 id="modalTitle">Nice!</h3>
     <p id="modalText"></p>
     <button class="primary" id="modalClose" style="width:100%;">Sweet</button>
+  </div>
+</div>
+
+<!-- Trip checklist offer modal -->
+<div class="modal-bg" id="tripModalBg">
+  <div class="modal">
+    <div class="emoji">🧳</div>
+    <h3 id="tripModalTitle">Trip added!</h3>
+    <p id="tripModalText"></p>
+    <div class="row2">
+      <button class="ghost" id="tripSkipBtn">Not now</button>
+      <button class="primary" id="tripChecklistBtn">Add checklist</button>
+    </div>
   </div>
 </div>
 
@@ -1446,6 +1503,10 @@
     if(t.currency===undefined) t.currency = "EGP";
     if(t.link===undefined) t.link = null;
     if(!t.alternatives) t.alternatives = [];
+    // bricking is gone: anything stuck "needs code" is honored as done,
+    // and previously bricked tasks lose the scarlet letter
+    if(t.pendingLock){ t.pendingLock = false; t.locked = true; }
+    if(t.bricked) t.bricked = false;
   });
   seedInitialData();
 
@@ -1633,14 +1694,39 @@
     return defaultState();
   }
 
+  function showSaveWarn(e){
+    var el = document.getElementById("saveWarn");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "saveWarn";
+      el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:300;background:#7a1f33;color:#fff;font-size:12.5px;line-height:1.45;padding:10px 14px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.4);";
+      document.body.appendChild(el);
+    }
+    var quota = e && (e.name === "QuotaExceededError" || /quota/i.test(String(e)));
+    el.textContent = quota
+      ? "⚠️ Changes are NOT saving — this phone's storage for the app is full. Photos take the most space; remove a photo from an experience, then try again."
+      : "⚠️ Changes are NOT saving on this phone (" + (e && e.name ? e.name : "storage blocked") + "). If you're in private browsing, switch to normal mode.";
+  }
+  function hideSaveWarn(){
+    var el = document.getElementById("saveWarn");
+    if(el) el.remove();
+  }
+
   function save(){
     try{
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      hideSaveWarn();
       return true;
     }catch(e){
+      showSaveWarn(e);
       return false;
     }
   }
+
+  // any silent crash becomes a visible message instead of "nothing happened"
+  window.addEventListener("error", function(ev){
+    try{ toast("⚠️ Something broke: " + (ev.message || "unknown error")); }catch(_e){}
+  });
   function saveOrThrow(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
@@ -1821,11 +1907,14 @@
     if(!list) return;
     var isPriceBased = !!list.priceBased;
     var isExp = !!list.experienceBased;
+    var isTrip = list.id === "list-trips";
     document.getElementById("priceFieldsWrap").style.display = (isPriceBased && !isExp) ? "flex" : "none";
-    document.getElementById("difficultyFieldWrap").style.display = (isPriceBased || isExp) ? "none" : "block";
+    document.getElementById("difficultyFieldWrap").style.display = (isPriceBased || isExp || isTrip) ? "none" : "block";
     document.getElementById("expFieldsWrap").style.display = isExp ? "block" : "none";
-    document.getElementById("taskAssignee").style.display = isExp ? "none" : "block";
-    document.getElementById("taskRepeat").style.display = isExp ? "none" : "block";
+    document.getElementById("tripFieldsWrap").style.display = isTrip ? "block" : "none";
+    document.getElementById("taskAssignee").style.display = (isExp || isTrip) ? "none" : "block";
+    document.getElementById("taskRepeat").style.display = (isExp || isTrip) ? "none" : "block";
+    document.getElementById("taskTitle").placeholder = isTrip ? "Where to? e.g. Tokyo" : "e.g. Do the dishes";
     var labels = list.tierLabels || {easy:"Easy",medium:"Medium",hard:"Hard"};
     var diffSel = document.getElementById("taskDifficulty");
     diffSel.options[0].textContent = labels.easy + " · 5 pts";
@@ -1894,6 +1983,20 @@
 
     if(openTasks.length===0){
       open.innerHTML = '<div class="empty">Nothing here yet. Tap + to add one 🎯</div>';
+    }
+    if(listId === "list-trips"){
+      // photo cards for trips, then their checklist items as normal rows
+      var openTrips = openTasks.filter(function(t){ return t.trip; });
+      var openRest  = openTasks.filter(function(t){ return !t.trip; });
+      openTrips.forEach(function(t){ open.appendChild(tripCard(t)); fetchCityImage(t); });
+      openRest.forEach(function(t){ open.appendChild(taskRow(t)); });
+      if(doneTasks.length===0){
+        done.innerHTML = '<div class="empty">Nothing '+verb.toLowerCase()+' yet.</div>';
+      }
+      doneTasks.forEach(function(t){
+        done.appendChild(t.trip ? tripCard(t) : taskRow(t));
+      });
+      return;
     }
     if(listObj && listObj.priceBased && openTasks.length){
       // group shopping items under auto-detected categories
@@ -1980,6 +2083,27 @@
       '<rect x="12" y="24" width="76" height="54" rx="12" fill="none" stroke="rgba(0,0,0,.1)"/></svg>'; }
   };
 
+  // category placeholder art, so a pair of shoes never shows up as a towel
+  PRODUCT_ART.shoe = function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+    '<path d="M14 62c0-8 8-20 16-22 5-1 8 3 13 6 7 4 17 6 28 8 9 2 15 5 15 10v4H14Z" fill="'+c1+'"/>'+
+    '<path d="M14 68h72v4H14Z" fill="'+c2+'"/>'+
+    '<path d="M40 48l4 5M48 51l4 4M56 55l4 3" stroke="'+c2+'" stroke-width="2" stroke-linecap="round"/></svg>'; };
+  PRODUCT_ART.clothes = function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+    '<path d="M35 24l-17 12 8 12 7-5v33h34V43l7 5 8-12-17-12c-3 5-8 8-15 8s-12-3-15-8Z" fill="'+c1+'"/>'+
+    '<path d="M35 24c3 5 8 8 15 8s12-3 15-8" fill="none" stroke="'+c2+'" stroke-width="2.5"/></svg>'; };
+  PRODUCT_ART.plane = function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+    '<path d="M84 50c0 3-3 5-7 5H55L38 78h-8l9-23H24l-6 7h-7l5-12-5-12h7l6 7h15l-9-23h8l17 23h22c4 0 7 2 7 5Z" fill="'+c1+'"/>'+
+    '<circle cx="76" cy="50" r="2" fill="'+c2+'"/></svg>'; };
+  PRODUCT_ART.homecat = function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+    '<path d="M50 20 16 48h9v30h50V48h9Z" fill="'+c1+'"/>'+
+    '<rect x="43" y="58" width="14" height="20" rx="2" fill="'+c2+'"/>'+
+    '<rect x="30" y="52" width="9" height="9" rx="1.5" fill="'+c2+'" opacity=".7"/></svg>'; };
+  PRODUCT_ART.gift = function(c1,c2){ return '<svg viewBox="0 0 100 100">'+
+    '<rect x="22" y="42" width="56" height="38" rx="5" fill="'+c1+'"/>'+
+    '<rect x="18" y="32" width="64" height="12" rx="4" fill="'+c1+'"/>'+
+    '<rect x="46" y="32" width="8" height="48" fill="'+c2+'"/>'+
+    '<path d="M50 32c-8-2-16-10-10-14s10 6 10 14Zm0 0c8-2 16-10 10-14s-10 6-10 14Z" fill="'+c2+'"/></svg>'; };
+
   var PRODUCT_STYLE = {
     towel:  ["#e8ddcd","#b9a689"],
     hand:   ["#e6ddd0","#3a3a3a"],
@@ -1988,7 +2112,12 @@
     flat:   ["#f4f2ee","#cfcbc2"],
     pillow: ["#f5f3ef","#d2cec5"],
     duvet:  ["#f7f5f1","#d8d4cb"],
-    cover:  ["#f4f1ea","#c9b795"]
+    cover:  ["#f4f1ea","#c9b795"],
+    shoe:   ["#e8b4c4","#8f4a63"],
+    clothes:["#c9b8e8","#6f5a9e"],
+    plane:  ["#b8d4e8","#4a6e8f"],
+    homecat:["#e8d4b8","#8f6e4a"],
+    gift:   ["#e8c4d8","#a05a80"]
   };
 
   function productArt(kind){
@@ -1996,6 +2125,38 @@
     var fn = PRODUCT_ART[kind] || PRODUCT_ART[kind === "hand" ? "towel" : "towel"];
     if(kind === "hand") fn = PRODUCT_ART.towel;
     return fn(style[0], style[1]);
+  }
+
+  // pick placeholder art that matches what the item actually is
+  function buyFallbackArt(t){
+    if(t.kind && PRODUCT_ART[t.kind]) return productArt(t.kind);
+    var cat = buyCategoryFor(t).key;
+    if(cat === "drip"){
+      var shoeRe = /(^|[^a-z])(shoe|sneaker|kick|boot|heel|sandal|slide|jordan|yeezy|nike|adidas)/;
+      return productArt(shoeRe.test((t.title||"").toLowerCase()) ? "shoe" : "clothes");
+    }
+    if(cat === "travel") return productArt("plane");
+    if(cat === "home") return productArt("homecat");
+    return productArt("gift");
+  }
+
+  // auto-extract the product photo (og:image) from a pasted link, once per item
+  var imgFetchCount = 0;
+  function maybeFetchImage(t){
+    if(!t.link || t.image || t.imgTried) return;
+    if(typeof fetch !== "function") return;
+    if(imgFetchCount >= 4) return; // be polite per page-load
+    imgFetchCount++;
+    t.imgTried = true;
+    fetch("https://api.microlink.io/?url=" + encodeURIComponent(t.link))
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var u = j && j.data && ((j.data.image && j.data.image.url) || (j.data.logo && j.data.logo.url));
+        if(u){ t.image = u; }
+        save();
+        if(u) renderTasks();
+      })
+      .catch(function(){ save(); });
   }
 
   function iconBtn(svg, label, onClick){
@@ -2014,22 +2175,141 @@
     return {whole:whole.toLocaleString(), cents:String(cents).padStart(2,"0")};
   }
 
+  // ---------- trips ----------
+  // grab a destination photo from Wikipedia so the trips list is all pictures
+  function fetchCityImage(t){
+    if(!t.trip || t.image || t.imgTried) return;
+    if(typeof fetch !== "function") return;
+    t.imgTried = true;
+    var q = encodeURIComponent(t.title.trim().replace(/\s+/g, "_"));
+    fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + q)
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var u = (j && j.thumbnail && j.thumbnail.source) || (j && j.originalimage && j.originalimage.source);
+        if(u){ t.image = u; }
+        save();
+        if(u) renderTasks();
+      })
+      .catch(function(){ save(); });
+  }
+
+  function fmtTripDates(s, e){
+    if(!s && !e) return "Dates TBD";
+    function f(d){ return new Date(d + "T12:00:00").toLocaleDateString(undefined, {month:"short", day:"numeric"}); }
+    if(s && e) return f(s) + " – " + f(e);
+    return f(s || e);
+  }
+
+  function tripCard(t){
+    var wrap = document.createElement("div");
+    wrap.className = "trip-card" + (t.status==="done" ? " done" : "");
+
+    var bg = document.createElement("div");
+    bg.className = "trip-bg";
+    if(t.image){ bg.style.backgroundImage = "url('" + t.image.replace(/'/g, "%27") + "')"; }
+    else { bg.innerHTML = '<span class="trip-fallback">✈️</span>'; }
+    wrap.appendChild(bg);
+
+    var scrim = document.createElement("div");
+    scrim.className = "trip-scrim";
+    wrap.appendChild(scrim);
+
+    if(t.status==="done"){
+      var badge = document.createElement("div");
+      badge.className = "trip-badge";
+      badge.textContent = "✓ Booked";
+      wrap.appendChild(badge);
+    }
+
+    var info = document.createElement("div");
+    info.className = "trip-info";
+    info.innerHTML = '<div class="trip-dest">' + escapeHtml(t.title) + '</div>' +
+      '<div class="trip-dates">🗓 ' + escapeHtml(fmtTripDates(t.tripStart, t.tripEnd)) + '</div>';
+    wrap.appendChild(info);
+
+    var acts = document.createElement("div");
+    acts.className = "trip-actions";
+    if(t.status==="open"){
+      var chk = document.createElement("button");
+      chk.className = "trip-check";
+      chk.setAttribute("aria-label","Mark booked");
+      chk.textContent = "✓";
+      chk.addEventListener("click", function(){ completeTask(t.id); });
+      acts.appendChild(chk);
+      var del = document.createElement("button");
+      del.className = "trip-del";
+      del.innerHTML = ICON.trash;
+      del.setAttribute("aria-label","Remove trip");
+      del.addEventListener("click", function(){
+        if(!confirm("Remove the " + t.title + " trip?")) return;
+        state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
+        save(); renderAll();
+      });
+      acts.appendChild(del);
+    }
+    wrap.appendChild(acts);
+    return wrap;
+  }
+
+  // offer a starter checklist after a trip is added
+  var TRIP_CHECKLIST = [
+    {title:"Book flights", diff:"medium"},
+    {title:"Book hotel / Airbnb", diff:"medium"},
+    {title:"Request time off work", diff:"easy"},
+    {title:"Plan itinerary", diff:"medium"},
+    {title:"Sort travel docs & visas", diff:"easy"},
+    {title:"Pack bags", diff:"easy"}
+  ];
+  var pendingTripId = null;
+  function offerTripChecklist(trip){
+    pendingTripId = trip.id;
+    document.getElementById("tripModalTitle").textContent = trip.title + " added! 🧳";
+    document.getElementById("tripModalText").textContent =
+      "Want the starter checklist for this trip? Flights, hotel, time off, itinerary, docs, and packing — all assigned to the both of you.";
+    document.getElementById("tripModalBg").classList.add("show");
+  }
+  document.getElementById("tripSkipBtn").addEventListener("click", function(){
+    document.getElementById("tripModalBg").classList.remove("show");
+    pendingTripId = null;
+  });
+  document.getElementById("tripChecklistBtn").addEventListener("click", function(){
+    var trip = state.tasks.find(function(x){ return x.id === pendingTripId; });
+    document.getElementById("tripModalBg").classList.remove("show");
+    pendingTripId = null;
+    if(!trip) return;
+    var mk = monthKey();
+    if(!state.monthly[mk]) state.monthly[mk] = {assigned:0, completed:0, badgeAwarded:false};
+    TRIP_CHECKLIST.forEach(function(item){
+      state.tasks.push({
+        id: uid(), title: trip.title + " · " + item.title,
+        assignedTo: "both", difficulty: item.diff, status: "open",
+        createdMonth: mk, completedBy: null, completedAt: null,
+        repeat: "none", lastCompletedAt: null, listId: "list-trips",
+        link: null, unitPrice: 0, currency: "USD", quantity: 1, alternatives: [],
+        tripFor: trip.id
+      });
+      state.monthly[mk].assigned++;
+    });
+    save(); renderAll();
+    toast(TRIP_CHECKLIST.length + " to-dos added for " + trip.title + " ✈️");
+  });
+
   // Image-forward product card: photo + price lead, name is secondary.
   function buyCard(t, list){
     var wrap = document.createElement("div");
     wrap.className = "task-wrap";
 
     var card = document.createElement("div");
-    card.className = "buy-card" + (t.status==="done" ? " done" : "") +
-      (t.pendingLock ? " pending" : "") + (t.bricked ? " bricked" : "");
+    card.className = "buy-card" + (t.status==="done" ? " done" : "");
 
     // ---- thumbnail (real IKEA photo, with a designed fallback) ----
     var thumb = document.createElement("div");
     thumb.className = "buy-thumb";
     var fb = document.createElement("div");
     fb.className = "fallback";
-    fb.innerHTML = productArt(t.kind || "towel");
+    fb.innerHTML = buyFallbackArt(t);
     thumb.appendChild(fb);
+    maybeFetchImage(t);
     if(t.image){
       var img = document.createElement("img");
       img.loading = "lazy";
@@ -2093,8 +2373,6 @@
     tags.className = "buy-tags";
     var tierLabel = (list.tierLabels && list.tierLabels[t.difficulty]) || t.difficulty;
     tags.innerHTML = '<span class="diff-tag diff-'+t.difficulty+'">'+escapeHtml(tierLabel)+'</span>';
-    if(t.pendingLock) tags.innerHTML += '<span class="pending-pill">needs code</span>';
-    if(t.bricked) tags.innerHTML += '<span class="bricked-pill">bricked</span>';
     if(t.status === "done"){
       var vb = listVerb(t.listId).toLowerCase();
       tags.innerHTML += '<span class="buy-sub" style="margin:0;">'+escapeHtml(vb) +
@@ -2141,8 +2419,7 @@
     wrap.className = "task-wrap";
 
     var row = document.createElement("div");
-    row.className = "task" + (t.status==="done" ? " done" : "") +
-      (t.pendingLock ? " pending" : "") + (t.bricked ? " bricked" : "");
+    row.className = "task" + (t.status==="done" ? " done" : "");
     var check = document.createElement("div");
     check.className = "check";
     check.textContent = t.status==="done" ? "✓" : "";
@@ -2192,15 +2469,7 @@
       var daysSince = Math.floor((Date.now() - new Date(t.lastCompletedAt).getTime()) / 86400000);
       assignText += daysSince<=0 ? (" · " + verb + " today") : (" · last " + verb + " " + daysSince + "d ago");
     }
-    var statusTag = "";
-    if(t.pendingLock){
-      statusTag = ' <span class="pending-pill">⏳ needs code</span>';
-    } else if(t.bricked){
-      statusTag = ' <span class="bricked-pill">💔 bricked</span>';
-    } else if(t.locked && t.status === "done"){
-      statusTag = ' <span class="repeat-tag">🔐 locked in</span>';
-    }
-    meta.innerHTML = diffTag + repeatTag + statusTag + priceTag + " &nbsp; " + assignText;
+    meta.innerHTML = diffTag + repeatTag + priceTag + " &nbsp; " + assignText;
     info.appendChild(title); info.appendChild(meta);
 
     var actions = document.createElement("div");
@@ -2237,6 +2506,7 @@
     var fieldsHtml;
     if(list.priceBased){
       fieldsHtml = '<input type="url" class="edit-link" placeholder="Link" value="'+escapeAttr(t.link||"")+'">' +
+        '<input type="url" class="edit-image" placeholder="Image URL (optional — auto-detected from link)" value="'+escapeAttr(t.image||"")+'">' +
         '<div class="row2">' +
           '<input type="number" class="edit-price" min="0" step="0.01" placeholder="Price" value="'+(t.unitPrice||"")+'">' +
           '<select class="edit-currency"><option value="USD"'+((t.currency||"USD")==="USD"?" selected":"")+'>USD</option><option value="EGP"'+(t.currency==="EGP"?" selected":"")+'>EGP</option></select>' +
@@ -2275,7 +2545,11 @@
     box.querySelector(".edit-save").addEventListener("click", function(){
       t.assignedTo = box.querySelector(".edit-assignee").value;
       if(list.priceBased){
+        var oldLink = t.link;
         t.link = box.querySelector(".edit-link").value.trim() || null;
+        var manualImg = box.querySelector(".edit-image").value.trim();
+        if(manualImg !== (t.image||"")){ t.image = manualImg || null; }
+        if(t.link && t.link !== oldLink && !t.image){ t.imgTried = false; }
         var newPrice = parseFloat(box.querySelector(".edit-price").value) || 0;
         var newQty = parseInt(box.querySelector(".edit-qty").value,10) || 1;
         if(t.breakdown && t.breakdown.length && newPrice > 0){ t.breakdown = null; }
@@ -2401,6 +2675,30 @@
       return;
     }
 
+    if(listId === "list-trips"){
+      var trip = {
+        id: uid(), title: title, trip: true,
+        tripStart: document.getElementById("tripStart").value || null,
+        tripEnd: document.getElementById("tripEnd").value || null,
+        assignedTo: "both", difficulty: "hard", status: "open",
+        createdMonth: monthKey(), completedBy: null, completedAt: null,
+        repeat: "none", lastCompletedAt: null, listId: "list-trips",
+        link: null, unitPrice: 0, currency: "USD", quantity: 1, alternatives: []
+      };
+      state.tasks.push(trip);
+      var mkT = monthKey();
+      if(!state.monthly[mkT]) state.monthly[mkT] = {assigned:0, completed:0, badgeAwarded:false};
+      state.monthly[mkT].assigned++;
+      document.getElementById("taskTitle").value = "";
+      document.getElementById("tripStart").value = "";
+      document.getElementById("tripEnd").value = "";
+      save(); renderAll();
+      fetchCityImage(trip);
+      closeAddSheet();
+      offerTripChecklist(trip);
+      return;
+    }
+
     var diff, link = null, unitPrice = 0, currency = "EGP", quantity = 1;
     if(isPriceBased){
       link = document.getElementById("taskLink").value.trim() || null;
@@ -2412,7 +2710,7 @@
       diff = document.getElementById("taskDifficulty").value;
     }
 
-    state.tasks.push({
+    var newTask = {
       id: uid(),
       title: title,
       assignedTo: assignee,
@@ -2429,7 +2727,9 @@
       currency: currency,
       quantity: quantity,
       alternatives: []
-    });
+    };
+    state.tasks.push(newTask);
+    if(isPriceBased && link) maybeFetchImage(newTask);
     var mk = monthKey();
     if(!state.monthly[mk]) state.monthly[mk] = {assigned:0, completed:0, badgeAwarded:false};
     state.monthly[mk].assigned++;
@@ -2591,8 +2891,7 @@
       .replace("{name}", personName(t.assignedTo));
   }
 
-  // ================= DAILY CHECK-IN / BRICKING =================
-  var BRICK_PENALTY = 15;
+  // ================= DAILY CHECK-IN (positive-only: bonus points + streak) =================
 
   function hashStr(str){
     var h = 0;
@@ -2613,76 +2912,24 @@
     return !!(state.lockins[personId] && state.lockins[personId][dateISO]);
   }
 
-  function pendingTasksFor(personId, dateISO){
-    return state.tasks.filter(function(t){
-      return t.pendingLock && t.lockOwner === personId &&
-             (dateISO ? t.completedDate === dateISO : true);
-    });
+  function connectionStreak(){
+    // consecutive days (ending today or yesterday) where either of you connected
+    var n = 0;
+    var d = new Date();
+    function iso(dt){ return todayISO(dt); }
+    // allow the streak to be "alive" if yesterday connected but today not yet
+    var connectedOn = function(dateISO){
+      return state.people.some(function(p){ return isLockedIn(p.id, dateISO); });
+    };
+    if(!connectedOn(iso(d))){ d = new Date(d.getTime() - 86400000); }
+    while(connectedOn(iso(d))){
+      n++;
+      d = new Date(d.getTime() - 86400000);
+    }
+    return n;
   }
 
-  // Runs on load: anything left unconfirmed from a previous day gets bricked.
-  function processBricks(){
-    var today = todayISO();
-    var stale = state.tasks.filter(function(t){
-      return t.pendingLock && t.completedDate && t.completedDate < today;
-    });
-    if(stale.length === 0) return null;
-
-    var byDate = {};
-    stale.forEach(function(t){
-      // revoke the points that were provisionally awarded
-      var owner = t.lockOwner;
-      if(owner && state.points[owner]){
-        var bucket = t.awardedType === "thoughtful" ? "thoughtful" : "personal";
-        state.points[owner][bucket] = Math.max(0, state.points[owner][bucket] - (t.awardedPoints||0));
-        state.points[owner].totalCompleted = Math.max(0, state.points[owner].totalCompleted - 1);
-        state.points[owner].progressToSpin = Math.max(0, (state.points[owner].progressToSpin||0) - 1);
-      }
-      // the task itself is bricked — back to open, flagged
-      t.pendingLock = false;
-      t.status = "open";
-      t.bricked = true;
-      t.brickedDate = t.completedDate;
-      t.completedBy = null;
-      t.completedAt = null;
-      t.awardedPoints = 0;
-
-      byDate[t.completedDate] = (byDate[t.completedDate]||0) + 1;
-      t.completedDate = null;
-      t.lockOwner = null;
-    });
-
-    // both partners eat the penalty — the point is that *communication* failed
-    var days = Object.keys(byDate);
-    state.people.forEach(function(p){
-      ensurePerson(state, p.id);
-      state.points[p.id].personal = Math.max(0, state.points[p.id].personal - BRICK_PENALTY*days.length);
-      state.streaks[p.id].current = 0;
-      state.streaks[p.id].lastDate = null;
-    });
-    days.forEach(function(d){
-      if(!state.missedDays.some(function(m){ return m.date === d; })){
-        state.missedDays.push({date:d, count:byDate[d]});
-      }
-    });
-    state.missedDays.sort(function(a,b){ return a.date < b.date ? 1 : -1; });
-
-    save();
-    return {days:days, total:stale.length};
-  }
-
-  function msToMidnight(){
-    var now = new Date();
-    var mid = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 0, 0);
-    return mid - now;
-  }
-
-  function formatCountdown(ms){
-    var totalMin = Math.floor(ms/60000);
-    var h = Math.floor(totalMin/60), m = totalMin%60;
-    if(h > 0) return h + "h " + m + "m";
-    return m + "m";
-  }
+  var CONNECT_BONUS = 10;
 
   function renderCheckin(){
     var card = document.getElementById("checkinCard");
@@ -2693,10 +2940,10 @@
     var today = todayISO();
     var myCode = dailyCodeFor(me, today);
     var partnerCode = dailyCodeFor(partner, today);
-    var pending = pendingTasksFor(me, today);
     var locked = isLockedIn(me, today);
+    var streak = connectionStreak();
 
-    card.className = "card checkin-card" + (locked ? " locked" : (pending.length ? " warning" : ""));
+    card.className = "card checkin-card" + (locked ? " locked" : "");
     body.innerHTML = "";
 
     if(!state.paired){
@@ -2737,10 +2984,17 @@
       lockNote.className = "code-hint";
       lockNote.innerHTML = "🔒 This is <strong>" + escapeHtml(personName(owner)) + "'s</strong> phone, so " +
         escapeHtml(personName(me)) + "'s daily code stays hidden here — it only shows on " +
-        escapeHtml(personName(me)) + "'s own phone. No peeking, that's the whole point. " +
-        "Switch back to " + escapeHtml(personName(owner)) + " to check in.";
+        escapeHtml(personName(me)) + "'s own phone. No peeking, that's the whole point.";
       body.appendChild(lockNote);
       return;
+    }
+
+    if(streak > 0){
+      var sk = document.createElement("div");
+      sk.className = "code-hint";
+      sk.style.textAlign = "center";
+      sk.innerHTML = "🔗 <strong>" + streak + "-day connection streak</strong>";
+      body.appendChild(sk);
     }
 
     // your code, to read out to your love — only on your own phone
@@ -2753,29 +3007,15 @@
     if(locked){
       var done = document.createElement("div");
       done.className = "code-hint";
-      done.innerHTML = "✅ <strong>You two connected today.</strong> Everything you checked off is locked in and safe.";
+      done.innerHTML = "✅ <strong>You two connected today.</strong> +" + CONNECT_BONUS + " pts each, streak alive. See you tomorrow.";
       body.appendChild(done);
-      if(pending.length){
-        var extra = document.createElement("div");
-        extra.className = "code-hint";
-        extra.textContent = pending.length + " task(s) completed after locking in — enter " + personName(partner) + "'s code again to secure those too.";
-        body.appendChild(extra);
-      } else {
-        return;
-      }
+      return;
     }
 
     var hint = document.createElement("div");
     hint.className = "code-hint";
-    if(pending.length){
-      hint.innerHTML = "You've got <strong>" + pending.length + " unconfirmed " +
-        (pending.length===1?"task":"tasks") + "</strong>. Talk to " + personName(partner) +
-        ", get their 4-digit code, and enter it below before midnight — otherwise they brick and you both lose " +
-        BRICK_PENALTY + " points and your streaks.";
-    } else {
-      hint.innerHTML = "Nothing pending yet. Whatever you check off today needs " + personName(partner) +
-        "'s code before midnight to count.";
-    }
+    hint.innerHTML = "This is pure bonus — nothing depends on it. Trade codes when you talk today and you <strong>both get +" +
+      CONNECT_BONUS + " pts</strong> and keep the connection streak going.";
     body.appendChild(hint);
 
     var row = document.createElement("div");
@@ -2784,11 +3024,11 @@
     input.type = "text";
     input.inputMode = "numeric";
     input.maxLength = 4;
-    input.placeholder = "••••";
+    input.placeholder = "\u2022\u2022\u2022\u2022";
     input.id = "partnerCodeInput";
     var btn = document.createElement("button");
     btn.className = "primary";
-    btn.textContent = "Lock in";
+    btn.textContent = "Connect";
     btn.addEventListener("click", function(){
       var val = input.value.trim();
       if(val !== partnerCode){
@@ -2800,42 +3040,23 @@
     });
     row.appendChild(input); row.appendChild(btn);
     body.appendChild(row);
-
-    var cd = document.createElement("div");
-    cd.className = "countdown";
-    cd.innerHTML = "⏳ <strong>" + formatCountdown(msToMidnight()) + "</strong> until midnight";
-    body.appendChild(cd);
-
-    if(state.missedDays.length){
-      var log = document.createElement("div");
-      log.className = "miss-log";
-      var recent = state.missedDays.slice(0,3).map(function(m){
-        return "• " + new Date(m.date+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}) +
-          " — " + m.count + " bricked";
-      }).join("<br>");
-      log.innerHTML = "<strong>Missed connections:</strong><br>" + recent;
-      body.appendChild(log);
-    }
   }
 
   function lockInDay(personId, dateISO){
     if(!state.lockins[personId]) state.lockins[personId] = {};
     state.lockins[personId][dateISO] = true;
-    var secured = pendingTasksFor(personId, dateISO);
-    secured.forEach(function(t){
-      t.pendingLock = false;
-      t.locked = true;
+    // connection bonus goes to both of you
+    state.people.forEach(function(p){
+      ensurePerson(state, p.id);
+      state.points[p.id].personal += CONNECT_BONUS;
     });
     save();
     renderAll();
     var partner = otherPerson(personId);
-    if(secured.length){
-      showModal("🔐", "Locked in",
-        secured.length + " " + (secured.length===1?"task is":"tasks are") +
-        " safe. You and " + personName(partner) + " talked today — that's the whole point.");
-    } else {
-      toast("Checked in with " + personName(partner) + " ✅");
-    }
+    var streak = connectionStreak();
+    showModal("\uD83D\uDD17", "Connected!",
+      "You and " + personName(partner) + " talked today \u2014 that's the whole point. +" + CONNECT_BONUS +
+      " pts each" + (streak >= 2 ? (", and you're on a " + streak + "-day connection streak \uD83D\uDD25") : "") + ".");
   }
 
   function addExperienceTask(title, emoji){
@@ -3161,15 +3382,9 @@
     t.awardedPoints = pts;
     t.awardedType = isTogether ? "together" : (helped ? "thoughtful" : "personal");
     t.completedDate = today0;
-    t.lockOwner = actor;
-    // if you've already checked in with your partner today, it's locked immediately
-    if(isLockedIn(actor, today0)){
-      t.pendingLock = false;
-      t.locked = true;
-    } else {
-      t.pendingLock = true;
-      t.locked = false;
-    }
+    // done means done — points are final, nothing gets taken back
+    t.pendingLock = false;
+    t.locked = true;
 
     // Together tasks pay out to both of you; solo tasks to whoever they credit
     var beneficiaries = isTogether ? state.people.map(function(p){return p.id;}) : [actor];
@@ -3214,8 +3429,9 @@
           }
         }
       });
-      if(pid === actor && STREAK_CHEERS[st.current]){
-        setTimeout(function(){ toast(STREAK_CHEERS[st.current]); }, 2700);
+      if(pid === actor && st.current >= 2){
+        var cheer = STREAK_CHEERS[st.current] || ("🔥 " + st.current + "-day streak — keep it going!");
+        setTimeout(function(){ toast(cheer); }, 2700);
       }
 
       // multi-task-in-a-day bonus
@@ -3791,20 +4007,9 @@
   randomQuote();
   applyLock();
 
-  // brick anything left unconfirmed from previous days, then render
-  var brickResult = processBricks();
   renderAll();
-  if(brickResult){
-    setTimeout(function(){
-      showModal("💔", "Tasks bricked",
-        brickResult.total + " task" + (brickResult.total===1?"":"s") +
-        " went unconfirmed past midnight, so " + (brickResult.total===1?"it":"they") +
-        " didn't count. You both lost " + (BRICK_PENALTY*brickResult.days.length) +
-        " points and your streaks reset. Trade codes before midnight next time.");
-    }, 500);
-  }
 
-  // keep the midnight countdown honest while the app is open
+  // refresh the check-in card as the day rolls over
   setInterval(function(){
     if(document.getElementById("view-tasks").classList.contains("active")){
       renderCheckin();
