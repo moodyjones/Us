@@ -575,6 +575,19 @@
   }
   .list-pills button.add-list{background:transparent;color:var(--faint);}
 
+  /* ---- shopping category headers ---- */
+  .buy-cat-header{
+    display:flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin:18px 2px 10px;
+  }
+  .buy-cat-header:first-child{margin-top:4px;}
+  .buy-cat-header .cat-ico{font-size:16px;letter-spacing:0;}
+  .buy-cat-count{
+    background:var(--s2);border:1px solid var(--line);border-radius:999px;
+    padding:1px 8px;font-size:10.5px;color:var(--muted);letter-spacing:0;
+  }
+
   /* ---- FAB + add-task sheet ---- */
   .fab{
     position:fixed;right:18px;bottom:22px;z-index:60;
@@ -914,7 +927,7 @@
 <header>
   <h1>💞 Us</h1>
   <div class="sub">Tasks, points, and reasons to smile</div>
-  <div class="sub">Build 12 · Rae edition</div>
+  <div class="sub">Build 14 · Rae edition</div>
 </header>
 
 <main>
@@ -1649,6 +1662,7 @@
     return p ? p.id : null;
   }
   function personName(id){
+    if(id === "both") return "Together";
     var p = state.people.find(function(x){return x.id === id;});
     return p ? p.name : "?";
   }
@@ -1719,6 +1733,9 @@
       o.value = p.id; o.textContent = "For " + p.name;
       sel.appendChild(o);
     });
+    var both = document.createElement("option");
+    both.value = "both"; both.textContent = "Together 💞";
+    sel.appendChild(both);
   }
 
   function renderTaskListOptions(){
@@ -1831,6 +1848,24 @@
     document.getElementById(id).addEventListener("change", updateTierPreview);
   });
 
+  // ---------- auto-categories for shopping lists ----------
+  var BUY_CATEGORIES = [
+    {key:"home", label:"Home", emoji:"🏠", words:["bed","bedding","duvet","sheet","sheets","pillow","pillowcase","blanket","comforter","towel","towels","mat","mats","rug","curtain","curtains","mattress","couch","sofa","chair","table","desk","lamp","shelf","shelves","drawer","dresser","hanger","hangers","mirror","frame","vase","plant","candle","decor","kitchen","pan","pot","plate","plates","bowl","mug","mugs","cup","cups","glassware","cutlery","knife","knives","fork","spoon","utensil","utensils","appliance","toaster","kettle","blender","microwave","vacuum","cleaner","detergent","laundry","storage","organizer","bin","bins","ikea","furniture","cushion","throw","bathmat","shower"]},
+    {key:"drip", label:"Drip", emoji:"👟", words:["shoe","shoes","sneaker","sneakers","kicks","boot","boots","heel","heels","sandal","sandals","slides","shirt","shirts","tee","tees","tshirt","t-shirt","top","tops","hoodie","sweater","sweatshirt","cardigan","jacket","coat","jeans","pants","trousers","shorts","dress","skirt","sock","socks","hat","cap","beanie","watch","ring","necklace","bracelet","earring","earrings","jewelry","jewellery","bag","purse","handbag","backpack","wallet","sunglasses","shades","perfume","cologne","fragrance","belt","scarf","gloves","outfit","fit","suit","tie","lingerie","makeup","skincare","nails","hair"]},
+    {key:"travel", label:"Travel", emoji:"✈️", words:["flight","flights","plane","airfare","airline","ticket","tickets","hotel","airbnb","resort","hostel","trip","vacation","getaway","holiday","cruise","train","visa","passport","luggage","suitcase","carry-on","tour","excursion","booking","travel","beach","island","safari","roadtrip","road-trip","camping","tent","staycation"]}
+  ];
+  BUY_CATEGORIES.forEach(function(c){
+    c.re = new RegExp("(^|[^a-z])(" + c.words.join("|") + ")(e?s)?([^a-z]|$)");
+  });
+  var BUY_CAT_OTHER = {key:"other", label:"Other", emoji:"🛍️"};
+  function buyCategoryFor(t){
+    var txt = (t.title || "").toLowerCase();
+    for(var i=0;i<BUY_CATEGORIES.length;i++){
+      if(BUY_CATEGORIES[i].re.test(txt)) return BUY_CATEGORIES[i];
+    }
+    return BUY_CAT_OTHER;
+  }
+
   function renderTasks(){
     var open = document.getElementById("openTasks");
     var done = document.getElementById("doneTasks");
@@ -1851,11 +1886,34 @@
     var doneTasks = inList.filter(function(t){return t.status==="done";}).slice().reverse().slice(0,15);
 
     if(openTasks.length===0){
-      open.innerHTML = '<div class="empty">Nothing here yet. Add one above 🎯</div>';
+      open.innerHTML = '<div class="empty">Nothing here yet. Tap + to add one 🎯</div>';
     }
-    openTasks.forEach(function(t){
-      open.appendChild(taskRow(t));
-    });
+    if(listObj && listObj.priceBased && openTasks.length){
+      // group shopping items under auto-detected categories
+      var groups = {};
+      openTasks.forEach(function(t){
+        var c = buyCategoryFor(t);
+        if(!groups[c.key]) groups[c.key] = {cat:c, items:[]};
+        groups[c.key].items.push(t);
+      });
+      var keys = ["home","drip","travel","other"].filter(function(k){ return groups[k]; });
+      var onlyOther = keys.length===1 && keys[0]==="other";
+      keys.forEach(function(k){
+        var g = groups[k];
+        if(!onlyOther){
+          var h = document.createElement("div");
+          h.className = "buy-cat-header";
+          h.innerHTML = '<span class="cat-ico">'+g.cat.emoji+'</span>'+g.cat.label+
+            '<span class="buy-cat-count">'+g.items.length+'</span>';
+          open.appendChild(h);
+        }
+        g.items.forEach(function(t){ open.appendChild(taskRow(t)); });
+      });
+    } else {
+      openTasks.forEach(function(t){
+        open.appendChild(taskRow(t));
+      });
+    }
 
     if(doneTasks.length===0){
       done.innerHTML = '<div class="empty">Nothing '+verb.toLowerCase()+' yet.</div>';
@@ -2035,7 +2093,7 @@
       tags.innerHTML += '<span class="buy-sub" style="margin:0;">'+escapeHtml(vb) +
         (t.completedBy && t.completedBy !== t.assignedTo ? " by "+escapeHtml(personName(t.completedBy)) : "") + '</span>';
     } else {
-      tags.innerHTML += '<span class="buy-sub" style="margin:0;">for '+escapeHtml(personName(t.assignedTo))+'</span>';
+      tags.innerHTML += '<span class="buy-sub" style="margin:0;">'+(t.assignedTo==="both" ? "together 💞" : "for "+escapeHtml(personName(t.assignedTo)))+'</span>';
     }
     body.appendChild(tags);
     card.appendChild(body);
@@ -2115,9 +2173,14 @@
       priceTag = ' <span class="price-tag">'+formatMoney(totalP, t.currency||"USD")+escapeHtml(qtyNote)+'</span>';
     }
     var verb = listVerb(t.listId).toLowerCase();
-    var assignText = "For " + personName(t.assignedTo);
+    var isTogether = t.assignedTo === "both";
+    var assignText = isTogether ? "Together 💞" : "For " + personName(t.assignedTo);
     if(t.status==="done"){
-      assignText += t.completedBy !== t.assignedTo ? (" · " + verb + " by " + personName(t.completedBy) + " 💛") : (" · " + verb);
+      if(isTogether){
+        assignText += " · " + verb + " together";
+      } else {
+        assignText += t.completedBy !== t.assignedTo ? (" · " + verb + " by " + personName(t.completedBy) + " 💛") : (" · " + verb);
+      }
     } else if(t.lastCompletedAt){
       var daysSince = Math.floor((Date.now() - new Date(t.lastCompletedAt).getTime()) / 86400000);
       assignText += daysSince<=0 ? (" · " + verb + " today") : (" · last " + verb + " " + daysSince + "d ago");
@@ -2162,7 +2225,7 @@
     box.className = "edit-form";
     var assigneeOptions = state.people.map(function(p){
       return '<option value="'+p.id+'"'+(p.id===t.assignedTo?' selected':'')+'>'+escapeHtml(p.name)+'</option>';
-    }).join('');
+    }).join('') + '<option value="both"'+(t.assignedTo==="both"?' selected':'')+'>Together 💞</option>';
 
     var fieldsHtml;
     if(list.priceBased){
@@ -3083,12 +3146,13 @@
 
     ensurePerson(state, actor);
     var pts = DIFF_POINTS[t.difficulty] || 10;
-    var helped = (actor !== t.assignedTo);
+    var isTogether = (t.assignedTo === "both");
+    var helped = !isTogether && (actor !== t.assignedTo);
     var today0 = todayISO();
 
     t.bricked = false;
     t.awardedPoints = pts;
-    t.awardedType = helped ? "thoughtful" : "personal";
+    t.awardedType = isTogether ? "together" : (helped ? "thoughtful" : "personal");
     t.completedDate = today0;
     t.lockOwner = actor;
     // if you've already checked in with your partner today, it's locked immediately
@@ -3100,49 +3164,61 @@
       t.locked = false;
     }
 
-    if(helped){
+    // Together tasks pay out to both of you; solo tasks to whoever they credit
+    var beneficiaries = isTogether ? state.people.map(function(p){return p.id;}) : [actor];
+
+    if(isTogether){
+      toast("Done together — you both get +" + pts + " pts 💞");
+    } else if(helped){
       state.points[actor].thoughtful += pts;
+      toast(praiseFor(t, actor, pts, helped));
     } else {
       state.points[actor].personal += pts;
-    }
-    toast(praiseFor(t, actor, pts, helped));
-
-    // completion counters (count toward spins regardless of who it's for)
-    state.points[actor].totalCompleted++;
-    state.points[actor].progressToSpin = (state.points[actor].progressToSpin||0) + 1;
-    if(state.points[actor].progressToSpin >= 5){
-      state.points[actor].progressToSpin -= 5;
-      state.points[actor].spinsAvailable = (state.points[actor].spinsAvailable||0) + 1;
-      setTimeout(function(){ showModal("🎡","Spin unlocked!", personName(actor)+" earned a spin of the rewards wheel for hitting 5 completed tasks."); }, 300);
+      toast(praiseFor(t, actor, pts, helped));
     }
 
-    // streaks
-    var st = state.streaks[actor];
     var today = todayISO();
     var yesterday = todayISO(new Date(Date.now()-86400000));
-    if(st.lastDate !== today){
-      if(st.lastDate === yesterday){ st.current++; } else { st.current = 1; }
-      st.lastDate = today;
-    }
-    var streakMilestones = [3,7,14,30];
-    streakMilestones.forEach(function(m){
-      if(st.current === m){
-        if(awardBadge(actor, "streak-"+m, m+"-day streak")){
-          setTimeout(function(){ showModal("🔥", m+"-Day Streak!", personName(actor)+" has completed tasks "+m+" days in a row."); }, 350);
+
+    beneficiaries.forEach(function(pid){
+      ensurePerson(state, pid);
+      if(isTogether) state.points[pid].personal += pts;
+
+      // completion counters (count toward spins regardless of who it's for)
+      state.points[pid].totalCompleted++;
+      state.points[pid].progressToSpin = (state.points[pid].progressToSpin||0) + 1;
+      if(state.points[pid].progressToSpin >= 5){
+        state.points[pid].progressToSpin -= 5;
+        state.points[pid].spinsAvailable = (state.points[pid].spinsAvailable||0) + 1;
+        setTimeout(function(){ showModal("🎡","Spin unlocked!", personName(pid)+" earned a spin of the rewards wheel for hitting 5 completed tasks."); }, 300);
+      }
+
+      // streaks
+      var st = state.streaks[pid];
+      if(st.lastDate !== today){
+        if(st.lastDate === yesterday){ st.current++; } else { st.current = 1; }
+        st.lastDate = today;
+      }
+      var streakMilestones = [3,7,14,30];
+      streakMilestones.forEach(function(m){
+        if(st.current === m){
+          if(awardBadge(pid, "streak-"+m, m+"-day streak")){
+            setTimeout(function(){ showModal("🔥", m+"-Day Streak!", personName(pid)+" has completed tasks "+m+" days in a row."); }, 350);
+          }
         }
+      });
+      if(pid === actor && STREAK_CHEERS[st.current]){
+        setTimeout(function(){ toast(STREAK_CHEERS[st.current]); }, 2700);
+      }
+
+      // multi-task-in-a-day bonus
+      if(!state.dailyCompletions[pid]) state.dailyCompletions[pid] = {};
+      state.dailyCompletions[pid][today] = (state.dailyCompletions[pid][today]||0) + 1;
+      if(state.dailyCompletions[pid][today] === 2){
+        state.points[pid].personal += 5;
+        if(pid === actor) toast("Overachiever bonus: +5 pts for 2 tasks today!");
       }
     });
-    if(STREAK_CHEERS[st.current]){
-      setTimeout(function(){ toast(STREAK_CHEERS[st.current]); }, 2700);
-    }
-
-    // multi-task-in-a-day bonus
-    if(!state.dailyCompletions[actor]) state.dailyCompletions[actor] = {};
-    state.dailyCompletions[actor][today] = (state.dailyCompletions[actor][today]||0) + 1;
-    if(state.dailyCompletions[actor][today] === 2){
-      state.points[actor].personal += 5;
-      toast("Overachiever bonus: +5 pts for 2 tasks today!");
-    }
 
     // monthly tally toward Power Couple badge
     var mk = monthKey();
@@ -3263,7 +3339,10 @@
 
     var counts = {};
     state.people.forEach(function(p){ counts[p.id] = 0; });
-    state.tasks.forEach(function(t){ if(counts[t.assignedTo]!==undefined) counts[t.assignedTo]++; });
+    state.tasks.forEach(function(t){
+      if(t.assignedTo === "both"){ state.people.forEach(function(p){ counts[p.id]++; }); }
+      else if(counts[t.assignedTo]!==undefined) counts[t.assignedTo]++;
+    });
     var totalOwned = counts[a.id] + counts[b.id];
     var ownedPctA = totalOwned ? Math.round((counts[a.id]/totalOwned)*100) : 50;
 
