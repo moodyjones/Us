@@ -575,6 +575,21 @@
   }
   .list-pills button.add-list{background:transparent;color:var(--faint);}
 
+  /* ---- health card ---- */
+  .health-grid{
+    display:grid;grid-template-columns:1fr 44px 1fr;gap:9px 6px;align-items:center;
+    text-align:center;margin-top:4px;
+  }
+  .health-name{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);}
+  .health-stale{font-size:10px;color:var(--gold);letter-spacing:0;text-transform:none;font-weight:600;}
+  .health-ico{font-size:17px;}
+  .health-val{font-size:19px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .health-val.win{color:var(--teal);}
+  .health-nudge{
+    font-size:12.5px;color:var(--muted);margin-top:10px;padding:8px 11px;
+    background:var(--s2);border:1px solid var(--line);border-radius:12px;line-height:1.5;
+  }
+
   /* ---- trip photo cards ---- */
   .trip-card{
     position:relative;height:150px;border-radius:18px;overflow:hidden;
@@ -964,7 +979,7 @@
 <header>
   <h1>💞 WeDO</h1>
   <div class="sub">Do stuff Together, To Get There ❤️</div>
-  <div class="sub">Build 16 · Rae edition</div>
+  <div class="sub">Build 20 · Rae edition</div>
 </header>
 
 <main>
@@ -1009,6 +1024,14 @@
 
   <!-- TASKS VIEW -->
   <div class="view active" id="view-tasks">
+    <div class="card" id="noBackupCard" style="display:none;border-color:var(--gold);">
+      <div style="font-size:13px;line-height:1.55;color:var(--muted);">
+        ⚠️ <strong style="color:var(--text);">This phone isn't backed up yet.</strong>
+        Everything you add lives only in this browser until Auto-sync is on — and phones do clear browser data.
+        Open <em>Sync between two phones</em> below, save the Gist link + token, and this warning disappears for good.
+      </div>
+      <button class="ghost" id="noBackupLater" style="width:100%;margin-top:10px;">Remind me later</button>
+    </div>
     <div class="card quest-card">
       <h2>Couple Quest</h2>
       <div id="questBody"></div>
@@ -1022,6 +1045,13 @@
         <div class="stat gold"><div class="num" id="statStreak">0</div><div class="label">Day Streak</div></div>
       </div>
       <div class="badge-row" id="badgeRow"></div>
+    </div>
+
+    <div class="card" id="healthCard">
+      <h2 style="display:flex;align-items:center;justify-content:space-between;">Health today
+        <button type="button" id="healthRefresh" class="icon-btn" aria-label="Refresh health data" style="font-size:16px;">↻</button>
+      </h2>
+      <div id="healthBody"></div>
     </div>
 
     <div class="list-pills" id="listSwitcher"></div>
@@ -1222,8 +1252,26 @@
     <summary>Sync between two phones (tap to expand)</summary>
     <p style="font-size:12px;color:var(--muted);"><strong>Do this once to pair.</strong> Tap "Copy my data", send it to your person, and have them paste it into Import on their phone. This gives you both the same secret, which is what makes your daily codes line up. After that, re-sync whenever you want to share progress.</p>
     <button class="ghost" id="exportBtn" style="width:100%;">Copy my data</button>
-    <textarea id="syncBox" placeholder="Paste their code here to import..."></textarea>
-    <button class="ghost" id="importBtn" style="width:100%;margin-top:6px;">Import</button>
+    <textarea id="syncBox" placeholder="Paste their code (or a backup file's contents) here..."></textarea>
+    <button class="ghost" id="importBtn" style="width:100%;margin-top:6px;">Import (merges, never wipes)</button>
+    <button class="ghost" id="backupBtn" style="width:100%;margin-top:6px;">Download backup file</button>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+    <p style="font-size:12px;color:var(--muted);"><strong>Apple Health sync.</strong> Paste the link of your shared health Gist once (the setup guide explains how to create it and the iPhone Shortcuts that feed it). Steps, calories and sleep then show for both of you on the Health card.</p>
+    <input type="url" id="healthGistInput" placeholder="https://gist.github.com/you/abc123...">
+    <button class="ghost" id="healthGistSaveBtn" style="width:100%;margin-top:6px;">Save Health link</button>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+    <p style="font-size:12px;color:var(--muted);"><strong>Auto-sync (recommended).</strong> With the Gist link above <em>plus</em> your GitHub token here, both phones share everything automatically — tasks, trips, points, spins. The token stays on this phone only; paste the same one on both phones. It's the same token from the Health setup guide.</p>
+    <input type="password" id="ghTokenInput" placeholder="ghp_... (never leaves this phone)">
+    <div class="row2" style="margin-top:6px;">
+      <button class="ghost" id="ghTokenSaveBtn">Save token</button>
+      <button class="ghost" id="syncNowBtn">Sync now</button>
+    </div>
+    <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+    <p style="font-size:12px;color:var(--muted);"><strong>Something looks off?</strong> Run this on BOTH phones and compare — it checks the build, sync setup, connections, and trip images, and says exactly what's wrong.</p>
+    <button class="ghost" id="diagBtn" style="width:100%;">Run diagnostics</button>
+    <button class="ghost" id="retryImagesBtn" style="width:100%;margin-top:6px;">Retry missing trip images</button>
+    <div id="diagOut" style="display:none;font-size:11px;line-height:1.8;margin-top:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--card2);border-radius:10px;padding:10px 12px;word-break:break-word;"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Phone owner.</strong> <span id="deviceOwnerLabel">Not set yet.</span> Daily codes only show on their owner's phone. Only change this if it's genuinely wrong.</p>
     <button class="ghost" id="deviceOwnerBtn" style="width:100%;">Change phone owner</button>
@@ -1457,6 +1505,10 @@
       rewardsWon: [], // {personId, rewardId, name, tier, date}
       rewardRequests: [], // {id, name, tier, emoji, proposedBy, date}
       notes: [], // {fromId, toId, text, date}
+      healthGistUrl: null,  // shared gist the iOS Shortcuts write into
+      healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
+      tombstones: {},       // deleted item id -> deletion time (so deletes survive sync merges)
+      savedAt: null,        // last local save time (drives sync merge direction)
       quest: {active: null, completedCount: 0} // active: {title, desc, contributions:{personId:bool}, startedAt}
     };
   }
@@ -1471,6 +1523,13 @@
 
   var state = load();
   state.people.forEach(function(p){ ensurePerson(state, p.id); });
+  // migrate: track spins spent so sync merges can't resurrect used spins
+  state.people.forEach(function(p){
+    var pts = state.points[p.id];
+    if(pts && pts.spinsUsed == null){
+      pts.spinsUsed = Math.max(0, Math.floor((pts.totalCompleted||0)/5) - (pts.spinsAvailable||0));
+    }
+  });
   if(!state.lists || state.lists.length===0){
     state.lists = [
       {id:"list-todo", name:"Stuff", emoji:"✅", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
@@ -1714,13 +1773,32 @@
 
   function save(){
     try{
+      state.savedAt = new Date().toISOString();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       hideSaveWarn();
+      scheduleSync();
       return true;
     }catch(e){
       showSaveWarn(e);
       return false;
     }
+  }
+
+  // mark an item as touched (newer copy wins in sync merges)
+  function touch(t){ if(t) t.mtime = Date.now(); return t; }
+  // record a deletion so it propagates to the other phone instead of resurrecting
+  function tombstone(id){
+    if(!state.tombstones) state.tombstones = {};
+    state.tombstones[id] = Date.now();
+  }
+  function taskContentKey(t){
+    return "ct:" + (t.listId||"") + "|" + String(t.title||"").toLowerCase();
+  }
+  function tombstoneTask(t){
+    tombstone(t.id);
+    // starter tasks were seeded with different random ids on each phone —
+    // tombstone by content too so deleting one kills its twin over there
+    if(!t.mtime) tombstone(taskContentKey(t));
   }
 
   // any silent crash becomes a visible message instead of "nothing happened"
@@ -2140,14 +2218,28 @@
     return productArt("gift");
   }
 
-  // auto-extract the product photo (og:image) from a pasted link, once per item
+  // shared retry policy for image lookups: a failed attempt is retried later
+  // (up to 5 tries, at least 10 minutes apart) instead of giving up forever
+  function imgRetryOk(t){
+    if(t.image) return false;
+    if((t.imgTries || 0) >= 5) return false;
+    if(t.imgTryAt && (Date.now() - t.imgTryAt) < 10 * 60000) return false;
+    return true;
+  }
+  function imgMarkTry(t){
+    t.imgTries = (t.imgTries || 0) + 1;
+    t.imgTryAt = Date.now();
+    t.imgTried = true; // legacy flag, no longer read
+  }
+
+  // auto-extract the product photo (og:image) from a pasted link
   var imgFetchCount = 0;
   function maybeFetchImage(t){
-    if(!t.link || t.image || t.imgTried) return;
+    if(!t.link || !imgRetryOk(t)) return;
     if(typeof fetch !== "function") return;
     if(imgFetchCount >= 4) return; // be polite per page-load
     imgFetchCount++;
-    t.imgTried = true;
+    imgMarkTry(t);
     fetch("https://api.microlink.io/?url=" + encodeURIComponent(t.link))
       .then(function(r){ return r.json(); })
       .then(function(j){
@@ -2175,17 +2267,463 @@
     return {whole:whole.toLocaleString(), cents:String(cents).padStart(2,"0")};
   }
 
+  // ================= AUTO-SYNC (both phones share state through the gist) =================
+  // The GitHub token lives ONLY on this phone (separate localStorage key) —
+  // it never travels through exports or the synced state itself.
+  var GH_TOKEN_KEY = "us-gh-token-v1";
+  function ghToken(){ try{ return localStorage.getItem(GH_TOKEN_KEY) || ""; }catch(e){ return ""; } }
+  function setGhToken(v){
+    try{ if(v) localStorage.setItem(GH_TOKEN_KEY, v); else localStorage.removeItem(GH_TOKEN_KEY); }catch(e){}
+  }
+  function gistIdFromUrl(){
+    var m = String(state.healthGistUrl || "").match(/gist\.github(?:usercontent)?\.com\/[^\/\s]+\/([a-f0-9]+)/i);
+    return m ? m[1] : null;
+  }
+  function autoSyncOn(){ return !!(gistIdFromUrl() && ghToken()); }
+
+  // ---- merge helpers: nothing either phone did is ever lost ----
+  function unionById(a, b, tomb){
+    var byId = {};
+    (a||[]).concat(b||[]).forEach(function(x){
+      if(!x || !x.id) return;
+      if(tomb[x.id] && tomb[x.id] >= (x.mtime||0)) return; // deleted
+      var cur = byId[x.id];
+      if(!cur || (x.mtime||0) > (cur.mtime||0)) byId[x.id] = x;
+    });
+    var seen = {}, out = [];
+    (a||[]).concat(b||[]).forEach(function(x){
+      if(x && x.id && byId[x.id] && !seen[x.id]){ seen[x.id] = 1; out.push(byId[x.id]); }
+    });
+    return out;
+  }
+  function unionByKey(a, b, keyFn){
+    var seen = {}, out = [];
+    (a||[]).concat(b||[]).forEach(function(x){
+      if(!x) return;
+      var k = keyFn(x);
+      if(seen[k]) return;
+      seen[k] = 1; out.push(x);
+    });
+    return out;
+  }
+
+  function mergeTasks(a, b, tomb){
+    var all = unionById(a, b, tomb);
+    // untouched starter tasks exist with different ids per phone — collapse
+    // same-list same-title copies when at least one side was never touched,
+    // and honor content-level tombstones for them
+    var byKey = {}, out = [];
+    all.forEach(function(t){
+      var k = taskContentKey(t);
+      if(tomb[k] && tomb[k] >= (t.mtime||0)) return;
+      var cur = byKey[k];
+      if(cur && ((cur.mtime||0) === 0 || (t.mtime||0) === 0)){
+        if((t.mtime||0) > (cur.mtime||0)){ out[out.indexOf(cur)] = t; byKey[k] = t; }
+        return;
+      }
+      byKey[k] = t;
+      out.push(t);
+    });
+    return out;
+  }
+
+  function mergeStates(L, R){
+    if(!R || typeof R !== "object" || !R.people) return L;
+    var lNewer = String(L.savedAt||"") >= String(R.savedAt||"");
+    var base = lNewer ? L : R, other = lNewer ? R : L;
+    var m = JSON.parse(JSON.stringify(base));
+
+    // tombstones: union, pruned after 90 days
+    var tomb = {};
+    [L.tombstones, R.tombstones].forEach(function(o){
+      for(var k in (o||{})){ tomb[k] = Math.max(tomb[k]||0, o[k]); }
+    });
+    var cutoff = Date.now() - 90*86400000;
+    for(var tk in tomb){ if(tomb[tk] < cutoff) delete tomb[tk]; }
+    m.tombstones = tomb;
+
+    m.people = unionById(base.people, other.people, {});
+    m.lists = unionById(base.lists, other.lists, {});
+    m.tasks = mergeTasks(base.tasks, other.tasks, tomb);
+    m.rewards = unionById(base.rewards, other.rewards, tomb);
+    m.rewardRequests = unionById(base.rewardRequests, other.rewardRequests, tomb);
+    m.rewardsWon = unionByKey(base.rewardsWon, other.rewardsWon, function(w){
+      return w.id || (w.personId + "|" + w.rewardId + "|" + w.date);
+    });
+    m.notes = unionByKey(base.notes, other.notes, function(n){
+      return n.fromId + "|" + n.date + "|" + n.text;
+    });
+    m.missedDays = unionByKey(base.missedDays, other.missedDays, function(d){ return d.date; });
+
+    // per-person structures
+    m.points = {}; m.streaks = {}; m.badges = {}; m.lockins = {}; m.dailyCompletions = {};
+    m.people.forEach(function(p){
+      var pid = p.id;
+      var lp = (L.points||{})[pid] || {}, rp = (R.points||{})[pid] || {};
+      var tc = Math.max(lp.totalCompleted||0, rp.totalCompleted||0);
+      var used = Math.max(lp.spinsUsed||0, rp.spinsUsed||0);
+      m.points[pid] = {
+        personal: Math.max(lp.personal||0, rp.personal||0),
+        thoughtful: Math.max(lp.thoughtful||0, rp.thoughtful||0),
+        totalCompleted: tc,
+        spinsUsed: used,
+        spinsAvailable: Math.max(0, Math.floor(tc/5) - used),
+        progressToSpin: tc % 5
+      };
+      var ls = (L.streaks||{})[pid] || {}, rs = (R.streaks||{})[pid] || {};
+      if(String(ls.lastDate||"") === String(rs.lastDate||"")){
+        m.streaks[pid] = {current: Math.max(ls.current||0, rs.current||0), lastDate: ls.lastDate||null};
+      } else {
+        m.streaks[pid] = (String(ls.lastDate||"") > String(rs.lastDate||"")) ? {current:ls.current||0,lastDate:ls.lastDate} : {current:rs.current||0,lastDate:rs.lastDate};
+      }
+      m.badges[pid] = unionByKey((L.badges||{})[pid], (R.badges||{})[pid], function(b){ return b.key; });
+      var lock = {};
+      [(L.lockins||{})[pid], (R.lockins||{})[pid]].forEach(function(o){ for(var d in (o||{})) lock[d] = true; });
+      m.lockins[pid] = lock;
+      var dc = {};
+      [(L.dailyCompletions||{})[pid], (R.dailyCompletions||{})[pid]].forEach(function(o){
+        for(var d in (o||{})) dc[d] = Math.max(dc[d]||0, o[d]);
+      });
+      m.dailyCompletions[pid] = dc;
+    });
+
+    // monthly tallies: max of each side
+    m.monthly = {};
+    [L.monthly, R.monthly].forEach(function(o){
+      for(var mk in (o||{})){
+        var cur = m.monthly[mk] || {assigned:0, completed:0, badgeAwarded:false};
+        m.monthly[mk] = {
+          assigned: Math.max(cur.assigned, o[mk].assigned||0),
+          completed: Math.max(cur.completed, o[mk].completed||0),
+          badgeAwarded: cur.badgeAwarded || !!o[mk].badgeAwarded
+        };
+      }
+    });
+
+    var lq = L.quest || {}, rq = R.quest || {};
+    m.quest = (lq.mtime||0) >= (rq.mtime||0) ? lq : rq;
+    var lb = L.powerCoupleBadge || {}, rb = R.powerCoupleBadge || {};
+    m.powerCoupleBadge = {held: !!(lb.held || rb.held), sinceMonth: lb.sinceMonth || rb.sinceMonth || null};
+    m.paired = !!(L.paired || R.paired || true); // two phones sharing a gist ARE paired
+    m.pairSecret = base.pairSecret || other.pairSecret;
+    m.healthGistUrl = base.healthGistUrl || other.healthGistUrl;
+    m.healthCache = {};
+    ["p1","p2"].forEach(function(pid){
+      var lh = (L.healthCache||{})[pid], rh = (R.healthCache||{})[pid];
+      m.healthCache[pid] = (!rh || (lh && String(lh.date||"") >= String(rh.date||""))) ? lh : rh;
+    });
+    m.savedAt = String(L.savedAt||"") > String(R.savedAt||"") ? L.savedAt : R.savedAt;
+    return m;
+  }
+
+  // fields that stay per-phone and never sync
+  function stripLocal(s){
+    var c = {};
+    for(var k in s){ if(s.hasOwnProperty(k)) c[k] = s[k]; }
+    delete c.currentUser;
+    delete c.currentList;
+    delete c.devicePin;
+    return c;
+  }
+
+  var syncTimer = null, syncInFlight = false, syncQueued = false, applyingRemote = false;
+  var lastSync = {at: null, ok: null, err: null};
+  function scheduleSync(){
+    if(!autoSyncOn() || applyingRemote) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function(){ syncNow(false); }, 4000);
+  }
+  function setSyncStatus(s){
+    var el = document.getElementById("syncStatusLabel");
+    if(!el) return;
+    el.textContent = s === "syncing" ? "syncing…" : (s === "ok" ? "synced ✓ " + new Date().toLocaleTimeString() : "sync failed — check token");
+    el.style.color = s === "err" ? "var(--pink)" : "var(--muted)";
+  }
+  function syncNow(manual){
+    if(!autoSyncOn()){
+      if(manual) toast("Save your Gist link and GitHub token first");
+      return;
+    }
+    if(syncInFlight){ syncQueued = true; return; }
+    syncInFlight = true;
+    setSyncStatus("syncing");
+    var id = gistIdFromUrl();
+    var headers = {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json"};
+    fetch("https://api.github.com/gists/" + id, {headers: headers})
+      .then(function(r){ if(!r.ok) throw new Error("read " + r.status); return r.json(); })
+      .then(function(g){
+        var f = g.files && g.files["wedo-state.json"];
+        if(!f) return null;
+        if(f.truncated) return fetch(f.raw_url).then(function(r){ return r.text(); });
+        return f.content;
+      })
+      .then(function(txt){
+        var remote = null;
+        try{ remote = txt ? JSON.parse(txt) : null; }catch(e){}
+        var merged = mergeStates(state, remote);
+        var mergedJson = JSON.stringify(stripLocal(merged));
+        var changedLocally = mergedJson !== JSON.stringify(stripLocal(state));
+        if(changedLocally){
+          applyingRemote = true;
+          merged.currentUser = state.currentUser;
+          merged.currentList = listById(state.currentList) ? state.currentList : merged.currentList;
+          merged.devicePin = state.devicePin;
+          state = merged;
+          state.people.forEach(function(p){ ensurePerson(state, p.id); });
+          save();
+          // don't yank the UI around while the add-task sheet is open
+          if(!document.getElementById("addTaskSheet").classList.contains("show")) renderAll();
+          applyingRemote = false;
+        }
+        if(!remote || mergedJson !== JSON.stringify(stripLocal(remote))){
+          return fetch("https://api.github.com/gists/" + id, {
+            method: "PATCH",
+            headers: {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json", "Content-Type": "application/json"},
+            body: JSON.stringify({files: {"wedo-state.json": {content: mergedJson}}})
+          }).then(function(r){ if(!r.ok) throw new Error("write " + r.status); });
+        }
+      })
+      .then(function(){
+        lastSync = {at: new Date(), ok: true, err: null};
+        setSyncStatus("ok");
+        if(manual) toast("Synced with " + personName(otherPerson(state.currentUser)) + "'s phone ✅");
+      })
+      .catch(function(e){
+        lastSync = {at: new Date(), ok: false, err: e.message};
+        setSyncStatus("err");
+        if(manual) toast("Sync failed: " + e.message);
+      })
+      .then(function(){
+        syncInFlight = false;
+        if(syncQueued){ syncQueued = false; scheduleSync(); }
+      });
+  }
+
+  // ---------- diagnostics: run on both phones, compare lines ----------
+  var BUILD_NUM = 20;
+  function runDiagnostics(){
+    var out = document.getElementById("diagOut");
+    out.style.display = "block";
+    var lines = [];
+    function add(ok, label, extra){
+      lines.push((ok === null ? "•" : ok ? "✅" : "❌") + " " + label + (extra ? " — " + extra : ""));
+      out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+    }
+    add(null, "Build " + BUILD_NUM);
+    var owner = deviceOwner();
+    add(!!owner, "Phone owner", owner ? personName(owner) : "NOT SET — pick in Daily check-in");
+    add(null, "Viewing as", personName(state.currentUser));
+    var gist = parseGistBase(state.healthGistUrl);
+    add(!!gist, "Gist link", gist ? "saved" : "MISSING — paste it above and Save");
+    var tok = ghToken();
+    add(!!tok, "GitHub token", tok ? "saved on this phone (" + tok.slice(0,7) + "…)" : "MISSING — paste it above and Save");
+    add(autoSyncOn(), "Auto-sync", autoSyncOn() ? "ON" : "OFF (needs both link + token)");
+    if(lastSync.at){
+      add(lastSync.ok, "Last sync", lastSync.at.toLocaleTimeString() + (lastSync.err ? " · " + lastSync.err : ""));
+    } else {
+      add(null, "Last sync", "none yet this session");
+    }
+    var trips = state.tasks.filter(function(t){ return t.trip; });
+    var tripsNoImg = trips.filter(function(t){ return !t.image; });
+    add(null, "Tasks on this phone", state.tasks.length + " total, " + trips.length + " trips");
+    trips.forEach(function(t){
+      add(!!t.image, "Trip “" + t.title + "”", t.image ? "has photo" : "no photo yet (tries: " + (t.imgTries||0) + ")");
+    });
+    add(null, "Storage used", storageKB() + " KB");
+
+    // live connection tests
+    if(typeof fetch === "function"){
+      add(null, "Testing Wikipedia (trip photos)…");
+      var wikiIdx = lines.length - 1;
+      fetch("https://en.wikipedia.org/api/rest_v1/page/summary/Tokyo")
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          lines[wikiIdx] = (j && j.thumbnail ? "✅" : "❌") + " Wikipedia reachable" + (j && j.thumbnail ? "" : " but no image data");
+          out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+        })
+        .catch(function(e){
+          lines[wikiIdx] = "❌ Wikipedia unreachable — " + e.message + " (trip photos can't load)";
+          out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+        });
+      if(autoSyncOn()){
+        add(null, "Testing gist connection…");
+        var gIdx = lines.length - 1;
+        fetch("https://api.github.com/gists/" + gistIdFromUrl(), {headers:{Authorization:"Bearer "+ghToken(), Accept:"application/vnd.github+json"}})
+          .then(function(r){
+            var f = null;
+            if(r.ok) return r.json().then(function(g){
+              f = g.files && g.files["wedo-state.json"];
+              lines[gIdx] = "✅ Gist reachable" + (f ? " · shared state exists" : " · no shared state yet (sync once on the other phone)");
+              out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+            });
+            lines[gIdx] = "❌ Gist error " + r.status + (r.status === 401 || r.status === 403 ? " — token is wrong/expired" : r.status === 404 ? " — gist link is wrong" : "");
+            out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+          })
+          .catch(function(e){
+            lines[gIdx] = "❌ Gist unreachable — " + e.message;
+            out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+          });
+      }
+    }
+  }
+  document.getElementById("diagBtn").addEventListener("click", runDiagnostics);
+  document.getElementById("retryImagesBtn").addEventListener("click", function(){
+    var retried = 0;
+    state.tasks.forEach(function(t){
+      if(t.trip && !t.image){ t.imgTries = 0; t.imgTryAt = 0; fetchCityImage(t); retried++; }
+      if(!t.trip && t.link && !t.image){ t.imgTries = 0; t.imgTryAt = 0; }
+    });
+    imgFetchCount = 0;
+    save(); renderTasks();
+    toast(retried ? ("Retrying photos for " + retried + " trip(s)…") : "No trips are missing photos");
+  });
+
+  // ---------- Apple Health (via shared Gist that iOS Shortcuts update) ----------
+  function parseGistBase(url){
+    if(!url) return null;
+    var m = String(url).match(/gist\.github(?:usercontent)?\.com\/([^\/\s]+)\/([a-f0-9]+)/i);
+    if(!m) return null;
+    return "https://gist.githubusercontent.com/" + m[1] + "/" + m[2] + "/raw/";
+  }
+
+  function fetchHealth(){
+    var base = parseGistBase(state.healthGistUrl);
+    if(!base || typeof fetch !== "function") return;
+    ["p1","p2"].forEach(function(pid){
+      fetch(base + "health-" + pid + ".json?t=" + Date.now())
+        .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+        .then(function(j){
+          if(j && typeof j === "object" && (j.steps != null || j.sleepHours != null || j.calories != null)){
+            if(!state.healthCache) state.healthCache = {};
+            state.healthCache[pid] = j;
+            save();
+            renderHealth();
+          }
+        })
+        .catch(function(){ /* offline or not set up yet — card shows what it has */ });
+    });
+  }
+
+  function fmtSleep(h){
+    if(h == null) return "—";
+    var hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+    return hh + "h " + (mm > 0 ? mm + "m" : "");
+  }
+
+  function healthNudges(a, b){
+    var out = [];
+    var n1 = personName("p1"), n2 = personName("p2");
+    if(a && b){
+      if(a.sleepHours != null && b.sleepHours != null){
+        var lo = a.sleepHours <= b.sleepHours ? {n:n1, h:a.sleepHours} : {n:n2, h:b.sleepHours};
+        if(lo.h < 6.5) out.push("😴 " + lo.n + " ran on " + fmtSleep(lo.h) + " of sleep — extra gentleness today 💛");
+      }
+      if(a.steps != null && b.steps != null && a.steps !== b.steps){
+        var lead = a.steps > b.steps ? n1 : n2;
+        var diff = Math.abs(a.steps - b.steps);
+        out.push("👟 " + lead + " leads by " + diff.toLocaleString() + " steps — game on.");
+      }
+      if(a.calories != null && b.calories != null && a.calories !== b.calories && out.length < 2){
+        var burn = a.calories > b.calories ? n1 : n2;
+        out.push("🔥 " + burn + "'s burning more today.");
+      }
+    }
+    return out;
+  }
+
+  function healthCol(d){
+    function stale(){
+      if(!d || !d.date) return "";
+      if(d.date === todayISO()) return "";
+      return '<div class="health-stale">' + new Date(d.date + "T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}) + "</div>";
+    }
+    return {
+      steps: d && d.steps != null ? Math.round(d.steps).toLocaleString() : "—",
+      cal:   d && d.calories != null ? Math.round(d.calories).toLocaleString() : "—",
+      sleep: d ? fmtSleep(d.sleepHours) : "—",
+      stale: stale()
+    };
+  }
+
+  function renderHealth(){
+    var body = document.getElementById("healthBody");
+    if(!body) return;
+    if(!state.healthGistUrl){
+      body.innerHTML = '<div class="empty" style="font-style:normal;">Steps, calories &amp; sleep — side by side, straight from your iPhones. ' +
+        'Set it up once with the Health guide, then paste your Gist link under <em>Sync</em> below. 🍎</div>';
+      return;
+    }
+    var a = (state.healthCache || {}).p1, b = (state.healthCache || {}).p2;
+    if(!a && !b){
+      body.innerHTML = '<div class="empty" style="font-style:normal;">Link saved — waiting for the first numbers. Run your Health shortcut once and hit ↻.</div>';
+      return;
+    }
+    var ca = healthCol(a), cb = healthCol(b);
+    var winStep = (a && b && a.steps != null && b.steps != null) ? (a.steps > b.steps ? "l" : (b.steps > a.steps ? "r" : "")) : "";
+    var winCal  = (a && b && a.calories != null && b.calories != null) ? (a.calories > b.calories ? "l" : (b.calories > a.calories ? "r" : "")) : "";
+    var winSlp  = (a && b && a.sleepHours != null && b.sleepHours != null) ? (a.sleepHours > b.sleepHours ? "l" : (b.sleepHours > a.sleepHours ? "r" : "")) : "";
+    function cls(side, win){ return "health-val" + (win === side ? " win" : ""); }
+    body.innerHTML =
+      '<div class="health-grid">' +
+        '<div class="health-name">' + escapeHtml(personName("p1")) + ca.stale + '</div><div></div>' +
+        '<div class="health-name">' + escapeHtml(personName("p2")) + cb.stale + '</div>' +
+        '<div class="' + cls("l", winStep) + '">' + ca.steps + '</div><div class="health-ico" title="Steps">👣</div><div class="' + cls("r", winStep) + '">' + cb.steps + '</div>' +
+        '<div class="' + cls("l", winCal) + '">' + ca.cal + '</div><div class="health-ico" title="Active calories">🔥</div><div class="' + cls("r", winCal) + '">' + cb.cal + '</div>' +
+        '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">😴</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
+      '</div>' +
+      healthNudges(a, b).map(function(n){ return '<div class="health-nudge">' + escapeHtml(n) + '</div>'; }).join("");
+  }
+
+  document.getElementById("healthRefresh").addEventListener("click", function(){
+    if(!state.healthGistUrl){ toast("Paste your Gist link in Sync settings first"); return; }
+    toast("Refreshing health data…");
+    fetchHealth();
+  });
+  document.getElementById("healthGistSaveBtn").addEventListener("click", function(){
+    var v = document.getElementById("healthGistInput").value.trim();
+    if(v && !parseGistBase(v)){ toast("That doesn't look like a Gist link"); return; }
+    state.healthGistUrl = v || null;
+    save();
+    renderHealth();
+    if(v){ toast("Health link saved ✅"); fetchHealth(); }
+    else { toast("Health link removed"); }
+  });
+
   // ---------- trips ----------
   // grab a destination photo from Wikipedia so the trips list is all pictures
+  function tripQuery(title){
+    // strip filler so "Trip to Tokyo!" or "tokyo vacation 2027" still finds the city page
+    return String(title || "")
+      .replace(/[!?.,:;()]/g, " ")
+      .replace(/\b(trip|vacation|holiday|getaway|visit|to|the|a|an|weekend|honeymoon|20\d\d)\b/gi, " ")
+      .replace(/\s+/g, " ").trim() || String(title || "").trim();
+  }
+  function wikiThumb(j){
+    return (j && j.thumbnail && j.thumbnail.source) || (j && j.originalimage && j.originalimage.source) || null;
+  }
   function fetchCityImage(t){
-    if(!t.trip || t.image || t.imgTried) return;
+    if(!t.trip || !imgRetryOk(t)) return;
     if(typeof fetch !== "function") return;
-    t.imgTried = true;
-    var q = encodeURIComponent(t.title.trim().replace(/\s+/g, "_"));
-    fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + q)
+    imgMarkTry(t);
+    var name = tripQuery(t.title);
+    var direct = "https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(name.replace(/\s+/g, "_"));
+    fetch(direct)
       .then(function(r){ return r.json(); })
       .then(function(j){
-        var u = (j && j.thumbnail && j.thumbnail.source) || (j && j.originalimage && j.originalimage.source);
+        var u = wikiThumb(j);
+        if(u) return u;
+        // fallback: title search, then summary of the best match
+        return fetch("https://en.wikipedia.org/w/rest.php/v1/search/title?q=" + encodeURIComponent(name) + "&limit=1")
+          .then(function(r){ return r.json(); })
+          .then(function(s){
+            var hit = s && s.pages && s.pages[0];
+            if(!hit) return null;
+            return fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(hit.key))
+              .then(function(r){ return r.json(); })
+              .then(wikiThumb);
+          });
+      })
+      .then(function(u){
         if(u){ t.image = u; }
         save();
         if(u) renderTasks();
@@ -2242,6 +2780,7 @@
       del.setAttribute("aria-label","Remove trip");
       del.addEventListener("click", function(){
         if(!confirm("Remove the " + t.title + " trip?")) return;
+        tombstoneTask(t);
         state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
         save(); renderAll();
       });
@@ -2281,7 +2820,7 @@
     if(!state.monthly[mk]) state.monthly[mk] = {assigned:0, completed:0, badgeAwarded:false};
     TRIP_CHECKLIST.forEach(function(item){
       state.tasks.push({
-        id: uid(), title: trip.title + " · " + item.title,
+        id: uid(), mtime: Date.now(), title: trip.title + " · " + item.title,
         assignedTo: "both", difficulty: item.diff, status: "open",
         createdMonth: mk, completedBy: null, completedAt: null,
         repeat: "none", lastCompletedAt: null, listId: "list-trips",
@@ -2313,6 +2852,7 @@
     if(t.image){
       var img = document.createElement("img");
       img.loading = "lazy";
+      img.referrerPolicy = "no-referrer"; // some shops block hotlinks by referrer on mobile
       img.alt = t.title;
       img.style.opacity = "0";
       img.style.transition = "opacity .25s ease";
@@ -2397,6 +2937,7 @@
         renderAll();
       }));
       rail.appendChild(iconBtn(ICON.trash, "Remove", function(){
+        tombstoneTask(t);
         state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
         delete openEditIds[t.id];
         save(); renderAll();
@@ -2480,6 +3021,7 @@
         renderAll();
       }));
       actions.appendChild(iconBtn(ICON.trash, "Remove", function(){
+        tombstoneTask(t);
         state.tasks = state.tasks.filter(function(x){return x.id !== t.id;});
         delete openEditIds[t.id];
         save(); renderAll();
@@ -2543,6 +3085,7 @@
       renderAll();
     });
     box.querySelector(".edit-save").addEventListener("click", function(){
+      touch(t);
       t.assignedTo = box.querySelector(".edit-assignee").value;
       if(list.priceBased){
         var oldLink = t.link;
@@ -2677,7 +3220,7 @@
 
     if(listId === "list-trips"){
       var trip = {
-        id: uid(), title: title, trip: true,
+        id: uid(), mtime: Date.now(), title: title, trip: true,
         tripStart: document.getElementById("tripStart").value || null,
         tripEnd: document.getElementById("tripEnd").value || null,
         assignedTo: "both", difficulty: "hard", status: "open",
@@ -2712,6 +3255,7 @@
 
     var newTask = {
       id: uid(),
+      mtime: Date.now(),
       title: title,
       assignedTo: assignee,
       difficulty: diff,
@@ -2971,6 +3515,8 @@
         pb.textContent = personName(p.id) + "'s phone";
         pb.addEventListener("click", function(){
           setDeviceOwner(p.id);
+          state.currentUser = p.id;
+          save();
           toast("Got it — this is " + personName(p.id) + "'s phone 📱");
           renderAll();
         });
@@ -3061,7 +3607,7 @@
 
   function addExperienceTask(title, emoji){
     state.tasks.push({
-      id: uid(), title: title, assignedTo:"both", difficulty:"hard", status:"open",
+      id: uid(), mtime: Date.now(), title: title, assignedTo:"both", difficulty:"hard", status:"open",
       createdMonth: monthKey(), completedBy:null, completedAt:null, repeat:"none", lastCompletedAt:null,
       listId:"list-exp", link:null, unitPrice:0, currency:"USD", quantity:1, alternatives:[],
       emoji: emoji || "🏆", venue:null, speakerId:null, photo:null
@@ -3184,6 +3730,7 @@
       var delBtn = document.createElement("button");
       delBtn.textContent = "Remove";
       delBtn.addEventListener("click", function(){
+        tombstoneTask(t);
         state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
         save(); renderAll();
       });
@@ -3301,6 +3848,7 @@
     var t = state.tasks.find(function(x){ return x.id === pendingExpId; });
     if(!t) return;
     var dateVal = document.getElementById("expDate").value || todayISO();
+    touch(t);
     t.status = "done";
     t.completedBy = "both";
     t.completedAt = dateVal + "T12:00:00.000Z";
@@ -3371,6 +3919,7 @@
     t.status = "done";
     t.completedBy = actor;
     t.completedAt = new Date().toISOString();
+    touch(t);
 
     ensurePerson(state, actor);
     var pts = DIFF_POINTS[t.difficulty] || 10;
@@ -3599,6 +4148,7 @@
         var contributions = {};
         state.people.forEach(function(p){ contributions[p.id] = false; });
         state.quest.active = {title:s.title, desc:s.desc, contributions:contributions, startedAt:new Date().toISOString()};
+        state.quest.mtime = Date.now();
         save(); renderQuest();
       });
       return;
@@ -3620,6 +4170,7 @@
   function toggleQuestPart(personId){
     var q = state.quest.active;
     if(!q) return;
+    state.quest.mtime = Date.now();
     q.contributions[personId] = !q.contributions[personId];
     var allDone = state.people.every(function(p){ return q.contributions[p.id]; });
     if(allDone){
@@ -3720,7 +4271,8 @@
         var idx = state.rewardRequests.findIndex(function(r){return r.id===id;});
         if(idx<0) return;
         var r = state.rewardRequests[idx];
-        state.rewards.push({id:r.id, name:r.name, tier:r.tier, emoji:r.emoji});
+        state.rewards.push({id:uid(), mtime:Date.now(), name:r.name, tier:r.tier, emoji:r.emoji});
+        tombstone(r.id);
         state.rewardRequests.splice(idx,1);
         save(); renderRewards(); drawWheel();
         toast("Added \""+r.name+"\" to the wheel");
@@ -3732,6 +4284,7 @@
         var idx = state.rewardRequests.findIndex(function(r){return r.id===id;});
         if(idx<0) return;
         var r = state.rewardRequests[idx];
+        tombstone(r.id);
         state.rewardRequests.splice(idx,1);
         save(); renderRewards();
         toast("Declined \""+r.name+"\"");
@@ -3742,6 +4295,7 @@
         var id = btn.dataset.id;
         var idx = state.rewardRequests.findIndex(function(r){return r.id===id;});
         if(idx<0) return;
+        tombstone(state.rewardRequests[idx].id);
         state.rewardRequests.splice(idx,1);
         save(); renderRewards();
         toast("Request withdrawn");
@@ -3755,7 +4309,7 @@
     if(!name) return;
     var tier = document.getElementById("rewardTier").value;
     if(!state.rewardRequests) state.rewardRequests = [];
-    state.rewardRequests.push({id:uid(), name:name, tier:tier, emoji:emojiByTier[tier], proposedBy:state.currentUser, date:new Date().toISOString()});
+    state.rewardRequests.push({id:uid(), mtime:Date.now(), name:name, tier:tier, emoji:emojiByTier[tier], proposedBy:state.currentUser, date:new Date().toISOString()});
     document.getElementById("rewardName").value = "";
     save(); renderRewards();
     toast("Sent \""+name+"\" to "+personName(otherPerson(state.currentUser))+" for approval");
@@ -3845,8 +4399,9 @@
     canvas.style.transform = "rotate("+targetDeg+"deg)";
 
     p.spinsAvailable--;
+    p.spinsUsed = (p.spinsUsed||0) + 1;
     setTimeout(function(){
-      state.rewardsWon.push({personId:uid_, rewardId:chosen.id, name:chosen.name, tier:chosen.tier, emoji:chosen.emoji, date:new Date().toISOString()});
+      state.rewardsWon.push({id:uid(), personId:uid_, rewardId:chosen.id, name:chosen.name, tier:chosen.tier, emoji:chosen.emoji, date:new Date().toISOString()});
       save();
       renderRewards();
       renderStats();
@@ -3915,15 +4470,39 @@
     var val = document.getElementById("syncBox").value.trim();
     if(!val) return;
     try{
-      var imported = JSON.parse(decodeURIComponent(escape(atob(val))));
-      state = imported;
+      // accept both the classic sync code and a raw backup-file's JSON
+      var imported = val.charAt(0) === "{"
+        ? JSON.parse(val)
+        : JSON.parse(decodeURIComponent(escape(atob(val))));
+      if(!imported || !imported.people) throw new Error("bad");
+      // merge instead of overwrite: never lose what this phone already has
+      state = mergeStates(state, imported);
+      // pairing means adopting the sender's secret + gist so codes and sync line up
+      if(imported.pairSecret) state.pairSecret = imported.pairSecret;
+      if(imported.healthGistUrl) state.healthGistUrl = imported.healthGistUrl;
       state.people.forEach(function(p){ ensurePerson(state, p.id); });
       state.paired = true;
       save();
       renderAll();
-      toast("Paired & synced ✅");
+      toast("Imported & merged ✅ nothing lost");
     }catch(e){
       toast("That code didn't look right.");
+    }
+  });
+
+  // download a backup file of everything on this phone
+  document.getElementById("backupBtn").addEventListener("click", function(){
+    try{
+      var blob = new Blob([JSON.stringify(state, null, 1)], {type: "application/json"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "wedo-backup-" + todayISO() + ".json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      toast("Backup saved to your files 📦");
+    }catch(e){
+      toast("Couldn't create the backup file");
     }
   });
 
@@ -4002,12 +4581,62 @@
     renderNotes();
     renderDailyQuestion();
     renderDeviceOwnerLabel();
+    renderHealth();
   }
 
   randomQuote();
   applyLock();
 
   renderAll();
+  document.getElementById("healthGistInput").value = state.healthGistUrl || "";
+  document.getElementById("ghTokenInput").value = ghToken();
+  fetchHealth();
+  setInterval(fetchHealth, 30 * 60000); // keep health numbers fresh while the app is open
+
+  // ---- auto-sync wiring ----
+  document.getElementById("ghTokenSaveBtn").addEventListener("click", function(){
+    var v = document.getElementById("ghTokenInput").value.trim();
+    setGhToken(v);
+    if(v){ toast("Token saved on this phone 🔐"); syncNow(true); }
+    else { toast("Token removed — back to manual sync"); setSyncStatus("err"); }
+  });
+  document.getElementById("syncNowBtn").addEventListener("click", function(){ syncNow(true); });
+  syncNow(false); // no-op until gist link + token are saved
+  setInterval(function(){ syncNow(false); }, 2 * 60000);
+
+  // a shared setup link like ...?gist=<id-or-url> pre-fills the gist so
+  // re-pairing a wiped or new phone is one paste (the token) instead of two
+  try{
+    var qGist = new URLSearchParams(location.search).get("gist");
+    if(qGist && !state.healthGistUrl){
+      var norm = /^[a-f0-9]+$/i.test(qGist) ? ("https://gist.github.com/x/" + qGist) : qGist;
+      if(parseGistBase(norm)){
+        state.healthGistUrl = norm;
+        save();
+        document.getElementById("healthGistInput").value = norm;
+        toast("Gist link loaded from the URL — just add the token 🔑");
+      }
+    }
+  }catch(e){}
+
+  // nag (gently) until this phone's data is actually backed up by auto-sync
+  function renderBackupNag(){
+    var card = document.getElementById("noBackupCard");
+    if(!card) return;
+    var snoozedUntil = 0;
+    try{ snoozedUntil = parseInt(localStorage.getItem("us-backup-nag-snooze") || "0", 10); }catch(e){}
+    card.style.display = (!autoSyncOn() && Date.now() > snoozedUntil) ? "" : "none";
+  }
+  document.getElementById("noBackupLater").addEventListener("click", function(){
+    try{ localStorage.setItem("us-backup-nag-snooze", String(Date.now() + 3 * 86400000)); }catch(e){}
+    renderBackupNag();
+    toast("Okay — I'll mention it again in a few days");
+  });
+  renderBackupNag();
+  setInterval(renderBackupNag, 60000);
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible"){ syncNow(false); fetchHealth(); }
+  });
 
   // refresh the check-in card as the day rolls over
   setInterval(function(){
