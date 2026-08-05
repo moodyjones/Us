@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#17131c">
-<title>Us — Tasks & Rewards</title>
+<title>WeDO — Do Stuff Together, To Get There</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -915,7 +915,7 @@
 <div id="lockScreen" style="display:none;position:fixed;inset:0;z-index:200;background:var(--bg);align-items:center;justify-content:center;padding:24px;">
   <div style="max-width:320px;width:100%;text-align:center;">
     <div style="font-size:42px;margin-bottom:10px;">💞</div>
-    <h3 style="margin:0 0 6px;">Us</h3>
+    <h3 style="margin:0 0 6px;">WeDO</h3>
     <p style="color:var(--muted);font-size:13px;margin:0 0 16px;" id="lockPrompt">Enter your 4-digit PIN</p>
     <input type="password" id="lockInput" inputmode="numeric" maxlength="4"
       style="width:100%;font-size:26px;text-align:center;letter-spacing:10px;font-family:ui-monospace,monospace;">
@@ -925,9 +925,9 @@
 </div>
 
 <header>
-  <h1>💞 Us</h1>
-  <div class="sub">Tasks, points, and reasons to smile</div>
-  <div class="sub">Build 14 · Rae edition</div>
+  <h1>💞 WeDO</h1>
+  <div class="sub">Do stuff Together, To Get There ❤️</div>
+  <div class="sub">Build 15 · Rae edition</div>
 </header>
 
 <main>
@@ -1378,9 +1378,10 @@
       ],
       currentUser: "p1",
       lists: [
-        {id:"list-todo", name:"To Do", emoji:"✅", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
-        {id:"list-buy", name:"To Buy", emoji:"🛒", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}},
-        {id:"list-exp", name:"To Experience", emoji:"🎟️", verb:"Lived", priceBased:false, experienceBased:true, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}}
+        {id:"list-todo", name:"Stuff", emoji:"✅", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
+        {id:"list-trips", name:"Trips", emoji:"✈️", verb:"Booked", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
+        {id:"list-exp", name:"Experiences", emoji:"🎟️", verb:"Lived", priceBased:false, experienceBased:true, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
+        {id:"list-buy", name:"Shopping", emoji:"🛒", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}}
       ],
       currentList: "list-todo",
       speechTurn: "p1",
@@ -1415,12 +1416,15 @@
   state.people.forEach(function(p){ ensurePerson(state, p.id); });
   if(!state.lists || state.lists.length===0){
     state.lists = [
-      {id:"list-todo", name:"To Do", emoji:"✅", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
-      {id:"list-buy", name:"To Buy", emoji:"🛒", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}}
+      {id:"list-todo", name:"Stuff", emoji:"✅", verb:"Done", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}},
+      {id:"list-buy", name:"Shopping", emoji:"🛒", verb:"Bought", priceBased:true, tierLabels:{easy:"Easy",medium:"Tough",hard:"Boujie"}}
     ];
   }
   if(!state.lists.some(function(l){return l.id==="list-exp";})){
-    state.lists.push({id:"list-exp", name:"To Experience", verb:"Lived", priceBased:false, experienceBased:true, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}});
+    state.lists.push({id:"list-exp", name:"Experiences", emoji:"🎟️", verb:"Lived", priceBased:false, experienceBased:true, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}});
+  }
+  if(!state.lists.some(function(l){return l.id==="list-trips";})){
+    state.lists.splice(1, 0, {id:"list-trips", name:"Trips", emoji:"✈️", verb:"Booked", priceBased:false, tierLabels:{easy:"Easy",medium:"Medium",hard:"Hard"}});
   }
   if(!state.speechTurn) state.speechTurn = "p1";
   if(!state.pairSecret){
@@ -1614,11 +1618,14 @@
           if(r.name==="Partner does one chore for you") r.name = "Your love does one chore for you";
           if(r.name==="Partner cooks your favorite meal") r.name = "Your love cooks your favorite meal";
         });
-        // migrate old saves: give lists their icons
+        // migrate old saves: give lists their icons + WeDO-era names
         if(parsed.lists) parsed.lists.forEach(function(l){
           if(!l.emoji){
             l.emoji = l.id==="list-todo" ? "✅" : l.id==="list-buy" ? "🛒" : l.id==="list-exp" ? "🎟️" : "📋";
           }
+          if(l.id==="list-todo" && l.name==="To Do") l.name = "Stuff";
+          if(l.id==="list-buy" && l.name==="To Buy") l.name = "Shopping";
+          if(l.id==="list-exp" && l.name==="To Experience") l.name = "Experiences";
         });
         return parsed;
       }
