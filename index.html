@@ -575,6 +575,21 @@
   }
   .list-pills button.add-list{background:transparent;color:var(--faint);}
 
+  /* ---- daily question answers ---- */
+  .qa-bubble{
+    background:var(--s2);border:1px solid var(--line);border-radius:14px;
+    padding:10px 13px;margin-top:8px;font-size:13.5px;line-height:1.55;
+  }
+  .qa-bubble.sealed{color:var(--faint);font-style:italic;border-style:dashed;}
+  .qa-who{
+    font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--pink);margin-bottom:3px;
+  }
+  .qa-status{font-size:12.5px;color:var(--muted);margin-top:9px;text-align:center;}
+  .qa-past{border-top:1px solid var(--line);padding-top:10px;margin-top:12px;}
+  .qa-past:first-child{border-top:none;padding-top:0;margin-top:0;}
+  .qa-past-q{font-size:12.5px;color:var(--muted);font-weight:600;}
+
   /* ---- health card ---- */
   .health-grid{
     display:grid;grid-template-columns:1fr 44px 1fr;gap:9px 6px;align-items:center;
@@ -960,6 +975,63 @@
   }
   details.sync summary{font-size:13px;font-weight:600;color:var(--faint);}
   hr{border-color:var(--line)!important;}
+
+/* ══════════════════════════════════════════════════════════
+   POLISH LAYER — calmer color, clearer hierarchy, real motion
+   ══════════════════════════════════════════════════════════ */
+
+  /* one accent, neutral surfaces: flatten the loud purple gradients */
+  .card{
+    background:#211b28;
+    box-shadow:0 1px 2px rgba(0,0,0,.25);
+  }
+  .card::before{display:none;}
+  .hero-card{
+    /* frameless hero — content, not a box */
+    background:transparent;border:none;box-shadow:none;
+    padding:8px 4px 4px;
+  }
+  .quest-card{
+    background:#211b28;
+    border-color:var(--line);
+  }
+  .quest-card h2::after{content:"";display:block;width:26px;height:3px;border-radius:2px;
+    background:var(--rose,#ff6f91);margin-top:7px;}
+
+  /* section headers as quiet eyebrow labels — grouped-list feel */
+  .card h2{
+    font-family:var(--ui);
+    font-size:11.5px;
+    font-weight:800;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+    color:var(--faint);
+    margin:0 0 12px;
+  }
+  .daily-q-card .q{font-size:19px;}
+
+  /* buttons: solid accent, honest press states */
+  button.primary{
+    background:var(--rose,#ff6f91);
+    box-shadow:0 2px 10px rgba(217,74,107,.25);
+  }
+  button{transition:transform .12s ease, opacity .15s ease;}
+  button:active{transform:scale(.965);}
+  .fab{background:var(--rose,#ff6f91);}
+
+  /* left-align stragglers */
+  .qa-status{text-align:left;}
+  #powerCoupleStatus{text-align:left!important;}
+
+  /* motion: views breathe in, tasks check out */
+  @media (prefers-reduced-motion: no-preference){
+    .view.active{animation:viewIn .18s ease-out;}
+    @keyframes viewIn{from{opacity:.55;transform:translateY(5px);}to{opacity:1;transform:none;}}
+    .task-wrap{transition:opacity .28s ease, transform .28s ease;}
+    .task-wrap.completing{opacity:0;transform:translateX(14px);}
+    .task .check, .buy-card .buy-check{transition:background .15s ease, border-color .15s ease;}
+    .toast{transition:opacity .2s ease, transform .2s ease;}
+  }
 </style>
 </head>
 <body>
@@ -979,7 +1051,7 @@
 <header>
   <h1>💞 WeDO</h1>
   <div class="sub">Do stuff Together, To Get There ❤️</div>
-  <div class="sub">Build 20 · Rae edition</div>
+  <div class="sub">Build 23 · Rae edition</div>
 </header>
 
 <main>
@@ -1222,7 +1294,13 @@
     <div class="card daily-q-card">
       <h2>Today's Question</h2>
       <div class="q" id="dailyQuestionText"></div>
-      <div class="hint">Same question on both your phones today — talk about it together 💬</div>
+      <div class="hint">Answer separately — answers stay sealed 🔒 until you've both answered, then they reveal.</div>
+      <div id="qaArea" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card" id="qaArchiveCard" style="display:none;">
+      <h2>Past reveals</h2>
+      <div id="qaArchive"></div>
     </div>
 
     <div class="card">
@@ -1269,6 +1347,7 @@
     <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Something looks off?</strong> Run this on BOTH phones and compare — it checks the build, sync setup, connections, and trip images, and says exactly what's wrong.</p>
+    <button class="ghost" id="tourReplayBtn" style="width:100%;margin-bottom:6px;">Replay the welcome tour</button>
     <button class="ghost" id="diagBtn" style="width:100%;">Run diagnostics</button>
     <button class="ghost" id="retryImagesBtn" style="width:100%;margin-top:6px;">Retry missing trip images</button>
     <div id="diagOut" style="display:none;font-size:11px;line-height:1.8;margin-top:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--card2);border-radius:10px;padding:10px 12px;word-break:break-word;"></div>
@@ -1296,6 +1375,20 @@
     <h3 id="modalTitle">Nice!</h3>
     <p id="modalText"></p>
     <button class="primary" id="modalClose" style="width:100%;">Sweet</button>
+  </div>
+</div>
+
+<!-- Welcome tour -->
+<div class="modal-bg" id="tourBg">
+  <div class="modal">
+    <div class="emoji" id="tourEmoji">💞</div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourText" style="line-height:1.6;"></p>
+    <div id="tourDots" style="display:flex;gap:6px;justify-content:center;margin:14px 0 12px;"></div>
+    <div class="row2">
+      <button class="ghost" id="tourSkip">Skip</button>
+      <button class="primary" id="tourNext">Next</button>
+    </div>
   </div>
 </div>
 
@@ -1509,6 +1602,7 @@
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
       tombstones: {},       // deleted item id -> deletion time (so deletes survive sync merges)
       savedAt: null,        // last local save time (drives sync merge direction)
+      qa: {},               // "YYYY-MM-DD" -> {question, answers: {pid: {text, at}}} — sealed until both answer
       quest: {active: null, completedCount: 0} // active: {title, desc, contributions:{personId:bool}, startedAt}
     };
   }
@@ -1523,6 +1617,13 @@
 
   var state = load();
   state.people.forEach(function(p){ ensurePerson(state, p.id); });
+  // prune Q&A entries older than 60 days to keep storage lean
+  (function(){
+    if(!state.qa) return;
+    var cutoffQA = todayISO(new Date(Date.now() - 60 * 86400000));
+    Object.keys(state.qa).forEach(function(d){ if(d < cutoffQA) delete state.qa[d]; });
+  })();
+
   // migrate: track spins spent so sync merges can't resurrect used spins
   state.people.forEach(function(p){
     var pts = state.points[p.id];
@@ -2400,6 +2501,20 @@
       }
     });
 
+    // daily Q&A: union per day, per person; newest answer wins
+    m.qa = {};
+    [L.qa, R.qa].forEach(function(o){
+      for(var d in (o||{})){
+        if(!m.qa[d]) m.qa[d] = {question: o[d].question, answers: {}};
+        if(!m.qa[d].question) m.qa[d].question = o[d].question;
+        var ans = (o[d] && o[d].answers) || {};
+        for(var apid in ans){
+          var curA = m.qa[d].answers[apid];
+          if(!curA || String(ans[apid].at||"") > String(curA.at||"")) m.qa[d].answers[apid] = ans[apid];
+        }
+      }
+    });
+
     var lq = L.quest || {}, rq = R.quest || {};
     m.quest = (lq.mtime||0) >= (rq.mtime||0) ? lq : rq;
     var lb = L.powerCoupleBadge || {}, rb = R.powerCoupleBadge || {};
@@ -2499,8 +2614,53 @@
       });
   }
 
+  // ---------- welcome tour (first open per phone; replayable) ----------
+  var TOUR_KEY = "us-tour-done-v1";
+  var tourIdx = 0;
+  function tourSteps(){
+    var n1 = personName("p1"), n2 = personName("p2");
+    return [
+      {e:"💞", t:"Welcome to WeDO", x:n1 + " built this for the two of you. One app, one scoreboard, one rule: do stuff together, to get there."},
+      {e:"☀️", t:"Your morning minute", x:"Open the app with your coffee. You'll get a greeting (" + n2 + ", expect a different dessert name every day), a quote, and one considerate cue — a small thing to do for each other today."},
+      {e:"✅", t:"Do stuff", x:"Everything lives in four lists — Stuff, Trips, Experiences, Shopping. Tap the pink + to add anything. Checking things off earns points, and Together 💞 tasks pay you BOTH."},
+      {e:"🔗", t:"The evening code trade", x:"Each day you both get a 4-digit code that only shows on your own phone. Talk to each other, swap codes, type theirs in — you both get +10 points and your connection streak grows. This is the heart of the app."},
+      {e:"🎡", t:"Spins & rewards", x:"Every 5 completed tasks earns a spin of the wheel — massages, date nights, weekend getaways. Want a new reward on there? Propose it, and the other person approves it."},
+      {e:"💌", t:"Make it a ritual", x:"Morning: read your cue. During the day: check things off. Evening: trade codes together. Weekly: spin your spins and pick a Couple Quest. Tip: set a 9pm phone reminder called “trade codes 🔗” — that one habit carries everything else. And leave a note in the Notes tab now and then. ❤️"}
+    ];
+  }
+  function renderTourStep(){
+    var steps = tourSteps();
+    var s = steps[tourIdx];
+    document.getElementById("tourEmoji").textContent = s.e;
+    document.getElementById("tourTitle").textContent = s.t;
+    document.getElementById("tourText").textContent = s.x;
+    document.getElementById("tourNext").textContent = tourIdx === steps.length - 1 ? "Let's go 💞" : "Next";
+    var dots = document.getElementById("tourDots");
+    dots.innerHTML = "";
+    steps.forEach(function(_, i){
+      var d = document.createElement("span");
+      d.style.cssText = "width:7px;height:7px;border-radius:50%;background:" + (i === tourIdx ? "var(--pink)" : "var(--border)") + ";";
+      dots.appendChild(d);
+    });
+  }
+  function openTour(){
+    tourIdx = 0;
+    renderTourStep();
+    document.getElementById("tourBg").classList.add("show");
+  }
+  function closeTour(){
+    document.getElementById("tourBg").classList.remove("show");
+    try{ localStorage.setItem(TOUR_KEY, "1"); }catch(e){}
+  }
+  document.getElementById("tourSkip").addEventListener("click", closeTour);
+  document.getElementById("tourNext").addEventListener("click", function(){
+    if(tourIdx >= tourSteps().length - 1){ closeTour(); return; }
+    tourIdx++;
+    renderTourStep();
+  });
+
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 20;
+  var BUILD_NUM = 23;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -2762,7 +2922,7 @@
     var info = document.createElement("div");
     info.className = "trip-info";
     info.innerHTML = '<div class="trip-dest">' + escapeHtml(t.title) + '</div>' +
-      '<div class="trip-dates">🗓 ' + escapeHtml(fmtTripDates(t.tripStart, t.tripEnd)) + '</div>';
+      '<div class="trip-dates">' + escapeHtml(fmtTripDates(t.tripStart, t.tripEnd)) + '</div>';
     wrap.appendChild(info);
 
     var acts = document.createElement("div");
@@ -2929,7 +3089,13 @@
     var check = document.createElement("div");
     check.className = "buy-check";
     if(t.status === "done") check.innerHTML = '<span style="color:var(--ink);width:14px;height:14px;display:block;">'+ICON.check+'</span>';
-    check.addEventListener("click", function(){ if(t.status==="open") completeTask(t.id); });
+    check.addEventListener("click", function(){
+      if(t.status !== "open") return;
+      check.style.background = "var(--jade)";
+      check.style.borderColor = "var(--jade)";
+      wrap.classList.add("completing");
+      setTimeout(function(){ completeTask(t.id); }, 260);
+    });
     rail.appendChild(check);
     if(t.status === "open"){
       rail.appendChild(iconBtn(ICON.edit, "Edit", function(){
@@ -2965,7 +3131,10 @@
     check.className = "check";
     check.textContent = t.status==="done" ? "✓" : "";
     check.addEventListener("click", function(){
-      if(t.status==="open"){ completeTask(t.id); }
+      if(t.status !== "open") return;
+      check.textContent = "✓";
+      wrap.classList.add("completing");
+      setTimeout(function(){ completeTask(t.id); }, 260);
     });
     var info = document.createElement("div");
     info.className = "info";
@@ -3920,6 +4089,7 @@
     t.completedBy = actor;
     t.completedAt = new Date().toISOString();
     touch(t);
+    try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
 
     ensurePerson(state, actor);
     var pts = DIFF_POINTS[t.difficulty] || 10;
@@ -4052,15 +4222,38 @@
   }
 
   // ---------- stats ----------
+  // animate number changes so points feel earned, not swapped
+  function countUp(id, target){
+    var el = document.getElementById(id);
+    if(!el) return;
+    var from = parseInt(String(el.textContent).replace(/[^\d-]/g, ""), 10);
+    if(isNaN(from)) from = 0;
+    target = target || 0;
+    if(from === target){ el.textContent = target; return; }
+    var start = null, dur = 450;
+    function step(ts){
+      if(!start) start = ts;
+      var k = Math.min(1, (ts - start) / dur);
+      k = 1 - Math.pow(1 - k, 3); // ease-out
+      el.textContent = Math.round(from + (target - from) * k);
+      if(k < 1) requestAnimationFrame(step);
+    }
+    if(typeof requestAnimationFrame === "function" && Math.abs(target - from) > 1){
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = target;
+    }
+  }
+
   function renderStats(){
     var uid_ = state.currentUser;
     ensurePerson(state, uid_);
     var p = state.points[uid_];
-    document.getElementById("statPersonal").textContent = p.personal;
-    document.getElementById("statThoughtful").textContent = p.thoughtful;
-    document.getElementById("statStreak").textContent = state.streaks[uid_].current;
-    document.getElementById("spinsAvailable").textContent = p.spinsAvailable || 0;
-    document.getElementById("tasksToNextSpin").textContent = 5 - (p.progressToSpin||0);
+    countUp("statPersonal", p.personal);
+    countUp("statThoughtful", p.thoughtful);
+    countUp("statStreak", state.streaks[uid_].current);
+    countUp("spinsAvailable", p.spinsAvailable || 0);
+    countUp("tasksToNextSpin", 5 - (p.progressToSpin||0));
     document.getElementById("spinBtn").disabled = !(p.spinsAvailable > 0);
     document.getElementById("spinBtn").style.opacity = (p.spinsAvailable>0) ? "1":"0.5";
   }
@@ -4191,11 +4384,93 @@
     renderAll();
   }
 
+  function todaysQuestion(){
+    return DAILY_QUESTIONS[dayOfYear() % DAILY_QUESTIONS.length];
+  }
+
+  // an answer's text is only readable by its author, on the author's own phone
+  function canReadAnswer(pid){
+    var owner = deviceOwner();
+    return state.currentUser === pid && (!owner || owner === pid);
+  }
+
+  function qaBubble(pid, ans, revealed){
+    var name = escapeHtml(personName(pid));
+    if(revealed || canReadAnswer(pid)){
+      return '<div class="qa-bubble"><div class="qa-who">' + name + '</div>' + escapeHtml(ans.text) + '</div>';
+    }
+    return '<div class="qa-bubble sealed"><div class="qa-who">' + name + '</div>🔒 sealed until you both answer</div>';
+  }
+
   function renderDailyQuestion(){
     var el = document.getElementById("dailyQuestionText");
     if(!el) return;
-    var idx = dayOfYear() % DAILY_QUESTIONS.length;
-    el.textContent = DAILY_QUESTIONS[idx];
+    el.textContent = todaysQuestion();
+
+    var wrap = document.getElementById("qaArea");
+    if(!wrap) return;
+    var today = todayISO();
+    var me = state.currentUser, partner = otherPerson(me);
+    var entry = (state.qa || {})[today] || {answers: {}};
+    var mine = entry.answers[me], theirs = entry.answers[partner];
+    wrap.innerHTML = "";
+
+    if(mine && theirs){
+      // 🎉 both answered — reveal
+      wrap.innerHTML = qaBubble(me, mine, true) + qaBubble(partner, theirs, true) +
+        '<div class="qa-status">💬 Revealed — go compare notes.</div>';
+      var seenKey = "us-qa-reveal-seen";
+      var seen = "";
+      try{ seen = localStorage.getItem(seenKey) || ""; }catch(e){}
+      if(seen !== today){
+        try{ localStorage.setItem(seenKey, today); }catch(e){}
+        setTimeout(function(){ showModal("💬", "Answers revealed!", "You both answered today's question. Read them side by side in Notes — then talk about it. 💞"); }, 400);
+      }
+    } else if(mine){
+      wrap.innerHTML = qaBubble(me, mine, false) +
+        '<div class="qa-status">⏳ Waiting for ' + escapeHtml(personName(partner)) + ' to answer…</div>';
+    } else {
+      var noticeHtml = theirs
+        ? '<div class="qa-status">👀 ' + escapeHtml(personName(partner)) + ' already answered — it\'s sealed until you do.</div>'
+        : "";
+      wrap.innerHTML = noticeHtml +
+        '<textarea id="qaInput" placeholder="Your answer, for ' + escapeAttr(personName(partner)) + '\'s eyes only (after they answer too)..." style="width:100%;"></textarea>' +
+        '<button class="primary" id="qaSealBtn" style="width:100%;margin-top:8px;">Seal my answer · +5 pts</button>';
+      document.getElementById("qaSealBtn").addEventListener("click", function(){
+        var txt = document.getElementById("qaInput").value.trim();
+        if(!txt){ toast("Write something first 💬"); return; }
+        if(!state.qa) state.qa = {};
+        if(!state.qa[today]) state.qa[today] = {question: todaysQuestion(), answers: {}};
+        state.qa[today].question = state.qa[today].question || todaysQuestion();
+        state.qa[today].answers[me] = {text: txt, at: new Date().toISOString()};
+        ensurePerson(state, me);
+        state.points[me].personal += 5;
+        save();
+        renderDailyQuestion();
+        renderStats();
+        var other = state.qa[today].answers[partner];
+        toast(other ? "Sealed — and revealing now! +5 pts" : "Sealed 🔒 +5 pts. It reveals once " + personName(partner) + " answers.");
+      });
+    }
+
+    // archive of past reveals (both answered), newest first, last 7
+    var arcCard = document.getElementById("qaArchiveCard");
+    var arc = document.getElementById("qaArchive");
+    var days = Object.keys(state.qa || {}).filter(function(d){
+      var e = state.qa[d];
+      return d < today && e && e.answers && e.answers.p1 && e.answers.p2;
+    }).sort().reverse().slice(0, 7);
+    if(days.length === 0){
+      arcCard.style.display = "none";
+    } else {
+      arcCard.style.display = "";
+      arc.innerHTML = days.map(function(d){
+        var e = state.qa[d];
+        var dt = new Date(d + "T12:00:00").toLocaleDateString(undefined, {month:"short", day:"numeric"});
+        return '<div class="qa-past"><div class="qa-past-q">' + escapeHtml(dt) + ' — ' + escapeHtml(e.question || "") + '</div>' +
+          qaBubble("p1", e.answers.p1, true) + qaBubble("p2", e.answers.p2, true) + '</div>';
+      }).join("");
+    }
   }
 
   function lbRow(rank, name, pts){
@@ -4331,7 +4606,8 @@
     return list;
   }
 
-  var WHEEL_COLORS = ["#ff6f91","#9d7fd6","#5fd6c4","#ffc857","#c94f70","#7fb2d6","#e08fd6","#8fd67f"];
+  // curated, harmonized wheel palette (was a full rainbow)
+  var WHEEL_COLORS = ["#ff6f91","#e05a7a","#ffc857","#5fd6c4","#c9698a","#e8a26a","#8fb8c9","#b884a8"];
 
   function drawWheel(){
     var canvas = document.getElementById("wheelCanvas");
@@ -4634,6 +4910,14 @@
   });
   renderBackupNag();
   setInterval(renderBackupNag, 60000);
+
+  // first open on this phone → run the welcome tour
+  document.getElementById("tourReplayBtn").addEventListener("click", openTour);
+  try{
+    if(!localStorage.getItem(TOUR_KEY)){
+      setTimeout(openTour, 700);
+    }
+  }catch(e){}
   document.addEventListener("visibilitychange", function(){
     if(document.visibilityState === "visible"){ syncNow(false); fetchHealth(); }
   });
