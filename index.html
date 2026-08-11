@@ -1032,6 +1032,32 @@
     .task .check, .buy-card .buy-check{transition:background .15s ease, border-color .15s ease;}
     .toast{transition:opacity .2s ease, transform .2s ease;}
   }
+
+  /* ---- task completion celebration ---- */
+  .burst-layer{
+    position:fixed;inset:0;pointer-events:none;z-index:55;overflow:hidden;
+  }
+  .burst-piece{
+    position:absolute;left:50%;top:50%;font-size:22px;will-change:transform,opacity;
+    opacity:0;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .burst-piece{animation:burstFly .85s cubic-bezier(.2,.7,.3,1) forwards;}
+    @keyframes burstFly{
+      0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(0deg);}
+      12%{opacity:1;}
+      100%{opacity:0;transform:translate(calc(-50% + var(--bx)),calc(-50% + var(--by))) scale(1.05) rotate(var(--br));}
+    }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .burst-piece{display:none;}
+  }
+  /* toast with an inline undo action */
+  .toast .undo-btn{
+    margin-left:10px;color:var(--rose,#ff6f91);font-weight:800;
+    text-decoration:underline;text-underline-offset:2px;cursor:pointer;
+    background:none;border:none;padding:0;font-size:13px;
+  }
 </style>
 </head>
 <body>
@@ -1051,7 +1077,7 @@
 <header>
   <h1>💞 WeDO</h1>
   <div class="sub">Do stuff Together, To Get There ❤️</div>
-  <div class="sub">Build 23 · Rae edition</div>
+  <div class="sub">Build 24 · Rae edition</div>
 </header>
 
 <main>
@@ -1065,24 +1091,7 @@
       <div class="hero-cue">
         <div class="cue-label" id="cueLabel">Today's considerate cue</div>
         <div id="heroCue"></div>
-        <div class="sign-picker">
-          Star sign flavor:
-          <select id="signPicker">
-            <option value="">Off</option>
-            <option value="Aries">Aries</option>
-            <option value="Taurus">Taurus</option>
-            <option value="Gemini">Gemini</option>
-            <option value="Cancer">Cancer</option>
-            <option value="Leo">Leo</option>
-            <option value="Virgo">Virgo</option>
-            <option value="Libra">Libra</option>
-            <option value="Scorpio">Scorpio</option>
-            <option value="Sagittarius">Sagittarius</option>
-            <option value="Capricorn">Capricorn</option>
-            <option value="Aquarius">Aquarius</option>
-            <option value="Pisces">Pisces</option>
-          </select>
-        </div>
+
       </div>
     </div>
   </div>
@@ -1586,7 +1595,7 @@
       pairSecret: null,
       lockins: {},      // personId -> { "YYYY-MM-DD": true }
       missedDays: [],   // [{date, count}]
-      signs: {},        // personId -> star sign (optional flavor)
+      signs: {p1:"Aquarius", p2:"Sagittarius"}, // built in: Moody ♒, Rae ♐
       tasks: [],
       points: {}, // personId -> {personal, thoughtful, totalCompleted, spinsAvailable, spinsUsedTowardNext}
       streaks: {}, // personId -> {current, lastDate}
@@ -1617,6 +1626,17 @@
 
   var state = load();
   state.people.forEach(function(p){ ensurePerson(state, p.id); });
+  // star signs are built in — Moody is Aquarius, Rae is Sagittarius
+  state.signs = {p1: "Aquarius", p2: "Sagittarius"};
+
+  // this phone always wakes up viewing as its owner (fixes notes going to yourself)
+  (function(){
+    var owner = deviceOwner();
+    if(owner && state.people.some(function(p){ return p.id === owner; })){
+      state.currentUser = owner;
+    }
+  })();
+
   // prune Q&A entries older than 60 days to keep storage lean
   (function(){
     if(!state.qa) return;
@@ -1902,6 +1922,23 @@
     if(!t.mtime) tombstone(taskContentKey(t));
   }
 
+  // delete with a 6-second undo — accidents shouldn't be permanent
+  function deleteTaskWithUndo(t){
+    var hadNoMtime = !t.mtime;
+    tombstoneTask(t);
+    state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
+    if(typeof openEditIds === "object") delete openEditIds[t.id];
+    save(); renderAll();
+    showUndoToast('Deleted "' + t.title + '"', function(){
+      touch(t); // newer than the tombstone, so the restore wins every sync merge
+      delete state.tombstones[t.id];
+      if(hadNoMtime) delete state.tombstones[taskContentKey(t)];
+      state.tasks.push(t);
+      save(); renderAll();
+      toast("Restored ✅");
+    });
+  }
+
   // any silent crash becomes a visible message instead of "nothing happened"
   window.addEventListener("error", function(ev){
     try{ toast("⚠️ Something broke: " + (ev.message || "unknown error")); }catch(_e){}
@@ -1950,10 +1987,63 @@
   var toastEl = document.getElementById("toast");
   var toastTimer = null;
   function toast(msg){
+    toastEl.innerHTML = "";
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2600);
+  }
+  // a toast with an inline Undo action — stays up longer, cancels on tap
+  function showUndoToast(msg, onUndo){
+    toastEl.innerHTML = "";
+    clearTimeout(toastTimer);
+    var span = document.createElement("span");
+    span.textContent = msg;
+    var btn = document.createElement("button");
+    btn.className = "undo-btn";
+    btn.type = "button";
+    btn.textContent = "Undo";
+    var done = false;
+    btn.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      if(done) return;
+      done = true;
+      toastEl.classList.remove("show");
+      clearTimeout(toastTimer);
+      onUndo();
+    });
+    toastEl.appendChild(span);
+    toastEl.appendChild(btn);
+    toastEl.classList.add("show");
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 6000);
+  }
+  // a little confetti burst of emoji flying out from the middle of the screen —
+  // paired with the praise toast so completing something actually feels good
+  var BURST_EMOJI = ["✨","🎉","💫","⭐️","🔥","💖"];
+  var TOGETHER_BURST_EMOJI = ["💞","✨","💫","🎉","💖","🥂"];
+  function celebrateCompletion(isTogether){
+    try{
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if(reduce) return;
+      var bank = isTogether ? TOGETHER_BURST_EMOJI : BURST_EMOJI;
+      var layer = document.createElement("div");
+      layer.className = "burst-layer";
+      var count = isTogether ? 14 : 9;
+      for(var i=0;i<count;i++){
+        var piece = document.createElement("span");
+        piece.className = "burst-piece";
+        piece.textContent = bank[i % bank.length];
+        var angle = (Math.PI * 2 * i / count) + (Math.random()*0.6 - 0.3);
+        var dist = 90 + Math.random()*90;
+        piece.style.setProperty("--bx", (Math.cos(angle)*dist).toFixed(0) + "px");
+        piece.style.setProperty("--by", (Math.sin(angle)*dist - 40).toFixed(0) + "px");
+        piece.style.setProperty("--br", (Math.random()*70 - 35).toFixed(0) + "deg");
+        piece.style.animationDelay = (Math.random()*0.08).toFixed(2) + "s";
+        layer.appendChild(piece);
+      }
+      document.body.appendChild(layer);
+      setTimeout(function(){ layer.remove(); }, 1100);
+    }catch(e){}
   }
   var modalBg = document.getElementById("modalBg");
   function showModal(emoji, title, text){
@@ -2660,7 +2750,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 23;
+  var BUILD_NUM = 24;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -2940,9 +3030,7 @@
       del.setAttribute("aria-label","Remove trip");
       del.addEventListener("click", function(){
         if(!confirm("Remove the " + t.title + " trip?")) return;
-        tombstoneTask(t);
-        state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
-        save(); renderAll();
+        deleteTaskWithUndo(t);
       });
       acts.appendChild(del);
     }
@@ -3103,10 +3191,7 @@
         renderAll();
       }));
       rail.appendChild(iconBtn(ICON.trash, "Remove", function(){
-        tombstoneTask(t);
-        state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
-        delete openEditIds[t.id];
-        save(); renderAll();
+        deleteTaskWithUndo(t);
       }));
     }
     card.appendChild(rail);
@@ -3190,10 +3275,7 @@
         renderAll();
       }));
       actions.appendChild(iconBtn(ICON.trash, "Remove", function(){
-        tombstoneTask(t);
-        state.tasks = state.tasks.filter(function(x){return x.id !== t.id;});
-        delete openEditIds[t.id];
-        save(); renderAll();
+        deleteTaskWithUndo(t);
       }));
     }
 
@@ -3545,16 +3627,7 @@
       label.textContent = "Today's considerate cue";
     }
     document.getElementById("heroCue").textContent = cue;
-
-    var picker = document.getElementById("signPicker");
-    if(picker) picker.value = sign || "";
   }
-
-  document.getElementById("signPicker").addEventListener("change", function(){
-    state.signs[state.currentUser] = this.value || null;
-    save();
-    renderHero();
-  });
 
   // ================= POSITIVE REINFORCEMENT =================
   var PRAISE_SELF = [
@@ -3899,9 +3972,7 @@
       var delBtn = document.createElement("button");
       delBtn.textContent = "Remove";
       delBtn.addEventListener("click", function(){
-        tombstoneTask(t);
-        state.tasks = state.tasks.filter(function(x){ return x.id !== t.id; });
-        save(); renderAll();
+        deleteTaskWithUndo(t);
       });
       actions2.appendChild(delBtn);
       body.appendChild(actions2);
@@ -4108,6 +4179,7 @@
     // Together tasks pay out to both of you; solo tasks to whoever they credit
     var beneficiaries = isTogether ? state.people.map(function(p){return p.id;}) : [actor];
 
+    celebrateCompletion(isTogether);
     if(isTogether){
       toast("Done together — you both get +" + pts + " pts 💞");
     } else if(helped){
@@ -4691,9 +4763,12 @@
   function renderNotes(){
     var wrap = document.getElementById("notesList");
     wrap.innerHTML = "";
-    var mine = state.notes.filter(function(n){return n.toId===state.currentUser;}).slice().reverse();
+    // notes are tied to whose PHONE this is, not whichever view is on screen —
+    // otherwise leaving the switcher on your partner's view hides your own notes
+    var me = deviceOwner() || state.currentUser;
+    var mine = state.notes.filter(function(n){return n.toId===me;}).slice().reverse();
     if(mine.length===0){
-      wrap.innerHTML = '<div class="empty">No notes yet — ask '+personName(otherPerson(state.currentUser))+' to leave you one 💌</div>';
+      wrap.innerHTML = '<div class="empty">No notes yet — ask '+personName(otherPerson(me))+' to leave you one 💌</div>';
     }
     mine.forEach(function(n){
       var d = document.createElement("div");
@@ -4716,8 +4791,10 @@
     e.preventDefault();
     var text = document.getElementById("noteText").value.trim();
     if(!text) return;
-    var to = otherPerson(state.currentUser);
-    state.notes.push({fromId:state.currentUser, toId:to, text:text, date:new Date().toISOString()});
+    // same identity fix: send as whoever owns this phone, not the on-screen view
+    var me = deviceOwner() || state.currentUser;
+    var to = otherPerson(me);
+    state.notes.push({fromId:me, toId:to, text:text, date:new Date().toISOString()});
     document.getElementById("noteText").value = "";
     save();
     toast("Note sent to " + personName(to) + " 💌");
