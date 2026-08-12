@@ -5,9 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#17131c">
 <title>WeDO — Do Stuff Together, To Get There</title>
+<!-- PWA install + push requirements: iOS only allows web push for a home-screen app that
+     has a real manifest (display:standalone) — see WeDO-Notifications-Setup.md -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WeDO">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- OneSignal Web Push — only activates once you paste an App ID in Sync settings; see WeDO-Notifications-Setup.md -->
+<script>window.OneSignalDeferred = window.OneSignalDeferred || [];</script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <style>
   :root{
     --bg:#1c1520;
@@ -317,6 +328,17 @@
   .repeat-tag{
     font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;
     background:#2c3e4b;color:#8fc6ff;text-transform:uppercase;
+  }
+  .due-tag{
+    font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;
+    background:#2c3e28;color:#a3e08a;text-transform:uppercase;
+  }
+  .due-tag.overdue{background:#4a2020;color:#ff9d9d;}
+  .task-filter-bar{
+    display:flex;gap:8px;margin-bottom:12px;
+  }
+  .task-filter-bar select{
+    flex:1;font-size:12.5px;padding:8px 10px;
   }
   .daily-q-card{
     background:linear-gradient(135deg,#2c3e4b,#2a1f2c);
@@ -1074,10 +1096,33 @@
   </div>
 </div>
 
+<!-- Missed-code gate: you two didn't trade yesterday's code in time, so today's app is on hold
+     until you catch up on it — talking to each other is the whole point of the mechanic. -->
+<div id="connLockScreen" style="display:none;position:fixed;inset:0;z-index:199;background:var(--bg);align-items:center;justify-content:center;padding:24px;overflow:auto;">
+  <div style="max-width:340px;width:100%;text-align:center;">
+    <div style="font-size:42px;margin-bottom:10px;">🔒</div>
+    <h3 style="margin:0 0 6px;">You missed yesterday's code</h3>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;" id="connLockPrompt">
+      Neither of you traded yesterday's connection code, so WeDO is on hold until you two talk and catch up on it.
+    </p>
+    <div class="code-display" style="margin-bottom:14px;">
+      <div class="code-label" id="connLockMyCodeLabel">Your code for yesterday</div>
+      <div class="code-value" id="connLockMyCode">••••</div>
+    </div>
+    <input type="text" id="connLockInput" inputmode="numeric" maxlength="4" placeholder="Their code for yesterday"
+      style="width:100%;font-size:22px;text-align:center;letter-spacing:6px;font-family:ui-monospace,monospace;">
+    <button class="primary" id="connLockBtn" style="width:100%;margin-top:12px;">Connect &amp; unlock</button>
+    <div id="connLockErr" style="color:var(--pink);font-size:12px;margin-top:10px;min-height:16px;"></div>
+    <button type="button" id="connLockSkip" style="width:100%;margin-top:18px;background:none;border:none;color:var(--muted);font-size:11.5px;text-decoration:underline;cursor:pointer;">
+      One of us is unreachable (travel, dead phone) — skip yesterday
+    </button>
+  </div>
+</div>
+
 <header>
   <h1>💞 WeDO</h1>
   <div class="sub">Do stuff Together, To Get There ❤️</div>
-  <div class="sub">Build 24 · Rae edition</div>
+  <div class="sub">Build 27 · Rae edition</div>
 </header>
 
 <main>
@@ -1112,6 +1157,10 @@
         Open <em>Sync between two phones</em> below, save the Gist link + token, and this warning disappears for good.
       </div>
       <button class="ghost" id="noBackupLater" style="width:100%;margin-top:10px;">Remind me later</button>
+    </div>
+    <div class="card" id="activityCard" style="display:none;">
+      <h2>While you were away</h2>
+      <div id="activityBody"></div>
     </div>
     <div class="card quest-card">
       <h2>Couple Quest</h2>
@@ -1152,6 +1201,17 @@
         <button class="ghost" id="cancelListBtn">Cancel</button>
         <button class="primary" id="createListBtn">Create list</button>
       </div>
+    </div>
+
+    <div class="task-filter-bar" id="taskFilterBar">
+      <select id="filterAssignee" aria-label="Filter by who it's for"></select>
+      <select id="sortTasks" aria-label="Sort tasks">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="easy">Easiest → hardest</option>
+        <option value="hard">Hardest → easiest</option>
+        <option value="due">By due date</option>
+      </select>
     </div>
 
     <div class="card">
@@ -1211,11 +1271,14 @@
             <input type="date" id="tripEnd" aria-label="Trip end date">
           </div>
         </div>
-        <select id="taskRepeat">
-          <option value="none" selected>One-time task</option>
-          <option value="daily">Repeats daily</option>
-          <option value="weekly">Repeats weekly</option>
-        </select>
+        <div id="dueDateFieldWrap" class="row2">
+          <input type="date" id="taskDueDate" aria-label="Due date (optional)">
+          <select id="taskRepeat">
+            <option value="none" selected>One-time task</option>
+            <option value="daily">Repeats daily</option>
+            <option value="weekly">Repeats weekly</option>
+          </select>
+        </div>
         <div class="row2">
           <button type="button" class="ghost" id="sheetCancel">Cancel</button>
           <button type="submit" class="primary">Add task</button>
@@ -1354,6 +1417,15 @@
       <button class="ghost" id="syncNowBtn">Sync now</button>
     </div>
     <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+    <p style="font-size:12px;color:var(--muted);"><strong>Push notifications.</strong> Get notified when your person adds or finishes something — the setup guide (WeDO-Notifications-Setup.md) walks through creating a free OneSignal account. Paste the App ID (safe to share) and REST API key (stays on this phone, same trust level as your GitHub token above) below, then tap Enable on <em>each</em> phone.</p>
+    <input type="text" id="onesignalAppIdInput" placeholder="OneSignal App ID">
+    <input type="password" id="onesignalRestKeyInput" placeholder="OneSignal REST API key" style="margin-top:6px;">
+    <div class="row2" style="margin-top:6px;">
+      <button class="ghost" id="onesignalSaveBtn">Save</button>
+      <button class="ghost" id="onesignalEnableBtn">Enable on this phone</button>
+    </div>
+    <div id="onesignalStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Something looks off?</strong> Run this on BOTH phones and compare — it checks the build, sync setup, connections, and trip images, and says exactly what's wrong.</p>
     <button class="ghost" id="tourReplayBtn" style="width:100%;margin-bottom:6px;">Replay the welcome tour</button>
@@ -1533,6 +1605,27 @@
   function addDaysISO(days){
     return todayISO(new Date(Date.now() + days*86400000));
   }
+  // ---- due dates ----
+  function isOverdue(t){
+    return !!t.dueDate && t.status === "open" && t.dueDate < todayISO();
+  }
+  function fmtDueDate(iso){
+    var d = new Date(iso + "T12:00:00");
+    var today = todayISO();
+    if(iso === today) return "today";
+    if(iso === addDaysISO(1)) return "tomorrow";
+    if(iso === addDaysISO(-1)) return "yesterday";
+    return d.toLocaleDateString(undefined, {month:"short", day:"numeric"});
+  }
+  function dueDateTag(t){
+    if(!t.dueDate || t.status === "done") return "";
+    var overdue = isOverdue(t);
+    return ' <span class="due-tag'+(overdue?" overdue":"")+'">'+(overdue?"⚠️ was due ":"📅 due ")+fmtDueDate(t.dueDate)+'</span>';
+  }
+  // ---- created-at, for the newest/oldest sort (mtime keeps changing on edits) ----
+  function taskCreatedAt(t){
+    return t.createdAt || t.mtime || 0;
+  }
   function uid(){
     return Math.random().toString(36).slice(2,10) + Date.now().toString(36);
   }
@@ -1595,6 +1688,8 @@
       pairSecret: null,
       lockins: {},      // personId -> { "YYYY-MM-DD": true }
       missedDays: [],   // [{date, count}]
+      skippedDays: {},  // "YYYY-MM-DD" -> true — deliberately excused from the missed-code lock
+      installedAt: null, // first day this state existed — the lock never applies before this
       signs: {p1:"Aquarius", p2:"Sagittarius"}, // built in: Moody ♒, Rae ♐
       tasks: [],
       points: {}, // personId -> {personal, thoughtful, totalCompleted, spinsAvailable, spinsUsedTowardNext}
@@ -1609,6 +1704,8 @@
       notes: [], // {fromId, toId, text, date}
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
+      activityLog: [],      // [{id, by, text, at}] — feeds "while you were away" + push notifications
+      onesignalAppId: null, // OneSignal App ID (not secret, shared via sync — see WeDO-Notifications-Setup.md)
       tombstones: {},       // deleted item id -> deletion time (so deletes survive sync merges)
       savedAt: null,        // last local save time (drives sync merge direction)
       qa: {},               // "YYYY-MM-DD" -> {question, answers: {pid: {text, at}}} — sealed until both answer
@@ -1669,6 +1766,12 @@
   }
   if(!state.lockins) state.lockins = {};
   if(!state.missedDays) state.missedDays = [];
+  if(!state.skippedDays) state.skippedDays = {};
+  // the missed-code lock only ever looks at days after this one — an existing
+  // save (upgrading from an older build) is grandfathered in as of today, so
+  // nobody gets retroactively locked out for days before the feature existed
+  if(!state.installedAt) state.installedAt = todayISO();
+  if(!state.activityLog) state.activityLog = [];
   if(!state.signs) state.signs = {};
   state.lists.forEach(function(l){
     if(l.priceBased===undefined) l.priceBased = false;
@@ -1944,7 +2047,13 @@
     try{ toast("⚠️ Something broke: " + (ev.message || "unknown error")); }catch(_e){}
   });
   function saveOrThrow(){
+    // same as save(), but lets the caller catch a quota error and roll back
+    // (used by photo attach) — must still mark savedAt + queue a sync, or a
+    // successfully-saved photo just sits on this phone until something else syncs it
+    state.savedAt = new Date().toISOString();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    hideSaveWarn();
+    scheduleSync();
   }
   function storageKB(){
     try{ return Math.round((localStorage.getItem(STORAGE_KEY)||"").length/1024); }
@@ -2183,6 +2292,8 @@
     document.getElementById("tripFieldsWrap").style.display = isTrip ? "block" : "none";
     document.getElementById("taskAssignee").style.display = (isExp || isTrip) ? "none" : "block";
     document.getElementById("taskRepeat").style.display = (isExp || isTrip) ? "none" : "block";
+    document.getElementById("dueDateFieldWrap").style.display = isTrip ? "none" : "flex";
+    document.getElementById("taskDueDate").style.display = isTrip ? "none" : "block";
     document.getElementById("taskTitle").placeholder = isTrip ? "Where to? e.g. Tokyo" : "e.g. Do the dishes";
     var labels = list.tierLabels || {easy:"Easy",medium:"Medium",hard:"Hard"};
     var diffSel = document.getElementById("taskDifficulty");
@@ -2231,6 +2342,70 @@
     return BUY_CAT_OTHER;
   }
 
+  // ---------- view filter / sort (per-phone preference, not synced) ----------
+  function viewFilter(){
+    if(!state.viewFilter) state.viewFilter = {assignee:"all", sort:"newest"};
+    return state.viewFilter;
+  }
+  function matchesAssigneeFilter(t, who){
+    if(who === "all") return true;
+    if(who === "both") return t.assignedTo === "both";
+    return t.assignedTo === who || t.assignedTo === "both";
+  }
+  function sortTasksBy(list, sort){
+    var out = list.slice();
+    if(sort === "oldest"){
+      out.sort(function(a,b){ return taskCreatedAt(a) - taskCreatedAt(b); });
+    } else if(sort === "easy"){
+      out.sort(function(a,b){ return (DIFF_POINTS[a.difficulty]||0) - (DIFF_POINTS[b.difficulty]||0); });
+    } else if(sort === "hard"){
+      out.sort(function(a,b){ return (DIFF_POINTS[b.difficulty]||0) - (DIFF_POINTS[a.difficulty]||0); });
+    } else if(sort === "due"){
+      out.sort(function(a,b){
+        if(!a.dueDate && !b.dueDate) return taskCreatedAt(b) - taskCreatedAt(a);
+        if(!a.dueDate) return 1;
+        if(!b.dueDate) return -1;
+        return a.dueDate < b.dueDate ? -1 : (a.dueDate > b.dueDate ? 1 : 0);
+      });
+    } else {
+      out.sort(function(a,b){ return taskCreatedAt(b) - taskCreatedAt(a); }); // newest first (default)
+    }
+    return out;
+  }
+  function renderFilterBar(listObj){
+    var bar = document.getElementById("taskFilterBar");
+    // trips have their own dated-card layout — the generic filter/sort doesn't apply there
+    var applies = listObj && !listObj.experienceBased && listObj.id !== "list-trips";
+    bar.style.display = applies ? "flex" : "none";
+    if(!applies) return;
+    var vf = viewFilter();
+    var sel = document.getElementById("filterAssignee");
+    sel.innerHTML = "";
+    var optAll = document.createElement("option");
+    optAll.value = "all"; optAll.textContent = "Everyone's tasks";
+    sel.appendChild(optAll);
+    state.people.forEach(function(p){
+      var o = document.createElement("option");
+      o.value = p.id; o.textContent = "For " + p.name;
+      sel.appendChild(o);
+    });
+    var optBoth = document.createElement("option");
+    optBoth.value = "both"; optBoth.textContent = "Together only 💞";
+    sel.appendChild(optBoth);
+    sel.value = vf.assignee;
+    document.getElementById("sortTasks").value = vf.sort;
+  }
+  var filterAssigneeEl = document.getElementById("filterAssignee");
+  var sortTasksEl = document.getElementById("sortTasks");
+  filterAssigneeEl.addEventListener("change", function(){
+    viewFilter().assignee = filterAssigneeEl.value;
+    save(); renderTasks();
+  });
+  sortTasksEl.addEventListener("change", function(){
+    viewFilter().sort = sortTasksEl.value;
+    save(); renderTasks();
+  });
+
   function renderTasks(){
     var open = document.getElementById("openTasks");
     var done = document.getElementById("doneTasks");
@@ -2239,6 +2414,8 @@
     var verb = listVerb(listId);
     var listObj = listById(listId);
 
+    renderFilterBar(listObj);
+
     if(listObj && listObj.experienceBased){
       renderExperienceList();
       return;
@@ -2246,9 +2423,10 @@
     document.getElementById("openTasksHeader").textContent = (listObj ? listObj.name : "Open") + " — open";
     document.getElementById("doneTasksHeader").textContent = verb;
 
+    var vf = viewFilter();
     var inList = state.tasks.filter(function(t){ return t.listId === listId; });
-    var openTasks = inList.filter(function(t){return t.status==="open";});
-    var doneTasks = inList.filter(function(t){return t.status==="done";}).slice().reverse().slice(0,15);
+    var openTasks = sortTasksBy(inList.filter(function(t){return t.status==="open" && matchesAssigneeFilter(t, vf.assignee);}), vf.sort);
+    var doneTasks = inList.filter(function(t){return t.status==="done" && matchesAssigneeFilter(t, vf.assignee);}).slice().reverse().slice(0,15);
 
     if(openTasks.length===0){
       open.innerHTML = '<div class="empty">Nothing here yet. Tap + to add one 🎯</div>';
@@ -2268,7 +2446,7 @@
       return;
     }
     if(listObj && listObj.priceBased && openTasks.length){
-      // group shopping items under auto-detected categories
+      // group shopping items under auto-detected categories (sort order within each group is preserved)
       var groups = {};
       openTasks.forEach(function(t){
         var c = buyCategoryFor(t);
@@ -2472,6 +2650,56 @@
   }
   function autoSyncOn(){ return !!(gistIdFromUrl() && ghToken()); }
 
+  // ================= NOTIFICATIONS (activity log + optional push) =================
+  // The REST API key can actually send pushes, so — same trust model as the GitHub
+  // token above — it lives ONLY on this phone, never in the synced state.
+  var ONESIGNAL_KEY_STORAGE = "us-onesignal-restkey-v1";
+  function onesignalRestKey(){ try{ return localStorage.getItem(ONESIGNAL_KEY_STORAGE) || ""; }catch(e){ return ""; } }
+  function setOnesignalRestKey(v){
+    try{ if(v) localStorage.setItem(ONESIGNAL_KEY_STORAGE, v); else localStorage.removeItem(ONESIGNAL_KEY_STORAGE); }catch(e){}
+  }
+  function pushConfigured(){ return !!(state.onesignalAppId && onesignalRestKey()); }
+
+  // every phone keeps its own "I've seen activity up to here" marker — not synced,
+  // so opening the app on one phone doesn't mark things read on the other
+  var LAST_SEEN_ACTIVITY_KEY = "us-last-seen-activity-v1";
+  function lastSeenActivity(){ try{ return Number(localStorage.getItem(LAST_SEEN_ACTIVITY_KEY)) || 0; }catch(e){ return 0; } }
+  function setLastSeenActivity(ts){ try{ localStorage.setItem(LAST_SEEN_ACTIVITY_KEY, String(ts)); }catch(e){} }
+
+  // logs "who did what" for the in-app catch-up feed, and — if configured — fires a
+  // real push to the other phone via OneSignal. Never throws: a broken/missing push
+  // setup should never stop the actual task/task-add/etc from completing.
+  function announce(text){
+    try{
+      var owner = deviceOwner() || state.currentUser;
+      if(!state.activityLog) state.activityLog = [];
+      state.activityLog.push({id: uid(), by: owner, text: text, at: Date.now()});
+      // keep the shared gist small — same lesson learned from the photo-storage issue
+      state.activityLog.sort(function(a,b){ return b.at - a.at; });
+      if(state.activityLog.length > 150) state.activityLog.length = 150;
+      sendPushToPartner(owner, text);
+    }catch(e){}
+  }
+  function sendPushToPartner(owner, text){
+    if(!pushConfigured()) return;
+    var to = otherPerson(owner);
+    if(!to) return;
+    fetch("https://api.onesignal.com/notifications?c=push", {
+      method: "POST",
+      headers: {
+        "Authorization": "Key " + onesignalRestKey(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        app_id: state.onesignalAppId,
+        include_aliases: {external_id: [to]},
+        target_channel: "push",
+        headings: {en: "WeDO"},
+        contents: {en: personName(owner) + " " + text}
+      })
+    }).catch(function(){ /* best-effort — the in-app feed still has it */ });
+  }
+
   // ---- merge helpers: nothing either phone did is ever lost ----
   function unionById(a, b, tomb){
     var byId = {};
@@ -2545,6 +2773,11 @@
       return n.fromId + "|" + n.date + "|" + n.text;
     });
     m.missedDays = unionByKey(base.missedDays, other.missedDays, function(d){ return d.date; });
+    m.skippedDays = {};
+    [L.skippedDays, R.skippedDays].forEach(function(o){ for(var d in (o||{})) m.skippedDays[d] = true; });
+    // activity log: union, newest first, capped so the shared gist never balloons
+    m.activityLog = unionByKey(base.activityLog, other.activityLog, function(a){ return a.id; })
+      .sort(function(a,b){ return b.at - a.at; }).slice(0, 150);
 
     // per-person structures
     m.points = {}; m.streaks = {}; m.badges = {}; m.lockins = {}; m.dailyCompletions = {};
@@ -2611,7 +2844,11 @@
     m.powerCoupleBadge = {held: !!(lb.held || rb.held), sinceMonth: lb.sinceMonth || rb.sinceMonth || null};
     m.paired = !!(L.paired || R.paired || true); // two phones sharing a gist ARE paired
     m.pairSecret = base.pairSecret || other.pairSecret;
+    // earliest wins — that's the true "day zero" for the missed-code lock on both phones
+    var lIns = L.installedAt, rIns = R.installedAt;
+    m.installedAt = (lIns && rIns) ? (lIns < rIns ? lIns : rIns) : (lIns || rIns || todayISO());
     m.healthGistUrl = base.healthGistUrl || other.healthGistUrl;
+    m.onesignalAppId = base.onesignalAppId || other.onesignalAppId;
     m.healthCache = {};
     ["p1","p2"].forEach(function(pid){
       var lh = (L.healthCache||{})[pid], rh = (R.healthCache||{})[pid];
@@ -2628,6 +2865,7 @@
     delete c.currentUser;
     delete c.currentList;
     delete c.devicePin;
+    delete c.viewFilter; // each phone can filter/sort its own view without affecting the other
     return c;
   }
 
@@ -2673,6 +2911,7 @@
           merged.currentUser = state.currentUser;
           merged.currentList = listById(state.currentList) ? state.currentList : merged.currentList;
           merged.devicePin = state.devicePin;
+          merged.viewFilter = state.viewFilter;
           state = merged;
           state.people.forEach(function(p){ ensurePerson(state, p.id); });
           save();
@@ -2750,7 +2989,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 24;
+  var BUILD_NUM = 27;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -2780,6 +3019,8 @@
       add(!!t.image, "Trip “" + t.title + "”", t.image ? "has photo" : "no photo yet (tries: " + (t.imgTries||0) + ")");
     });
     add(null, "Storage used", storageKB() + " KB");
+    add(pushConfigured(), "Push notifications", pushConfigured() ? "credentials saved on this phone" : "not set up — see WeDO-Notifications-Setup.md");
+    add(null, "Unread activity", (state.activityLog||[]).filter(function(a){ return a.by !== owner && a.at > lastSeenActivity(); }).length + " item(s)");
 
     // live connection tests
     if(typeof fetch === "function"){
@@ -3160,7 +3401,7 @@
     var tags = document.createElement("div");
     tags.className = "buy-tags";
     var tierLabel = (list.tierLabels && list.tierLabels[t.difficulty]) || t.difficulty;
-    tags.innerHTML = '<span class="diff-tag diff-'+t.difficulty+'">'+escapeHtml(tierLabel)+'</span>';
+    tags.innerHTML = '<span class="diff-tag diff-'+t.difficulty+'">'+escapeHtml(tierLabel)+'</span>' + dueDateTag(t);
     if(t.status === "done"){
       var vb = listVerb(t.listId).toLowerCase();
       tags.innerHTML += '<span class="buy-sub" style="margin:0;">'+escapeHtml(vb) +
@@ -3264,7 +3505,7 @@
       var daysSince = Math.floor((Date.now() - new Date(t.lastCompletedAt).getTime()) / 86400000);
       assignText += daysSince<=0 ? (" · " + verb + " today") : (" · last " + verb + " " + daysSince + "d ago");
     }
-    meta.innerHTML = diffTag + repeatTag + priceTag + " &nbsp; " + assignText;
+    meta.innerHTML = diffTag + repeatTag + priceTag + dueDateTag(t) + " &nbsp; " + assignText;
     info.appendChild(title); info.appendChild(meta);
 
     var actions = document.createElement("div");
@@ -3328,6 +3569,7 @@
     box.innerHTML = '<div style="margin-bottom:8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);">Edit item</div>' +
       '<select class="edit-assignee">'+assigneeOptions+'</select>' +
       fieldsHtml +
+      '<input type="date" class="edit-duedate" aria-label="Due date (optional)" value="'+escapeAttr(t.dueDate||"")+'" style="margin-top:8px;">' +
       '<div class="row2" style="margin-top:8px;"><button type="button" class="ghost edit-cancel">Cancel</button><button type="button" class="primary edit-save">Save</button></div>' +
       altAdder;
 
@@ -3354,6 +3596,7 @@
       } else {
         t.difficulty = box.querySelector(".edit-difficulty").value;
       }
+      t.dueDate = box.querySelector(".edit-duedate").value || null;
       delete openEditIds[t.id];
       save();
       renderAll();
@@ -3463,6 +3706,7 @@
       addExperienceTask(title, document.getElementById("taskEmoji").value.trim() || "🏆");
       document.getElementById("taskTitle").value = "";
       document.getElementById("taskEmoji").value = "";
+      announce('added "' + title + '" to the bucket list 🎟️');
       save(); renderAll();
       closeAddSheet();
       toast("Added to your bucket list ✨");
@@ -3471,7 +3715,7 @@
 
     if(listId === "list-trips"){
       var trip = {
-        id: uid(), mtime: Date.now(), title: title, trip: true,
+        id: uid(), mtime: Date.now(), createdAt: Date.now(), title: title, trip: true,
         tripStart: document.getElementById("tripStart").value || null,
         tripEnd: document.getElementById("tripEnd").value || null,
         assignedTo: "both", difficulty: "hard", status: "open",
@@ -3486,6 +3730,7 @@
       document.getElementById("taskTitle").value = "";
       document.getElementById("tripStart").value = "";
       document.getElementById("tripEnd").value = "";
+      announce('added a trip: "' + title + '" ✈️');
       save(); renderAll();
       fetchCityImage(trip);
       closeAddSheet();
@@ -3507,6 +3752,7 @@
     var newTask = {
       id: uid(),
       mtime: Date.now(),
+      createdAt: Date.now(),
       title: title,
       assignedTo: assignee,
       difficulty: diff,
@@ -3521,6 +3767,7 @@
       unitPrice: unitPrice,
       currency: currency,
       quantity: quantity,
+      dueDate: document.getElementById("taskDueDate").value || null,
       alternatives: []
     };
     state.tasks.push(newTask);
@@ -3532,6 +3779,8 @@
     document.getElementById("taskLink").value = "";
     document.getElementById("taskUnitPrice").value = "";
     document.getElementById("taskQuantity").value = "1";
+    document.getElementById("taskDueDate").value = "";
+    announce('added "' + title + '" to ' + (list ? list.name : "your list"));
     save(); renderAll();
     closeAddSheet();
     toast("Task added ✅");
@@ -3698,21 +3947,66 @@
     return !!(state.lockins[personId] && state.lockins[personId][dateISO]);
   }
 
+  function connectedOnDate(dateISO){
+    return state.people.some(function(p){ return isLockedIn(p.id, dateISO); });
+  }
+
   function connectionStreak(){
     // consecutive days (ending today or yesterday) where either of you connected
     var n = 0;
     var d = new Date();
     function iso(dt){ return todayISO(dt); }
     // allow the streak to be "alive" if yesterday connected but today not yet
-    var connectedOn = function(dateISO){
-      return state.people.some(function(p){ return isLockedIn(p.id, dateISO); });
-    };
-    if(!connectedOn(iso(d))){ d = new Date(d.getTime() - 86400000); }
-    while(connectedOn(iso(d))){
+    if(!connectedOnDate(iso(d))){ d = new Date(d.getTime() - 86400000); }
+    while(connectedOnDate(iso(d))){
       n++;
       d = new Date(d.getTime() - 86400000);
     }
     return n;
+  }
+
+  // ---------- missed-code lock: gate the whole app if yesterday's code never got traded ----------
+  function missedLockDate(){
+    var owner = deviceOwner();
+    if(!owner || !state.paired || !state.pairSecret) return null;
+    var yesterday = addDaysISO(-1);
+    // never lock for a day before the feature (or the app itself) existed
+    if(yesterday < state.installedAt) return null;
+    if(connectedOnDate(yesterday)) return null;
+    if(state.skippedDays && state.skippedDays[yesterday]) return null;
+    return yesterday;
+  }
+  function applyConnLock(){
+    var screen = document.getElementById("connLockScreen");
+    var missed = missedLockDate();
+    if(!missed){ screen.style.display = "none"; return; }
+    screen.style.display = "flex";
+    var owner = deviceOwner();
+    var partner = otherPerson(owner);
+    var myCode = dailyCodeFor(owner, missed);
+    var partnerCode = dailyCodeFor(partner, missed);
+    document.getElementById("connLockMyCodeLabel").textContent = "Your code for " + fmtDueDate(missed);
+    document.getElementById("connLockMyCode").textContent = myCode;
+    document.getElementById("connLockErr").textContent = "";
+    document.getElementById("connLockInput").value = "";
+    document.getElementById("connLockBtn").onclick = function(){
+      var val = document.getElementById("connLockInput").value.trim();
+      if(val !== partnerCode){
+        document.getElementById("connLockErr").textContent = "That's not " + personName(partner) + "'s code for " + fmtDueDate(missed);
+        document.getElementById("connLockInput").value = "";
+        return;
+      }
+      lockInDay(owner, missed);
+      applyConnLock();
+    };
+    document.getElementById("connLockSkip").onclick = function(){
+      if(!confirm("Skip " + fmtDueDate(missed) + "'s code? Only do this if one of you genuinely couldn't be reached — no points, and it breaks the streak.")) return;
+      if(!state.skippedDays) state.skippedDays = {};
+      state.skippedDays[missed] = true;
+      state.missedDays.push({date: missed, count: 1});
+      save();
+      applyConnLock();
+    };
   }
 
   var CONNECT_BONUS = 10;
@@ -3802,8 +4096,8 @@
 
     var hint = document.createElement("div");
     hint.className = "code-hint";
-    hint.innerHTML = "This is pure bonus — nothing depends on it. Trade codes when you talk today and you <strong>both get +" +
-      CONNECT_BONUS + " pts</strong> and keep the connection streak going.";
+    hint.innerHTML = "Trade codes when you talk today and you <strong>both get +" + CONNECT_BONUS +
+      " pts</strong> and keep the connection streak going. Miss a whole day and the app locks tomorrow until you catch up on it — so don't leave it too late.";
     body.appendChild(hint);
 
     var row = document.createElement("div");
@@ -3949,6 +4243,7 @@
         var rmBtn = document.createElement("button");
         rmBtn.textContent = "Remove photo";
         rmBtn.addEventListener("click", function(){
+          touch(t); // so this removal wins the next sync merge instead of the photo reappearing
           t.photo = null; t.photoType = null;
           save(); renderAll();
           toast("Photo removed");
@@ -4023,14 +4318,15 @@
       readAndCompress(f, function(dataUrl, kind){
         var t = state.tasks.find(function(x){ return x.id === taskId; });
         if(!t) return;
-        var prevPhoto = t.photo, prevType = t.photoType;
+        var prevPhoto = t.photo, prevType = t.photoType, prevMtime = t.mtime;
+        touch(t); // newer than whatever's on the other phone, so this photo wins the merge
         t.photo = dataUrl; t.photoType = kind;
         try{
           saveOrThrow();
           renderAll();
           toast("Memory saved 📸");
         }catch(err){
-          t.photo = prevPhoto; t.photoType = prevType;
+          t.photo = prevPhoto; t.photoType = prevType; t.mtime = prevMtime;
           save();
           renderAll();
           showModal("💾","Out of photo storage",
@@ -4111,6 +4407,7 @@
 
     // speech duty alternates
     state.speechTurn = otherPerson(t.speakerId) || state.speechTurn;
+    announce('crossed off "' + t.title + '" 🏆 — go look');
 
     try{ saveOrThrow(); }
     catch(err){
@@ -4189,6 +4486,7 @@
       state.points[actor].personal += pts;
       toast(praiseFor(t, actor, pts, helped));
     }
+    announce('crossed off "' + t.title + '" ✅');
 
     var today = todayISO();
     var yesterday = todayISO(new Date(Date.now()-86400000));
@@ -4395,6 +4693,41 @@
     document.getElementById("fairCompletedNums").textContent = a.name+" "+doneCounts[a.id]+" · "+b.name+" "+doneCounts[b.id];
     document.getElementById("fairCompletedBar").innerHTML =
       '<div class="a" style="width:'+donePctA+'%"></div><div class="b" style="width:'+(100-donePctA)+'%"></div>';
+  }
+
+  // ---------- "while you were away" catch-up feed ----------
+  function renderActivityFeed(){
+    var card = document.getElementById("activityCard");
+    var wrap = document.getElementById("activityBody");
+    if(!card || !wrap) return;
+    var me = deviceOwner();
+    if(!me || !state.activityLog || !state.activityLog.length){ card.style.display = "none"; return; }
+    var since = lastSeenActivity();
+    var unseen = state.activityLog
+      .filter(function(a){ return a.by !== me && a.at > since; })
+      .sort(function(a,b){ return b.at - a.at; })
+      .slice(0, 8);
+    if(!unseen.length){ card.style.display = "none"; return; }
+    card.style.display = "block";
+    wrap.innerHTML = "";
+    unseen.forEach(function(a){
+      var row = document.createElement("div");
+      row.style.cssText = "font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);";
+      var mins = Math.max(1, Math.round((Date.now() - a.at) / 60000));
+      var when = mins < 60 ? (mins + "m ago") : (mins < 1440 ? (Math.round(mins/60) + "h ago") : (Math.round(mins/1440) + "d ago"));
+      row.innerHTML = "<strong>" + escapeHtml(personName(a.by)) + "</strong> " + escapeHtml(a.text) +
+        " <span style='color:var(--muted);font-size:11px;'>· " + when + "</span>";
+      wrap.appendChild(row);
+    });
+    var btn = document.createElement("button");
+    btn.className = "ghost";
+    btn.style.cssText = "width:100%;margin-top:10px;";
+    btn.textContent = "Got it, thanks 💌";
+    btn.addEventListener("click", function(){
+      setLastSeenActivity(Date.now());
+      renderActivityFeed();
+    });
+    wrap.appendChild(btn);
   }
 
   function renderQuest(){
@@ -4794,10 +5127,19 @@
     // same identity fix: send as whoever owns this phone, not the on-screen view
     var me = deviceOwner() || state.currentUser;
     var to = otherPerson(me);
-    state.notes.push({fromId:me, toId:to, text:text, date:new Date().toISOString()});
-    document.getElementById("noteText").value = "";
-    save();
-    toast("Note sent to " + personName(to) + " 💌");
+    var note = {fromId:me, toId:to, text:text, date:new Date().toISOString()};
+    state.notes.push(note);
+    // only clear the box and say "sent" if the save actually succeeded —
+    // otherwise the note silently vanished and you'd never know to retype it
+    if(save()){
+      document.getElementById("noteText").value = "";
+      renderNotes();
+      toast("Note sent to " + personName(to) + " 💌");
+    } else {
+      state.notes.splice(state.notes.indexOf(note), 1);
+      showModal("💾","Note didn't save",
+        "This phone's storage is full, so the note wasn't kept. Free up space (remove an old photo) and try again — your text is still in the box below.");
+    }
   });
 
   function randomQuote(){
@@ -4923,6 +5265,7 @@
     renderAssigneeOptions();
     renderTaskListOptions();
     renderTasks();
+    renderActivityFeed();
     renderBadges();
     renderStats();
     renderMonth();
@@ -4935,6 +5278,7 @@
     renderDailyQuestion();
     renderDeviceOwnerLabel();
     renderHealth();
+    applyConnLock();
   }
 
   randomQuote();
@@ -4943,6 +5287,8 @@
   renderAll();
   document.getElementById("healthGistInput").value = state.healthGistUrl || "";
   document.getElementById("ghTokenInput").value = ghToken();
+  document.getElementById("onesignalAppIdInput").value = state.onesignalAppId || "";
+  document.getElementById("onesignalRestKeyInput").value = onesignalRestKey();
   fetchHealth();
   setInterval(fetchHealth, 30 * 60000); // keep health numbers fresh while the app is open
 
@@ -4956,6 +5302,59 @@
   document.getElementById("syncNowBtn").addEventListener("click", function(){ syncNow(true); });
   syncNow(false); // no-op until gist link + token are saved
   setInterval(function(){ syncNow(false); }, 2 * 60000);
+
+  // ---- OneSignal push wiring ----
+  // Queues onto window.OneSignalDeferred (declared in <head>, before the SDK itself
+  // loads) so this works regardless of whether the SDK has finished loading yet.
+  // Calls run in order, and init only ever happens once per page load.
+  var oneSignalInitDone = false;
+  function withOneSignal(fn){
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function(OneSignal){
+      try{
+        if(!oneSignalInitDone){
+          if(!state.onesignalAppId) throw new Error("no App ID saved yet");
+          await OneSignal.init({appId: state.onesignalAppId});
+          oneSignalInitDone = true;
+        }
+        await fn(OneSignal);
+      }catch(e){
+        setOnesignalStatus("Couldn't reach push service: " + e.message);
+      }
+    });
+  }
+  function setOnesignalStatus(msg){
+    var el = document.getElementById("onesignalStatusLabel");
+    if(el) el.textContent = msg;
+  }
+  document.getElementById("onesignalSaveBtn").addEventListener("click", function(){
+    var appId = document.getElementById("onesignalAppIdInput").value.trim();
+    var restKey = document.getElementById("onesignalRestKeyInput").value.trim();
+    state.onesignalAppId = appId || null;
+    setOnesignalRestKey(restKey);
+    save();
+    toast(appId && restKey ? "Push credentials saved — now tap Enable on each phone" : "Push credentials cleared");
+  });
+  document.getElementById("onesignalEnableBtn").addEventListener("click", function(){
+    var owner = deviceOwner();
+    if(!owner){ toast("Set whose phone this is first (Daily check-in card)"); return; }
+    if(!state.onesignalAppId){ toast("Paste + save the OneSignal App ID first"); return; }
+    setOnesignalStatus("requesting permission…");
+    withOneSignal(async function(OneSignal){
+      await OneSignal.login(owner); // tags this subscription "p1"/"p2" so pushes can target it later
+      await OneSignal.Notifications.requestPermission();
+      var granted = OneSignal.Notifications.permission;
+      setOnesignalStatus(granted ? ("Enabled for " + personName(owner) + " ✅") : "Permission not granted — check Settings > Notifications for WeDO");
+    });
+  });
+  // if credentials + a device owner are already set (e.g. the other phone set this up
+  // and it synced over), quietly re-tag this subscription without waiting for a tap —
+  // this only re-confirms an identity, it never re-prompts for permission on its own
+  if(state.onesignalAppId && deviceOwner()){
+    withOneSignal(async function(OneSignal){
+      await OneSignal.login(deviceOwner());
+    });
+  }
 
   // a shared setup link like ...?gist=<id-or-url> pre-fills the gist so
   // re-pairing a wiped or new phone is one paste (the token) instead of two
