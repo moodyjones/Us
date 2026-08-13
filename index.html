@@ -1183,7 +1183,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 32 · Rae edition</div>
+  <div class="sub">Build 33 · Rae edition</div>
 </header>
 
 <main>
@@ -3065,7 +3065,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 32;
+  var BUILD_NUM = 33;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -5404,17 +5404,22 @@
   // ---- OneSignal push wiring ----
   // Queues onto window.OneSignalDeferred (declared in <head>, before the SDK itself
   // loads) so this works regardless of whether the SDK has finished loading yet.
-  // Calls run in order, and init only ever happens once per page load.
-  var oneSignalInitDone = false;
+  // init() must only ever be called once per page load — but two withOneSignal()
+  // callers can land back-to-back (e.g. the silent startup re-login below, plus a
+  // tap on "Enable on this phone"), so we memoize the IN-FLIGHT PROMISE itself
+  // (assigned synchronously, before any await) rather than a boolean that only
+  // flips true after init() resolves. A boolean guard has a race: both callers
+  // can see it as false before either one finishes awaiting init().
+  var oneSignalInitPromise = null;
   function withOneSignal(fn){
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async function(OneSignal){
       try{
-        if(!oneSignalInitDone){
+        if(!oneSignalInitPromise){
           if(!state.onesignalAppId) throw new Error("no App ID saved yet");
-          await OneSignal.init({appId: state.onesignalAppId});
-          oneSignalInitDone = true;
+          oneSignalInitPromise = OneSignal.init({appId: state.onesignalAppId});
         }
+        await oneSignalInitPromise;
         await fn(OneSignal);
       }catch(e){
         setOnesignalStatus("Couldn't reach push service: " + e.message);
