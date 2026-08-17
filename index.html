@@ -188,6 +188,11 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
   }
   .duo-when{font-size:10.5px;color:var(--muted);margin-top:1px;}
+  .duo-health{
+    margin-top:5px;font-size:10.5px;font-weight:600;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  }
+  .duo-health.stale-health{opacity:.5;font-weight:500;}
   .duo-when.today{color:var(--jade,#249383);font-weight:700;}
   /* sits level with the middle of the two circles rather than the middle of the whole
      column (the name + date labels below make the columns taller than the circles) */
@@ -1318,7 +1323,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 41 · Rae edition</div>
+  <div class="sub">Build 42 · Rae edition</div>
 </header>
 
 <main>
@@ -3274,7 +3279,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 41;
+  var BUILD_NUM = 42;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3338,17 +3343,25 @@
         });
       add(null, "Testing horoscope feed…");
       var hIdx = lines.length - 1;
-      fetch(HOROSCOPE_API + "?day=TODAY&sign=aquarius")
-        .then(function(r){ return r.json(); })
-        .then(function(j){
-          var ok = !!(j && j.data && j.data.horoscope);
-          lines[hIdx] = (ok ? "✅" : "❌") + " Horoscope feed" + (ok ? " reachable" : " responded but had no text");
-          out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
-        })
-        .catch(function(e){
-          lines[hIdx] = "❌ Horoscope feed unreachable — " + e.message + " (the built-in cue still works)";
-          out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
-        });
+      var hDirect = HOROSCOPE_API + "?day=TODAY&sign=aquarius";
+      function diagHoro(url, label, isLast){
+        fetch(url)
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            if(!(j && j.data && j.data.horoscope)) throw new Error("no text");
+            lines[hIdx] = "✅ Horoscope feed reachable (" + label + ")";
+            out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+          })
+          .catch(function(e){
+            if(!isLast){
+              diagHoro("https://api.allorigins.win/raw?url=" + encodeURIComponent(hDirect), "via relay", true);
+              return;
+            }
+            lines[hIdx] = "❌ Horoscope feed unreachable — " + e.message + " (the built-in cue still works)";
+            out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+          });
+      }
+      diagHoro(hDirect, "direct", false);
       if(autoSyncOn()){
         add(null, "Testing gist connection…");
         var gIdx = lines.length - 1;
@@ -4330,24 +4343,34 @@
       if(!force && horoscopeFor(sg)) return;     // already have today's
       if(horoscopeInFlight[sg]) return;
       horoscopeInFlight[sg] = true;
-      var ctrl = (typeof AbortController === "function") ? new AbortController() : null;
-      var timer = setTimeout(function(){ try{ ctrl && ctrl.abort(); }catch(e){} }, 9000);
-      fetch(HOROSCOPE_API + "?day=TODAY&sign=" + encodeURIComponent(sg),
-            ctrl ? {signal: ctrl.signal} : undefined)
-        .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
-        .then(function(j){
-          var txt = j && j.data && j.data.horoscope;
-          if(typeof txt !== "string" || txt.length < 20) throw new Error("empty");
-          if(!state.horoscopes) state.horoscopes = {};
-          state.horoscopes[sg] = {date: todayISO(), text: txt.trim(), at: new Date().toISOString()};
-          save();
-          renderHero();
-        })
-        .catch(function(){ /* silent — the local fallback is already on screen */ })
-        .then(function(){
-          clearTimeout(timer);
-          horoscopeInFlight[sg] = false;
-        });
+      var direct = HOROSCOPE_API + "?day=TODAY&sign=" + encodeURIComponent(sg);
+      // The API doesn't send CORS headers, so a browser on your own domain is refused
+      // ("Load failed"). Try it directly first anyway — if that's ever fixed we use it —
+      // then fall back to a public read-only relay that does send them. Only the star sign
+      // ever leaves the phone on that second path; no personal data is involved.
+      var attempts = [direct, "https://api.allorigins.win/raw?url=" + encodeURIComponent(direct)];
+      function tryNext(i){
+        if(i >= attempts.length){ horoscopeInFlight[sg] = false; return; }
+        var ctrl = (typeof AbortController === "function") ? new AbortController() : null;
+        var timer = setTimeout(function(){ try{ ctrl && ctrl.abort(); }catch(e){} }, 9000);
+        fetch(attempts[i], ctrl ? {signal: ctrl.signal} : undefined)
+          .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+          .then(function(j){
+            var txt = j && j.data && j.data.horoscope;
+            if(typeof txt !== "string" || txt.length < 20) throw new Error("empty");
+            if(!state.horoscopes) state.horoscopes = {};
+            state.horoscopes[sg] = {date: todayISO(), text: txt.trim(), at: new Date().toISOString()};
+            save();
+            renderHero();
+            clearTimeout(timer);
+            horoscopeInFlight[sg] = false;
+          })
+          .catch(function(){
+            clearTimeout(timer);
+            tryNext(i + 1);   // silent — the local flavour is already on screen
+          });
+      }
+      tryNext(0);
     });
   }
 
@@ -5765,6 +5788,18 @@
         : (d.date === today ? "today" : friendlyPhotoDate(d.date));
       slot.appendChild(when);
 
+      // today's Health numbers right under this person's photo (only if there are any)
+      var hc = (state.healthCache || {})[p.id];
+      if(hc && (hc.steps != null || hc.sleepHours != null)){
+        var hrow = document.createElement("div");
+        hrow.className = "duo-health" + (hc.date === today ? "" : " stale-health");
+        var bits = [];
+        if(hc.steps != null) bits.push("👣 " + Number(hc.steps).toLocaleString());
+        if(hc.sleepHours != null) bits.push("😴 " + fmtSleep(hc.sleepHours));
+        hrow.textContent = bits.join("  ");
+        slot.appendChild(hrow);
+      }
+
       slot.addEventListener("click", function(){ onDuoSlotTap(p.id, isMe); });
       row.appendChild(slot);
 
@@ -6205,7 +6240,23 @@
     // A sleep figure over ~20 means the Shortcut handed us minutes (or seconds) rather than
     // hours — convert instead of rendering a nonsense "223h" on the card.
     if(sleep != null && sleep > 20) sleep = sleep > 1200 ? sleep / 3600 : sleep / 60;
-    if(steps == null && cal == null && sleep == null) return;
+    if(steps == null && cal == null && sleep == null){
+      // The Shortcut DID reach us, but nothing it sent was a number. Overwhelmingly this
+      // means the variables were typed as plain text in the Open URLs action rather than
+      // inserted from the variable bar, so we got the literal string "[Steps]". Say so —
+      // silently returning here is exactly what makes this look like "nothing happened".
+      var raw = [q.get("hsteps"), q.get("hcal"), q.get("hsleep")]
+        .filter(function(v){ return v != null && v !== ""; }).join("   ");
+      showModal("🍎", "The numbers didn't come through",
+        "The shortcut opened WeDO, but the values arrived as text instead of numbers" +
+        (raw ? (" — what actually arrived was:  " + raw) : "") + ".\n\n" +
+        "In the shortcut's last action (Open URLs), the three values have to be inserted " +
+        "from the variable bar above the keyboard — not typed out. Delete [Steps], [Cals] " +
+        "and [SleepMins] from the address, then tap each one in that bar to re-insert it. " +
+        "Inserted variables appear as shaded chips; typed text stays plain.");
+      try{ history.replaceState(null, "", location.pathname); }catch(e){}
+      return;
+    }
     if(!state.healthCache) state.healthCache = {};
     var prev = state.healthCache[owner] || {};
     var qd = q.get("hdate");
