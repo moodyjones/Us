@@ -1318,7 +1318,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 40 · Rae edition</div>
+  <div class="sub">Build 41 · Rae edition</div>
 </header>
 
 <main>
@@ -1623,7 +1623,10 @@
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Apple Health sync.</strong> Paste the link of your shared health Gist once (the setup guide explains how to create it and the iPhone Shortcuts that feed it). Steps, calories and sleep then show for both of you on the Health card.</p>
     <input type="url" id="healthGistInput" placeholder="https://gist.github.com/you/abc123...">
-    <button class="ghost" id="healthGistSaveBtn" style="width:100%;margin-top:6px;">Save Health link</button>
+    <div class="row2" style="margin-top:6px;">
+      <button class="ghost" id="healthGistSaveBtn">Save Health link</button>
+      <button class="ghost" id="copySetupLinkBtn">Copy setup link</button>
+    </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Auto-sync (recommended).</strong> With the Gist link above <em>plus</em> your GitHub token here, both phones share everything automatically — tasks, trips, points, spins. The token stays on this phone only; paste the same one on both phones. It's the same token from the Health setup guide.</p>
     <input type="password" id="ghTokenInput" placeholder="ghp_... (never leaves this phone)">
@@ -3271,7 +3274,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 40;
+  var BUILD_NUM = 41;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -6053,6 +6056,25 @@
     if(v){ toast("Token saved on this phone 🔐"); syncNow(true); }
     else { toast("Token removed — back to manual sync"); setSyncStatus("err"); }
   });
+  // A one-tap way to hand the Gist to the other phone. The link carries only the Gist ID —
+  // never the token, which is the part that can actually write. Opening it on the other
+  // phone fills in the Gist field so they only have to paste the token.
+  document.getElementById("copySetupLinkBtn").addEventListener("click", function(){
+    var id = gistIdFromUrl();
+    if(!id){ toast("Save your Gist link first"); return; }
+    var link = location.origin + location.pathname + "?gist=" + id;
+    function done(){
+      showModal("🔗","Setup link copied",
+        "Send this to your person. When they open it on their phone, WeDO fills in the shared " +
+        "Gist for them automatically — they'll only need to paste the token, which you should " +
+        "send separately.\n\n" + link);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(done, function(){ done(); });
+    } else {
+      done();
+    }
+  });
   document.getElementById("syncNowBtn").addEventListener("click", function(){ syncNow(true); });
   syncNow(false); // no-op until gist link + token are saved
   setInterval(function(){ syncNow(false); }, 2 * 60000);
@@ -6143,6 +6165,9 @@
         state.healthGistUrl = norm;
         save();
         document.getElementById("healthGistInput").value = norm;
+        // this block runs after the first renderAll(), so refresh the bits that key off the
+        // Gist — otherwise the setup card keeps asking for a link it already has
+        renderSetupCard(); renderBackupNag(); renderHealth();
         toast("Gist link loaded from the URL — just add the token 🔑");
       }
     }
@@ -6321,6 +6346,11 @@
             renderSetupCard();
           });
           body.appendChild(inp); body.appendChild(btn); body.appendChild(st);
+          var hint = document.createElement("div");
+          hint.style.cssText = "margin-top:9px;font-size:11.5px;";
+          hint.innerHTML = "Don't have the link? Ask your person to open <em>Sync between two phones</em> " +
+            "and tap <strong>Copy setup link</strong> — opening that link fills this in for you.";
+          body.appendChild(hint);
         }
       },
       {
