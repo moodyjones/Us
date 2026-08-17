@@ -35,6 +35,13 @@
     --radius:18px;
   }
   *{box-sizing:border-box;}
+  /* Safety net for the "page looks indented / doesn't fill the screen" class of bug:
+     if ANY single element spills past the right edge, the document grows wider than the
+     viewport and iOS Safari renders the whole app shifted left with dead space on the
+     right — and gets stuck there once the keyboard opens. Nothing here scrolls sideways
+     at the document level (the tab strip has its own overflow-x container), so clamping
+     this is safe and stops the symptom recurring from any future stray wide element. */
+  html,body{max-width:100%;overflow-x:hidden;}
   body{
     margin:0;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -87,6 +94,64 @@
   }
   header .sub .m-red{color:var(--pink);}
   header .sub .m-purple{color:var(--purple);}
+  /* ---- daily photo duo (top of app: you two, today) ---- */
+  .duo-row{
+    display:flex;align-items:flex-start;justify-content:center;gap:14px;
+    max-width:420px;margin:4px auto 2px;padding:0 16px;
+  }
+  .duo-slot{
+    flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+    background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .duo-frame{
+    width:100%;max-width:118px;aspect-ratio:1/1;border-radius:50%;
+    overflow:hidden;position:relative;
+    background:linear-gradient(160deg,var(--card2),var(--card));
+    border:3px solid var(--border);
+    box-shadow:0 6px 18px rgba(38,30,45,.13);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .16s ease, border-color .16s ease;
+  }
+  .duo-slot:active .duo-frame{transform:scale(.96);}
+  .duo-slot[data-side="left"] .duo-frame{border-color:var(--pink);}
+  .duo-slot[data-side="right"] .duo-frame{border-color:var(--purple);}
+  .duo-frame img{width:100%;height:100%;object-fit:cover;display:block;}
+  /* yesterday's photo still shows (better than an empty hole) but reads as not-today */
+  .duo-frame.stale img{filter:saturate(.72) brightness(.97);opacity:.82;}
+  .duo-empty{
+    text-align:center;font-size:11px;line-height:1.35;color:var(--muted);
+    padding:0 8px;font-weight:600;
+  }
+  .duo-empty .plus{display:block;font-size:22px;font-weight:400;margin-bottom:1px;color:var(--faint,var(--muted));}
+  .duo-name{
+    margin-top:7px;font-size:12.5px;font-weight:700;letter-spacing:-.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  }
+  .duo-when{font-size:10.5px;color:var(--muted);margin-top:1px;}
+  .duo-when.today{color:var(--jade,#249383);font-weight:700;}
+  /* sits level with the middle of the two circles rather than the middle of the whole
+     column (the name + date labels below make the columns taller than the circles) */
+  .duo-heart{
+    align-self:flex-start;margin-top:46px;font-size:20px;flex:0 0 auto;opacity:.9;
+  }
+  /* full-size photo viewer */
+  .photo-view-bg{
+    position:fixed;inset:0;z-index:120;background:rgba(20,16,26,.92);
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px;gap:14px;
+  }
+  .photo-view-bg.show{display:flex;}
+  .photo-view-bg img{
+    max-width:100%;max-height:72vh;border-radius:18px;
+    box-shadow:0 18px 50px rgba(0,0,0,.5);
+  }
+  .photo-view-cap{color:#fdf1f0;font-size:13.5px;text-align:center;font-weight:600;}
+  .photo-view-close{
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
+    color:#fff;font-size:14px;font-weight:600;padding:10px 26px;border-radius:999px;
+    cursor:pointer;
+  }
   .switcher{
     display:flex;
     justify-content:center;
@@ -505,9 +570,17 @@
   }
   .task.pending{border:1px dashed var(--gold);}
   .task.bricked{border:1px solid var(--pink);opacity:.85;}
-  .code-input-row{display:flex;gap:8px;}
+  .code-input-row{display:flex;gap:8px;max-width:100%;}
   .code-input-row input{
-    flex:1;font-size:20px;text-align:center;letter-spacing:6px;
+    /* min-width:0 is load-bearing. A flex item defaults to min-width:auto, so this
+       input refused to shrink below its intrinsic size (a bare <input> is 20 chars
+       wide — at 20px monospace + 6px letter-spacing that's ~300px). The row then
+       overflowed and pushed the Connect button ~22px past the right edge, which made
+       the WHOLE document wider than the viewport. On iOS that reads as the page being
+       shifted/indented to the left, and focusing this input (keyboard opens, Safari
+       re-lays out) locks it into that shifted position. */
+    flex:1;min-width:0;width:0;
+    font-size:20px;text-align:center;letter-spacing:6px;
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   }
   .streak-flame{color:var(--gold);}
@@ -1183,10 +1256,13 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 33 · Rae edition</div>
+  <div class="sub">Build 35 · Rae edition</div>
 </header>
 
 <main>
+  <!-- daily photo duo: each of you posts one photo a day; you see each other first thing -->
+  <div class="duo-row" id="duoRow"></div>
+
   <div class="switcher" id="userSwitcher"></div>
 
   <div class="hero" style="padding:0;margin-top:16px;">
@@ -1511,6 +1587,13 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- full-size viewer for a daily photo -->
+<div class="photo-view-bg" id="photoViewBg">
+  <img id="photoViewImg" alt="">
+  <div class="photo-view-cap" id="photoViewCap"></div>
+  <button type="button" class="photo-view-close" id="photoViewClose">Close</button>
+</div>
+
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <div class="emoji" id="modalEmoji">🎉</div>
@@ -1777,6 +1860,9 @@
       rewardsWon: [], // {personId, rewardId, name, tier, date}
       rewardRequests: [], // {id, name, tier, emoji, proposedBy, date}
       notes: [], // {fromId, toId, text, date}
+      // one photo per person, replaced each day (never a growing history) so the shared
+      // gist stays small enough to keep syncing — see mergeStates for how the newer wins
+      dailyPhotos: {},      // pid -> {photo, date:"YYYY-MM-DD", at:ISO}
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
       activityLog: [],      // [{id, by, text, at}] — feeds "while you were away" + push notifications
@@ -2928,7 +3014,27 @@
     m.healthCache = {};
     ["p1","p2"].forEach(function(pid){
       var lh = (L.healthCache||{})[pid], rh = (R.healthCache||{})[pid];
-      m.healthCache[pid] = (!rh || (lh && String(lh.date||"") >= String(rh.date||""))) ? lh : rh;
+      if(!lh || !rh){ m.healthCache[pid] = lh || rh; return; }
+      var ld = String(lh.date||""), rd = String(rh.date||"");
+      if(ld !== rd){ m.healthCache[pid] = ld > rd ? lh : rh; return; }
+      // same day on both sides: prefer the more recently written one. Without this the
+      // side that happens to be "L" always won, so a morning reading could overwrite an
+      // evening one and steps would appear to go backwards.
+      m.healthCache[pid] = String(lh.updatedAt||"") >= String(rh.updatedAt||"") ? lh : rh;
+    });
+    // daily photos: per person, the newer post wins. Merged per-person (not as a whole
+    // object) because each phone only ever writes ITS OWN slot — taking the object from
+    // one side wholesale would silently drop the partner's photo of the day.
+    m.dailyPhotos = {};
+    var photoPids = {};
+    [L.dailyPhotos, R.dailyPhotos].forEach(function(o){ for(var k in (o||{})) photoPids[k] = 1; });
+    (m.people||[]).forEach(function(p){ if(p && p.id) photoPids[p.id] = 1; });
+    Object.keys(photoPids).forEach(function(pid){
+      var lp = (L.dailyPhotos||{})[pid], rp = (R.dailyPhotos||{})[pid];
+      if(!lp && !rp){ delete m.dailyPhotos[pid]; return; }
+      if(!rp){ m.dailyPhotos[pid] = lp; return; }
+      if(!lp){ m.dailyPhotos[pid] = rp; return; }
+      m.dailyPhotos[pid] = String(lp.at||"") >= String(rp.at||"") ? lp : rp;
     });
     m.savedAt = String(L.savedAt||"") > String(R.savedAt||"") ? L.savedAt : R.savedAt;
     return m;
@@ -3065,7 +3171,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 33;
+  var BUILD_NUM = 35;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3083,6 +3189,11 @@
     var tok = ghToken();
     add(!!tok, "GitHub token", tok ? "saved on this phone (" + tok.slice(0,7) + "…)" : "MISSING — paste it above and Save");
     add(autoSyncOn(), "Auto-sync", autoSyncOn() ? "ON" : "OFF (needs both link + token)");
+    // The single most useful cross-phone check: if these IDs differ, the two phones are
+    // syncing to two DIFFERENT gists and will never see each other's notes/photos/badges,
+    // even though both will happily report "synced ✓".
+    var gid = gistIdFromUrl();
+    add(!!gid, "Gist ID (compare on both phones!)", gid ? gid : "unreadable — check the link format");
     if(lastSync.at){
       add(lastSync.ok, "Last sync", lastSync.at.toLocaleTimeString() + (lastSync.err ? " · " + lastSync.err : ""));
     } else {
@@ -3094,6 +3205,16 @@
     trips.forEach(function(t){
       add(!!t.image, "Trip “" + t.title + "”", t.image ? "has photo" : "no photo yet (tries: " + (t.imgTries||0) + ")");
     });
+    // content counts — run on BOTH phones and compare. Equal counts = sync is working;
+    // one side at 0 while the other has items = that side never pushed/pulled.
+    var notes = state.notes || [];
+    add(null, "Notes on this phone", notes.length + " total (" +
+      notes.filter(function(n){ return n.toId === (owner || state.currentUser); }).length + " addressed to you)");
+    add(null, "Achievements", state.people.map(function(p){
+      return personName(p.id) + ": " + (((state.badges||{})[p.id]) || []).length;
+    }).join(", "));
+    var withPhoto = state.tasks.filter(function(t){ return !!t.photo; });
+    add(null, "Photos/memories attached", withPhoto.length + " item(s)");
     add(null, "Storage used", storageKB() + " KB");
     add(pushConfigured(), "Push notifications", pushConfigured() ? "credentials saved on this phone" : "not set up — see WeDO-Notifications-Setup.md");
     add(null, "Unread activity", (state.activityLog||[]).filter(function(a){ return a.by !== owner && a.at > lastSeenActivity(); }).length + " item(s)");
@@ -3162,6 +3283,12 @@
         .then(function(j){
           if(j && typeof j === "object" && (j.steps != null || j.sleepHours != null || j.calories != null)){
             if(!state.healthCache) state.healthCache = {};
+            // the gist health files are the OLD delivery path (a Shortcut PATCHing them
+            // directly). The URL hand-off writes straight into state, so only let the gist
+            // win if it's actually for a later day — otherwise a stale health-p1.json
+            // would keep stomping on today's fresh numbers on every refresh.
+            var cur = state.healthCache[pid];
+            if(cur && String(cur.date||"") > String(j.date||"")) return;
             state.healthCache[pid] = j;
             save();
             renderHealth();
@@ -3215,14 +3342,10 @@
   function renderHealth(){
     var body = document.getElementById("healthBody");
     if(!body) return;
-    if(!state.healthGistUrl){
-      body.innerHTML = '<div class="empty" style="font-style:normal;">Steps, calories &amp; sleep — side by side, straight from your iPhones. ' +
-        'Set it up once with the Health guide, then paste your Gist link under <em>Sync</em> below. 🍎</div>';
-      return;
-    }
     var a = (state.healthCache || {}).p1, b = (state.healthCache || {}).p2;
     if(!a && !b){
-      body.innerHTML = '<div class="empty" style="font-style:normal;">Link saved — waiting for the first numbers. Run your Health shortcut once and hit ↻.</div>';
+      body.innerHTML = '<div class="empty" style="font-style:normal;">Steps, calories &amp; sleep — side by side, straight from your iPhones. ' +
+        'Build the one-time <em>WeDO Health</em> shortcut (see the setup guide) and run it once. 🍎</div>';
       return;
     }
     var ca = healthCol(a), cb = healthCol(b);
@@ -4354,8 +4477,16 @@
   }
 
   // ---- photo handling (downscaled so localStorage survives) ----
-  function readAndCompress(file, cb){
+  // opts.maxDim / opts.quality let callers ask for a smaller file. Daily photos use a
+  // tighter budget than trophy photos: they're replaced every day and BOTH of them ride
+  // in the synced gist, so keeping each one small is what keeps sync working.
+  function readAndCompress(file, cb, opts){
+    opts = opts || {};
     if(file.type && file.type.indexOf("video") === 0){
+      if(opts.noVideo){
+        toast("Photos only here — pick an image");
+        return;
+      }
       if(file.size > 3.5 * 1024 * 1024){
         toast("Video too large — try a photo or a short clip");
         return;
@@ -4369,14 +4500,14 @@
     reader.onload = function(e){
       var img = new Image();
       img.onload = function(){
-        var maxDim = 900;
+        var maxDim = opts.maxDim || 900;
         var w = img.width, h = img.height;
         if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
         else if(h >= w && h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
         var canvas = document.createElement("canvas");
         canvas.width = w; canvas.height = h;
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        cb(canvas.toDataURL("image/jpeg", 0.72), "image");
+        cb(canvas.toDataURL("image/jpeg", opts.quality || 0.72), "image");
       };
       img.onerror = function(){ toast("Couldn't read that image"); };
       img.src = e.target.result;
@@ -5189,6 +5320,134 @@
     save();
   });
 
+  // ---------- daily photo duo ----------
+  // Each person posts one photo per day. Only your own phone can fill your own slot, so
+  // the two sides never fight over the same key in the sync merge.
+  function dailyPhotoFor(pid){
+    var d = (state.dailyPhotos || {})[pid];
+    return (d && d.photo) ? d : null;
+  }
+  function renderDailyPhotos(){
+    var row = document.getElementById("duoRow");
+    if(!row) return;
+    row.innerHTML = "";
+    var me = deviceOwner() || state.currentUser;
+    var today = todayISO();
+    var people = state.people.slice(0, 2);
+    people.forEach(function(p, i){
+      var slot = document.createElement("button");
+      slot.type = "button";
+      slot.className = "duo-slot";
+      slot.dataset.pid = p.id;
+      slot.dataset.side = i === 0 ? "left" : "right";
+
+      var frame = document.createElement("div");
+      frame.className = "duo-frame";
+      var d = dailyPhotoFor(p.id);
+      var isMe = (p.id === me);
+      if(d){
+        var isToday = (d.date === today);
+        if(!isToday) frame.className += " stale";
+        var img = document.createElement("img");
+        img.src = d.photo;
+        img.alt = personName(p.id);
+        frame.appendChild(img);
+      } else {
+        var empty = document.createElement("div");
+        empty.className = "duo-empty";
+        empty.innerHTML = '<span class="plus">+</span>' +
+          (isMe ? "Add today's photo" : "Waiting on " + escapeHtml(personName(p.id)));
+        frame.appendChild(empty);
+      }
+      slot.appendChild(frame);
+
+      var name = document.createElement("div");
+      name.className = "duo-name";
+      name.textContent = personName(p.id) + (isMe ? " (you)" : "");
+      slot.appendChild(name);
+
+      var when = document.createElement("div");
+      when.className = "duo-when" + (d && d.date === today ? " today" : "");
+      when.textContent = !d ? (isMe ? "tap to post" : "nothing yet")
+        : (d.date === today ? "today" : friendlyPhotoDate(d.date));
+      slot.appendChild(when);
+
+      slot.addEventListener("click", function(){ onDuoSlotTap(p.id, isMe); });
+      row.appendChild(slot);
+
+      if(i === 0 && people.length > 1){
+        var heart = document.createElement("div");
+        heart.className = "duo-heart";
+        heart.textContent = "\uD83D\uDC9E";
+        row.appendChild(heart);
+      }
+    });
+  }
+  function friendlyPhotoDate(dateStr){
+    if(!dateStr) return "";
+    var y = todayISO(new Date(Date.now() - 86400000));
+    if(dateStr === y) return "yesterday";
+    var parts = String(dateStr).split("-").map(Number);
+    if(parts.length !== 3) return dateStr;
+    var dt = new Date(parts[0], parts[1] - 1, parts[2]);
+    return dt.toLocaleDateString(undefined, {month:"short", day:"numeric"});
+  }
+  function onDuoSlotTap(pid, isMe){
+    if(isMe){
+      pickDailyPhoto(pid);
+      return;
+    }
+    var d = dailyPhotoFor(pid);
+    if(d){
+      openPhotoView(d.photo, personName(pid) + " \u00b7 " +
+        (d.date === todayISO() ? "today" : friendlyPhotoDate(d.date)));
+    } else {
+      toast(personName(pid) + " hasn't posted one yet \uD83D\uDCF8");
+    }
+  }
+  function pickDailyPhoto(pid){
+    var input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.addEventListener("change", function(){
+      var f = input.files && input.files[0];
+      if(!f) return;
+      readAndCompress(f, function(dataUrl){
+        if(!state.dailyPhotos) state.dailyPhotos = {};
+        var prev = state.dailyPhotos[pid];
+        state.dailyPhotos[pid] = {photo: dataUrl, date: todayISO(), at: new Date().toISOString()};
+        try{
+          saveOrThrow();
+          announce("posted today's photo \uD83D\uDCF8");
+          save();
+          renderDailyPhotos();
+          renderActivityFeed();
+          toast("Photo posted \u2014 " + personName(otherPerson(pid)) + " will see it \uD83D\uDC9E");
+        }catch(err){
+          // put the old one back rather than leaving the slot in a half-saved state
+          if(prev) state.dailyPhotos[pid] = prev; else delete state.dailyPhotos[pid];
+          save();
+          renderDailyPhotos();
+          showModal("\uD83D\uDCBE","Out of photo storage",
+            "This phone's browser storage is full (~"+storageKB()+" KB used). Remove a photo from an older trophy to make room, then try again.");
+        }
+      }, {maxDim: 620, quality: 0.7, noVideo: true});
+    });
+    input.click();
+  }
+  var photoViewBg = document.getElementById("photoViewBg");
+  function openPhotoView(src, caption){
+    document.getElementById("photoViewImg").src = src;
+    document.getElementById("photoViewCap").textContent = caption || "";
+    photoViewBg.classList.add("show");
+  }
+  document.getElementById("photoViewClose").addEventListener("click", function(){
+    photoViewBg.classList.remove("show");
+  });
+  photoViewBg.addEventListener("click", function(e){
+    if(e.target === photoViewBg) photoViewBg.classList.remove("show");
+  });
+
   // ---------- notes / quotes ----------
   function renderNotes(){
     var wrap = document.getElementById("notesList");
@@ -5356,6 +5615,7 @@
   // ---------- render all ----------
   function renderAll(){
     renderSwitcher();
+    renderDailyPhotos();
     renderHero();
     renderCheckin();
     renderListSwitcher();
@@ -5472,7 +5732,78 @@
         toast("Gist link loaded from the URL — just add the token 🔑");
       }
     }
+    ingestHealthFromUrl();
   }catch(e){}
+
+  // ---- Apple Health hand-off via URL (?hsteps=..&hcal=..&hsleep=..) ----
+  // The iPhone Shortcut just OPENS this page with today's numbers on the query string.
+  // That replaces the old approach where the Shortcut had to PATCH the gist itself with an
+  // auth header and a triple-nested JSON body — which is the fiddly, error-prone part.
+  // Once the numbers are in state, normal auto-sync carries them to the other phone, so we
+  // reuse a path that already works instead of maintaining a second one.
+  function ingestHealthFromUrl(){
+    var q = new URLSearchParams(location.search);
+    if(!q.has("hsteps") && !q.has("hcal") && !q.has("hsleep")) return;
+    // ?hp=p1|p2 lets the Shortcut name the person explicitly. That matters because
+    // "Open URLs" from Shortcuts lands in Safari, and iOS gives the Safari copy of this
+    // page its OWN storage — separate from the installed Home Screen app — so that copy
+    // may never have had "whose phone is this?" answered.
+    var hp = q.get("hp");
+    var owner = (hp === "p1" || hp === "p2") ? hp : (deviceOwner() || state.currentUser);
+    if(!owner){
+      toast("Pick whose phone this is first, then run the shortcut again");
+      return;
+    }
+    function num(v){
+      if(v == null || v === "") return null;
+      // Shortcuts can hand over "5,614" or "433.03 kcal" depending on locale / unit display
+      var n = parseFloat(String(v).replace(/,/g, "").replace(/[^0-9.\-]/g, ""));
+      return isFinite(n) ? n : null;
+    }
+    var steps = num(q.get("hsteps"));
+    var cal = num(q.get("hcal"));
+    var sleep = num(q.get("hsleep"));
+    // A sleep figure over ~20 means the Shortcut handed us minutes (or seconds) rather than
+    // hours — convert instead of rendering a nonsense "223h" on the card.
+    if(sleep != null && sleep > 20) sleep = sleep > 1200 ? sleep / 3600 : sleep / 60;
+    if(steps == null && cal == null && sleep == null) return;
+    if(!state.healthCache) state.healthCache = {};
+    var prev = state.healthCache[owner] || {};
+    var qd = q.get("hdate");
+    var day = (qd && /^\d{4}-\d{2}-\d{2}$/.test(qd)) ? qd : todayISO();
+    state.healthCache[owner] = {
+      date: day,
+      steps: steps != null ? Math.round(steps) : (prev.date === day ? prev.steps : null),
+      calories: cal != null ? Math.round(cal) : (prev.date === day ? prev.calories : null),
+      sleepHours: sleep != null ? Math.round(sleep * 100) / 100 : (prev.date === day ? prev.sleepHours : null),
+      updatedAt: new Date().toISOString()
+    };
+    save();
+    renderHealth();
+    var bits = [];
+    if(steps != null) bits.push(Math.round(steps).toLocaleString() + " steps");
+    if(cal != null) bits.push(Math.round(cal) + " cal");
+    if(sleep != null) bits.push(fmtSleep(Math.round(sleep*100)/100) + " sleep");
+    toast("Health updated — " + bits.join(" · ") + " 🍎");
+    // drop the query string so reopening the app later doesn't re-ingest stale numbers
+    try{ history.replaceState(null, "", location.pathname); }catch(e){}
+
+    // The numbers are saved — but if THIS copy of the app can't sync, they're saved into a
+    // dead end (typically the Safari copy, which has its own storage and no token). Say so
+    // out loud rather than letting the Health card silently stay empty on the real app.
+    if(!autoSyncOn()){
+      setTimeout(function(){
+        showModal("🍎", "Numbers received — one step left",
+          "Got " + bits.join(", ") + " for " + personName(owner) + ". But this copy of WeDO isn't " +
+          "connected to your shared Gist yet, so it can't pass them along.\n\n" +
+          "Scroll down to \u201cSync between two phones\u201d, paste the Gist link and your GitHub " +
+          "token here too, then tap Sync now. You only have to do this once — after that the " +
+          "shortcut updates both phones on its own.");
+      }, 900);
+    } else {
+      syncNow(false);
+    }
+  }
 
   // nag (gently) until this phone's data is actually backed up by auto-sync
   function renderBackupNag(){
