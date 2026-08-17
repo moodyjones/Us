@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#11142a">
+<!-- iOS keeps its own copy of a Home Screen app's HTML and force-quitting does NOT clear it,
+     which strands the app on an old build. These help; checkForUpdate() below is the real fix. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>WeDO — Do Stuff Together, To Get There</title>
 <!-- PWA install + push requirements: iOS only allows web push for a home-screen app that
      has a real manifest (display:standalone) — see WeDO-Notifications-Setup.md -->
@@ -1323,7 +1328,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 42 · Rae edition</div>
+  <div class="sub">Build 43 · Rae edition</div>
 </header>
 
 <main>
@@ -1654,6 +1659,7 @@
     <button class="ghost" id="tourReplayBtn" style="width:100%;margin-bottom:6px;">Replay the welcome tour</button>
     <button class="ghost" id="diagBtn" style="width:100%;">Run diagnostics</button>
     <button class="ghost" id="retryImagesBtn" style="width:100%;margin-top:6px;">Retry missing trip images</button>
+    <button class="ghost" id="forceUpdateBtn" style="width:100%;margin-top:6px;">Force reload latest version</button>
     <div id="diagOut" style="display:none;font-size:11px;line-height:1.8;margin-top:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--card2);border-radius:10px;padding:10px 12px;word-break:break-word;"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Phone owner.</strong> <span id="deviceOwnerLabel">Not set yet.</span> Daily codes only show on their owner's phone. Only change this if it's genuinely wrong.</p>
@@ -3279,7 +3285,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 42;
+  var BUILD_NUM = 43;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3289,6 +3295,15 @@
       out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
     }
     add(null, "Build " + BUILD_NUM);
+    var bIdx = lines.length - 1;
+    if(location.protocol.indexOf("http") === 0){
+      liveBuildNumber().then(function(live){
+        if(live == null) return;
+        lines[bIdx] = (live > BUILD_NUM ? "❌" : "✅") + " Build " + BUILD_NUM +
+          (live > BUILD_NUM ? " — site has Build " + live + ", tap “Force reload latest version”" : " (latest)");
+        out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+      }).catch(function(){});
+    }
     var owner = deviceOwner();
     add(!!owner, "Phone owner", owner ? personName(owner) : "NOT SET — pick in Daily check-in");
     add(null, "Viewing as", personName(state.currentUser));
@@ -6080,6 +6095,57 @@
   fetchHealth();
   setInterval(fetchHealth, 30 * 60000); // keep health numbers fresh while the app is open
   fetchHoroscopes(false);
+
+  // ---------- self-update ----------
+  // iOS caches a Home Screen app's HTML aggressively and keeps serving it even after a
+  // force-quit, which is how a phone ends up stuck several builds behind. So: fetch our own
+  // page with a cache-busting query and no-store, read the BUILD_NUM out of the response,
+  // and if the live one is newer, reload onto a URL the cache has never seen.
+  var UPDATE_TRY_KEY = "us-update-attempt";
+  function liveBuildNumber(){
+    var url = location.pathname + "?_v=" + Date.now();
+    return fetch(url, {cache: "no-store"})
+      .then(function(r){ return r.text(); })
+      .then(function(txt){
+        var m = txt.match(/var BUILD_NUM = (\d+);/);
+        return m ? parseInt(m[1], 10) : null;
+      });
+  }
+  function checkForUpdate(manual){
+    if(location.protocol.indexOf("http") !== 0){
+      if(manual) toast("Only works on the live site");
+      return;
+    }
+    if(manual) toast("Checking for a newer version…");
+    liveBuildNumber()
+      .then(function(live){
+        if(live == null){ if(manual) toast("Couldn't read the version"); return; }
+        if(live <= BUILD_NUM){
+          if(manual) toast("You're on the latest — Build " + BUILD_NUM + " ✅");
+          return;
+        }
+        // Guard against a reload loop: if we already tried to jump to this version and
+        // we're STILL not on it, the cache is winning. Say so instead of looping forever.
+        var tried = 0;
+        try{ tried = parseInt(sessionStorage.getItem(UPDATE_TRY_KEY) || "0", 10); }catch(e){}
+        if(tried === live){
+          showModal("⬆️", "Build " + live + " is available",
+            "This phone keeps loading Build " + BUILD_NUM + " from its cache. Delete the WeDO icon " +
+            "from your Home Screen, open the site in Safari, then Add to Home Screen again.\n\n" +
+            "Your data is safe in the Gist — you'll only need to paste the token back in, and the " +
+            "setup card will walk you through it.");
+          return;
+        }
+        try{ sessionStorage.setItem(UPDATE_TRY_KEY, String(live)); }catch(e){}
+        toast("Updating to Build " + live + "…");
+        setTimeout(function(){
+          location.replace(location.pathname + "?_v=" + live);
+        }, 600);
+      })
+      .catch(function(){ if(manual) toast("Couldn't reach the site to check"); });
+  }
+  document.getElementById("forceUpdateBtn").addEventListener("click", function(){ checkForUpdate(true); });
+  setTimeout(function(){ checkForUpdate(false); }, 1500);
 
   // ---- auto-sync wiring ----
   document.getElementById("ghTokenSaveBtn").addEventListener("click", function(){
