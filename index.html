@@ -94,6 +94,65 @@
   }
   header .sub .m-red{color:var(--pink);}
   header .sub .m-purple{color:var(--purple);}
+  /* ---- live daily horoscope block ---- */
+  .hero-scope{
+    margin-top:14px;padding-top:13px;border-top:1px solid var(--border);
+  }
+  #heroScope{
+    font-size:13.5px;line-height:1.6;color:var(--text);
+  }
+  #heroScope.clamped{
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .scope-more{
+    background:none;border:none;padding:5px 0 0;cursor:pointer;
+    color:var(--purple);font-size:12px;font-weight:700;
+  }
+  .scope-src{font-size:10.5px;color:var(--faint);margin-top:6px;}
+
+  /* ---- "finish setting up" card: shows only the pieces still missing ---- */
+  .setup-card{border:1px solid rgba(201,138,31,.42)!important;background:linear-gradient(170deg,#fffaf0,var(--card))!important;}
+  .setup-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .setup-title{font-size:15.5px;font-weight:700;letter-spacing:-.01em;}
+  .setup-count{font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap;}
+  .setup-lead{font-size:12.5px;color:var(--muted);line-height:1.5;margin:5px 0 12px;}
+  .setup-item{border-top:1px solid var(--border);padding:11px 0 3px;}
+  .setup-item:first-child{border-top:none;padding-top:2px;}
+  .setup-row{
+    display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;
+    padding:4px 0;font:inherit;color:inherit;text-align:left;cursor:pointer;
+  }
+  .setup-dot{
+    flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+    border:2px solid rgba(201,138,31,.55);
+    display:flex;align-items:center;justify-content:center;font-size:11px;
+  }
+  .setup-item.optional .setup-dot{border-color:var(--border);border-style:dashed;}
+  .setup-label{flex:1 1 auto;min-width:0;font-size:13.5px;font-weight:600;}
+  .setup-tag{
+    flex:0 0 auto;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--faint);background:var(--card2);padding:3px 7px;border-radius:999px;
+  }
+  .setup-chev{flex:0 0 auto;color:var(--faint);font-size:12px;transition:transform .16s ease;}
+  .setup-item.open .setup-chev{transform:rotate(90deg);}
+  .setup-body{display:none;padding:4px 0 8px 28px;font-size:12.5px;color:var(--muted);line-height:1.55;}
+  .setup-item.open .setup-body{display:block;}
+  .setup-body input{margin-top:7px;}
+  .setup-body .row2{margin-top:7px;}
+  .setup-body .setup-status{font-size:11.5px;margin-top:7px;min-height:14px;}
+  .setup-body code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+    background:var(--card2);border-radius:5px;padding:1px 5px;color:var(--pink-dim);
+    word-break:break-all;
+  }
+  .setup-body .mini{
+    background:none;border:none;color:var(--faint);font-size:11.5px;text-decoration:underline;
+    padding:6px 0 0;cursor:pointer;
+  }
+  .setup-done-note{
+    font-size:12px;color:var(--jade);font-weight:600;margin-top:10px;
+  }
+
   /* ---- daily photo duo (top of app: you two, today) ---- */
   .duo-row{
     display:flex;align-items:flex-start;justify-content:center;gap:14px;
@@ -525,7 +584,7 @@
     margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
     font-size:13px;line-height:1.5;
   }
-  .hero-cue .cue-label{
+  .hero-cue .cue-label,.hero-scope .cue-label{
     font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--teal);
     font-weight:700;margin-bottom:4px;
   }
@@ -833,10 +892,13 @@
   }
   .hero-author{font-size:11.5px;color:var(--faint);margin-top:8px;letter-spacing:.02em;}
   .hero-cue{border-top:1px solid var(--line);margin-top:16px;padding-top:14px;font-size:13.5px;line-height:1.55;color:var(--text);}
-  .hero-cue .cue-label{
+  .hero-cue .cue-label,.hero-scope .cue-label{
     font-family:var(--ui);font-size:9.5px;font-weight:800;
     letter-spacing:.14em;color:var(--jade);margin-bottom:6px;
   }
+  /* the horoscope heading uses the plum accent so the two labelled blocks read as
+     different things at a glance rather than two identical green headings */
+  .hero-scope .cue-label{color:var(--plum,var(--purple));}
 
   /* ---- stats: rings, not flat numerals ---- */
   .stat-row{gap:11px;}
@@ -1256,7 +1318,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 35 · Rae edition</div>
+  <div class="sub">Build 40 · Rae edition</div>
 </header>
 
 <main>
@@ -1273,7 +1335,12 @@
       <div class="hero-cue">
         <div class="cue-label" id="cueLabel">Today's considerate cue</div>
         <div id="heroCue"></div>
-
+      </div>
+      <!-- live daily horoscope; stays hidden unless a real one has been fetched -->
+      <div class="hero-scope" id="heroScopeWrap" style="display:none;">
+        <div class="cue-label" id="scopeLabel">Today's horoscope</div>
+        <div id="heroScope"></div>
+        <div class="scope-src" id="scopeSrc"></div>
       </div>
     </div>
   </div>
@@ -1287,6 +1354,17 @@
 
   <!-- TASKS VIEW -->
   <div class="view active" id="view-tasks">
+    <!-- Finish setting up: only rendered when something is actually missing, and it lists
+         ONLY the missing pieces. Fully self-service so a partner can finish setup alone. -->
+    <div class="card setup-card" id="setupCard" style="display:none;">
+      <div class="setup-head">
+        <div class="setup-title">Finish setting up</div>
+        <div class="setup-count" id="setupCount"></div>
+      </div>
+      <div class="setup-lead" id="setupLead"></div>
+      <div id="setupItems"></div>
+    </div>
+
     <div class="card" id="noBackupCard" style="display:none;border-color:var(--gold);">
       <div style="font-size:13px;line-height:1.55;color:var(--muted);">
         ⚠️ <strong style="color:var(--text);">This phone isn't backed up yet.</strong>
@@ -1863,6 +1941,9 @@
       // one photo per person, replaced each day (never a growing history) so the shared
       // gist stays small enough to keep syncing — see mergeStates for how the newer wins
       dailyPhotos: {},      // pid -> {photo, date:"YYYY-MM-DD", at:ISO}
+      // live daily horoscope, cached per sign per day. Synced, so whichever phone opens
+      // first does the fetch and the other just reads it.
+      horoscopes: {},       // "aquarius" -> {date:"YYYY-MM-DD", text, at:ISO}
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
       activityLog: [],      // [{id, by, text, at}] — feeds "while you were away" + push notifications
@@ -3036,6 +3117,25 @@
       if(!lp){ m.dailyPhotos[pid] = rp; return; }
       m.dailyPhotos[pid] = String(lp.at||"") >= String(rp.at||"") ? lp : rp;
     });
+    // ---- compatibility when the two phones are on different builds ----
+    // `m` starts as a deep copy of whichever side saved most recently, then we explicitly
+    // merge each field we know about. Anything we DON'T know about therefore only survives
+    // if it happened to be on the newer side. That bites on version skew: the older build
+    // silently drops fields it has never heard of and writes that back to the shared gist.
+    // Copying unknown keys across from the other side makes skew non-destructive instead.
+    for(var uk in other){
+      if(other.hasOwnProperty(uk) && !(uk in m)) m[uk] = other[uk];
+    }
+    // horoscopes: per sign, the later day wins (they're identical for a given day, so this
+    // just avoids one phone's stale copy overwriting a fresh one)
+    m.horoscopes = {};
+    var hsigns = {};
+    [L.horoscopes, R.horoscopes].forEach(function(o){ for(var k in (o||{})) hsigns[k] = 1; });
+    Object.keys(hsigns).forEach(function(sg){
+      var lh = (L.horoscopes||{})[sg], rh = (R.horoscopes||{})[sg];
+      if(!lh || !rh){ m.horoscopes[sg] = lh || rh; return; }
+      m.horoscopes[sg] = String(lh.date||"") >= String(rh.date||"") ? lh : rh;
+    });
     m.savedAt = String(L.savedAt||"") > String(R.savedAt||"") ? L.savedAt : R.savedAt;
     return m;
   }
@@ -3171,7 +3271,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 35;
+  var BUILD_NUM = 40;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3231,6 +3331,19 @@
         })
         .catch(function(e){
           lines[wikiIdx] = "❌ Wikipedia unreachable — " + e.message + " (trip photos can't load)";
+          out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+        });
+      add(null, "Testing horoscope feed…");
+      var hIdx = lines.length - 1;
+      fetch(HOROSCOPE_API + "?day=TODAY&sign=aquarius")
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          var ok = !!(j && j.data && j.data.horoscope);
+          lines[hIdx] = (ok ? "✅" : "❌") + " Horoscope feed" + (ok ? " reachable" : " responded but had no text");
+          out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+        })
+        .catch(function(e){
+          lines[hIdx] = "❌ Horoscope feed unreachable — " + e.message + " (the built-in cue still works)";
           out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
         });
       if(autoSyncOn()){
@@ -3375,6 +3488,7 @@
     state.healthGistUrl = v || null;
     save();
     renderHealth();
+    renderBackupNag();
     if(v){ toast("Health link saved ✅"); fetchHealth(); }
     else { toast("Health link removed"); }
   });
@@ -3996,7 +4110,7 @@
   ];
   var PET_NAME_FOR = "p2"; // Rae
   function dailyPetName(){
-    return PET_NAMES[(dayOfYear() + hashStr(todayISO())) % PET_NAMES.length];
+    return PET_NAMES[mixSeed("pet|" + todayISO()) % PET_NAMES.length];
   }
   function greetName(id){
     return id === PET_NAME_FOR ? dailyPetName() : personName(id);
@@ -4012,69 +4126,292 @@
   ];
 
   // Real, actionable ways to be considerate toward your partner today.
+  // Grounded in the parts of relationship research that actually replicate: Gottman's work
+  // on bids for connection, repair attempts, turning toward rather than away, and building
+  // a culture of appreciation; plus the "perceived partner responsiveness" literature, which
+  // finds that feeling understood and cared for predicts satisfaction better than grand
+  // gestures do. Every line is something you can actually DO today, not a sentiment.
   var CONSIDERATE_CUES = [
+    // --- turning toward small bids for connection ---
     "Ask {p} what's the heaviest thing on their plate today — then take one piece of it.",
-    "Say thank you for something {p} does so routinely it usually goes unnoticed.",
+    "When {p} says something small and offhand today, stop what you're doing and respond properly.",
     "Text {p} something mid-day that isn't logistics.",
-    "When {p} tells you about their day, resist fixing it. Just listen first.",
-    "Do the chore {p} hates most before they get to it.",
-    "Ask {p} how they'd like to be supported this week — don't assume you know.",
+    "Ask {p} a question you don't already know the answer to.",
     "Put your phone in another room for the first 20 minutes you're both home.",
+    "When {p} walks in, look up and greet them before anything else.",
+    "Ask {p} what the best part of their day was, and don't move on after the first sentence.",
+    "Sit next to {p} for ten minutes with nothing on — no screen, no task.",
+    "Notice when {p} tries to start a conversation today, and go with it instead of finishing your thing first.",
+    "Ask {p} what they're looking forward to this week.",
+    // --- listening without fixing ---
+    "When {p} tells you about their day, resist fixing it. Just listen first.",
+    "Ask {p} \u201cdo you want help, or do you want me to just listen?\u201d and then actually do that.",
+    "Repeat back what {p} said before you give your take on it.",
+    "Let {p} finish the whole thought today, even when you can see where it's going.",
+    "Ask {p} one follow-up question instead of switching to your own story.",
+    "If {p} vents today, don't defend anyone — including yourself. Just hear it.",
+    // --- appreciation, specifically ---
+    "Say thank you for something {p} does so routinely it usually goes unnoticed.",
     "Tell {p} one specific thing you admired about them recently.",
     "Notice what {p} did today without being asked, and name it out loud.",
-    "If something's been bugging you, bring it up gently today instead of letting it sit.",
-    "Let {p} pick tonight — the food, the show, the plan. No negotiating.",
-    "Ask {p} about something they're excited about and actually go deep on it.",
-    "Handle one thing you know {p} has been quietly dreading.",
-    "Give {p} an hour completely to themselves, no guilt attached.",
-    "Remember something {p} mentioned in passing and follow up on it.",
-    "Apologize for the small thing you brushed off earlier this week.",
-    "Ask {p} what would make tomorrow easier for them, then do that thing.",
     "Compliment {p} on effort, not just outcome.",
+    "Tell {p} something they're better at than you are, and mean it.",
+    "Mention something {p} did months ago that you still think about.",
+    "Tell {p} what you'd miss most if they were away for a week.",
+    "Say out loud the thing you usually just think about them.",
+    // --- taking load off ---
+    "Do the chore {p} hates most before they get to it.",
+    "Handle one thing you know {p} has been quietly dreading.",
+    "Do something for {p} that takes 5 minutes but saves them 30.",
+    "Ask {p} what would make tomorrow easier for them, then do that thing.",
+    "Take one recurring thing off {p}'s list permanently, not just today.",
+    "Notice what {p} is about to have to do, and do it first without announcing it.",
+    "Deal with the admin thing you've both been avoiding.",
+    "Make the appointment, send the email, or make the call {p} keeps putting off.",
+    // --- repair and honesty ---
+    "If something's been bugging you, bring it up gently today instead of letting it sit.",
+    "Apologize for the small thing you brushed off earlier this week.",
     "Be the one who starts the hard conversation today.",
-    "Do something for {p} that takes 5 minutes but saves them 30."
+    "If you snapped recently, name it and own it without adding a \u201cbut\u201d.",
+    "Ask {p} if there's anything you've been getting wrong lately, and don't argue with the answer.",
+    "Revisit the argument you left half-finished and close it properly.",
+    "Admit one thing you were wrong about, without being asked.",
+    "Ask {p} whether something you did landed the way you meant it to.",
+    // --- accepting influence / giving space ---
+    "Let {p} pick tonight — the food, the show, the plan. No negotiating.",
+    "Give {p} an hour completely to themselves, no guilt attached.",
+    "Ask {p} how they'd like to be supported this week — don't assume you know.",
+    "Change your mind about something today because of what {p} said.",
+    "Say yes to the thing you'd normally push back on.",
+    "Let {p} do it their way, even if yours is faster.",
+    "Ask {p} what they need less of from you, not just more of.",
+    // --- shared future / interest in their world ---
+    "Ask {p} about something they're excited about and actually go deep on it.",
+    "Remember something {p} mentioned in passing and follow up on it.",
+    "Ask {p} about a person in their life you don't know much about.",
+    "Ask {p} what they'd do with a completely free weekend, then start making it possible.",
+    "Bring up something you two used to do and haven't done in a while.",
+    "Ask {p} what they want to be different a year from now.",
+    "Learn one small thing about {p}'s work that you've never really understood.",
+    "Ask {p} what they were like at a stage of life you weren't around for.",
+    // --- warmth and play ---
+    "Be the first one to be affectionate today, without waiting to see their mood.",
+    "Make {p} laugh before you make {p} a point.",
+    "Do the thing that always makes {p} roll their eyes and smile.",
+    "Say the soft thing you'd normally save for a special occasion.",
+    "Touch base physically — a hand, a shoulder — when you pass each other today.",
+    "Tell {p} you're glad they're yours, plainly, with no joke attached."
   ];
 
+  // Light garnish only. Several variants per sign so the line isn't word-for-word identical
+  // every single day — the previous version had exactly one string per sign, which is why
+  // the cue always opened the same way no matter what day it was.
   var SIGN_FLAVOR = {
-    Aries:"Aries fire — channel it into doing, not debating.",
-    Taurus:"Taurus steadiness — slow and warm wins today.",
-    Gemini:"Gemini chatter — talk less, ask more.",
-    Cancer:"Cancer softness — lead with care today.",
-    Leo:"Leo warmth — turn the spotlight on them.",
-    Virgo:"Virgo precision — notice the small stuff.",
-    Libra:"Libra balance — check the scales are even.",
-    Scorpio:"Scorpio depth — go past the surface question.",
-    Sagittarius:"Sagittarius restlessness — bring them along.",
-    Capricorn:"Capricorn drive — soften the edges today.",
-    Aquarius:"Aquarius independence — close the distance a little.",
-    Pisces:"Pisces intuition — trust what you're sensing."
+    Aries:[
+      "Aries fire — channel it into doing, not debating.",
+      "Aries impatience — give it one more beat before you answer.",
+      "Aries drive — aim it at their to-do list, not yours.",
+      "Aries bluntness — say the kind version first.",
+      "Aries momentum — start something small for them.",
+      "Aries heat — let them win one today."
+    ],
+    Taurus:[
+      "Taurus steadiness — slow and warm wins today.",
+      "Taurus stubbornness — loosen your grip on being right.",
+      "Taurus comfort — make the room nicer for them.",
+      "Taurus patience — use it on the conversation you've been avoiding.",
+      "Taurus routine — break it once, on purpose, for them.",
+      "Taurus loyalty — say it out loud instead of assuming it's obvious."
+    ],
+    Gemini:[
+      "Gemini chatter — talk less, ask more.",
+      "Gemini curiosity — point it at them today.",
+      "Gemini quickness — slow to their pace for one conversation.",
+      "Gemini wit — use it to lighten, not to deflect.",
+      "Gemini restlessness — sit still with them for ten minutes.",
+      "Gemini two minds — pick the generous one."
+    ],
+    Cancer:[
+      "Cancer softness — lead with care today.",
+      "Cancer memory — bring up the good one, not the old wound.",
+      "Cancer intuition — check it out loud instead of assuming.",
+      "Cancer shell — come out of it a little earlier than feels comfortable.",
+      "Cancer nurture — accept some back today.",
+      "Cancer moods — name yours instead of radiating it."
+    ],
+    Leo:[
+      "Leo warmth — turn the spotlight on them.",
+      "Leo pride — set it down for one conversation.",
+      "Leo generosity — spend it somewhere they'll actually notice.",
+      "Leo presence — make them feel like the main character today.",
+      "Leo confidence — lend some to them.",
+      "Leo heart — be openly soft about them."
+    ],
+    Virgo:[
+      "Virgo precision — notice the small stuff.",
+      "Virgo standards — apply them to your own kindness today.",
+      "Virgo fixing — ask before you improve anything of theirs.",
+      "Virgo eye for detail — use it to catch something they did well.",
+      "Virgo lists — put one of their things at the top.",
+      "Virgo criticism — swap it for curiosity once today."
+    ],
+    Libra:[
+      "Libra balance — check the scales are even.",
+      "Libra harmony — don't smooth over the thing that needs saying.",
+      "Libra fairness — count what they carry, not just what you do.",
+      "Libra charm — spend it at home today.",
+      "Libra indecision — just pick, and make it their favourite.",
+      "Libra diplomacy — be direct with them instead."
+    ],
+    Scorpio:[
+      "Scorpio depth — go past the surface question.",
+      "Scorpio guardedness — share the thing you were going to keep.",
+      "Scorpio intensity — aim it at their corner today.",
+      "Scorpio loyalty — say the quiet part out loud.",
+      "Scorpio suspicion — ask instead of concluding.",
+      "Scorpio all-in — let them see it."
+    ],
+    Sagittarius:[
+      "Sagittarius restlessness — bring them along.",
+      "Sagittarius honesty — soften the delivery, keep the truth.",
+      "Sagittarius optimism — hand some to them today.",
+      "Sagittarius wandering — be fully here for one evening.",
+      "Sagittarius big plans — make one that's about them.",
+      "Sagittarius freedom — choose them out loud."
+    ],
+    Capricorn:[
+      "Capricorn drive — soften the edges today.",
+      "Capricorn discipline — schedule the thing that's just for them.",
+      "Capricorn seriousness — be silly with them for ten minutes.",
+      "Capricorn self-reliance — let them help with something.",
+      "Capricorn ambition — count this relationship as part of it.",
+      "Capricorn reserve — say the warm thing anyway."
+    ],
+    Aquarius:[
+      "Aquarius independence — close the distance a little.",
+      "Aquarius head — check in with the feeling underneath.",
+      "Aquarius detachment — stay in the room for the hard bit.",
+      "Aquarius originality — do something for them nobody would predict.",
+      "Aquarius principles — apply one to how you listen today.",
+      "Aquarius distance — trade it for ten close minutes."
+    ],
+    Pisces:[
+      "Pisces intuition — trust what you're sensing.",
+      "Pisces empathy — leave some for yourself too.",
+      "Pisces daydreams — bring one of them into the real plan.",
+      "Pisces avoidance — say the awkward thing today.",
+      "Pisces tenderness — make it concrete, not just felt.",
+      "Pisces drift — anchor to one thing you'll actually do."
+    ]
   };
+
+  // ---------- live daily horoscope ----------
+  // Best-effort only. If the API is down, blocked by CORS, or the phone is offline, the
+  // block simply stays hidden and the built-in sign flavour carries the cue exactly as it
+  // did before — this must never be able to break the hero card.
+  var HOROSCOPE_API = "https://freehoroscopeapi.com/api/v1/get-horoscope/daily";
+  var horoscopeInFlight = {};
+  function signSlug(sign){ return String(sign || "").trim().toLowerCase(); }
+  function horoscopeFor(sign){
+    var h = (state.horoscopes || {})[signSlug(sign)];
+    return (h && h.text && h.date === todayISO()) ? h : null;
+  }
+  function fetchHoroscopes(force){
+    if(typeof fetch !== "function") return;
+    var signs = {};
+    state.people.forEach(function(p){
+      var sg = signSlug((state.signs || {})[p.id]);
+      if(sg) signs[sg] = 1;
+    });
+    Object.keys(signs).forEach(function(sg){
+      if(!force && horoscopeFor(sg)) return;     // already have today's
+      if(horoscopeInFlight[sg]) return;
+      horoscopeInFlight[sg] = true;
+      var ctrl = (typeof AbortController === "function") ? new AbortController() : null;
+      var timer = setTimeout(function(){ try{ ctrl && ctrl.abort(); }catch(e){} }, 9000);
+      fetch(HOROSCOPE_API + "?day=TODAY&sign=" + encodeURIComponent(sg),
+            ctrl ? {signal: ctrl.signal} : undefined)
+        .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+        .then(function(j){
+          var txt = j && j.data && j.data.horoscope;
+          if(typeof txt !== "string" || txt.length < 20) throw new Error("empty");
+          if(!state.horoscopes) state.horoscopes = {};
+          state.horoscopes[sg] = {date: todayISO(), text: txt.trim(), at: new Date().toISOString()};
+          save();
+          renderHero();
+        })
+        .catch(function(){ /* silent — the local fallback is already on screen */ })
+        .then(function(){
+          clearTimeout(timer);
+          horoscopeInFlight[sg] = false;
+        });
+    });
+  }
 
   function renderHero(){
     var me = state.currentUser;
     var partner = otherPerson(me);
-    var d = dayOfYear();
     // deterministic per person + per day, so it's stable all day and differs between partners
-    var seed = hashStr(me + "|" + todayISO());
+    var seed = mixSeed(me + "|" + todayISO());
 
     document.getElementById("heroGreet").textContent =
       GREETINGS[seed % GREETINGS.length].replace("{me}", greetName(me));
 
-    var q = QUOTES[(seed + d) % QUOTES.length];
+    var q = QUOTES[mixSeed("quote|" + me + "|" + todayISO()) % QUOTES.length];
     document.getElementById("heroQuote").textContent = '"' + q.q + '"';
     document.getElementById("heroAuthor").textContent = "— " + q.a;
 
-    var cue = CONSIDERATE_CUES[(seed + d*7) % CONSIDERATE_CUES.length]
+    var cue = CONSIDERATE_CUES[mixSeed("cue|" + me + "|" + todayISO()) % CONSIDERATE_CUES.length]
       .replace(/\{p\}/g, personName(partner));
     var sign = state.signs[me];
     var label = document.getElementById("cueLabel");
-    if(sign && SIGN_FLAVOR[sign]){
+    var scope = sign ? horoscopeFor(sign) : null;
+    var flavors = sign && SIGN_FLAVOR[sign];
+    if(flavors && flavors.length){
       label.textContent = sign + " · today's considerate cue";
-      cue = SIGN_FLAVOR[sign] + " " + cue;
+      // Only prepend the canned sign flavour when there's no real horoscope to show —
+      // otherwise the card says the same kind of thing twice.
+      if(!scope){
+        cue = flavors[mixSeed("flav|" + me + "|" + todayISO()) % flavors.length] + " " + cue;
+      }
     } else {
       label.textContent = "Today's considerate cue";
     }
     document.getElementById("heroCue").textContent = cue;
+    renderHoroscopeBlock(sign, scope);
+  }
+
+  // Long horoscopes get clamped to four lines with a Read more toggle, so the hero card
+  // doesn't turn into a wall of text on a phone.
+  var scopeExpanded = false;
+  function renderHoroscopeBlock(sign, scope){
+    var wrap = document.getElementById("heroScopeWrap");
+    if(!wrap) return;
+    if(!scope){ wrap.style.display = "none"; return; }
+    wrap.style.display = "";
+    document.getElementById("scopeLabel").textContent = sign + " · today's horoscope";
+    var body = document.getElementById("heroScope");
+    body.textContent = scope.text;
+    var longText = scope.text.length > 220;
+    body.className = (longText && !scopeExpanded) ? "clamped" : "";
+
+    var src = document.getElementById("scopeSrc");
+    src.innerHTML = "";
+    if(longText){
+      var more = document.createElement("button");
+      more.type = "button";
+      more.className = "scope-more";
+      more.textContent = scopeExpanded ? "Show less" : "Read more";
+      more.addEventListener("click", function(){
+        scopeExpanded = !scopeExpanded;
+        renderHoroscopeBlock(sign, scope);
+      });
+      src.appendChild(more);
+      src.appendChild(document.createElement("br"));
+    }
+    var note = document.createElement("span");
+    note.textContent = "Fetched today · freehoroscopeapi.com";
+    src.appendChild(note);
   }
 
   // ================= POSITIVE REINFORCEMENT =================
@@ -4134,6 +4471,30 @@
       h |= 0;
     }
     return Math.abs(h);
+  }
+
+  // Separate, properly-mixed hash for the cosmetic "one per day" pickers (greeting, quote,
+  // considerate cue, sign flavour, pet name).
+  //
+  // hashStr above must NOT change: it derives the shared daily connection code, and both
+  // phones have to compute the same value even when they're on different builds. But it's a
+  // poor choice for daily rotation, because the last character contributes with weight 1 —
+  // so "…-08-20" and "…-08-21" hash to values exactly 1 apart. Every `(seed + day*k) % n`
+  // pick therefore moved by a fixed step each day, which meant: lists whose length shared a
+  // factor with that step only ever showed half their entries, and the sign flavour (step 6,
+  // list of 6) froze on one line permanently — the "same cue every day" bug.
+  //
+  // FNV-1a plus a murmur3 finalizer, so a one-character change scrambles the whole value.
+  function mixSeed(str){
+    var h = 2166136261;
+    for(var i=0;i<str.length;i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    h ^= h >>> 15; h = Math.imul(h, 2246822507);
+    h ^= h >>> 13; h = Math.imul(h, 3266489909);
+    h ^= h >>> 16;
+    return (h >>> 0);
   }
 
   // Deterministic per-person, per-day code. Both phones derive the same value
@@ -4509,19 +4870,49 @@
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
         cb(canvas.toDataURL("image/jpeg", opts.quality || 0.72), "image");
       };
-      img.onerror = function(){ toast("Couldn't read that image"); };
+      img.onerror = function(){
+        showModal("📸","Couldn't read that photo",
+          "Your phone handed over a file WeDO can't decode. Try a different photo, or take a new one with the camera.");
+      };
       img.src = e.target.result;
+    };
+    reader.onerror = function(){
+      showModal("📸","Couldn't open that photo",
+        "Your phone wouldn't hand the file over. Try picking it again, or choose a different photo.");
     };
     reader.readAsDataURL(file);
   }
 
-  function attachPhotoTo(taskId){
+  // Opens the photo picker. The input MUST be in the document: iOS Safari quietly ignores
+  // .click() on a detached <input type="file">, which is why tapping a photo slot appeared
+  // to do nothing at all. Parked off-screen rather than display:none — some Safari versions
+  // refuse to click a hidden input too.
+  function openFilePicker(accept, onFile){
     var input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*,video/*";
+    input.accept = accept;
+    input.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;";
+    document.body.appendChild(input);
+    var cleaned = false;
+    function cleanup(){
+      if(cleaned) return;
+      cleaned = true;
+      try{ if(input.parentNode) input.parentNode.removeChild(input); }catch(e){}
+    }
     input.addEventListener("change", function(){
       var f = input.files && input.files[0];
-      if(!f) return;
+      if(!f){ cleanup(); return; }
+      // hand the file over BEFORE removing the node, so .files stays readable
+      try{ onFile(f); } finally { cleanup(); }
+    });
+    input.addEventListener("cancel", cleanup);
+    // backstop: if neither event ever fires (older Safari), don't leak the node
+    setTimeout(cleanup, 120000);
+    input.click();
+  }
+
+  function attachPhotoTo(taskId){
+    openFilePicker("image/*,video/*", function(f){
       readAndCompress(f, function(dataUrl, kind){
         var t = state.tasks.find(function(x){ return x.id === taskId; });
         if(!t) return;
@@ -4541,7 +4932,6 @@
         }
       });
     });
-    input.click();
   }
 
   // ---- completion modal ----
@@ -5406,13 +5796,14 @@
     }
   }
   function pickDailyPhoto(pid){
-    var input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.addEventListener("change", function(){
-      var f = input.files && input.files[0];
-      if(!f) return;
+    openFilePicker("image/*", function(f){
+      toast("Adding your photo…");
       readAndCompress(f, function(dataUrl){
+        if(!dataUrl || dataUrl.length < 100){
+          showModal("📸","Couldn't read that photo",
+            "That image didn't come through. Try a different one, or take a fresh photo with the camera.");
+          return;
+        }
         if(!state.dailyPhotos) state.dailyPhotos = {};
         var prev = state.dailyPhotos[pid];
         state.dailyPhotos[pid] = {photo: dataUrl, date: todayISO(), at: new Date().toISOString()};
@@ -5433,7 +5824,6 @@
         }
       }, {maxDim: 620, quality: 0.7, noVideo: true});
     });
-    input.click();
   }
   var photoViewBg = document.getElementById("photoViewBg");
   function openPhotoView(src, caption){
@@ -5614,6 +6004,8 @@
 
   // ---------- render all ----------
   function renderAll(){
+    renderSetupCard();
+    renderBackupNag();
     renderSwitcher();
     renderDailyPhotos();
     renderHero();
@@ -5649,11 +6041,15 @@
   document.getElementById("onesignalRestKeyInput").value = onesignalRestKey();
   fetchHealth();
   setInterval(fetchHealth, 30 * 60000); // keep health numbers fresh while the app is open
+  fetchHoroscopes(false);
 
   // ---- auto-sync wiring ----
   document.getElementById("ghTokenSaveBtn").addEventListener("click", function(){
     var v = document.getElementById("ghTokenInput").value.trim();
     setGhToken(v);
+    // refresh the "not backed up" banner straight away — it's on a 60s timer otherwise,
+    // so it used to linger after you'd already fixed the thing it was complaining about
+    renderBackupNag();
     if(v){ toast("Token saved on this phone 🔐"); syncNow(true); }
     else { toast("Token removed — back to manual sync"); setSyncStatus("err"); }
   });
@@ -5698,17 +6094,35 @@
     save();
     toast(appId && restKey ? "Push credentials saved — now tap Enable on each phone" : "Push credentials cleared");
   });
-  document.getElementById("onesignalEnableBtn").addEventListener("click", function(){
+  // shared by the Sync panel button and the Finish-setup card, so both behave identically
+  // literal key here too — same hoisting reason as us-setup-skipped-v1 above
+  function pushEnabledHere(){
+    try{
+      if(localStorage.getItem("us-push-enabled-v1") !== "1") return false;
+    }catch(e){ return false; }
+    // the saved flag can go stale if permission is later revoked in iOS Settings
+    try{
+      if(typeof Notification !== "undefined" && Notification.permission !== "granted") return false;
+    }catch(e){}
+    return pushConfigured();
+  }
+  function enablePushOnThisPhone(statusFn){
+    var say = statusFn || setOnesignalStatus;
     var owner = deviceOwner();
-    if(!owner){ toast("Set whose phone this is first (Daily check-in card)"); return; }
+    if(!owner){ toast("Tell WeDO whose phone this is first"); return; }
     if(!state.onesignalAppId){ toast("Paste + save the OneSignal App ID first"); return; }
-    setOnesignalStatus("requesting permission…");
+    say("requesting permission…");
     withOneSignal(async function(OneSignal){
       await OneSignal.login(owner); // tags this subscription "p1"/"p2" so pushes can target it later
       await OneSignal.Notifications.requestPermission();
       var granted = OneSignal.Notifications.permission;
-      setOnesignalStatus(granted ? ("Enabled for " + personName(owner) + " ✅") : "Permission not granted — check Settings > Notifications for WeDO");
+      try{ localStorage.setItem("us-push-enabled-v1", granted ? "1" : "0"); }catch(e){}
+      say(granted ? ("Enabled for " + personName(owner) + " ✅") : "Permission not granted — check Settings > Notifications for WeDO");
+      renderSetupCard();
     });
+  }
+  document.getElementById("onesignalEnableBtn").addEventListener("click", function(){
+    enablePushOnThisPhone();
   });
   // if credentials + a device owner are already set (e.g. the other phone set this up
   // and it synced over), quietly re-tag this subscription without waiting for a tap —
@@ -5806,12 +6220,288 @@
   }
 
   // nag (gently) until this phone's data is actually backed up by auto-sync
+  // ---------- "finish setting up" card ----------
+  // Deliberately shows ONLY what's still missing. Every row carries the control needed to
+  // fix it right there, so a phone can be set up end-to-end without the other person
+  // present. The whole card disappears once nothing is outstanding.
+  var setupOpenKey = null;
+  // NOTE: the storage key is written out literally in both functions on purpose. renderAll()
+  // fires earlier in this file than any `var X = "..."` down here would be assigned — function
+  // declarations hoist but var VALUES don't, so a shared constant would still be `undefined`
+  // on the very first render and every skip flag would read back empty.
+  function setupSkipped(){
+    try{ return JSON.parse(localStorage.getItem("us-setup-skipped-v1") || "{}"); }catch(e){ return {}; }
+  }
+  function skipSetupItem(key){
+    var sk = setupSkipped();
+    sk[key] = true;
+    try{ localStorage.setItem("us-setup-skipped-v1", JSON.stringify(sk)); }catch(e){}
+    renderSetupCard();
+  }
+  function isStandaloneApp(){
+    try{
+      if(navigator.standalone === true) return true;
+      if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+    }catch(e){}
+    return false;
+  }
+  function setupChecklist(){
+    var owner = deviceOwner();
+    var hc = (state.healthCache || {})[owner || ""];
+    return [
+      {
+        key: "owner",
+        label: "Tell WeDO whose phone this is",
+        done: !!owner,
+        why: "Daily codes, notes and your photo slot all key off this. Nothing else works properly until it's set.",
+        build: function(body){
+          var row = document.createElement("div");
+          row.className = "row2";
+          state.people.slice(0,2).forEach(function(p){
+            var b = document.createElement("button");
+            b.className = "ghost";
+            b.textContent = "This is " + personName(p.id) + "'s phone";
+            b.addEventListener("click", function(){
+              setDeviceOwner(p.id);
+              state.currentUser = p.id;
+              save();
+              renderAll();
+              toast("Set as " + personName(p.id) + "'s phone ✅");
+            });
+            row.appendChild(b);
+          });
+          body.appendChild(row);
+        }
+      },
+      {
+        key: "install",
+        label: "Add WeDO to your Home Screen",
+        done: isStandaloneApp(),
+        optional: false,
+        skippable: true,
+        why: "You're in a Safari tab right now. iOS won't allow notifications for a tab — only for an installed app — and a tab's data is easier to lose.",
+        build: function(body){
+          var p = document.createElement("div");
+          p.innerHTML = "In Safari, tap the <strong>Share</strong> icon (square with an arrow) \u2192 " +
+            "<strong>Add to Home Screen</strong> \u2192 <strong>Add</strong>. Then close Safari and open WeDO " +
+            "from the new icon. Do the rest of this setup there.";
+          body.appendChild(p);
+        }
+      },
+      {
+        key: "gist",
+        label: "Connect the shared Gist",
+        done: !!gistIdFromUrl(),
+        why: "This is the shared file both phones read and write. Without it nothing is backed up and you two can't see each other's lists.",
+        build: function(body){
+          var inp = document.createElement("input");
+          inp.type = "url";
+          inp.placeholder = "https://gist.github.com/…";
+          inp.value = state.healthGistUrl || "";
+          var btn = document.createElement("button");
+          btn.className = "ghost";
+          btn.style.width = "100%";
+          btn.style.marginTop = "7px";
+          btn.textContent = "Save Gist link";
+          var st = document.createElement("div");
+          st.className = "setup-status";
+          btn.addEventListener("click", function(){
+            var v = inp.value.trim();
+            if(!v || !parseGistBase(v)){
+              st.style.color = "var(--pink)";
+              st.textContent = "That doesn't look like a Gist link — it should start https://gist.github.com/";
+              return;
+            }
+            state.healthGistUrl = v;
+            save();
+            var f = document.getElementById("healthGistInput");
+            if(f) f.value = v;
+            renderHealth(); renderBackupNag();
+            toast("Gist link saved ✅");
+            renderSetupCard();
+          });
+          body.appendChild(inp); body.appendChild(btn); body.appendChild(st);
+        }
+      },
+      {
+        key: "token",
+        label: "Add the GitHub token",
+        done: !!ghToken(),
+        why: "Lets this phone actually write to the Gist. It's stored only on this phone and never synced \u2014 which is why each phone needs it pasted once.",
+        build: function(body){
+          var inp = document.createElement("input");
+          inp.type = "password";
+          inp.placeholder = "ghp_…";
+          var btn = document.createElement("button");
+          btn.className = "ghost";
+          btn.style.width = "100%";
+          btn.style.marginTop = "7px";
+          btn.textContent = "Save token & sync now";
+          var st = document.createElement("div");
+          st.className = "setup-status";
+          btn.addEventListener("click", function(){
+            var v = inp.value.trim();
+            if(!v){ st.style.color = "var(--pink)"; st.textContent = "Paste the token first."; return; }
+            setGhToken(v);
+            var f = document.getElementById("ghTokenInput");
+            if(f) f.value = v;
+            renderBackupNag();
+            st.style.color = "var(--muted)";
+            st.textContent = "Saved — syncing…";
+            syncNow(true);
+            renderSetupCard();
+          });
+          body.appendChild(inp); body.appendChild(btn); body.appendChild(st);
+        }
+      },
+      {
+        key: "push",
+        label: "Turn on notifications",
+        done: pushEnabledHere(),
+        skippable: true,
+        why: "So you hear about it the moment the other one adds or finishes something, even with WeDO closed.",
+        build: function(body){
+          var a = document.createElement("input");
+          a.type = "text"; a.placeholder = "OneSignal App ID";
+          a.value = state.onesignalAppId || "";
+          var k = document.createElement("input");
+          k.type = "password"; k.placeholder = "OneSignal REST API key";
+          k.style.marginTop = "7px";
+          k.value = onesignalRestKey();
+          var row = document.createElement("div");
+          row.className = "row2";
+          var save1 = document.createElement("button");
+          save1.className = "ghost"; save1.textContent = "Save";
+          var en = document.createElement("button");
+          en.className = "ghost"; en.textContent = "Enable on this phone";
+          var st = document.createElement("div");
+          st.className = "setup-status";
+          save1.addEventListener("click", function(){
+            state.onesignalAppId = a.value.trim() || null;
+            setOnesignalRestKey(k.value.trim());
+            save();
+            st.style.color = "var(--muted)";
+            st.textContent = a.value.trim() && k.value.trim()
+              ? "Saved — now tap Enable on this phone."
+              : "Both fields are needed. Ask for them if you don't have them.";
+          });
+          en.addEventListener("click", function(){
+            if(!isStandaloneApp()){
+              st.style.color = "var(--pink)";
+              st.textContent = "Open WeDO from its Home Screen icon first — iOS blocks this in a Safari tab.";
+              return;
+            }
+            enablePushOnThisPhone(function(msg){
+              st.style.color = "var(--muted)";
+              st.textContent = msg;
+            });
+          });
+          row.appendChild(save1); row.appendChild(en);
+          body.appendChild(a); body.appendChild(k); body.appendChild(row); body.appendChild(st);
+        }
+      },
+      {
+        key: "health",
+        label: "Apple Health (steps & sleep)",
+        done: !!(hc && (hc.steps != null || hc.sleepHours != null || hc.calories != null)),
+        optional: true,
+        skippable: true,
+        why: "Optional. Puts your steps, calories and sleep next to your partner's — and the app uses the sleep figure to nudge you both to go gentle after a rough night.",
+        build: function(body){
+          var p = document.createElement("div");
+          p.innerHTML = "Apple won't let a website read Health, so this needs a one-time iPhone " +
+            "<strong>Shortcut</strong> that reads the numbers and hands them to WeDO. It's about 10 minutes, " +
+            "and the setup guide walks through it action by action.<br><br>Once built, the shortcut opens " +
+            "this app with today's numbers on the end of the web address and they appear on the Health card.";
+          body.appendChild(p);
+        }
+      }
+    ];
+  }
+  function renderSetupCard(){
+    var card = document.getElementById("setupCard");
+    if(!card) return false;
+    var items = setupChecklist();
+    var skipped = setupSkipped();
+    var doneCount = items.filter(function(i){ return i.done; }).length;
+    var outstanding = items.filter(function(i){ return !i.done && !skipped[i.key]; });
+
+    if(outstanding.length === 0){
+      card.style.display = "none";
+      return false;
+    }
+    card.style.display = "";
+    document.getElementById("setupCount").textContent = doneCount + " of " + items.length + " done";
+    var blocking = outstanding.filter(function(i){ return !i.optional; }).length;
+    document.getElementById("setupLead").textContent = blocking
+      ? "Just these left on this phone — tap any one to finish it here."
+      : "Everything essential is done. This last bit is optional.";
+
+    // keep exactly one row open: whatever the person last tapped, else the first thing left
+    if(!setupOpenKey || !outstanding.some(function(i){ return i.key === setupOpenKey; })){
+      setupOpenKey = outstanding[0].key;
+    }
+    var wrap = document.getElementById("setupItems");
+    wrap.innerHTML = "";
+    outstanding.forEach(function(item){
+      var el = document.createElement("div");
+      el.className = "setup-item" + (item.optional ? " optional" : "") + (item.key === setupOpenKey ? " open" : "");
+
+      var row = document.createElement("button");
+      row.type = "button";
+      row.className = "setup-row";
+      var dot = document.createElement("span");
+      dot.className = "setup-dot";
+      var label = document.createElement("span");
+      label.className = "setup-label";
+      label.textContent = item.label;
+      row.appendChild(dot); row.appendChild(label);
+      if(item.optional){
+        var tag = document.createElement("span");
+        tag.className = "setup-tag";
+        tag.textContent = "optional";
+        row.appendChild(tag);
+      }
+      var chev = document.createElement("span");
+      chev.className = "setup-chev";
+      chev.textContent = "\u276F";
+      row.appendChild(chev);
+      row.addEventListener("click", function(){
+        setupOpenKey = (setupOpenKey === item.key) ? null : item.key;
+        renderSetupCard();
+      });
+      el.appendChild(row);
+
+      var body = document.createElement("div");
+      body.className = "setup-body";
+      var why = document.createElement("div");
+      why.innerHTML = item.why;
+      body.appendChild(why);
+      if(item.build) item.build(body);
+      if(item.skippable){
+        var sk = document.createElement("button");
+        sk.type = "button";
+        sk.className = "mini";
+        sk.textContent = item.optional ? "Skip this — I don't want it" : "Hide this for now";
+        sk.addEventListener("click", function(){ skipSetupItem(item.key); });
+        body.appendChild(sk);
+      }
+      el.appendChild(body);
+      wrap.appendChild(el);
+    });
+    return true;
+  }
+
   function renderBackupNag(){
     var card = document.getElementById("noBackupCard");
     if(!card) return;
     var snoozedUntil = 0;
     try{ snoozedUntil = parseInt(localStorage.getItem("us-backup-nag-snooze") || "0", 10); }catch(e){}
-    card.style.display = (!autoSyncOn() && Date.now() > snoozedUntil) ? "" : "none";
+    // the Finish-setup card already covers this (and lets you fix it inline), so don't
+    // stack two warnings about the same thing
+    var setupShowing = document.getElementById("setupCard") &&
+      document.getElementById("setupCard").style.display !== "none";
+    card.style.display = (!setupShowing && !autoSyncOn() && Date.now() > snoozedUntil) ? "" : "none";
   }
   document.getElementById("noBackupLater").addEventListener("click", function(){
     try{ localStorage.setItem("us-backup-nag-snooze", String(Date.now() + 3 * 86400000)); }catch(e){}
@@ -5833,6 +6523,7 @@
       refreshRepeatingTasks();
       renderAll();
       syncNow(false); fetchHealth();
+      fetchHoroscopes(false); // no-op unless the day has rolled over
     }
   });
 
