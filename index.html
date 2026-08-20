@@ -1328,7 +1328,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 43 · Rae edition</div>
+  <div class="sub">Build 44 · Rae edition</div>
 </header>
 
 <main>
@@ -3285,7 +3285,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 43;
+  var BUILD_NUM = 44;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3338,6 +3338,17 @@
     }).join(", "));
     var withPhoto = state.tasks.filter(function(t){ return !!t.photo; });
     add(null, "Photos/memories attached", withPhoto.length + " item(s)");
+    // exact stored health rows — the date and updatedAt are what decide which copy wins a
+    // merge, so seeing them is the only way to tell a stale entry from a genuine one
+    state.people.slice(0,2).forEach(function(p){
+      var h = (state.healthCache || {})[p.id];
+      if(!h){ add(null, "Health · " + personName(p.id), "nothing stored"); return; }
+      add(h.date === todayISO(), "Health · " + personName(p.id),
+        (h.date || "no date") +
+        " · " + (h.steps != null ? h.steps + " steps" : "no steps") +
+        " · " + (h.sleepHours != null ? h.sleepHours + "h sleep" : "no sleep") +
+        " · written " + (h.updatedAt ? new Date(h.updatedAt).toLocaleString() : "unknown"));
+    });
     add(null, "Storage used", storageKB() + " KB");
     add(pushConfigured(), "Push notifications", pushConfigured() ? "credentials saved on this phone" : "not set up — see WeDO-Notifications-Setup.md");
     add(null, "Unread activity", (state.activityLog||[]).filter(function(a){ return a.by !== owner && a.at > lastSeenActivity(); }).length + " item(s)");
