@@ -250,7 +250,8 @@
   }
   /* full-size photo viewer */
   .photo-view-bg{
-    position:fixed;inset:0;z-index:120;background:rgba(20,16,26,.92);
+    /* above the album sheet — full-size view is opened FROM the album, so it must cover it */
+    position:fixed;inset:0;z-index:130;background:rgba(20,16,26,.92);
     display:none;flex-direction:column;align-items:center;justify-content:center;
     padding:24px;gap:14px;
   }
@@ -265,6 +266,51 @@
     color:#fff;font-size:14px;font-weight:600;padding:10px 26px;border-radius:999px;
     cursor:pointer;
   }
+  /* ---- trip album ---- */
+  .trip-album-chip{
+    position:absolute;left:12px;top:12px;z-index:3;
+    background:rgba(20,16,26,.62);border:1px solid rgba(255,255,255,.34);
+    color:#fff;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;
+    cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  }
+  .album-bg{
+    position:fixed;inset:0;z-index:125;background:rgba(20,16,26,.9);
+    display:none;align-items:flex-end;justify-content:center;
+  }
+  .album-bg.show{display:flex;}
+  .album-sheet{
+    width:100%;max-width:520px;max-height:86vh;background:var(--card);
+    border-radius:22px 22px 0 0;padding:18px 16px 26px;overflow-y:auto;
+  }
+  .album-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .album-title{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+  .album-sub{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .album-close{
+    background:var(--card2);border:1px solid var(--border);color:var(--text);
+    width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;flex:0 0 auto;
+  }
+  .td-lab{
+    display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);margin:12px 0 5px;
+  }
+  #tripDatesStart, #tripDatesEnd{width:100%;}
+  .td-err{font-size:12.5px;color:var(--pink);margin-top:9px;min-height:1em;}
+  .album-recap{
+    background:linear-gradient(160deg,var(--card2),var(--card));
+    border:1px solid rgba(201,138,31,.4);border-radius:14px;
+    padding:13px 15px;margin-bottom:14px;font-size:14px;line-height:1.55;color:var(--text);
+  }
+  .album-recap b{color:var(--gold);}
+  .album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  .album-cell{
+    border:none;background:none;padding:0;cursor:pointer;position:relative;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .album-cell img{
+    width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;display:block;
+    border:1px solid var(--border);
+  }
+  .album-lab{font-size:10.5px;font-weight:700;color:var(--muted);margin-top:4px;}
   .photo-view-remove{
     margin-top:10px;background:none;border:1px solid rgba(255,140,160,.5);
     color:#ff9bb0;font-size:13px;font-weight:600;padding:8px 20px;border-radius:999px;
@@ -888,6 +934,19 @@
   .trip-info{position:absolute;left:15px;bottom:12px;z-index:2;max-width:70%;}
   .trip-dest{font-size:21px;font-weight:800;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.55);line-height:1.15;}
   .trip-dates{font-size:12.5px;color:rgba(255,255,255,.88);margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.5);}
+  .trip-edit{
+    font-size:11px;font-weight:700;opacity:.82;margin-left:5px;
+    border-bottom:1px dotted rgba(255,255,255,.6);padding-bottom:1px;
+  }
+  .trip-state{
+    display:inline-block;margin-top:6px;font-size:11.5px;font-weight:700;
+    padding:3px 10px;border-radius:999px;
+    background:rgba(15,10,20,.5);color:rgba(255,255,255,.92);
+    border:1px solid rgba(255,255,255,.3);
+    -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+  }
+  .trip-state.live{background:rgba(26,156,126,.85);border-color:rgba(255,255,255,.5);}
+  .trip-state.warn{background:rgba(201,138,31,.9);border-color:rgba(255,255,255,.5);}
   .trip-actions{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:7px;}
   .trip-check{
     width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.75);cursor:pointer;
@@ -1388,7 +1447,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 48 · Rae edition</div>
+  <div class="sub">Build 52 · Rae edition</div>
 </header>
 
 <main>
@@ -1761,6 +1820,44 @@
   <button type="button" class="photo-view-remove" id="photoViewRemove" style="display:none;">Remove this day</button>
 </div>
 
+<!-- Trip dates, editable after the fact. Until now they could only be set when the trip was
+     first added, so a trip created without them could never switch together mode on. -->
+<div class="album-bg" id="tripDatesBg">
+  <div class="album-sheet" style="max-width:420px;">
+    <div class="album-head">
+      <div>
+        <div class="album-title" id="tripDatesTitle">Trip dates</div>
+        <div class="album-sub" id="tripDatesSub">While these cover today, WeDO pauses the daily codes and switches to one shared photo.</div>
+      </div>
+      <button type="button" class="album-close" id="tripDatesClose" aria-label="Close">✕</button>
+    </div>
+    <label class="td-lab">Start</label>
+    <input type="date" id="tripDatesStart">
+    <label class="td-lab">End</label>
+    <input type="date" id="tripDatesEnd">
+    <div id="tripDatesErr" class="td-err"></div>
+    <div class="row2" style="margin-top:14px;">
+      <button class="ghost" id="tripDatesClear">Clear dates</button>
+      <button class="primary" id="tripDatesSave">Save dates</button>
+    </div>
+  </div>
+</div>
+
+<!-- the trip album, reachable from a trip card long after the trip is over -->
+<div class="album-bg" id="albumBg">
+  <div class="album-sheet">
+    <div class="album-head">
+      <div>
+        <div class="album-title" id="albumTitle"></div>
+        <div class="album-sub" id="albumSub"></div>
+      </div>
+      <button type="button" class="album-close" id="albumClose" aria-label="Close">✕</button>
+    </div>
+    <div class="album-recap" id="albumRecap" style="display:none;"></div>
+    <div class="album-grid" id="albumGrid"></div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <div class="emoji" id="modalEmoji">🎉</div>
@@ -2040,6 +2137,9 @@
       // the two photo slots become one shared frame. Keyed by DATE, not by person, because
       // there's only one of these a day and either phone may post it.
       tripPhotos: {},       // "YYYY-MM-DD" -> {photo, by:pid, at:ISO, tripId}
+      // which trips have already had their "you're home" recap shown, so it appears once
+      tripRecapSeen: {},    // tripId -> true
+      photoReminderDate: null, // last day an evening photo reminder was scheduled
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
       activityLog: [],      // [{id, by, text, at}] — feeds "while you were away" + push notifications
@@ -2104,6 +2204,7 @@
   }
   if(!state.lockins) state.lockins = {};
   if(!state.tripPhotos) state.tripPhotos = {};
+  if(!state.tripRecapSeen) state.tripRecapSeen = {};
   if(!state.missedDays) state.missedDays = [];
   if(!state.skippedDays) state.skippedDays = {};
   // the missed-code lock only ever looks at days after this one — an existing
@@ -3043,6 +3144,47 @@
     }).catch(function(){ /* best-effort — the in-app feed still has it */ });
   }
 
+  // Ask OneSignal to deliver a reminder at 8pm tonight, to BOTH phones. Scheduled rather than
+  // sent, so it arrives with the app closed — which is the whole point, since the in-app nudge
+  // only helps someone who already opened WeDO.
+  //
+  // Guarded by a date in the SYNCED state, so whichever phone opens first books it and the
+  // other doesn't double up. Entirely best-effort: a trip with no push set up just falls back
+  // to the in-app nudge, and nothing here is allowed to throw.
+  function schedulePhotoReminder(){
+    try{
+      var trip = activeTrip();
+      if(!trip || !pushConfigured()) return;
+      var today = todayISO();
+      if(state.photoReminderDate === today) return;
+      if(tripPhotoFor(today)) return;          // already posted, nothing to nag about
+      var now = new Date();
+      if(now.getHours() >= 20) return;          // too late to schedule tonight's
+      var at = new Date(now.getTime());
+      at.setHours(20, 0, 0, 0);
+      // claim the day before the request goes out, so a slow network can't cause two phones
+      // to both book it
+      state.photoReminderDate = today;
+      save();
+      var ids = state.people.slice(0, 2).map(function(p){ return p.id; });
+      fetch("https://api.onesignal.com/notifications?c=push", {
+        method: "POST",
+        headers: {"Authorization": "Key " + onesignalRestKey(), "Content-Type": "application/json"},
+        body: JSON.stringify({
+          app_id: state.onesignalAppId,
+          include_aliases: {external_id: ids},
+          target_channel: "push",
+          headings: {en: "WeDO · " + trip.title},
+          contents: {en: "Day " + tripDayNumber(trip, today) + " — one photo of the two of you 📸"},
+          send_after: at.toISOString()
+        })
+      }).catch(function(){
+        // let tomorrow's open try again rather than marking today done on a failed request
+        if(state.photoReminderDate === today){ state.photoReminderDate = null; save(); }
+      });
+    }catch(e){}
+  }
+
   // ---- merge helpers: nothing either phone did is ever lost ----
   function unionById(a, b, tomb){
     var byId = {};
@@ -3234,6 +3376,15 @@
       if(killed && killed >= Date.parse(keep.at || 0)) return;
       m.tripPhotos[ds] = keep;
     });
+    // a recap seen on either phone counts as seen — it's a one-off celebration, not a task
+    m.tripRecapSeen = {};
+    [L.tripRecapSeen, R.tripRecapSeen].forEach(function(o){
+      for(var k in (o||{})) if((o||{})[k]) m.tripRecapSeen[k] = true;
+    });
+    // whichever phone booked tonight's photo reminder most recently wins, so the other
+    // doesn't schedule a second copy of the same notification
+    var lr = String(L.photoReminderDate || ""), rr = String(R.photoReminderDate || "");
+    m.photoReminderDate = (lr >= rr ? lr : rr) || null;
     // ---- compatibility when the two phones are on different builds ----
     // `m` starts as a deep copy of whichever side saved most recently, then we explicitly
     // merge each field we know about. Anything we DON'T know about therefore only survives
@@ -3276,7 +3427,98 @@
     return c;
   }
 
+  // ================= PHOTO STORE =================
+  // Until now every photo lived base64-inline inside the single wedo-state.json file, and
+  // GitHub refuses to write a gist file past ~1 MB. Crossing that line didn't degrade sync,
+  // it stopped it dead and silently — which is what stranded Rae's photos and would have
+  // capped the Japan album at about a dozen days.
+  //
+  // Photos now live one-per-file in the SAME gist, and the state file carries only a short
+  // "ref:<id>" in their place. Two consequences beyond the size fix: a photo is uploaded once
+  // instead of on every single sync, and the state file stays a few KB forever.
+  //
+  // Ids are content-derived, so the same picture posted twice costs one file, and a file that
+  // already exists is never re-sent.
+  var PHOTO_PREFIX = "photo-";
+  var PHOTO_REF = "ref:";
+  // How many NEW photos may ride along in one PATCH. A first sync after upgrading could
+  // otherwise try to push a whole album in a single request; anything over the batch simply
+  // stays inline this round and goes out on the next one.
+  var MAX_NEW_PHOTOS_PER_SYNC = 3;
+
+  function photoId(dataUrl){
+    return mixSeed(dataUrl).toString(16) + "-" + dataUrl.length.toString(36);
+  }
+  function photoFileName(id){ return PHOTO_PREFIX + id + ".txt"; }
+  function isPhotoRef(v){ return typeof v === "string" && v.indexOf(PHOTO_REF) === 0; }
+  function isInlinePhoto(v){ return typeof v === "string" && v.indexOf("data:") === 0; }
+
+  // every place a photo can be stored. `task.image` is deliberately absent — that's a remote
+  // Wikipedia URL, not our bytes.
+  function eachPhotoSlot(st, fn){
+    var dp = st.dailyPhotos || {};
+    for(var pid in dp){ if(dp.hasOwnProperty(pid) && dp[pid]) fn(dp[pid]); }
+    var tp = st.tripPhotos || {};
+    for(var ds in tp){ if(tp.hasOwnProperty(ds) && tp[ds]) fn(tp[ds]); }
+    (st.tasks || []).forEach(function(t){ if(t) fn(t); });
+  }
+
+  // Replace inline photos with refs, returning the files that must go up alongside.
+  // `existing` is the set of photo files the gist already holds, so nothing is re-uploaded.
+  // Anything past the batch limit is LEFT INLINE on purpose: writing a ref whose file isn't
+  // in the same PATCH would point the other phone at a file that doesn't exist yet.
+  // `limit` caps how many new files this call will emit; pass Infinity to externalise
+  // everything (used for measuring, where nothing is actually uploaded).
+  function externalisePhotos(st, existing, limit){
+    if(limit == null) limit = MAX_NEW_PHOTOS_PER_SYNC;
+    var files = {}, added = 0, deferred = 0;
+    eachPhotoSlot(st, function(o){
+      var v = o.photo;
+      if(!isInlinePhoto(v)) return;
+      var id = photoId(v), name = photoFileName(id);
+      if(existing[name] || files[name]){ o.photo = PHOTO_REF + id; return; }
+      if(added >= limit){ deferred++; return; }
+      files[name] = v; added++;
+      o.photo = PHOTO_REF + id;
+    });
+    return {files: files, deferred: deferred};
+  }
+
+  // Turn refs back into real data URLs. Returns a promise because a photo file over 1 MB
+  // comes back truncated with only a raw_url to follow.
+  function resolvePhotos(st, gistFiles){
+    var waits = [];
+    eachPhotoSlot(st, function(o){
+      if(!isPhotoRef(o.photo)) return;
+      var f = gistFiles[photoFileName(o.photo.slice(PHOTO_REF.length))];
+      if(!f){ o.photo = null; return; }
+      if(f.truncated && f.raw_url){
+        waits.push(fetch(f.raw_url).then(function(r){ return r.text(); })
+          .then(function(t){ o.photo = t; }).catch(function(){ o.photo = null; }));
+      } else {
+        o.photo = f.content || null;
+      }
+    });
+    return waits.length ? Promise.all(waits) : Promise.resolve();
+  }
+
+  // photo files in the gist that nothing points at any more — a day removed from the album,
+  // a trophy photo replaced. Without this the gist would only ever grow.
+  function orphanPhotoFiles(st, gistFiles){
+    var live = {};
+    eachPhotoSlot(st, function(o){
+      if(isPhotoRef(o.photo)) live[photoFileName(o.photo.slice(PHOTO_REF.length))] = 1;
+      else if(isInlinePhoto(o.photo)) live[photoFileName(photoId(o.photo))] = 1;
+    });
+    var dead = [];
+    for(var name in gistFiles){
+      if(name.indexOf(PHOTO_PREFIX) === 0 && !live[name]) dead.push(name);
+    }
+    return dead;
+  }
+
   var syncTimer = null, syncInFlight = false, syncQueued = false, applyingRemote = false;
+  var pendingPhotoUploads = 0;
   var lastSync = {at: null, ok: null, err: null};
   function scheduleSync(){
     if(!autoSyncOn() || applyingRemote) return;
@@ -3308,10 +3550,12 @@
     setSyncStatus("syncing");
     var id = gistIdFromUrl();
     var headers = {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json"};
+    var gistFiles = {};
     fetch("https://api.github.com/gists/" + id, {headers: headers})
       .then(function(r){ if(!r.ok) throw new Error("read " + r.status); return r.json(); })
       .then(function(g){
-        var f = g.files && g.files["wedo-state.json"];
+        gistFiles = g.files || {};
+        var f = gistFiles["wedo-state.json"];
         if(!f) return null;
         if(f.truncated) return fetch(f.raw_url).then(function(r){ return r.text(); });
         return f.content;
@@ -3319,6 +3563,12 @@
       .then(function(txt){
         var remote = null;
         try{ remote = txt ? JSON.parse(txt) : null; }catch(e){}
+        // swap the remote's "ref:" placeholders back into real images before merging, so
+        // mergeStates only ever compares like with like
+        if(!remote) return null;
+        return resolvePhotos(remote, gistFiles).then(function(){ return remote; });
+      })
+      .then(function(remote){
         var merged = mergeStates(state, remote);
         var mergedJson = JSON.stringify(stripLocal(merged));
         var changedLocally = mergedJson !== JSON.stringify(stripLocal(state));
@@ -3335,13 +3585,32 @@
           if(!document.getElementById("addTaskSheet").classList.contains("show")) renderAll();
           applyingRemote = false;
         }
-        if(!remote || mergedJson !== JSON.stringify(stripLocal(remote))){
-          return fetch("https://api.github.com/gists/" + id, {
-            method: "PATCH",
-            headers: {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json", "Content-Type": "application/json"},
-            body: JSON.stringify({files: {"wedo-state.json": {content: mergedJson}}})
-          }).then(function(r){ if(!r.ok) throw new Error("write " + r.status); });
-        }
+        // Build the outgoing copy with photos pulled out into their own files. Deep-cloned
+        // first: stripLocal is a shallow copy, so rewriting o.photo on it would blank the
+        // pictures out of the live app.
+        var outState = JSON.parse(JSON.stringify(stripLocal(merged)));
+        var ext = externalisePhotos(outState, gistFiles);
+        var outJson = JSON.stringify(outState);
+        var dead = orphanPhotoFiles(outState, gistFiles);
+
+        // did anything actually change? compare against the remote as it was ON THE WIRE
+        var remoteWire = gistFiles["wedo-state.json"] ? (gistFiles["wedo-state.json"].content || "") : "";
+        var nothingToDo = remote && outJson === remoteWire &&
+          !Object.keys(ext.files).length && !dead.length;
+        if(nothingToDo){ pendingPhotoUploads = 0; return; }
+
+        var patch = {"wedo-state.json": {content: outJson}};
+        for(var name in ext.files){ patch[name] = {content: ext.files[name]}; }
+        dead.forEach(function(n){ patch[n] = null; });
+
+        // more photos than fit in this request — remember, and go round again
+        pendingPhotoUploads = ext.deferred;
+
+        return fetch("https://api.github.com/gists/" + id, {
+          method: "PATCH",
+          headers: {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json", "Content-Type": "application/json"},
+          body: JSON.stringify({files: patch})
+        }).then(function(r){ if(!r.ok) throw new Error("write " + r.status); });
       })
       .then(function(){
         lastSync = {at: new Date(), ok: true, err: null};
@@ -3355,6 +3624,8 @@
       })
       .then(function(){
         syncInFlight = false;
+        // photos that didn't fit in that request still need to go up
+        if(pendingPhotoUploads > 0 && lastSync.ok) syncQueued = true;
         // a queued run is about to carry the same data — report on THAT one instead
         if(syncQueued){ syncQueued = false; scheduleSync(); return; }
         var cbs = syncDoneCbs; syncDoneCbs = [];
@@ -3408,7 +3679,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 48;
+  var BUILD_NUM = 52;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3477,11 +3748,20 @@
     // What actually gets PATCHed to the Gist. GitHub refuses a file much over 1 MB through
     // the API, and a few full-size trophy photos will get you there — at which point the
     // phone holding them stops syncing entirely while still looking fine locally.
+    // photos live in their own gist files now, so this is the small state file — it should
+    // read in the tens of KB no matter how many pictures you've taken
     var payloadKB = syncPayloadKB();
-    add(payloadKB < 900, "Sync payload", payloadKB + " KB" +
-      (payloadKB >= 900 ? " — too big for the Gist API, photos won't sync" : " (limit ~1000 KB)"));
+    add(payloadKB < 900, "State file", payloadKB + " KB" +
+      (payloadKB >= 900 ? " — too big for the Gist API, sync will fail" : " (limit ~1000 KB)"));
+    add(null, "Photos (separate files)", photoCount() + " total, " + storageKB() + " KB on this phone");
+    if(pendingPhotoUploads > 0) add(false, "Photos still uploading", pendingPhotoUploads + " waiting — leave the app open a moment");
     var tpN = Object.keys(state.tripPhotos || {}).length;
-    if(tpN) add(null, "Trip photos stored", tpN + " day(s)");
+    if(tpN) add(null, "Trip album days", tpN);
+    // the single line that answers "why isn't the shared photo frame showing?"
+    var ts = togetherStatus();
+    add(ts.on, "Together mode", ts.text);
+    if(ts.trip) add(!!(ts.trip.tripStart && ts.trip.tripEnd), "Trip dates",
+      (ts.trip.tripStart || "not set") + " → " + (ts.trip.tripEnd || "not set") + "  ·  today is " + todayISO());
     add(pushConfigured(), "Push credentials", pushConfigured() ? "saved on this phone" : "not set up — see the setup guide");
     add(isStandaloneApp(), "Opened from Home Screen icon",
       isStandaloneApp() ? "yes — push can work here" : "NO, this is a Safari tab — iOS won't deliver push to this copy");
@@ -3802,8 +4082,30 @@
 
     var info = document.createElement("div");
     info.className = "trip-info";
+    // Say plainly where this trip stands relative to together mode. Without it, a trip with
+    // no dates and a trip starting next week look exactly the same on screen — and both look
+    // like the photo feature is simply broken.
+    var status = "";
+    if(!t.tripStart || !t.tripEnd){
+      status = '<div class="trip-state warn">⚠️ No dates — tap to add them</div>';
+    } else {
+      var today = todayISO();
+      if(today >= t.tripStart && today <= t.tripEnd){
+        status = '<div class="trip-state live">● On this trip now · Day ' + tripDayNumber(t, today) + '</div>';
+      } else if(t.tripStart > today){
+        var away = Math.round((new Date(t.tripStart + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000);
+        status = '<div class="trip-state">Starts in ' + away + " " + (away === 1 ? "day" : "days") + '</div>';
+      }
+    }
+    // the pencil is the only visible cue that the dates are editable at all — without it the
+    // tap target is invisible and people reasonably assume they're fixed
     info.innerHTML = '<div class="trip-dest">' + escapeHtml(t.title) + '</div>' +
-      '<div class="trip-dates">' + escapeHtml(fmtTripDates(t.tripStart, t.tripEnd)) + '</div>';
+      '<div class="trip-dates">' + escapeHtml(fmtTripDates(t.tripStart, t.tripEnd)) +
+      ' <span class="trip-edit">✎ edit</span></div>' + status;
+    // dates were previously fixed at creation time with no way back in, which meant a trip
+    // added without them could never turn together mode on
+    info.style.cursor = "pointer";
+    info.addEventListener("click", function(e){ e.stopPropagation(); openTripDates(t); });
     wrap.appendChild(info);
 
     var acts = document.createElement("div");
@@ -3826,7 +4128,106 @@
       acts.appendChild(del);
     }
     wrap.appendChild(acts);
+
+    // The album outlives together mode. Once the trip is over the shared frame disappears
+    // from the home screen, and without this the days you captured would be unreachable —
+    // stored, synced, and invisible. The chip shows on the trip itself, forever.
+    var days = tripAlbumDays(t);
+    if(days.length){
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "trip-album-chip";
+      chip.innerHTML = "📸 " + days.length + " " + (days.length === 1 ? "day" : "days");
+      chip.addEventListener("click", function(e){ e.stopPropagation(); openTripAlbum(t); });
+      wrap.appendChild(chip);
+    }
     return wrap;
+  }
+
+  // every dated photo that falls inside this trip's range, oldest first. Keyed off the
+  // DATES rather than the stored tripId so days posted before the trip was renamed, or
+  // while a phone was on an older build, still gather into the right album.
+  function tripAlbumDays(t){
+    if(!t || !t.trip || !t.tripStart || !t.tripEnd) return [];
+    return Object.keys(state.tripPhotos || {})
+      .filter(function(ds){ return ds >= t.tripStart && ds <= t.tripEnd && (state.tripPhotos[ds]||{}).photo; })
+      .sort();
+  }
+  // The trip that just ended and hasn't been celebrated yet. Only trips with something in the
+  // album qualify — a recap of nothing is worse than no recap.
+  function tripAwaitingRecap(){
+    var today = todayISO();
+    var all = (state.tasks || []).filter(function(t){
+      return t.trip && t.tripStart && t.tripEnd && t.tripEnd < today &&
+        !(state.tripRecapSeen || {})[t.id] && tripAlbumDays(t).length > 0;
+    });
+    if(!all.length) return null;
+    // most recently finished first
+    return all.sort(function(a, b){ return a.tripEnd < b.tripEnd ? 1 : -1; })[0];
+  }
+  function tripRecapStats(t){
+    var days = tripAlbumDays(t);
+    var done = (state.tasks || []).filter(function(x){
+      if(x.status !== "done" || !x.completedAt) return false;
+      var d = todayISO(new Date(x.completedAt));
+      return d >= t.tripStart && d <= t.tripEnd;
+    });
+    var span = tripDayNumber(t, t.tripEnd);
+    return {days: days, done: done.length, span: span};
+  }
+  function maybeShowTripRecap(){
+    var t = tripAwaitingRecap();
+    if(!t) return;
+    state.tripRecapSeen[t.id] = true;
+    save();
+    // let the app finish painting first — a modal that appears mid-render reads as a glitch
+    setTimeout(function(){ openTripAlbum(t, true); }, 1200);
+  }
+
+  function openTripAlbum(t, asRecap){
+    var days = tripAlbumDays(t);
+    var grid = document.getElementById("albumGrid");
+    var note = document.getElementById("albumRecap");
+    document.getElementById("albumTitle").textContent = (asRecap ? "Welcome home · " : "") + t.title;
+    document.getElementById("albumSub").textContent =
+      days.length + " " + (days.length === 1 ? "day" : "days") + " · " + fmtTripDates(t.tripStart, t.tripEnd);
+    if(asRecap){
+      var s = tripRecapStats(t);
+      note.style.display = "";
+      note.innerHTML = "<b>That was " + s.span + " days.</b> You captured " + s.days.length +
+        " of them" + (s.done ? (", and still crossed off " + s.done + " " + (s.done === 1 ? "thing" : "things") + " while you were away") : "") +
+        ". The album stays on the trip card — tap the 📸 chip any time.";
+    } else {
+      note.style.display = "none";
+      note.innerHTML = "";
+    }
+    grid.innerHTML = "";
+    days.forEach(function(ds){
+      var p = state.tripPhotos[ds];
+      var cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "album-cell";
+      var img = document.createElement("img");
+      img.src = p.photo;
+      img.alt = "Day " + tripDayNumber(t, ds);
+      cell.appendChild(img);
+      var lab = document.createElement("div");
+      lab.className = "album-lab";
+      lab.textContent = "Day " + tripDayNumber(t, ds);
+      cell.appendChild(lab);
+      cell.addEventListener("click", function(){
+        openPhotoView(p.photo, t.title + " · Day " + tripDayNumber(t, ds) + " · posted by " + personName(p.by),
+          function(){
+            delete state.tripPhotos[ds];
+            tombstone(TRIP_PHOTO_TOMB + ds);
+            save();
+            renderAll();
+            openTripAlbum(t);
+          });
+      });
+      grid.appendChild(cell);
+    });
+    document.getElementById("albumBg").classList.add("show");
   }
 
   // offer a starter checklist after a trip is added
@@ -4773,6 +5174,32 @@
     return t.slice().sort(function(a, b){ return a.tripEnd < b.tripEnd ? -1 : (a.tripEnd > b.tripEnd ? 1 : 0); })[0];
   }
   function togetherMode(){ return !!activeTrip(); }
+
+  // Together mode has exactly one input — a trip whose dates contain today — but from the
+  // outside "nothing happened" looks identical whether the dates are missing, in the future,
+  // or already past. This says which, and it's what the trip card and diagnostics both read.
+  function togetherStatus(){
+    var today = todayISO();
+    var trips = (state.tasks || []).filter(function(t){ return t.trip; });
+    if(!trips.length) return {on: false, why: "no-trip", text: "No trips on the list"};
+    var live = activeTrip();
+    if(live) return {on: true, why: "active", trip: live,
+      text: "ON · " + live.title + ", day " + tripDayNumber(live, today)};
+    var dated = trips.filter(function(t){ return t.tripStart && t.tripEnd; });
+    if(!dated.length) return {on: false, why: "no-dates", trip: trips[0],
+      text: "OFF — “" + trips[0].title + "” has no start/end dates set"};
+    var upcoming = dated.filter(function(t){ return t.tripStart > today; })
+      .sort(function(a, b){ return a.tripStart < b.tripStart ? -1 : 1; })[0];
+    if(upcoming){
+      var away = Math.round((new Date(upcoming.tripStart + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000);
+      return {on: false, why: "upcoming", trip: upcoming, daysAway: away,
+        text: "OFF — " + upcoming.title + " starts in " + away + " " + (away === 1 ? "day" : "days") +
+              " (" + fmtDueDate(upcoming.tripStart) + ")"};
+    }
+    var past = dated.sort(function(a, b){ return a.tripEnd < b.tripEnd ? 1 : -1; })[0];
+    return {on: false, why: "past", trip: past,
+      text: "OFF — " + past.title + " ended " + fmtDueDate(past.tripEnd)};
+  }
   function tripDayNumber(trip, dateISO){
     var a = new Date(trip.tripStart + "T12:00:00"), b = new Date(dateISO + "T12:00:00");
     return Math.round((b - a) / 86400000) + 1;
@@ -5453,6 +5880,13 @@
     save();
     checkPowerCouple();
     renderAll();
+
+    // Booking a trip is the exact moment you know its dates, and the dates are what switch
+    // the app into together mode later. Asking now means nobody has to remember to come back
+    // and do it — which is precisely what went wrong with Japan.
+    if(t.trip && (!t.tripStart || !t.tripEnd)){
+      setTimeout(function(){ openTripDates(t, true); }, 900);
+    }
   }
 
   // A completed daily/weekly task stays put in Done — it only pops back to Open
@@ -5841,11 +6275,33 @@
     body.innerHTML = "";
     var shown = 0;
 
+    // --- today's trip photo isn't up yet ---
+    // Goes first, and only from mid-afternoon: nagging at 8am about a day that's barely
+    // started is the fastest way to teach someone to ignore this card.
+    var nTrip = activeTrip();
+    if(nTrip && !tripPhotoFor(todayISO()) && new Date().getHours() >= 15){
+      var pb = document.createElement("div");
+      pb.className = "nudge-blk";
+      var pt = document.createElement("div");
+      pt.className = "nudge-title";
+      pt.innerHTML = "📸 No photo from Day " + tripDayNumber(nTrip, todayISO()) + " yet";
+      var ps = document.createElement("div");
+      ps.className = "nudge-sub";
+      ps.textContent = "One picture of the two of you. Either of you can post it — whoever gets there first.";
+      var pg = document.createElement("button");
+      pg.className = "primary nudge-btn";
+      pg.textContent = "Add today's photo 📸";
+      pg.addEventListener("click", function(){ pickTripPhoto(nTrip, todayISO()); });
+      pb.appendChild(pt); pb.appendChild(ps); pb.appendChild(pg);
+      body.appendChild(pb);
+      shown++;
+    }
+
     // --- unspent spins ---
     var spins = (state.points[me] || {}).spinsAvailable || 0;
     if(spins > 0){
       var blk = document.createElement("div");
-      blk.className = "nudge-blk";
+      blk.className = "nudge-blk" + (shown ? " divided" : "");
       var t = document.createElement("div");
       t.className = "nudge-title";
       t.innerHTML = "\uD83C\uDFA1 " + (spins === 1 ? "You've got a spin waiting" : "You've got " + spins + " spins waiting");
@@ -6143,11 +6599,20 @@
     var d = (state.tripPhotos || {})[dateISO];
     return (d && d.photo) ? d : null;
   }
-  // The Gist API rejects a file over ~1 MB, and it does it by failing the whole sync — so
-  // one photo too many stops tasks, points and notes crossing between phones too. A daily
-  // trip album is the first thing here that grows without bound, so it gets checked.
+  // Size of the state FILE as it actually goes to the gist — photos externalised, so this is
+  // the number the ~1 MB gist limit applies to. Before the photo store this was the whole
+  // album and it was the app's real ceiling; now it should stay in the tens of KB forever.
   function syncPayloadKB(){
-    try{ return Math.round(JSON.stringify(stripLocal(state)).length / 1024); }catch(e){ return 0; }
+    try{
+      var out = JSON.parse(JSON.stringify(stripLocal(state)));
+      externalisePhotos(out, {}, Infinity);
+      return Math.round(JSON.stringify(out).length / 1024);
+    }catch(e){ return 0; }
+  }
+  function photoCount(){
+    var n = 0;
+    try{ eachPhotoSlot(state, function(o){ if(o.photo) n++; }); }catch(e){}
+    return n;
   }
 
   // One shared frame for the day, plus the days already captured underneath. Either phone
@@ -6252,17 +6717,9 @@
         if(!state.tripPhotos) state.tripPhotos = {};
         var prev = state.tripPhotos[dateISO];
         state.tripPhotos[dateISO] = {photo: dataUrl, by: me, at: new Date().toISOString(), tripId: trip.id};
-        // Check BEFORE committing. Letting it through would break sync for everything, and
-        // the failure would show up days later as "her photos aren't appearing".
-        if(syncPayloadKB() >= 900){
-          if(prev) state.tripPhotos[dateISO] = prev; else delete state.tripPhotos[dateISO];
-          showModal("📦", "The album is full",
-            "Adding this one would push your shared data past what the Gist can hold (~1 MB), " +
-            "which would stop everything syncing between your phones — not just photos.\n\n" +
-            "Save the trip so far to your camera roll (tap a day, then long-press the picture), " +
-            "then delete a few older days from the strip to make room.");
-          return;
-        }
+        // The gist-size guard that used to live here is gone: photos are their own files now,
+        // so the album no longer competes with tasks and notes for one 1 MB budget. The
+        // binding limit is this phone's own browser storage, which saveOrThrow reports below.
         try{
           saveOrThrow();
           announce("posted Day " + tripDayNumber(trip, dateISO) + " of " + trip.title + " 📸");
@@ -6275,7 +6732,10 @@
           save();
           renderDailyPhotos();
           showModal("💾","Out of photo storage",
-            "This phone's browser storage is full (~"+storageKB()+" KB used). Remove a photo from an older trophy to make room, then try again.");
+            "This phone's browser storage is full (~" + storageKB() + " KB used).\n\n" +
+            "Open the trip card, tap the 📸 chip, and remove a few of the earliest days — save " +
+            "them to your camera roll first if you want to keep them. A photo from an older " +
+            "trophy works too.");
         }
       }, {maxDim: 620, quality: 0.7, noVideo: true});
     });
@@ -6404,6 +6864,58 @@
       }, {maxDim: 620, quality: 0.7, noVideo: true});
     });
   }
+  // ---- editing a trip's dates after it was created ----
+  var tripDatesBg = document.getElementById("tripDatesBg");
+  var tripDatesId = null;
+  // `justBooked` changes the framing only: same sheet, but it explains why it appeared
+  // unprompted and offers a way out that isn't the ✕ in the corner.
+  function openTripDates(t, justBooked){
+    tripDatesId = t.id;
+    document.getElementById("tripDatesTitle").textContent =
+      justBooked ? (t.title + " is booked 🎉") : (t.title + " · dates");
+    document.getElementById("tripDatesSub").textContent = justBooked
+      ? "When are you going? While these dates cover today, WeDO pauses the daily codes and switches to one shared photo a day."
+      : "While these cover today, WeDO pauses the daily codes and switches to one shared photo.";
+    document.getElementById("tripDatesStart").value = t.tripStart || "";
+    document.getElementById("tripDatesEnd").value = t.tripEnd || "";
+    document.getElementById("tripDatesErr").textContent = "";
+    document.getElementById("tripDatesClear").textContent = justBooked ? "Not sure yet" : "Clear dates";
+    tripDatesBg.classList.add("show");
+  }
+  function closeTripDates(){ tripDatesBg.classList.remove("show"); tripDatesId = null; }
+  document.getElementById("tripDatesClose").addEventListener("click", closeTripDates);
+  tripDatesBg.addEventListener("click", function(e){ if(e.target === tripDatesBg) closeTripDates(); });
+  document.getElementById("tripDatesSave").addEventListener("click", function(){
+    var t = state.tasks.filter(function(x){ return x.id === tripDatesId; })[0];
+    if(!t){ closeTripDates(); return; }
+    var s = document.getElementById("tripDatesStart").value;
+    var e = document.getElementById("tripDatesEnd").value;
+    var err = document.getElementById("tripDatesErr");
+    if(!s || !e){ err.textContent = "Both dates are needed — together mode keys off the range."; return; }
+    if(e < s){ err.textContent = "The end date is before the start date."; return; }
+    t.tripStart = s; t.tripEnd = e;
+    touch(t);
+    save();
+    closeTripDates();
+    renderAll();
+    var on = todayISO() >= s && todayISO() <= e;
+    toast(on ? "You're on this trip now — codes paused 💞" : "Dates saved ✈️");
+  });
+  document.getElementById("tripDatesClear").addEventListener("click", function(){
+    var t = state.tasks.filter(function(x){ return x.id === tripDatesId; })[0];
+    if(!t){ closeTripDates(); return; }
+    var had = !!(t.tripStart && t.tripEnd);
+    t.tripStart = null; t.tripEnd = null;
+    touch(t); save(); closeTripDates(); renderAll();
+    // "Not sure yet" on a trip that never had dates isn't a removal — don't report one
+    toast(had ? "Dates cleared — codes are back on"
+              : "No problem — tap the trip card whenever you know");
+  });
+
+  var albumBg = document.getElementById("albumBg");
+  document.getElementById("albumClose").addEventListener("click", function(){ albumBg.classList.remove("show"); });
+  albumBg.addEventListener("click", function(e){ if(e.target === albumBg) albumBg.classList.remove("show"); });
+
   var photoViewBg = document.getElementById("photoViewBg");
   var photoViewOnRemove = null;
   document.getElementById("photoViewRemove").addEventListener("click", function(){
@@ -6684,6 +7196,11 @@
   }
   document.getElementById("forceUpdateBtn").addEventListener("click", function(){ checkForUpdate(true); });
   setTimeout(function(){ checkForUpdate(false); }, 1500);
+
+  // "you're home" recap, and tonight's photo reminder. Both are no-ops unless a trip is
+  // actually involved, and both are deliberately after the first paint.
+  maybeShowTripRecap();
+  schedulePhotoReminder();
 
   // ---- auto-sync wiring ----
   document.getElementById("ghTokenShowBtn").addEventListener("click", function(){
