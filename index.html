@@ -115,6 +115,18 @@
   }
   .scope-src{font-size:10.5px;color:var(--faint);margin-top:6px;}
 
+  /* ---- nudge card: unspent spins + weekly reward suggestion ---- */
+  .nudge-card{
+    border:1px solid rgba(148,117,207,.4)!important;
+    background:linear-gradient(168deg,#faf6ff,var(--card))!important;
+  }
+  .nudge-blk{padding:2px 0;}
+  .nudge-blk.divided{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+  .nudge-title{font-size:15.5px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;}
+  .nudge-sub{font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:9px;}
+  .nudge-btn{width:100%;margin-top:2px;}
+  .nudge-blk input,.nudge-blk select{width:100%;}
+
   /* ---- "finish setting up" card: shows only the pieces still missing ---- */
   .setup-card{border:1px solid rgba(201,138,31,.42)!important;background:linear-gradient(170deg,#fffaf0,var(--card))!important;}
   .setup-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
@@ -199,6 +211,38 @@
   }
   .duo-health.stale-health{opacity:.5;font-weight:500;}
   .duo-when.today{color:var(--jade,#249383);font-weight:700;}
+
+  /* ---- together mode: one shared frame instead of two ---- */
+  .duo-row.together{max-width:460px;flex-direction:column;align-items:center;gap:0;}
+  .duo-slot.us{width:100%;}
+  .duo-slot.us .duo-frame{
+    max-width:none;width:100%;aspect-ratio:4/3;border-radius:20px;
+    border-color:var(--gold);
+  }
+  .duo-slot.us .duo-name{font-size:14px;margin-top:9px;}
+  .trip-banner{
+    font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:8px;text-align:center;
+  }
+  /* the days already captured, oldest first — the trip builds itself as you go */
+  .trip-strip{
+    display:flex;gap:7px;overflow-x:auto;max-width:100%;padding:11px 2px 3px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .trip-strip::-webkit-scrollbar{display:none;}
+  .trip-thumb{
+    flex:0 0 auto;width:52px;border:none;background:none;padding:0;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .trip-thumb .tt-img{
+    width:52px;height:52px;border-radius:11px;overflow:hidden;border:2px solid var(--border);
+    background:var(--card2);display:flex;align-items:center;justify-content:center;
+  }
+  .trip-thumb .tt-img img{width:100%;height:100%;object-fit:cover;display:block;}
+  .trip-thumb.blank .tt-img{border-style:dashed;color:var(--faint,var(--muted));font-size:16px;}
+  .trip-thumb .tt-day{font-size:9.5px;color:var(--muted);margin-top:3px;font-weight:700;}
+  .trip-thumb.is-today .tt-img{border-color:var(--gold);}
+  .trip-thumb.is-today .tt-day{color:var(--gold);}
   /* sits level with the middle of the two circles rather than the middle of the whole
      column (the name + date labels below make the columns taller than the circles) */
   .duo-heart{
@@ -219,6 +263,11 @@
   .photo-view-close{
     background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
     color:#fff;font-size:14px;font-weight:600;padding:10px 26px;border-radius:999px;
+    cursor:pointer;
+  }
+  .photo-view-remove{
+    margin-top:10px;background:none;border:1px solid rgba(255,140,160,.5);
+    color:#ff9bb0;font-size:13px;font-weight:600;padding:8px 20px;border-radius:999px;
     cursor:pointer;
   }
   .switcher{
@@ -810,6 +859,17 @@
     font-size:12.5px;color:var(--muted);margin-top:10px;padding:8px 11px;
     background:var(--s2);border:1px solid var(--line);border-radius:12px;line-height:1.5;
   }
+  /* stale numbers used to announce themselves with a 10px date and nothing else, which is
+     how week-old figures passed for today's. This one is meant to be impossible to skim past. */
+  .health-stale-warn{
+    font-size:12.5px;margin-top:10px;padding:10px 12px;line-height:1.5;
+    background:rgba(214,158,46,.12);border:1px solid rgba(214,158,46,.45);
+    border-radius:12px;color:var(--text);
+  }
+  .health-stale-warn b{color:var(--gold);}
+  .health-stale-warn button{
+    margin-top:8px;font-size:12px;padding:6px 12px;
+  }
 
   /* ---- trip photo cards ---- */
   .trip-card{
@@ -1328,7 +1388,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 44 · Rae edition</div>
+  <div class="sub">Build 48 · Rae edition</div>
 </header>
 
 <main>
@@ -1373,6 +1433,11 @@
       </div>
       <div class="setup-lead" id="setupLead"></div>
       <div id="setupItems"></div>
+    </div>
+
+    <!-- gentle nudges: unspent spins, and a weekly prompt for a new reward idea -->
+    <div class="card nudge-card" id="nudgeCard" style="display:none;">
+      <div id="nudgeBody"></div>
     </div>
 
     <div class="card" id="noBackupCard" style="display:none;border-color:var(--gold);">
@@ -1623,7 +1688,7 @@
     </div>
   </div>
 
-  <details class="sync">
+  <details class="sync" id="syncPanel">
     <summary>Sync between two phones (tap to expand)</summary>
     <p style="font-size:12px;color:var(--muted);"><strong>Do this once to pair.</strong> Tap "Copy my data", send it to your person, and have them paste it into Import on their phone. This gives you both the same secret, which is what makes your daily codes line up. After that, re-sync whenever you want to share progress.</p>
     <button class="ghost" id="exportBtn" style="width:100%;">Copy my data</button>
@@ -1643,6 +1708,13 @@
     <div class="row2" style="margin-top:6px;">
       <button class="ghost" id="ghTokenSaveBtn">Save token</button>
       <button class="ghost" id="syncNowBtn">Sync now</button>
+    </div>
+    <!-- GitHub shows a token exactly once, at creation. Without a way to read back the one
+         already saved here, "put your token in the shortcut" means generating a brand new one
+         and re-pasting it on both phones — so this reveals/copies the one this phone holds. -->
+    <div class="row2" style="margin-top:6px;">
+      <button class="ghost" id="ghTokenShowBtn">Show token</button>
+      <button class="ghost" id="ghTokenCopyBtn">Copy token</button>
     </div>
     <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
@@ -1684,6 +1756,9 @@
   <img id="photoViewImg" alt="">
   <div class="photo-view-cap" id="photoViewCap"></div>
   <button type="button" class="photo-view-close" id="photoViewClose">Close</button>
+  <!-- only shown for trip-album days, which are the one photo type that grows without
+       bound and can push the shared payload past what the Gist will accept -->
+  <button type="button" class="photo-view-remove" id="photoViewRemove" style="display:none;">Remove this day</button>
 </div>
 
 <div class="modal-bg" id="modalBg">
@@ -1958,6 +2033,13 @@
       // live daily horoscope, cached per sign per day. Synced, so whichever phone opens
       // first does the fetch and the other just reads it.
       horoscopes: {},       // "aquarius" -> {date:"YYYY-MM-DD", text, at:ISO}
+      // last ISO week each person was asked to suggest a reward, so the prompt is weekly
+      // rather than every time the app opens
+      rewardIdeaWeek: {},   // pid -> "2026-W34"
+      // "together mode": while a trip's dates cover today, the daily codes step aside and
+      // the two photo slots become one shared frame. Keyed by DATE, not by person, because
+      // there's only one of these a day and either phone may post it.
+      tripPhotos: {},       // "YYYY-MM-DD" -> {photo, by:pid, at:ISO, tripId}
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
       activityLog: [],      // [{id, by, text, at}] — feeds "while you were away" + push notifications
@@ -2021,6 +2103,7 @@
     state.pairSecret = Math.random().toString(36).slice(2) + Date.now().toString(36);
   }
   if(!state.lockins) state.lockins = {};
+  if(!state.tripPhotos) state.tripPhotos = {};
   if(!state.missedDays) state.missedDays = [];
   if(!state.skippedDays) state.skippedDays = {};
   // the missed-code lock only ever looks at days after this one — an existing
@@ -2266,6 +2349,9 @@
 
   // mark an item as touched (newer copy wins in sync merges)
   function touch(t){ if(t) t.mtime = Date.now(); return t; }
+  // trip-album days are tombstoned under their own prefix so a date string can never
+  // collide with a task id
+  var TRIP_PHOTO_TOMB = "tp:";
   // record a deletion so it propagates to the other phone instead of resurrecting
   function tombstone(id){
     if(!state.tombstones) state.tombstones = {};
@@ -3131,6 +3217,23 @@
       if(!lp){ m.dailyPhotos[pid] = rp; return; }
       m.dailyPhotos[pid] = String(lp.at||"") >= String(rp.at||"") ? lp : rp;
     });
+    // trip photos: keyed by DATE and writable from either phone. Merged per-date so a day
+    // one of you filled in is never dropped just because the other side saved later — only
+    // the SAME date can conflict, and there the later post wins.
+    m.tripPhotos = {};
+    var tpDates = {};
+    [L.tripPhotos, R.tripPhotos].forEach(function(o){ for(var k in (o||{})) tpDates[k] = 1; });
+    Object.keys(tpDates).forEach(function(ds){
+      var lt = (L.tripPhotos||{})[ds], rt = (R.tripPhotos||{})[ds];
+      var keep = (!lt && !rt) ? null
+               : (!rt ? lt : (!lt ? rt : (String(lt.at||"") >= String(rt.at||"") ? lt : rt)));
+      if(!keep) return;
+      // a day deleted on one phone must stay deleted, or the other phone hands it straight
+      // back — and deleting is how you make room when the album nears the Gist's size limit
+      var killed = (m.tombstones || {})[TRIP_PHOTO_TOMB + ds];
+      if(killed && killed >= Date.parse(keep.at || 0)) return;
+      m.tripPhotos[ds] = keep;
+    });
     // ---- compatibility when the two phones are on different builds ----
     // `m` starts as a deep copy of whichever side saved most recently, then we explicitly
     // merge each field we know about. Anything we DON'T know about therefore only survives
@@ -3149,6 +3252,14 @@
       var lh = (L.horoscopes||{})[sg], rh = (R.horoscopes||{})[sg];
       if(!lh || !rh){ m.horoscopes[sg] = lh || rh; return; }
       m.horoscopes[sg] = String(lh.date||"") >= String(rh.date||"") ? lh : rh;
+    });
+    // reward-idea prompt: keep whichever side was asked most recently, so answering on one
+    // phone doesn't make the other phone ask again the same week
+    m.rewardIdeaWeek = {};
+    [L.rewardIdeaWeek, R.rewardIdeaWeek].forEach(function(o){
+      for(var k in (o||{})){
+        if(!m.rewardIdeaWeek[k] || String(o[k]) > String(m.rewardIdeaWeek[k])) m.rewardIdeaWeek[k] = o[k];
+      }
     });
     m.savedAt = String(L.savedAt||"") > String(R.savedAt||"") ? L.savedAt : R.savedAt;
     return m;
@@ -3178,11 +3289,20 @@
     el.textContent = s === "syncing" ? "syncing…" : (s === "ok" ? "synced ✓ " + new Date().toLocaleTimeString() : "sync failed — check token");
     el.style.color = s === "err" ? "var(--pink)" : "var(--muted)";
   }
-  function syncNow(manual){
+  // `done(ok, errMessage)` is optional. The Health hand-off uses it because "the numbers
+  // saved locally" and "the numbers reached the other phone" are different events, and for a
+  // week they looked identical from the outside.
+  // Callbacks are held in a list rather than fired inline: a sync started on page load is
+  // usually already in flight when the Health hand-off asks for one, and the caller wants the
+  // outcome of the run that actually carries its data, not "someone else is syncing".
+  var syncDoneCbs = [];
+  function syncNow(manual, done){
     if(!autoSyncOn()){
       if(manual) toast("Save your Gist link and GitHub token first");
+      if(done) done(false, "not connected");
       return;
     }
+    if(done) syncDoneCbs.push(done);
     if(syncInFlight){ syncQueued = true; return; }
     syncInFlight = true;
     setSyncStatus("syncing");
@@ -3235,7 +3355,10 @@
       })
       .then(function(){
         syncInFlight = false;
-        if(syncQueued){ syncQueued = false; scheduleSync(); }
+        // a queued run is about to carry the same data — report on THAT one instead
+        if(syncQueued){ syncQueued = false; scheduleSync(); return; }
+        var cbs = syncDoneCbs; syncDoneCbs = [];
+        cbs.forEach(function(cb){ try{ cb(lastSync.ok, lastSync.err); }catch(e){} });
       });
   }
 
@@ -3285,7 +3408,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 44;
+  var BUILD_NUM = 48;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3347,10 +3470,38 @@
         (h.date || "no date") +
         " · " + (h.steps != null ? h.steps + " steps" : "no steps") +
         " · " + (h.sleepHours != null ? h.sleepHours + "h sleep" : "no sleep") +
-        " · written " + (h.updatedAt ? new Date(h.updatedAt).toLocaleString() : "unknown"));
+        " · written " + (h.updatedAt ? new Date(h.updatedAt).toLocaleString() : "unknown") +
+        (healthAgeDays(h) >= 1 ? "  [" + healthAgeDays(h) + " days old]" : ""));
     });
     add(null, "Storage used", storageKB() + " KB");
-    add(pushConfigured(), "Push notifications", pushConfigured() ? "credentials saved on this phone" : "not set up — see WeDO-Notifications-Setup.md");
+    // What actually gets PATCHed to the Gist. GitHub refuses a file much over 1 MB through
+    // the API, and a few full-size trophy photos will get you there — at which point the
+    // phone holding them stops syncing entirely while still looking fine locally.
+    var payloadKB = syncPayloadKB();
+    add(payloadKB < 900, "Sync payload", payloadKB + " KB" +
+      (payloadKB >= 900 ? " — too big for the Gist API, photos won't sync" : " (limit ~1000 KB)"));
+    var tpN = Object.keys(state.tripPhotos || {}).length;
+    if(tpN) add(null, "Trip photos stored", tpN + " day(s)");
+    add(pushConfigured(), "Push credentials", pushConfigured() ? "saved on this phone" : "not set up — see the setup guide");
+    add(isStandaloneApp(), "Opened from Home Screen icon",
+      isStandaloneApp() ? "yes — push can work here" : "NO, this is a Safari tab — iOS won't deliver push to this copy");
+    var permNow = "unknown";
+    try{ if(typeof Notification !== "undefined") permNow = Notification.permission; }catch(e){}
+    add(permNow === "granted", "Notification permission", permNow);
+    if(pushConfigured() && state.onesignalAppId){
+      add(null, "Checking push registration…");
+      var sIdx = lines.length - 1;
+      withOneSignal(async function(OneSignal){
+        var subId = null, optedIn = null;
+        try{ subId = OneSignal.User.PushSubscription.id; }catch(e){}
+        try{ optedIn = OneSignal.User.PushSubscription.optedIn; }catch(e){}
+        var ok = !!subId && optedIn !== false;
+        lines[sIdx] = (ok ? "✅" : "❌") + " Push registration — " +
+          (subId ? ("subscribed as " + String(subId).slice(0,8) + "…" + (optedIn === false ? " but opted OUT" : ""))
+                 : "NOT subscribed on this phone — tap Enable on this phone");
+        out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+      });
+    }
     add(null, "Unread activity", (state.activityLog||[]).filter(function(a){ return a.by !== owner && a.at > lastSeenActivity(); }).length + " item(s)");
 
     // live connection tests
@@ -3516,7 +3667,51 @@
         '<div class="' + cls("l", winCal) + '">' + ca.cal + '</div><div class="health-ico" title="Active calories">🔥</div><div class="' + cls("r", winCal) + '">' + cb.cal + '</div>' +
         '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">😴</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
       '</div>' +
+      healthStaleWarning(a, b) +
       healthNudges(a, b).map(function(n){ return '<div class="health-nudge">' + escapeHtml(n) + '</div>'; }).join("");
+    var rerun = document.getElementById("healthRerunBtn");
+    if(rerun) rerun.addEventListener("click", function(){
+      showModal("🍎", "Why the numbers are stuck",
+        "Your Health shortcut opens WeDO in Safari, not in the Home Screen app. iOS treats those " +
+        "as two separate apps with separate storage — and it wipes the Safari one's saved settings " +
+        "if you haven't opened Safari in about a week.\n\n" +
+        "So the shortcut saves your steps into the Safari copy, that copy has no GitHub token " +
+        "any more, and the numbers never reach the Gist that this app reads from.\n\n" +
+        "Two fixes — do the first now, the second so it stops happening:\n\n" +
+        "1. Run the shortcut. In the Safari page it opens, expand “Sync between two phones”, " +
+        "paste your Gist link and GitHub token, and tap Sync now.\n\n" +
+        "2. Add your token to the shortcut itself (append &ght=YOUR_TOKEN to the address in the " +
+        "Open URLs action). Then it re-arms that copy every single run, even after iOS clears it.");
+      var panel = document.getElementById("syncPanel");
+      if(panel){ panel.open = true; setTimeout(function(){ panel.scrollIntoView({behavior:"smooth", block:"start"}); }, 200); }
+    });
+  }
+
+  // How many whole days back a stored health entry is. Today = 0.
+  function healthAgeDays(d){
+    if(!d || !d.date) return null;
+    var then = new Date(d.date + "T12:00:00"), now = new Date(todayISO() + "T12:00:00");
+    if(isNaN(then)) return null;
+    return Math.round((now - then) / 86400000);
+  }
+  // Anything two days old or worse is almost never "we forgot to run the shortcut" — it's the
+  // shortcut landing in the Safari copy, which has its own storage and keeps losing its token.
+  function healthStaleWarning(a, b){
+    var ages = [{d:a,pid:"p1"}, {d:b,pid:"p2"}]
+      .filter(function(x){ return x.d && healthAgeDays(x.d) != null; });
+    if(!ages.length) return "";
+    var stale = ages.filter(function(x){ return healthAgeDays(x.d) >= 2; });
+    if(!stale.length) return "";
+    var worst = stale.reduce(function(m,x){ return healthAgeDays(x.d) > healthAgeDays(m.d) ? x : m; });
+    var days = healthAgeDays(worst.d);
+    var who = stale.length === 2 ? "These numbers are" : (personName(worst.pid) + "'s numbers are");
+    return '<div class="health-stale-warn">' +
+      '<b>⚠️ ' + escapeHtml(who) + ' ' + days + ' days old.</b> ' +
+      'Last updated ' + escapeHtml(new Date(worst.d.date + "T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})) + '. ' +
+      'Usually this means the shortcut is opening WeDO in Safari, and that copy has lost its ' +
+      'GitHub token — so it saves the numbers where this app can\'t see them.' +
+      '<div><button class="ghost" id="healthRerunBtn">How to fix it</button></div>' +
+      '</div>';
   }
 
   document.getElementById("healthRefresh").addEventListener("click", function(){
@@ -4559,7 +4754,41 @@
     return !!(state.lockins[personId] && state.lockins[personId][dateISO]);
   }
 
+  // ---------- together mode ----------
+  // The daily code exists to make you actually talk when you're apart. On a trip you're in
+  // the same room, so trading a 4-digit number is busywork — and worse, missing it would
+  // lock the app the next morning. Any day inside a trip's date range is treated as
+  // connected: no code to trade, no lock, and the streak carries straight through.
+  function tripsCovering(dateISO){
+    return (state.tasks || []).filter(function(t){
+      return t.trip && t.tripStart && t.tripEnd && dateISO >= t.tripStart && dateISO <= t.tripEnd;
+    });
+  }
+  function dateInTrip(dateISO){ return tripsCovering(dateISO).length > 0; }
+  // the trip we're on right now, if any — the one ending soonest, so overlapping entries
+  // resolve to the one you're actually finishing
+  function activeTrip(){
+    var t = tripsCovering(todayISO());
+    if(!t.length) return null;
+    return t.slice().sort(function(a, b){ return a.tripEnd < b.tripEnd ? -1 : (a.tripEnd > b.tripEnd ? 1 : 0); })[0];
+  }
+  function togetherMode(){ return !!activeTrip(); }
+  function tripDayNumber(trip, dateISO){
+    var a = new Date(trip.tripStart + "T12:00:00"), b = new Date(dateISO + "T12:00:00");
+    return Math.round((b - a) / 86400000) + 1;
+  }
+  // every date from the trip's start through today (never past it — no empty future slots)
+  function tripDatesSoFar(trip){
+    var out = [], d = trip.tripStart, today = todayISO();
+    var stop = trip.tripEnd < today ? trip.tripEnd : today;
+    var guard = 0;
+    while(d <= stop && guard++ < 400){ out.push(d); d = addDaysToISO(d, 1); }
+    return out;
+  }
+
   function connectedOnDate(dateISO){
+    // a trip day counts as connected — you were together, that's the whole point
+    if(dateInTrip(dateISO)) return true;
     return state.people.some(function(p){ return isLockedIn(p.id, dateISO); });
   }
 
@@ -4680,6 +4909,30 @@
         escapeHtml(personName(me)) + "'s daily code stays hidden here — it only shows on " +
         escapeHtml(personName(me)) + "'s own phone. No peeking, that's the whole point.";
       body.appendChild(lockNote);
+      return;
+    }
+
+    // ---- on a trip: no codes at all ----
+    // Rendering the code box "greyed out" would still invite trading it. The whole card
+    // becomes something else instead, and says plainly that the streak is safe — otherwise
+    // the first instinct on holiday is to worry about breaking it.
+    var trip = activeTrip();
+    if(trip){
+      var away = document.createElement("div");
+      away.className = "code-hint";
+      away.style.textAlign = "center";
+      away.innerHTML = "✈️ <strong>" + escapeHtml(trip.title) + "</strong><br>" +
+        "Day " + tripDayNumber(trip, today) + " · you're together, so there's no code to trade.<br>" +
+        "<span style=\"opacity:.85;\">Every day of this trip counts as connected — your " +
+        streak + "-day streak keeps running, and the app won't lock.</span><br>" +
+        "<span style=\"opacity:.85;\">Codes come back on " +
+        escapeHtml(fmtDueDate(addDaysToISO(trip.tripEnd, 1))) + ".</span>";
+      body.appendChild(away);
+      var upTop = document.createElement("div");
+      upTop.className = "code-hint";
+      upTop.style.textAlign = "center";
+      upTop.innerHTML = "📸 Post today's photo of you two at the top of this screen.";
+      body.appendChild(upTop);
       return;
     }
 
@@ -5558,6 +5811,123 @@
   // ---------- rewards ----------
   var emojiByTier = {common:"🎈", uncommon:"✨", rare:"🌟"};
 
+  // ---------- nudges: unspent spins + a weekly reward suggestion ----------
+  // ISO week key, so "once a week" means a real calendar week rather than 7 days from
+  // whenever you last happened to open the app.
+  function isoWeekKey(d){
+    d = d ? new Date(d.getTime()) : new Date();
+    d.setHours(0,0,0,0);
+    // Thursday of this week decides the ISO year
+    d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+    var thursday = new Date(d.getTime());
+    var jan4 = new Date(thursday.getFullYear(), 0, 4);
+    jan4.setDate(jan4.getDate() + 3 - ((jan4.getDay() + 6) % 7));
+    var week = 1 + Math.round((thursday - jan4) / (7 * 86400000));
+    return thursday.getFullYear() + "-W" + (week < 10 ? "0" + week : week);
+  }
+  function markRewardIdeaAsked(pid){
+    if(!state.rewardIdeaWeek) state.rewardIdeaWeek = {};
+    state.rewardIdeaWeek[pid] = isoWeekKey();
+    save();
+    renderNudges();
+  }
+  function renderNudges(){
+    var card = document.getElementById("nudgeCard");
+    var body = document.getElementById("nudgeBody");
+    if(!card || !body) return;
+    var me = deviceOwner() || state.currentUser;
+    if(!me){ card.style.display = "none"; return; }
+    ensurePerson(state, me);
+    body.innerHTML = "";
+    var shown = 0;
+
+    // --- unspent spins ---
+    var spins = (state.points[me] || {}).spinsAvailable || 0;
+    if(spins > 0){
+      var blk = document.createElement("div");
+      blk.className = "nudge-blk";
+      var t = document.createElement("div");
+      t.className = "nudge-title";
+      t.innerHTML = "\uD83C\uDFA1 " + (spins === 1 ? "You've got a spin waiting" : "You've got " + spins + " spins waiting");
+      var sub = document.createElement("div");
+      sub.className = "nudge-sub";
+      sub.textContent = spins === 1
+        ? "That's a reward sitting there unclaimed. Takes ten seconds."
+        : "They don't expire, but they're no fun stacking up either.";
+      var go = document.createElement("button");
+      go.className = "primary nudge-btn";
+      go.textContent = spins === 1 ? "Spin it \uD83C\uDFA1" : "Spin them \uD83C\uDFA1";
+      go.addEventListener("click", function(){
+        var tab = document.querySelector('.tabs button[data-tab="rewards"]');
+        if(tab) tab.click();
+        var wheel = document.getElementById("spinBtn");
+        if(wheel && wheel.scrollIntoView) wheel.scrollIntoView({behavior:"smooth", block:"center"});
+      });
+      blk.appendChild(t); blk.appendChild(sub); blk.appendChild(go);
+      body.appendChild(blk);
+      shown++;
+    }
+
+    // --- weekly "suggest a reward" prompt ---
+    var askedWeek = (state.rewardIdeaWeek || {})[me];
+    if(askedWeek !== isoWeekKey()){
+      var blk2 = document.createElement("div");
+      blk2.className = "nudge-blk";
+      if(shown) blk2.className += " divided";
+      var t2 = document.createElement("div");
+      t2.className = "nudge-title";
+      t2.innerHTML = "\uD83D\uDCA1 What would you actually want this week?";
+      var sub2 = document.createElement("div");
+      sub2.className = "nudge-sub";
+      sub2.textContent = "Add one thing to the wheel. " + personName(otherPerson(me)) +
+        " approves it before it goes on, so ask for something real.";
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.placeholder = "e.g. breakfast in bed, a night off cooking…";
+      inp.maxLength = 80;
+      var tierSel = document.createElement("select");
+      [["common","Small treat"],["uncommon","Proper treat"],["rare","Big one"]].forEach(function(o){
+        var op = document.createElement("option");
+        op.value = o[0]; op.textContent = o[1];
+        tierSel.appendChild(op);
+      });
+      tierSel.style.marginTop = "7px";
+      var row = document.createElement("div");
+      row.className = "row2";
+      row.style.marginTop = "7px";
+      var send = document.createElement("button");
+      send.className = "ghost";
+      send.textContent = "Propose it";
+      var skip = document.createElement("button");
+      skip.className = "ghost";
+      skip.textContent = "Not this week";
+      send.addEventListener("click", function(){
+        var name = inp.value.trim();
+        if(!name){ toast("Type an idea first"); return; }
+        if(!state.rewardRequests) state.rewardRequests = [];
+        state.rewardRequests.push({
+          id: uid(), mtime: Date.now(), name: name, tier: tierSel.value,
+          emoji: emojiByTier[tierSel.value], proposedBy: me, date: new Date().toISOString()
+        });
+        announce('suggested a new reward: "' + name + '" \uD83D\uDCA1');
+        markRewardIdeaAsked(me);
+        renderRewards(); renderActivityFeed();
+        toast("Sent to " + personName(otherPerson(me)) + " to approve \uD83D\uDC9E");
+      });
+      skip.addEventListener("click", function(){
+        markRewardIdeaAsked(me);
+        toast("Okay — I'll ask again next week");
+      });
+      row.appendChild(send); row.appendChild(skip);
+      blk2.appendChild(t2); blk2.appendChild(sub2);
+      blk2.appendChild(inp); blk2.appendChild(tierSel); blk2.appendChild(row);
+      body.appendChild(blk2);
+      shown++;
+    }
+
+    card.style.display = shown ? "" : "none";
+  }
+
   function renderRewards(){
     var wrap = document.getElementById("rewardList");
     wrap.innerHTML = "";
@@ -5769,10 +6139,155 @@
     var d = (state.dailyPhotos || {})[pid];
     return (d && d.photo) ? d : null;
   }
+  function tripPhotoFor(dateISO){
+    var d = (state.tripPhotos || {})[dateISO];
+    return (d && d.photo) ? d : null;
+  }
+  // The Gist API rejects a file over ~1 MB, and it does it by failing the whole sync — so
+  // one photo too many stops tasks, points and notes crossing between phones too. A daily
+  // trip album is the first thing here that grows without bound, so it gets checked.
+  function syncPayloadKB(){
+    try{ return Math.round(JSON.stringify(stripLocal(state)).length / 1024); }catch(e){ return 0; }
+  }
+
+  // One shared frame for the day, plus the days already captured underneath. Either phone
+  // can post or replace it — unlike the two-slot version there's nothing to "own", so the
+  // merge just keeps whichever copy was written last for that date.
+  function renderTogetherPhoto(row, trip){
+    var me = deviceOwner() || state.currentUser;
+    var today = todayISO();
+    row.className = "duo-row together";
+
+    var banner = document.createElement("div");
+    banner.className = "trip-banner";
+    banner.textContent = "✈️ " + trip.title + " · Day " + tripDayNumber(trip, today);
+    row.appendChild(banner);
+
+    var slot = document.createElement("button");
+    slot.type = "button";
+    slot.className = "duo-slot us";
+    var frame = document.createElement("div");
+    frame.className = "duo-frame";
+    var d = tripPhotoFor(today);
+    if(d){
+      var img = document.createElement("img");
+      img.src = d.photo;
+      img.alt = "Today on " + trip.title;
+      frame.appendChild(img);
+    } else {
+      var empty = document.createElement("div");
+      empty.className = "duo-empty";
+      empty.innerHTML = '<span class="plus">+</span>Add today\'s photo of you two';
+      frame.appendChild(empty);
+    }
+    slot.appendChild(frame);
+
+    var name = document.createElement("div");
+    name.className = "duo-name";
+    name.textContent = d ? "Today, together 💞" : "Today's photo";
+    slot.appendChild(name);
+
+    var when = document.createElement("div");
+    when.className = "duo-when" + (d ? " today" : "");
+    when.textContent = d ? ("posted by " + personName(d.by) + " · tap to replace")
+                         : "either of you can post it — tap to add";
+    slot.appendChild(when);
+
+    slot.addEventListener("click", function(){ pickTripPhoto(trip, today); });
+    row.appendChild(slot);
+
+    // the album so far. Empty days show as dashed placeholders you can still fill in, so a
+    // day you forgot isn't lost the moment midnight passes.
+    var dates = tripDatesSoFar(trip);
+    if(dates.length > 1){
+      var strip = document.createElement("div");
+      strip.className = "trip-strip";
+      dates.forEach(function(ds){
+        var p = tripPhotoFor(ds);
+        var th = document.createElement("button");
+        th.type = "button";
+        th.className = "trip-thumb" + (p ? "" : " blank") + (ds === today ? " is-today" : "");
+        var box = document.createElement("div");
+        box.className = "tt-img";
+        if(p){
+          var ti = document.createElement("img");
+          ti.src = p.photo; ti.alt = "Day " + tripDayNumber(trip, ds);
+          box.appendChild(ti);
+        } else {
+          box.textContent = "+";
+        }
+        th.appendChild(box);
+        var lab = document.createElement("div");
+        lab.className = "tt-day";
+        lab.textContent = "D" + tripDayNumber(trip, ds);
+        th.appendChild(lab);
+        th.addEventListener("click", function(){
+          if(p) openPhotoView(p.photo, trip.title + " · Day " + tripDayNumber(trip, ds) +
+            " · posted by " + personName(p.by),
+            function(){
+              delete state.tripPhotos[ds];
+              tombstone(TRIP_PHOTO_TOMB + ds);
+              save();
+              renderDailyPhotos();
+              toast("Day " + tripDayNumber(trip, ds) + " removed");
+            });
+          else pickTripPhoto(trip, ds);
+        });
+        strip.appendChild(th);
+      });
+      row.appendChild(strip);
+    }
+  }
+
+  function pickTripPhoto(trip, dateISO){
+    openFilePicker("image/*", function(f){
+      toast("Adding your photo…");
+      readAndCompress(f, function(dataUrl){
+        if(!dataUrl || dataUrl.length < 100){
+          showModal("📸","Couldn't read that photo",
+            "That image didn't come through. Try a different one, or take a fresh photo with the camera.");
+          return;
+        }
+        var me = deviceOwner() || state.currentUser;
+        if(!state.tripPhotos) state.tripPhotos = {};
+        var prev = state.tripPhotos[dateISO];
+        state.tripPhotos[dateISO] = {photo: dataUrl, by: me, at: new Date().toISOString(), tripId: trip.id};
+        // Check BEFORE committing. Letting it through would break sync for everything, and
+        // the failure would show up days later as "her photos aren't appearing".
+        if(syncPayloadKB() >= 900){
+          if(prev) state.tripPhotos[dateISO] = prev; else delete state.tripPhotos[dateISO];
+          showModal("📦", "The album is full",
+            "Adding this one would push your shared data past what the Gist can hold (~1 MB), " +
+            "which would stop everything syncing between your phones — not just photos.\n\n" +
+            "Save the trip so far to your camera roll (tap a day, then long-press the picture), " +
+            "then delete a few older days from the strip to make room.");
+          return;
+        }
+        try{
+          saveOrThrow();
+          announce("posted Day " + tripDayNumber(trip, dateISO) + " of " + trip.title + " 📸");
+          save();
+          renderDailyPhotos();
+          renderActivityFeed();
+          toast("Day " + tripDayNumber(trip, dateISO) + " saved 💞");
+        }catch(err){
+          if(prev) state.tripPhotos[dateISO] = prev; else delete state.tripPhotos[dateISO];
+          save();
+          renderDailyPhotos();
+          showModal("💾","Out of photo storage",
+            "This phone's browser storage is full (~"+storageKB()+" KB used). Remove a photo from an older trophy to make room, then try again.");
+        }
+      }, {maxDim: 620, quality: 0.7, noVideo: true});
+    });
+  }
+
   function renderDailyPhotos(){
     var row = document.getElementById("duoRow");
     if(!row) return;
     row.innerHTML = "";
+    row.className = "duo-row";
+    var activeT = activeTrip();
+    if(activeT){ renderTogetherPhoto(row, activeT); return; }
     var me = deviceOwner() || state.currentUser;
     var today = todayISO();
     var people = state.people.slice(0, 2);
@@ -5890,9 +6405,20 @@
     });
   }
   var photoViewBg = document.getElementById("photoViewBg");
-  function openPhotoView(src, caption){
+  var photoViewOnRemove = null;
+  document.getElementById("photoViewRemove").addEventListener("click", function(){
+    var fn = photoViewOnRemove;
+    if(!fn) return;
+    if(!confirm("Remove this day from the trip album? The photo stays in your camera roll.")) return;
+    photoViewBg.classList.remove("show");
+    photoViewOnRemove = null;
+    fn();
+  });
+  function openPhotoView(src, caption, onRemove){
     document.getElementById("photoViewImg").src = src;
     document.getElementById("photoViewCap").textContent = caption || "";
+    photoViewOnRemove = (typeof onRemove === "function") ? onRemove : null;
+    document.getElementById("photoViewRemove").style.display = photoViewOnRemove ? "" : "none";
     photoViewBg.classList.add("show");
   }
   document.getElementById("photoViewClose").addEventListener("click", function(){
@@ -6070,6 +6596,7 @@
   function renderAll(){
     renderSetupCard();
     renderBackupNag();
+    renderNudges();
     renderSwitcher();
     renderDailyPhotos();
     renderHero();
@@ -6159,6 +6686,33 @@
   setTimeout(function(){ checkForUpdate(false); }, 1500);
 
   // ---- auto-sync wiring ----
+  document.getElementById("ghTokenShowBtn").addEventListener("click", function(){
+    var f = document.getElementById("ghTokenInput");
+    if(!f.value) f.value = ghToken();
+    if(!f.value){ toast("No token saved on this phone yet"); return; }
+    var hidden = f.type === "password";
+    f.type = hidden ? "text" : "password";
+    this.textContent = hidden ? "Hide token" : "Show token";
+  });
+  document.getElementById("ghTokenCopyBtn").addEventListener("click", function(){
+    var v = ghToken() || document.getElementById("ghTokenInput").value.trim();
+    if(!v){ toast("No token saved on this phone yet"); return; }
+    // iOS only allows clipboard writes from inside a user gesture, so do it synchronously
+    // here rather than behind a promise chain
+    var ok = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(v);
+        ok = true;
+      }
+    }catch(e){}
+    if(!ok){
+      var f = document.getElementById("ghTokenInput");
+      f.value = v; f.type = "text"; f.select();
+      try{ ok = document.execCommand("copy"); }catch(e){}
+    }
+    toast(ok ? "Token copied 📋" : "Couldn't copy — tap Show token and copy it by hand");
+  });
   document.getElementById("ghTokenSaveBtn").addEventListener("click", function(){
     var v = document.getElementById("ghTokenInput").value.trim();
     setGhToken(v);
@@ -6283,7 +6837,26 @@
         toast("Gist link loaded from the URL — just add the token 🔑");
       }
     }
+    // ...?ght=<github token> lets the Health shortcut hand this copy of the app the token too.
+    // Why this exists: "Open URLs" from Shortcuts lands in SAFARI, and iOS gives the Safari
+    // copy its own localStorage — plus iOS clears script-written storage for sites you haven't
+    // opened in ~7 days. So the Safari copy keeps losing its token, silently stops syncing, and
+    // the numbers pile up in a dead end while the Home Screen app shows week-old figures.
+    // Carrying the token in the shortcut re-arms that copy automatically every run.
+    // Only ever fills an EMPTY slot, so a stale token baked into a shortcut can't clobber a
+    // good one typed in by hand.
+    var qTok = new URLSearchParams(location.search).get("ght");
+    if(qTok && !ghToken()){
+      setGhToken(qTok.trim());
+      var tf = document.getElementById("ghTokenInput");
+      if(tf) tf.value = ghToken();
+      renderSetupCard(); renderBackupNag();
+    }
+    // ingest FIRST — stripping the query string before this point would throw away the very
+    // health numbers the shortcut came here to deliver
     ingestHealthFromUrl();
+    // never leave a credential sitting in the address bar or a Safari history entry
+    if(qTok){ try{ history.replaceState(null, "", location.pathname); }catch(e){} }
   }catch(e){}
 
   // ---- Apple Health hand-off via URL (?hsteps=..&hcal=..&hsleep=..) ----
@@ -6368,7 +6941,20 @@
           "shortcut updates both phones on its own.");
       }, 900);
     } else {
-      syncNow(false);
+      // Saving locally and actually reaching the other phone are different events. Until now
+      // only the first one was reported, so a copy that could never push looked identical to
+      // one that pushed fine — which is how a week of stale numbers went unnoticed.
+      syncNow(false, function(ok, err){
+        if(ok){ toast("Sent to " + personName(otherPerson(owner)) + "'s phone ✅"); return; }
+        showModal("🍎", "Saved here, but not passed along",
+          "Got " + bits.join(", ") + " for " + personName(owner) + " — but this copy couldn't " +
+          "reach your shared Gist" + (err ? (" (" + err + ")") : "") + ", so the other phone " +
+          "still won't see them.\n\n" +
+          (/40[13]/.test(String(err))
+            ? "A 401 or 403 means the GitHub token has expired or been revoked. Make a new one and " +
+              "paste it into “Sync between two phones” below."
+            : "Open “Sync between two phones” below and tap Sync now to see the exact error."));
+      });
     }
   }
 
