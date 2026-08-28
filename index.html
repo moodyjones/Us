@@ -1447,7 +1447,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 56 · Rae edition</div>
+  <div class="sub">Build 57 · Rae edition</div>
 </header>
 
 <main>
@@ -3756,7 +3756,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 56;
+  var BUILD_NUM = 57;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3871,6 +3871,36 @@
           (subId ? ("subscribed as " + String(subId).slice(0,8) + "…" + (optedIn === false ? " but opted OUT" : ""))
                  : "NOT subscribed on this phone — tap Enable on this phone");
         out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+
+        // If permission is granted but no subscription exists, the service worker is the
+        // usual reason — and a missing worker file is invisible from inside the app.
+        if(!subId){
+          var swIdx = lines.length;
+          lines.push("• Checking push service worker…");
+          out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+          // absolute: swPath() is origin-relative for OneSignal's benefit, so fetching it
+          // as-is from /Us/index.html would resolve to /Us/Us/OneSignalSDKWorker.js
+          fetch("/" + swPath() + "?_=" + Date.now(), {cache: "no-store"})
+            .then(function(r){ return r.ok ? r.text() : Promise.reject(new Error(r.status)); })
+            .then(function(txt){
+              var good = /importScripts/.test(txt);
+              lines[swIdx] = (good ? "✅" : "❌") + " Push worker file — " +
+                (good ? ("found at /" + swPath()) : ("wrong contents at /" + swPath()));
+            })
+            .catch(function(e){
+              lines[swIdx] = "❌ Push worker file — MISSING at /" + swPath() +
+                " (" + e.message + ") — upload OneSignalSDKWorker.js next to index.html";
+            })
+            .then(function(){
+              navigator.serviceWorker && navigator.serviceWorker.getRegistrations
+                ? navigator.serviceWorker.getRegistrations().then(function(regs){
+                    lines.push((regs.length ? "✅" : "❌") + " Service worker registered — " +
+                      (regs.length ? (regs.length + " active") : "none on this phone"));
+                    out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
+                  })
+                : (out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join(""));
+            });
+        }
       });
     }
     add(null, "Unread activity", (state.activityLog||[]).filter(function(a){ return a.by !== owner && a.at > lastSeenActivity(); }).length + " item(s)");
@@ -7408,6 +7438,14 @@
   // (assigned synchronously, before any await) rather than a boolean that only
   // flips true after init() resolves. A boolean guard has a race: both callers
   // can see it as false before either one finishes awaiting init().
+  // the folder this page is served from — "/Us/" on GitHub Pages, "/" if hosted at a root
+  function appScope(){
+    var p = location.pathname || "/";
+    return p.slice(0, p.lastIndexOf("/") + 1) || "/";
+  }
+  // OneSignal wants this relative to the origin, with no leading slash
+  function swPath(){ return appScope().replace(/^\//, "") + "OneSignalSDKWorker.js"; }
+
   var oneSignalInitPromise = null;
   function withOneSignal(fn){
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -7415,7 +7453,16 @@
       try{
         if(!oneSignalInitPromise){
           if(!state.onesignalAppId) throw new Error("no App ID saved yet");
-          oneSignalInitPromise = OneSignal.init({appId: state.onesignalAppId});
+          // WeDO is served from a SUBDIRECTORY (…github.io/Us/), and OneSignal defaults to
+          // looking for its service worker at the ORIGIN ROOT — …github.io/OneSignalSDKWorker.js,
+          // which is a 404 here. The worker then never registers, so iOS grants notification
+          // permission and the subscription is still never created: permission "granted",
+          // push registration "NOT subscribed". Pointing it at the real path fixes that.
+          oneSignalInitPromise = OneSignal.init({
+            appId: state.onesignalAppId,
+            serviceWorkerPath: swPath(),
+            serviceWorkerParam: {scope: appScope()}
+          });
         }
         await oneSignalInitPromise;
         await fn(OneSignal);
