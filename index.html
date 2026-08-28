@@ -1447,7 +1447,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 54 · Rae edition</div>
+  <div class="sub">Build 56 · Rae edition</div>
 </header>
 
 <main>
@@ -1497,6 +1497,20 @@
     <!-- gentle nudges: unspent spins, and a weekly prompt for a new reward idea -->
     <div class="card nudge-card" id="nudgeCard" style="display:none;">
       <div id="nudgeBody"></div>
+    </div>
+
+    <!-- Sync failing is far more dangerous than sync being unconfigured: everything looks
+         normal while nothing reaches the other phone. It used to say so only in 11px grey
+         text inside a collapsed panel. -->
+    <div class="card" id="syncFailCard" style="display:none;border-color:var(--pink);">
+      <div style="font-size:13.5px;line-height:1.6;color:var(--muted);">
+        🔴 <strong style="color:var(--pink);">Nothing has reached <span id="syncFailWho">your person</span>'s phone</strong>
+        <div id="syncFailDetail" style="margin-top:6px;"></div>
+      </div>
+      <div class="row2" style="margin-top:10px;">
+        <button class="ghost" id="syncFailRetry">Try now</button>
+        <button class="ghost" id="syncFailHelp">What's wrong?</button>
+      </div>
     </div>
 
     <div class="card" id="noBackupCard" style="display:none;border-color:var(--gold);">
@@ -3514,21 +3528,36 @@
 
   // Turn refs back into real data URLs. Returns a promise because a photo file over 1 MB
   // comes back truncated with only a raw_url to follow.
+  // Resolves to {complete:true} only if EVERY ref turned back into a real image.
+  //
+  // This used to set o.photo = null whenever a file was missing or its fetch failed. That was
+  // a data-loss bug: the nulled photo then looked unreferenced to orphanPhotoFiles, which
+  // deleted the file for good. One flaky moment on hotel wifi could erase a trophy photo
+  // permanently. Now an unresolved ref is LEFT AS A REF — nothing is destroyed, and the next
+  // sync tries again.
   function resolvePhotos(st, gistFiles){
-    var waits = [];
+    var waits = [], complete = true;
     eachPhotoSlot(st, function(o){
       if(!isPhotoRef(o.photo)) return;
       var f = gistFiles[photoFileName(o.photo.slice(PHOTO_REF.length))];
-      if(!f){ o.photo = null; return; }
+      if(!f){ complete = false; return; }               // keep the ref, don't blank it
       if(f.truncated && f.raw_url){
         waits.push(fetch(f.raw_url).then(function(r){ return r.text(); })
-          .then(function(t){ o.photo = t; }).catch(function(){ o.photo = null; }));
+          .then(function(t){ if(t) o.photo = t; else complete = false; })
+          .catch(function(){ complete = false; }));
+      } else if(f.content){
+        o.photo = f.content;
       } else {
-        o.photo = f.content || null;
+        complete = false;
       }
     });
-    return waits.length ? Promise.all(waits) : Promise.resolve();
+    var done = waits.length ? Promise.all(waits) : Promise.resolve();
+    return done.then(function(){ return {complete: complete}; });
   }
+
+  // a "ref:" that hasn't been resolved yet is not a displayable image — never hand it to an
+  // <img>, or the trophy shows a broken-image icon instead of "no photo yet"
+  function photoSrc(v){ return isInlinePhoto(v) ? v : null; }
 
   // photo files in the gist that nothing points at any more — a day removed from the album,
   // a trophy photo replaced. Without this the gist would only ever grow.
@@ -3547,7 +3576,19 @@
 
   var syncTimer = null, syncInFlight = false, syncQueued = false, applyingRemote = false;
   var pendingPhotoUploads = 0;
+  var photosFullyResolved = true;
   var lastSync = {at: null, ok: null, err: null};
+  // Kept in localStorage, not just memory: "none yet this session" on every fresh open made
+  // a phone that hadn't synced in two weeks look exactly like one that just started up.
+  var LAST_OK_KEY = "us-last-sync-ok";
+  function lastSyncOkAt(){
+    try{ var v = parseInt(localStorage.getItem(LAST_OK_KEY) || "0", 10); return v > 0 ? v : null; }catch(e){ return null; }
+  }
+  function markSyncOk(){ try{ localStorage.setItem(LAST_OK_KEY, String(Date.now())); }catch(e){} }
+  function hoursSinceSyncOk(){
+    var t = lastSyncOkAt();
+    return t == null ? null : Math.floor((Date.now() - t) / 3600000);
+  }
   function scheduleSync(){
     if(!autoSyncOn() || applyingRemote) return;
     clearTimeout(syncTimer);
@@ -3594,7 +3635,10 @@
         // swap the remote's "ref:" placeholders back into real images before merging, so
         // mergeStates only ever compares like with like
         if(!remote) return null;
-        return resolvePhotos(remote, gistFiles).then(function(){ return remote; });
+        return resolvePhotos(remote, gistFiles).then(function(res){
+          photosFullyResolved = res.complete;
+          return remote;
+        });
       })
       .then(function(remote){
         var merged = mergeStates(state, remote);
@@ -3619,7 +3663,10 @@
         var outState = JSON.parse(JSON.stringify(stripLocal(merged)));
         var ext = externalisePhotos(outState, gistFiles);
         var outJson = JSON.stringify(outState);
-        var dead = orphanPhotoFiles(outState, gistFiles);
+        // Deleting is only safe when we know what's genuinely unreferenced. If any ref failed
+        // to resolve this round, some photos are still refs we can't vouch for — cleaning up
+        // now is how you delete a picture you simply couldn't read a moment ago.
+        var dead = photosFullyResolved ? orphanPhotoFiles(outState, gistFiles) : [];
 
         // did anything actually change? compare against the remote as it was ON THE WIRE
         var remoteWire = gistFiles["wedo-state.json"] ? (gistFiles["wedo-state.json"].content || "") : "";
@@ -3642,6 +3689,7 @@
       })
       .then(function(){
         lastSync = {at: new Date(), ok: true, err: null};
+        markSyncOk();
         setSyncStatus("ok");
         if(manual) toast("Synced with " + personName(otherPerson(state.currentUser)) + "'s phone ✅");
       })
@@ -3656,6 +3704,7 @@
         if(pendingPhotoUploads > 0 && lastSync.ok) syncQueued = true;
         // a queued run is about to carry the same data — report on THAT one instead
         if(syncQueued){ syncQueued = false; scheduleSync(); return; }
+        renderSyncFail();
         var cbs = syncDoneCbs; syncDoneCbs = [];
         cbs.forEach(function(cb){ try{ cb(lastSync.ok, lastSync.err); }catch(e){} });
       });
@@ -3707,7 +3756,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 54;
+  var BUILD_NUM = 56;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3740,10 +3789,16 @@
     var gid = gistIdFromUrl();
     add(!!gid, "Gist ID (compare on both phones!)", gid ? gid : "unreadable — check the link format");
     if(lastSync.at){
-      add(lastSync.ok, "Last sync", lastSync.at.toLocaleTimeString() + (lastSync.err ? " · " + lastSync.err : ""));
+      add(lastSync.ok, "Last sync attempt", lastSync.at.toLocaleTimeString() + (lastSync.err ? " · " + lastSync.err : ""));
     } else {
-      add(null, "Last sync", "none yet this session");
+      add(null, "Last sync attempt", "none yet this session");
     }
+    // the number that actually matters — survives restarts, so a phone that hasn't written
+    // in two weeks can't look freshly started
+    var okAt = lastSyncOkAt(), okHrs = hoursSinceSyncOk();
+    add(okAt != null && okHrs < 24, "Last SUCCESSFUL sync",
+      okAt == null ? "NEVER on this phone" :
+      (new Date(okAt).toLocaleString() + " (" + (okHrs < 1 ? "just now" : okHrs + "h ago") + ")"));
     var trips = state.tasks.filter(function(t){ return isTrip(t); });
     var tripsNoImg = trips.filter(function(t){ return !t.image; });
     add(null, "Tasks on this phone", state.tasks.length + " total, " + trips.length + " trips");
@@ -3781,8 +3836,16 @@
     var payloadKB = syncPayloadKB();
     add(payloadKB < 900, "State file", payloadKB + " KB" +
       (payloadKB >= 900 ? " — too big for the Gist API, sync will fail" : " (limit ~1000 KB)"));
-    add(null, "Photos (separate files)", photoCount() + " total, " + storageKB() + " KB on this phone");
+    // Break photos down by where they actually are. "0 real, 4 waiting" means the pictures
+    // exist in the gist but haven't downloaded; "0 real, 0 waiting" means they were never
+    // saved in the first place. Those need completely different fixes, and until now they
+    // looked identical from the outside.
+    var pc = photoStats();
+    add(pc.real > 0 || pc.refs === 0, "Photos on this phone",
+      pc.real + " downloaded, " + pc.refs + " still to download, " + storageKB() + " KB used");
+    add(null, "Trophy photos", pc.trophyReal + " of " + pc.trophyTotal + " trophies have one");
     if(pendingPhotoUploads > 0) add(false, "Photos still uploading", pendingPhotoUploads + " waiting — leave the app open a moment");
+    if(!photosFullyResolved) add(false, "Photo download", "some photos didn't come down last sync — tap Sync now again");
     var tpN = Object.keys(state.tripPhotos || {}).length;
     if(tpN) add(null, "Trip album days", tpN);
     // the single line that answers "why isn't the shared photo frame showing?"
@@ -4178,7 +4241,7 @@
   function tripAlbumDays(t){
     if(!t || !isTrip(t) || !t.tripStart || !t.tripEnd) return [];
     return Object.keys(state.tripPhotos || {})
-      .filter(function(ds){ return ds >= t.tripStart && ds <= t.tripEnd && (state.tripPhotos[ds]||{}).photo; })
+      .filter(function(ds){ return ds >= t.tripStart && ds <= t.tripEnd && photoSrc((state.tripPhotos[ds]||{}).photo); })
       .sort();
   }
   // The trip that just ended and hasn't been celebrated yet. Only trips with something in the
@@ -4236,7 +4299,7 @@
       cell.type = "button";
       cell.className = "album-cell";
       var img = document.createElement("img");
-      img.src = p.photo;
+      img.src = photoSrc(p.photo);
       img.alt = "Day " + tripDayNumber(t, ds);
       cell.appendChild(img);
       var lab = document.createElement("div");
@@ -5541,14 +5604,16 @@
       meta.innerHTML = bits.join("<br>");
       body.appendChild(meta);
 
-      if(t.photo){
+      // photoSrc() so a not-yet-downloaded "ref:" renders as "no photo yet" instead of a
+      // broken-image icon
+      if(photoSrc(t.photo)){
         if(t.photoType === "video"){
           var vid = document.createElement("video");
-          vid.src = t.photo; vid.controls = true; vid.className = "trophy-photo";
+          vid.src = photoSrc(t.photo); vid.controls = true; vid.className = "trophy-photo";
           body.appendChild(vid);
         } else {
           var img = document.createElement("img");
-          img.src = t.photo; img.className = "trophy-photo"; img.alt = t.title;
+          img.src = photoSrc(t.photo); img.className = "trophy-photo"; img.alt = t.title;
           body.appendChild(img);
         }
       }
@@ -6621,11 +6686,11 @@
   // the two sides never fight over the same key in the sync merge.
   function dailyPhotoFor(pid){
     var d = (state.dailyPhotos || {})[pid];
-    return (d && d.photo) ? d : null;
+    return (d && photoSrc(d.photo)) ? d : null;
   }
   function tripPhotoFor(dateISO){
     var d = (state.tripPhotos || {})[dateISO];
-    return (d && d.photo) ? d : null;
+    return (d && photoSrc(d.photo)) ? d : null;
   }
   // Size of the state FILE as it actually goes to the gist — photos externalised, so this is
   // the number the ~1 MB gist limit applies to. Before the photo store this was the whole
@@ -6641,6 +6706,23 @@
     var n = 0;
     try{ eachPhotoSlot(state, function(o){ if(o.photo) n++; }); }catch(e){}
     return n;
+  }
+  // real = a downloaded image we can display; refs = known to exist in the gist but not
+  // fetched yet. Trophies counted separately because that's where they're most missed.
+  function photoStats(){
+    var out = {real: 0, refs: 0, trophyReal: 0, trophyTotal: 0};
+    try{
+      eachPhotoSlot(state, function(o){
+        if(isInlinePhoto(o.photo)) out.real++;
+        else if(isPhotoRef(o.photo)) out.refs++;
+      });
+      (state.tasks || []).forEach(function(t){
+        if(!t || t.status !== "done" || t.trip) return;
+        out.trophyTotal++;
+        if(isInlinePhoto(t.photo)) out.trophyReal++;
+      });
+    }catch(e){}
+    return out;
   }
 
   // One shared frame for the day, plus the days already captured underneath. Either phone
@@ -6664,7 +6746,7 @@
     var d = tripPhotoFor(today);
     if(d){
       var img = document.createElement("img");
-      img.src = d.photo;
+      img.src = photoSrc(d.photo);
       img.alt = "Today on " + trip.title;
       frame.appendChild(img);
     } else {
@@ -6826,8 +6908,11 @@
         if(hc.steps != null) bits.push("👣 " + Number(hc.steps).toLocaleString());
         if(hc.sleepHours != null) bits.push("😴 " + fmtSleep(hc.sleepHours));
         // Say the date when it isn't today's. Dimming alone wasn't enough — week-old numbers
-        // sat under a photo labelled "today" and read as today's.
+        // sat under a photo labelled "today" and read as today's. When it IS today, show the
+        // time instead: numbers frozen since this morning look identical to live ones.
         if(hc.date !== today) bits.push("· " + friendlyPhotoDate(hc.date));
+        else if(hc.updatedAt) bits.push("· " + new Date(hc.updatedAt)
+          .toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}));
         hrow.textContent = bits.join("  ");
         slot.appendChild(hrow);
       }
@@ -7480,12 +7565,33 @@
     var prev = state.healthCache[owner] || {};
     var qd = q.get("hdate");
     var day = (qd && /^\d{4}-\d{2}-\d{2}$/.test(qd)) ? qd : todayISO();
+
+    // ---- replay guard ----
+    // The numbers ride in on a URL, and a URL can be re-opened: Safari restoring a pile of
+    // tabs, a tap in history, a bookmark. Each replay used to be treated as a fresh reading
+    // and stamped with today's date, quietly overwriting good numbers with old ones — which
+    // is how an 8,000-step test link from days ago came back looking like today's total.
+    var fp = owner + "|" + day + "|" + steps + "|" + cal + "|" + sleep;
+    if(prev.fingerprint === fp){
+      try{ history.replaceState(null, "", location.pathname); }catch(e){}
+      toast("Those are the numbers already saved — nothing new to add");
+      return;
+    }
+    // Steps and calories only ever climb during a day, so a smaller figure for a day we
+    // already have is a stale reading, not a correction. Keep the larger.
+    var sameDay = (prev.date === day);
+    var newSteps = steps != null ? Math.round(steps) : null;
+    var newCal   = cal != null ? Math.round(cal) : null;
+    if(sameDay && newSteps != null && prev.steps != null && newSteps < prev.steps) newSteps = prev.steps;
+    if(sameDay && newCal != null && prev.calories != null && newCal < prev.calories) newCal = prev.calories;
+
     state.healthCache[owner] = {
       date: day,
-      steps: steps != null ? Math.round(steps) : (prev.date === day ? prev.steps : null),
-      calories: cal != null ? Math.round(cal) : (prev.date === day ? prev.calories : null),
-      sleepHours: sleep != null ? Math.round(sleep * 100) / 100 : (prev.date === day ? prev.sleepHours : null),
-      updatedAt: new Date().toISOString()
+      steps: newSteps != null ? newSteps : (sameDay ? prev.steps : null),
+      calories: newCal != null ? newCal : (sameDay ? prev.calories : null),
+      sleepHours: sleep != null ? Math.round(sleep * 100) / 100 : (sameDay ? prev.sleepHours : null),
+      updatedAt: new Date().toISOString(),
+      fingerprint: fp
     };
     save();
     renderHealth();
@@ -7825,6 +7931,55 @@
       document.getElementById("setupCard").style.display !== "none";
     card.style.display = (!setupShowing && !autoSyncOn() && Date.now() > snoozedUntil) ? "" : "none";
   }
+  // ---- the loud "your data isn't going anywhere" banner ----
+  // Fires when sync IS set up but isn't working: the dangerous state, because the app looks
+  // completely normal while nothing crosses between phones.
+  function renderSyncFail(){
+    var card = document.getElementById("syncFailCard");
+    if(!card) return;
+    if(!autoSyncOn()){ card.style.display = "none"; return; }
+    var hrs = hoursSinceSyncOk();
+    var failing = (lastSync.ok === false);
+    var stale = (hrs == null) || (hrs >= 24);
+    if(!failing && !stale){ card.style.display = "none"; return; }
+
+    var me = deviceOwner() || state.currentUser;
+    document.getElementById("syncFailWho").textContent = personName(otherPerson(me)) || "your person";
+    var detail;
+    if(hrs == null){
+      detail = "This phone has <strong>never completed a sync</strong>. Everything you've added is " +
+        "only here.";
+    } else if(hrs >= 48){
+      detail = "Last successful sync was <strong>" + Math.floor(hrs / 24) + " days ago</strong>. " +
+        "Anything either of you added since then hasn't crossed over.";
+    } else {
+      detail = "Last successful sync was <strong>" + hrs + " hours ago</strong>.";
+    }
+    if(failing && lastSync.err) detail += "<br>Last attempt failed: <strong>" + escapeHtml(lastSync.err) + "</strong>";
+    document.getElementById("syncFailDetail").innerHTML = detail;
+    card.style.display = "";
+  }
+  document.getElementById("syncFailRetry").addEventListener("click", function(){ syncNow(true); });
+  document.getElementById("syncFailHelp").addEventListener("click", function(){
+    var e = String((lastSync && lastSync.err) || "");
+    showModal("🔴", "Why nothing is syncing",
+      (/40[13]/.test(e)
+        ? "GitHub rejected your token (" + e + "). It's expired or been revoked. Make a new one at " +
+          "github.com/settings/tokens with only “gist” ticked, then paste it here AND in Rae's app."
+        : /40[45]/.test(e)
+        ? "GitHub couldn't find that Gist (" + e + "). Check the Gist link — if it was deleted, " +
+          "you'll need to make a new one and put the new link on both phones."
+        : /Failed to fetch|NetworkError|Load failed/i.test(e)
+        ? "This phone couldn't reach GitHub at all — usually just no signal. It'll retry on its own."
+        : "Open “Sync between two phones” below and tap Sync now — the status line under the " +
+          "buttons will show the exact error.") +
+      "\n\nWhile this is showing, treat this phone as the only copy of anything you add.");
+    var panel = document.getElementById("syncPanel");
+    if(panel){ panel.open = true; setTimeout(function(){ panel.scrollIntoView({behavior:"smooth", block:"start"}); }, 200); }
+  });
+  renderSyncFail();
+  setInterval(renderSyncFail, 60000);
+
   document.getElementById("noBackupLater").addEventListener("click", function(){
     try{ localStorage.setItem("us-backup-nag-snooze", String(Date.now() + 3 * 86400000)); }catch(e){}
     renderBackupNag();
