@@ -1447,7 +1447,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 53 · Rae edition</div>
+  <div class="sub">Build 54 · Rae edition</div>
 </header>
 
 <main>
@@ -1775,6 +1775,10 @@
       <button class="ghost" id="ghTokenShowBtn">Show token</button>
       <button class="ghost" id="ghTokenCopyBtn">Copy token</button>
     </div>
+    <!-- The Health shortcut needs BOTH the gist id and the token to hand a wiped Safari copy
+         everything it needs. Copying them one at a time is where this went wrong, so this
+         hands over the whole ending in a single paste. -->
+    <button class="ghost" id="shortcutTailBtn" style="width:100%;margin-top:6px;">Copy shortcut ending (gist + token)</button>
     <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Push notifications.</strong> Get notified when your person adds or finishes something — the setup guide (WeDO-Notifications-Setup.md) walks through creating a free OneSignal account. Paste the App ID (safe to share) and REST API key (stays on this phone, same trust level as your GitHub token above) below, then tap Enable on <em>each</em> phone.</p>
@@ -3703,7 +3707,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 53;
+  var BUILD_NUM = 54;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -7260,6 +7264,24 @@
     }
     toast(ok ? "Token copied 📋" : "Couldn't copy — tap Show token and copy it by hand");
   });
+  document.getElementById("shortcutTailBtn").addEventListener("click", function(){
+    var id = gistIdFromUrl(), tok = ghToken();
+    if(!id && !tok){ toast("Save your Gist link and token on this phone first"); return; }
+    if(!id){ toast("Save your Gist link first"); return; }
+    if(!tok){ toast("Save your GitHub token first"); return; }
+    var tail = "&gist=" + id + "&ght=" + tok;
+    var ok = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(tail); ok = true; }
+    }catch(e){}
+    showModal("🔗", ok ? "Copied — paste it on the end" : "Paste this on the end",
+      "Open the Shortcuts app → WeDO Health → the last action with the long address. " +
+      "Select everything from the first “&gist=” or “&ght=” to the end and replace it " +
+      "with this:\n\n" + tail + "\n\n" +
+      "It must be the very last thing in the address, with no space before it. Rae needs her " +
+      "own copy of this too — same ending, but hp=p2 earlier in her address." +
+      (ok ? "" : "\n\n(Couldn't reach the clipboard — copy it from above by hand.)"));
+  });
   document.getElementById("ghTokenSaveBtn").addEventListener("click", function(){
     var v = document.getElementById("ghTokenInput").value.trim();
     setGhToken(v);
@@ -7480,12 +7502,21 @@
     // out loud rather than letting the Health card silently stay empty on the real app.
     if(!autoSyncOn()){
       setTimeout(function(){
+        // Name what's actually missing. "Not connected" covered two very different states, and
+        // the shortcut can already supply the token via &ght= — so telling him to paste the link
+        // AND the token sent him back to re-do a step he'd already got right.
+        var haveGist = !!gistIdFromUrl(), haveTok = !!ghToken();
+        var missing = (!haveGist && !haveTok) ? "neither the Gist link nor the GitHub token"
+                    : (!haveGist ? "no Gist link (your token arrived fine \u2705)" : "no GitHub token");
         showModal("🍎", "Numbers received — one step left",
-          "Got " + bits.join(", ") + " for " + personName(owner) + ". But this copy of WeDO isn't " +
-          "connected to your shared Gist yet, so it can't pass them along.\n\n" +
-          "Scroll down to \u201cSync between two phones\u201d, paste the Gist link and your GitHub " +
-          "token here too, then tap Sync now. You only have to do this once — after that the " +
-          "shortcut updates both phones on its own.");
+          "Got " + bits.join(", ") + " for " + personName(owner) + ". This copy of WeDO has " +
+          missing + ", so it can't pass them along.\n\n" +
+          (!haveGist
+            ? "PERMANENT FIX \u2014 put both in the shortcut so this stops happening: open WeDO from " +
+              "your HOME SCREEN icon, expand \u201cSync between two phones\u201d, tap \u201cCopy shortcut " +
+              "ending\u201d, then paste that over the &ght=... on the end of your Health shortcut.\n\n" +
+              "RIGHT NOW: scroll down on THIS page, paste your Gist link, tap Sync now."
+            : "Scroll down to \u201cSync between two phones\u201d, paste your GitHub token, then tap Sync now."));
       }, 900);
     } else {
       // Saving locally and actually reaching the other phone are different events. Until now
