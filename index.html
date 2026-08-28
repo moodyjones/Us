@@ -1447,7 +1447,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 52 · Rae edition</div>
+  <div class="sub">Build 53 · Rae edition</div>
 </header>
 
 <main>
@@ -2448,6 +2448,30 @@
     }
   }
 
+  // Is this task a destination rather than a to-do?
+  //
+  // It used to be the `trip` flag alone, and that turned out to be a single point of failure:
+  // trips added before the flag existed (Tahoe, Bali, Japan) had no `trip:true`, so they
+  // rendered as ordinary task rows — no dates, no album, and together mode could never fire
+  // no matter what you did. Anything sitting in the Trips list is a trip unless it's one of
+  // the auto-generated checklist items, which carry `tripFor`.
+  function isTrip(t){
+    return !!(t && (t.trip || (t.listId === "list-trips" && !t.tripFor)));
+  }
+  // back-fill the flag once, so the rest of the app (and the other phone) sees a real trip
+  function backfillTripFlags(){
+    var fixed = 0;
+    (state.tasks || []).forEach(function(t){
+      if(t && !t.trip && t.listId === "list-trips" && !t.tripFor){
+        t.trip = true;
+        touch(t);   // so it reaches the other phone rather than being merged back out
+        fixed++;
+      }
+    });
+    if(fixed) save();
+    return fixed;
+  }
+
   // mark an item as touched (newer copy wins in sync merges)
   function touch(t){ if(t) t.mtime = Date.now(); return t; }
   // trip-album days are tombstoned under their own prefix so a date string can never
@@ -2877,15 +2901,15 @@
     }
     if(listId === "list-trips"){
       // photo cards for trips, then their checklist items as normal rows
-      var openTrips = openTasks.filter(function(t){ return t.trip; });
-      var openRest  = openTasks.filter(function(t){ return !t.trip; });
+      var openTrips = openTasks.filter(function(t){ return isTrip(t); });
+      var openRest  = openTasks.filter(function(t){ return !isTrip(t); });
       openTrips.forEach(function(t){ open.appendChild(tripCard(t)); fetchCityImage(t); });
       openRest.forEach(function(t){ open.appendChild(taskRow(t)); });
       if(doneTasks.length===0){
         done.innerHTML = '<div class="empty">Nothing '+verb.toLowerCase()+' yet.</div>';
       }
       doneTasks.forEach(function(t){
-        done.appendChild(t.trip ? tripCard(t) : taskRow(t));
+        done.appendChild(isTrip(t) ? tripCard(t) : taskRow(t));
       });
       return;
     }
@@ -3679,7 +3703,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 52;
+  var BUILD_NUM = 53;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -3716,7 +3740,7 @@
     } else {
       add(null, "Last sync", "none yet this session");
     }
-    var trips = state.tasks.filter(function(t){ return t.trip; });
+    var trips = state.tasks.filter(function(t){ return isTrip(t); });
     var tripsNoImg = trips.filter(function(t){ return !t.image; });
     add(null, "Tasks on this phone", state.tasks.length + " total, " + trips.length + " trips");
     trips.forEach(function(t){
@@ -3844,8 +3868,8 @@
   document.getElementById("retryImagesBtn").addEventListener("click", function(){
     var retried = 0;
     state.tasks.forEach(function(t){
-      if(t.trip && !t.image){ t.imgTries = 0; t.imgTryAt = 0; fetchCityImage(t); retried++; }
-      if(!t.trip && t.link && !t.image){ t.imgTries = 0; t.imgTryAt = 0; }
+      if(isTrip(t) && !t.image){ t.imgTries = 0; t.imgTryAt = 0; fetchCityImage(t); retried++; }
+      if(!isTrip(t) && t.link && !t.image){ t.imgTries = 0; t.imgTryAt = 0; }
     });
     imgFetchCount = 0;
     save(); renderTasks();
@@ -4023,7 +4047,7 @@
     return (j && j.thumbnail && j.thumbnail.source) || (j && j.originalimage && j.originalimage.source) || null;
   }
   function fetchCityImage(t){
-    if(!t.trip || !imgRetryOk(t)) return;
+    if(!isTrip(t) || !imgRetryOk(t)) return;
     if(typeof fetch !== "function") return;
     imgMarkTry(t);
     var name = tripQuery(t.title);
@@ -4148,7 +4172,7 @@
   // DATES rather than the stored tripId so days posted before the trip was renamed, or
   // while a phone was on an older build, still gather into the right album.
   function tripAlbumDays(t){
-    if(!t || !t.trip || !t.tripStart || !t.tripEnd) return [];
+    if(!t || !isTrip(t) || !t.tripStart || !t.tripEnd) return [];
     return Object.keys(state.tripPhotos || {})
       .filter(function(ds){ return ds >= t.tripStart && ds <= t.tripEnd && (state.tripPhotos[ds]||{}).photo; })
       .sort();
@@ -4158,7 +4182,7 @@
   function tripAwaitingRecap(){
     var today = todayISO();
     var all = (state.tasks || []).filter(function(t){
-      return t.trip && t.tripStart && t.tripEnd && t.tripEnd < today &&
+      return isTrip(t) && t.tripStart && t.tripEnd && t.tripEnd < today &&
         !(state.tripRecapSeen || {})[t.id] && tripAlbumDays(t).length > 0;
     });
     if(!all.length) return null;
@@ -5162,7 +5186,7 @@
   // connected: no code to trade, no lock, and the streak carries straight through.
   function tripsCovering(dateISO){
     return (state.tasks || []).filter(function(t){
-      return t.trip && t.tripStart && t.tripEnd && dateISO >= t.tripStart && dateISO <= t.tripEnd;
+      return isTrip(t) && t.tripStart && t.tripEnd && dateISO >= t.tripStart && dateISO <= t.tripEnd;
     });
   }
   function dateInTrip(dateISO){ return tripsCovering(dateISO).length > 0; }
@@ -5180,7 +5204,7 @@
   // or already past. This says which, and it's what the trip card and diagnostics both read.
   function togetherStatus(){
     var today = todayISO();
-    var trips = (state.tasks || []).filter(function(t){ return t.trip; });
+    var trips = (state.tasks || []).filter(function(t){ return isTrip(t); });
     if(!trips.length) return {on: false, why: "no-trip", text: "No trips on the list"};
     var live = activeTrip();
     if(live) return {on: true, why: "active", trip: live,
@@ -5884,7 +5908,7 @@
     // Booking a trip is the exact moment you know its dates, and the dates are what switch
     // the app into together mode later. Asking now means nobody has to remember to come back
     // and do it — which is precisely what went wrong with Japan.
-    if(t.trip && (!t.tripStart || !t.tripEnd)){
+    if(isTrip(t) && (!t.tripStart || !t.tripEnd)){
       setTimeout(function(){ openTripDates(t, true); }, 900);
     }
   }
@@ -6797,6 +6821,9 @@
         var bits = [];
         if(hc.steps != null) bits.push("👣 " + Number(hc.steps).toLocaleString());
         if(hc.sleepHours != null) bits.push("😴 " + fmtSleep(hc.sleepHours));
+        // Say the date when it isn't today's. Dimming alone wasn't enough — week-old numbers
+        // sat under a photo labelled "today" and read as today's.
+        if(hc.date !== today) bits.push("· " + friendlyPhotoDate(hc.date));
         hrow.textContent = bits.join("  ");
         slot.appendChild(hrow);
       }
@@ -7196,6 +7223,9 @@
   }
   document.getElementById("forceUpdateBtn").addEventListener("click", function(){ checkForUpdate(true); });
   setTimeout(function(){ checkForUpdate(false); }, 1500);
+
+  // repair trips that pre-date the `trip` flag before anything renders off it
+  if(backfillTripFlags()) renderAll();
 
   // "you're home" recap, and tonight's photo reminder. Both are no-ops unless a trip is
   // actually involved, and both are deliberately after the first paint.
