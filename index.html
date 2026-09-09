@@ -1238,6 +1238,113 @@
     border-color:transparent;box-shadow:0 4px 14px rgba(240,193,75,.26);
   }
 
+  /* ---- collapsible cards ---- */
+  .card.collapsible{padding-top:0;padding-bottom:0;}
+  .card-collapse{
+    width:100%;background:none;border:none;padding:16px 0;margin:0;cursor:pointer;
+    display:flex;align-items:center;gap:10px;text-align:left;color:inherit;
+  }
+  .card-collapse h2{margin:0;flex:0 0 auto;}
+  .cc-count{
+    flex:1;min-width:0;font-size:12.5px;color:var(--faint);font-weight:600;
+  }
+  .cc-chev{
+    flex:0 0 auto;color:var(--faint);font-size:15px;
+    transition:transform .24s cubic-bezier(.4,0,.2,1);display:inline-block;
+  }
+  .card-collapse[aria-expanded="true"] .cc-chev{transform:rotate(180deg);}
+  .cc-body{
+    max-height:0;overflow:hidden;
+    transition:max-height .38s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;
+  }
+  .cc-body.open{max-height:9000px;opacity:1;padding-bottom:16px;}
+
+  /* ---- shared challenge ---- */
+  .chal-wrap{max-width:460px;margin:14px auto 0;padding:0 16px;}
+  .chal-card{
+    background:linear-gradient(165deg,#1f3038,#221b29);
+    border:1px solid rgba(79,209,181,.34);border-radius:18px;padding:15px 16px;
+    box-shadow:0 8px 26px rgba(38,30,45,.12);
+  }
+  .chal-top{display:flex;align-items:center;gap:11px;}
+  .chal-emoji{font-size:22px;flex:0 0 auto;line-height:1;}
+  .chal-head{flex:1;min-width:0;}
+  .chal-day{font-family:var(--display);font-size:19px;font-weight:600;color:#7ce0c6;
+    letter-spacing:-.015em;line-height:1.15;}
+  .chal-title{font-size:11.5px;color:#93a8a4;letter-spacing:.05em;text-transform:uppercase;
+    font-weight:700;margin-top:2px;}
+  .chal-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.09);margin:11px 0 0;overflow:hidden;}
+  .chal-bar i{display:block;height:100%;border-radius:99px;
+    background:linear-gradient(90deg,#4fd1b5,#7ce0c6);transition:width .45s cubic-bezier(.4,0,.2,1);}
+  .chal-msg{font-size:13.5px;line-height:1.55;color:#cfe3de;margin-top:11px;}
+  .chal-people{display:flex;gap:9px;margin-top:12px;}
+  .chal-p{
+    flex:1;display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:12px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
+    font-size:13px;color:#cfe3de;cursor:pointer;text-align:left;
+    transition:background .18s ease,border-color .18s ease,transform .12s ease;
+  }
+  .chal-p:active{transform:scale(.975);}
+  .chal-p.on{background:rgba(79,209,181,.17);border-color:rgba(79,209,181,.5);color:#dff6f0;}
+  .chal-p.mine{box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);}
+  .chal-p .tick{
+    width:20px;height:20px;flex:0 0 auto;border-radius:50%;border:1.5px solid rgba(255,255,255,.28);
+    display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;
+    transition:background .18s ease,border-color .18s ease,color .18s ease;
+  }
+  .chal-p.on .tick{background:#4fd1b5;border-color:#4fd1b5;color:#12312a;}
+  .chal-p .nm{font-weight:700;}
+  .chal-p .sub{font-size:11px;color:#8fa5a1;}
+  .chal-toggle{
+    width:100%;margin-top:11px;background:none;border:none;padding:7px 0 1px;
+    font-size:12.5px;color:#8fa5a1;cursor:pointer;text-align:center;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .chal-toggle:active{color:#cfe3de;}
+  .chal-toggle .cv{transition:transform .22s ease;display:inline-block;}
+  .chal-toggle.open .cv{transform:rotate(180deg);}
+
+  /* the downward timeline */
+  .chal-tl{margin-top:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:6px;
+    max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1);}
+  .chal-tl.open{max-height:2400px;}
+  .tl-row{display:flex;align-items:center;gap:10px;padding:5px 2px;position:relative;}
+  .tl-rail{position:absolute;left:14px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.08);}
+  .tl-row .dot{
+    width:11px;height:11px;border-radius:50%;flex:0 0 auto;margin-left:9px;z-index:1;
+    background:#2c3a3f;border:2px solid #2c3a3f;box-shadow:0 0 0 3px #223038;
+  }
+  .tl-row.both .dot{background:#4fd1b5;border-color:#4fd1b5;}
+  .tl-row.one  .dot{background:#2c3a3f;border-color:#4fd1b5;}
+  .tl-row.today .dot{box-shadow:0 0 0 3px #223038, 0 0 0 5px rgba(124,224,198,.45);}
+  .tl-row .dnum{font-size:11.5px;color:#7d918d;width:46px;flex:0 0 auto;font-variant-numeric:tabular-nums;}
+  .tl-row .ddate{font-size:12.5px;color:#a8bcb8;flex:1;min-width:0;}
+  .tl-row.today .ddate{color:#7ce0c6;font-weight:700;}
+  .tl-row.future .dnum,.tl-row.future .ddate{color:#5b6b68;}
+  .tl-row .marks{display:flex;gap:5px;flex:0 0 auto;}
+  .tl-row .mk{
+    width:19px;height:19px;border-radius:6px;font-size:10px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.05);color:#5b6b68;border:1px solid rgba(255,255,255,.07);
+  }
+  .tl-row .mk.yes{background:rgba(79,209,181,.2);color:#7ce0c6;border-color:rgba(79,209,181,.4);}
+  .tl-sum{font-size:12px;color:#8fa5a1;text-align:center;padding:9px 0 3px;line-height:1.6;}
+  .tl-sum b{color:#cfe3de;}
+
+  /* the strip that appears on the linked to-do task */
+  .task-chal{
+    display:flex;align-items:center;gap:8px;margin-top:8px;padding:7px 10px;border-radius:11px;
+    background:rgba(79,209,181,.12);border:1px solid rgba(79,209,181,.3);
+    font-size:12px;color:#2c6b60;font-weight:600;
+  }
+  .task-chal .mini{display:flex;gap:4px;margin-left:auto;}
+  .task-chal .mini span{
+    width:17px;height:17px;border-radius:5px;font-size:9.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.06);color:#8aa8a2;
+  }
+  .task-chal .mini span.yes{background:#4fd1b5;color:#12312a;}
+
   /* ---- check-in ---- */
   .checkin-card{background:linear-gradient(165deg,#1f3038,#221b29);border-color:rgba(79,209,181,.34);}
   .checkin-card.warning{background:linear-gradient(165deg,#3a3020,#231c29);border-color:rgba(240,193,75,.42);}
@@ -1447,12 +1554,15 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 59 · Rae edition</div>
+  <div class="sub">Build 61 · Rae edition</div>
 </header>
 
 <main>
   <!-- daily photo duo: each of you posts one photo a day; you see each other first thing -->
   <div class="duo-row" id="duoRow"></div>
+
+  <!-- shared challenge: sits above everything because it's a today thing, not an archive -->
+  <div class="chal-wrap" id="chalWrap" style="display:none;"></div>
 
   <div class="switcher" id="userSwitcher"></div>
 
@@ -1582,9 +1692,13 @@
       <div id="openTasks"></div>
     </div>
 
-    <div class="card">
-      <h2 id="doneTasksHeader">Completed</h2>
-      <div id="doneTasks"></div>
+    <div class="card collapsible" id="doneCard">
+      <button class="card-collapse" id="doneToggle" aria-expanded="false">
+        <h2 id="doneTasksHeader">Completed</h2>
+        <span class="cc-count" id="doneCount"></span>
+        <span class="cc-chev">▾</span>
+      </button>
+      <div class="cc-body" id="doneBody"><div id="doneTasks"></div></div>
     </div>
 
     <div class="card checkin-card" id="checkinCard">
@@ -1933,6 +2047,27 @@
   </div>
 </div>
 
+<!-- Start / edit a shared challenge -->
+<div class="modal-bg" id="chalModalBg">
+  <div class="modal wide">
+    <div class="emoji" style="text-align:center;">🌱</div>
+    <h3 id="chalModalTitle">Start a challenge</h3>
+    <label>What are you calling it?</label>
+    <input type="text" id="chalTitle" placeholder="30-day sober" maxlength="40">
+    <label>Icon</label>
+    <input type="text" id="chalEmoji" maxlength="4" value="🌱">
+    <label>Day one was...</label>
+    <input type="date" id="chalStart">
+    <label>How many days?</label>
+    <input type="number" id="chalDays" min="1" max="365" value="30">
+    <div class="row2" style="margin-top:16px;">
+      <button class="ghost" id="chalCancel">Cancel</button>
+      <button class="primary" id="chalSave">Start it</button>
+    </div>
+    <button class="later-link" id="chalEnd" style="display:none;">End this challenge</button>
+  </div>
+</div>
+
 <!-- Add-a-new-dream modal (required after each completion) -->
 <div class="modal-bg" id="newDreamModalBg">
   <div class="modal wide">
@@ -2230,7 +2365,12 @@
       tombstones: {},       // deleted item id -> deletion time (so deletes survive sync merges)
       savedAt: null,        // last local save time (drives sync merge direction)
       qa: {},               // "YYYY-MM-DD" -> {question, answers: {pid: {text, at}}} — sealed until both answer
-      quest: {active: null, completedCount: 0} // active: {title, desc, contributions:{personId:bool}, startedAt}
+      quest: {active: null, completedCount: 0}, // active: {title, desc, contributions:{personId:bool}, startedAt}
+      // A shared streak challenge — the 30-day sober run is the first one. Deliberately a
+      // single object rather than a list: two people can hold one of these in their heads at
+      // a time, and a screen full of half-finished challenges is worse than none.
+      // checkins are per person per day so either phone can mark its own without a conflict.
+      challenge: null       // {id,title,emoji,startDate,days,taskId,checkins:{pid:{date:true}},mtime,endedAt}
     };
   }
 
@@ -2983,6 +3123,7 @@
     var inList = state.tasks.filter(function(t){ return t.listId === listId; });
     var openTasks = sortTasksBy(inList.filter(function(t){return t.status==="open" && matchesAssigneeFilter(t, vf.assignee);}), vf.sort);
     var doneTasks = inList.filter(function(t){return t.status==="done" && matchesAssigneeFilter(t, vf.assignee);}).slice().reverse().slice(0,15);
+    syncCollapse("done", doneTasks.length, verb);
 
     if(openTasks.length===0){
       open.innerHTML = '<div class="empty">Nothing here yet. Tap + to add one 🎯</div>';
@@ -3408,6 +3549,43 @@
       m.dailyCompletions[pid] = dc;
     });
 
+    // The challenge: whichever side edited the meta last wins it, but the check-ins are
+    // UNIONED. Losing a day you'd already marked because your partner opened the app after
+    // you would be the single most demoralising bug this feature could have.
+    (function(){
+      var lc = L.challenge, rc = R.challenge;
+      if(!lc && !rc){ m.challenge = null; return; }
+      if(!lc || !rc){ m.challenge = JSON.parse(JSON.stringify(lc || rc)); return; }
+      if(lc.id !== rc.id){
+        m.challenge = JSON.parse(JSON.stringify((lc.mtime||0) >= (rc.mtime||0) ? lc : rc));
+        return;
+      }
+      var win = (lc.mtime||0) >= (rc.mtime||0) ? lc : rc;
+      var out = JSON.parse(JSON.stringify(win));
+      out.checkins = {};
+      [lc.checkins, rc.checkins].forEach(function(src){
+        for(var pid in (src||{})){
+          out.checkins[pid] = out.checkins[pid] || {};
+          for(var d in (src[pid]||{})){ if(src[pid][d]) out.checkins[pid][d] = true; }
+        }
+      });
+      // an un-tick has to be able to win too, or you could never correct a mis-tap
+      [lc, rc].forEach(function(src){
+        if(src === win || (src.unticks == null && win.unticks == null)) return;
+      });
+      var un = {};
+      [lc.unticks, rc.unticks].forEach(function(o){
+        for(var k in (o||{})){ un[k] = Math.max(un[k]||0, o[k]); }
+      });
+      out.unticks = un;
+      for(var k2 in un){
+        var parts = k2.split("|"), pid2 = parts[0], day2 = parts[1];
+        var markedAt = ((win.markedAt||{})[k2]) || 0;
+        if(un[k2] >= markedAt && out.checkins[pid2]) delete out.checkins[pid2][day2];
+      }
+      m.challenge = out;
+    })();
+
     // monthly tallies: max of each side
     m.monthly = {};
     [L.monthly, R.monthly].forEach(function(o){
@@ -3826,7 +4004,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 59;
+  var BUILD_NUM = 61;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -4665,6 +4843,39 @@
     row.appendChild(check); row.appendChild(info); row.appendChild(actions);
     wrap.appendChild(row);
 
+    // A task that IS the challenge carries the count on its own row, so the to-do list
+    // agrees with the top of the app instead of quietly contradicting it.
+    var chalT = activeChallenge();
+    if(chalT && chalT.taskId === t.id && t.status === "open"){
+      var meT = deviceOwner() || state.currentUser, partT = otherPerson(meT), tdy = todayISO();
+      var dn = challengeDayNumber(chalT, tdy);
+      var strip = document.createElement("div");
+      strip.className = "task-chal";
+      strip.innerHTML =
+        '<span>' + escapeHtml(chalT.emoji || "\uD83C\uDF31") + '</span>' +
+        '<span>Day ' + dn + ' of ' + chalT.days + '</span>' +
+        '<span class="mini">' +
+          '<span class="' + (challengeChecked(chalT, meT, tdy) ? "yes" : "") + '">' + escapeHtml(initialOf(meT)) + '</span>' +
+          '<span class="' + (challengeChecked(chalT, partT, tdy) ? "yes" : "") + '">' + escapeHtml(initialOf(partT)) + '</span>' +
+        '</span>';
+      strip.addEventListener("click", function(){
+        document.getElementById("chalWrap").scrollIntoView({behavior:"smooth", block:"center"});
+      });
+      wrap.appendChild(strip);
+    } else if(!chalT && t.status === "open" && t.listId === "list-todo" && openEditIds[t.id]){
+      // Only inside the edit panel. On every row it would be clutter on a page we're
+      // actively trying to make quieter.
+      var startBtn = document.createElement("button");
+      startBtn.className = "task-chal";
+      startBtn.style.cssText = "width:100%;cursor:pointer;background:rgba(79,209,181,.07);";
+      startBtn.innerHTML = '<span>\uD83C\uDF31</span><span>Make this a daily challenge</span>';
+      startBtn.addEventListener("click", function(){
+        document.getElementById("chalTitle").value = t.title;
+        openChallengeModal(t.id);
+      });
+      wrap.appendChild(startBtn);
+    }
+
     if(t.status==="open" && openEditIds[t.id]){
       wrap.appendChild(buildEditForm(t, list));
     }
@@ -5321,6 +5532,18 @@
 
     var cue = pickRotating(CONSIDERATE_CUES, "cue|" + me, todayISO())
       .replace(/\{p\}/g, personName(partner));
+    // While a challenge is running it takes the cue slot — one thing to hold in your head in
+    // the morning, not two. The considerate cue comes back the day the challenge finishes.
+    var chal = activeChallenge();
+    var chalDay = chal ? challengeDayNumber(chal, todayISO()) : 0;
+    if(chal && chalDay > 0){
+      document.getElementById("cueLabel").textContent =
+        (chal.emoji || "\uD83C\uDF31") + "  Day " + chalDay + " of " + chal.days;
+      document.getElementById("heroCue").textContent = challengeMessage(chalDay, me) || "";
+      renderHoroscopeBlock(state.signs[me], state.signs[me] ? horoscopeFor(state.signs[me]) : null);
+      return;
+    }
+
     var sign = state.signs[me];
     var label = document.getElementById("cueLabel");
     var scope = sign ? horoscopeFor(sign) : null;
@@ -5476,6 +5699,104 @@
     });
   }
   function dateInTrip(dateISO){ return tripsCovering(dateISO).length > 0; }
+
+  // ================= SHARED CHALLENGE (the 30-day sober run) =================
+  // Design notes, because the tone of this thing matters more than the code:
+  //  · A day you didn't mark is simply unmarked. There is no red X and no "you failed" —
+  //    a tracker that shames someone for a hard day makes the hard day worse.
+  //  · The headline number is days MARKED, not consecutive days, so one rough Tuesday
+  //    doesn't wipe three weeks of work off the screen.
+  //  · The current run is shown too, because it's motivating — but it's the smaller number.
+  function activeChallenge(){
+    var c = state.challenge;
+    if(!c || !c.startDate || c.endedAt) return null;
+    return c;
+  }
+  function challengeDayIndex(c, dateISO){
+    if(!c) return -1;
+    var d = daysBetweenISO(c.startDate, dateISO || todayISO());
+    return d;
+  }
+  function daysBetweenISO(a, b){
+    var pa = String(a).split("-"), pb = String(b).split("-");
+    var ta = Date.UTC(+pa[0], +pa[1]-1, +pa[2]), tb = Date.UTC(+pb[0], +pb[1]-1, +pb[2]);
+    return Math.round((tb - ta) / 86400000);
+  }
+  // 1-based day number, clamped so a challenge that's run over doesn't show "day 34 of 30"
+  function challengeDayNumber(c, dateISO){
+    var i = challengeDayIndex(c, dateISO);
+    if(i < 0) return 0;
+    return Math.min(i + 1, c.days);
+  }
+  function challengeChecked(c, pid, dateISO){
+    return !!(((c.checkins || {})[pid] || {})[dateISO]);
+  }
+  function challengeMarkedCount(c, pid){
+    var m = (c.checkins || {})[pid] || {}, n = 0;
+    for(var d in m){ if(m[d] && daysBetweenISO(c.startDate, d) < c.days) n++; }
+    return n;
+  }
+  // consecutive days ending today (or yesterday, so the count doesn't collapse before
+  // you've had a chance to tick today)
+  function challengeRun(c, pid){
+    var day = todayISO(), n = 0;
+    if(!challengeChecked(c, pid, day)) day = addDaysToISO(day, -1);
+    while(challengeChecked(c, pid, day) && daysBetweenISO(c.startDate, day) >= 0){
+      n++; day = addDaysToISO(day, -1);
+    }
+    return n;
+  }
+  function setChallengeCheck(pid, dateISO, on){
+    var c = activeChallenge();
+    if(!c) return;
+    c.checkins = c.checkins || {};
+    c.checkins[pid] = c.checkins[pid] || {};
+    c.markedAt = c.markedAt || {};
+    c.unticks = c.unticks || {};
+    var key = pid + "|" + dateISO;
+    if(on){ c.checkins[pid][dateISO] = true; c.markedAt[key] = Date.now(); }
+    else { delete c.checkins[pid][dateISO]; c.unticks[key] = Date.now(); }
+    c.mtime = Date.now();
+    save();
+    scheduleSync();
+  }
+
+  // Messages ramp with the day count. Written to sound like a person who's pleased for you,
+  // not an app congratulating itself. Nothing medical, nothing preachy, nothing that implies
+  // a missed day undoes anything.
+  var CHALLENGE_MESSAGES = [
+    {upTo: 1,  lines: ["Day one is the whole thing in miniature. You've already done the hard part — deciding.",
+                       "Started. That's the bit most people talk about for months and never do."]},
+    {upTo: 3,  lines: ["The first few days are mostly noticing how often it comes up. That noticing is the point.",
+                       "Early days are loud. It gets quieter.",
+                       "You're both doing the same hard thing on the same days. That's rarer than it sounds."]},
+    {upTo: 6,  lines: ["Nearly a week. The novelty's gone and you're still here, which is the actual test.",
+                       "This is the stretch where it stops being a decision and starts being a routine.",
+                       "Notice the mornings yet?"]},
+    {upTo: 7,  lines: ["One week. Tell each other one thing that's been easier than expected."]},
+    {upTo: 13, lines: ["Second week. The one nobody makes a fuss about, and the one that does the work.",
+                       "You're past the part you can do on willpower alone. This is the habit taking over.",
+                       "Halfway to halfway is still halfway to somewhere."]},
+    {upTo: 14, lines: ["Two weeks. Worth marking properly — do something together tonight that isn't about not drinking."]},
+    {upTo: 20, lines: ["Third week. At this point you're not resisting anything, you're just living differently.",
+                       "The counter matters less now than it did on day three. Good sign.",
+                       "You've built something. Keep going or don't — either way you know you can."]},
+    {upTo: 21, lines: ["Three weeks. Whatever you two said on day one, you meant it."]},
+    {upTo: 29, lines: ["Final stretch. Don't let the number become the point — how do you actually feel?",
+                       "Close enough now that finishing is a formality. Start thinking about what comes after.",
+                       "Nearly there, and more importantly, nearly out the other side."]},
+    {upTo: 999,lines: ["Thirty days. You set a thing and you did it, together. Go and celebrate however you want to."]}
+  ];
+  function challengeMessage(dayNum, salt){
+    for(var i = 0; i < CHALLENGE_MESSAGES.length; i++){
+      if(dayNum <= CHALLENGE_MESSAGES[i].upTo){
+        var pool = CHALLENGE_MESSAGES[i].lines;
+        return pickRotating(pool, "chal|" + (salt || "") + "|" + CHALLENGE_MESSAGES[i].upTo, todayISO());
+      }
+    }
+    return null;
+  }
+
   // the trip we're on right now, if any — the one ending soonest, so overlapping entries
   // resolve to the one you're actually finishing
   function activeTrip(){
@@ -5768,6 +6089,8 @@
 
     document.getElementById("openTasksHeader").textContent = "The list — " + openExp.length + " to go";
     document.getElementById("doneTasksHeader").textContent = "🏆 Trophy case";
+    // the album is the biggest thing on the page by a mile once it fills up — fold it
+    syncCollapse("done", doneExp.length, "memories");
 
     var turn = document.createElement("div");
     turn.className = "speech-turn";
@@ -7440,7 +7763,249 @@
   });
 
   // ---------- render all ----------
+  // ---- collapsible cards ----
+  // Default: open while there's little in it, closed once it's an archive. Once you've
+  // touched the chevron yourself, your choice sticks and the default stops applying.
+  function collapseKey(name){ return "us-collapse-" + name; }
+  function collapseState(name, autoClosed){
+    try{
+      var v = localStorage.getItem(collapseKey(name));
+      if(v === "1") return true;
+      if(v === "0") return false;
+    }catch(e){}
+    return !autoClosed;
+  }
+  function syncCollapse(name, count, label){
+    var btn = document.getElementById(name + "Toggle");
+    var body = document.getElementById(name + "Body");
+    var counter = document.getElementById(name + "Count");
+    if(!btn || !body) return;
+    var card = btn.parentNode;
+    if(count === 0){ card.style.display = "none"; return; }
+    card.style.display = "";
+    if(counter) counter.textContent = count + (count === 1 ? " item" : " items");
+    if(!btn.dataset.wired){
+      btn.dataset.wired = "1";
+      btn.addEventListener("click", function(){
+        var nowOpen = !body.classList.contains("open");
+        body.classList.toggle("open", nowOpen);
+        btn.setAttribute("aria-expanded", nowOpen ? "true" : "false");
+        // "1" means open — collapseState reads it the same way round
+        try{ localStorage.setItem(collapseKey(name), nowOpen ? "1" : "0"); }catch(e){}
+      });
+    }
+    if(!btn.dataset.initDone){
+      btn.dataset.initDone = "1";
+      var open = collapseState(name, count > 3);
+      body.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+  }
+
+  var CHAL_OPEN_KEY = "us-chal-timeline-open";
+  function chalTimelineOpen(){ try{ return localStorage.getItem(CHAL_OPEN_KEY) === "1"; }catch(e){ return false; } }
+  function setChalTimelineOpen(v){ try{ localStorage.setItem(CHAL_OPEN_KEY, v ? "1" : "0"); }catch(e){} }
+
+  function renderChallenge(){
+    var wrap = document.getElementById("chalWrap");
+    if(!wrap) return;
+    var c = activeChallenge();
+    if(!c){ wrap.style.display = "none"; wrap.innerHTML = ""; return; }
+    wrap.style.display = "";
+    var today = todayISO();
+    var dayNum = challengeDayNumber(c, today);
+    var idx = challengeDayIndex(c, today);
+    var me = deviceOwner() || state.currentUser;
+    var pct = Math.max(0, Math.min(100, Math.round((dayNum / c.days) * 100)));
+
+    wrap.innerHTML = "";
+    var card = document.createElement("div");
+    card.className = "chal-card";
+
+    var top = document.createElement("div");
+    top.className = "chal-top";
+    top.innerHTML =
+      '<div class="chal-emoji">' + escapeHtml(c.emoji || "\uD83C\uDF31") + '</div>' +
+      '<div class="chal-head">' +
+        '<div class="chal-day">' + (idx < 0
+            ? "Starts " + prettyShort(c.startDate)
+            : (dayNum >= c.days ? "Day " + c.days + " \u2014 done" : "Day " + dayNum + " of " + c.days)) + '</div>' +
+        '<div class="chal-title">' + escapeHtml(c.title || "Challenge") + '</div>' +
+      '</div>';
+    card.appendChild(top);
+
+    var bar = document.createElement("div");
+    bar.className = "chal-bar";
+    bar.innerHTML = '<i style="width:' + pct + '%"></i>';
+    card.appendChild(bar);
+
+    var msg = challengeMessage(dayNum, me);
+    if(msg && idx >= 0){
+      var m = document.createElement("div");
+      m.className = "chal-msg";
+      m.textContent = msg;
+      card.appendChild(m);
+    }
+
+    // today's two ticks. Only your own is tappable — marking your partner's day for them
+    // is exactly the kind of small dishonesty that makes a shared tracker worthless.
+    var people = document.createElement("div");
+    people.className = "chal-people";
+    state.people.forEach(function(pn){
+      var on = challengeChecked(c, pn.id, today);
+      var mine = (pn.id === me);
+      var btn = document.createElement("button");
+      btn.className = "chal-p" + (on ? " on" : "") + (mine ? " mine" : "");
+      btn.innerHTML =
+        '<span class="tick">\u2713</span>' +
+        '<span><span class="nm">' + escapeHtml(mine ? "You" : personName(pn.id)) + '</span>' +
+        '<br><span class="sub">' + (on ? "marked today" : (mine ? "tap to mark" : "not yet")) + '</span></span>';
+      if(mine && idx >= 0){
+        btn.addEventListener("click", function(){
+          setChallengeCheck(me, today, !challengeChecked(activeChallenge(), me, today));
+          renderChallenge(); renderTasks(); renderHero();
+        });
+      } else {
+        btn.disabled = true;
+        btn.style.cursor = "default";
+      }
+      people.appendChild(btn);
+    });
+    card.appendChild(people);
+
+    var toggle = document.createElement("button");
+    var open = chalTimelineOpen();
+    toggle.className = "chal-toggle" + (open ? " open" : "");
+    toggle.innerHTML = (open ? "Hide the " : "Show all ") + c.days + ' days <span class="cv">\u25BE</span>';
+    card.appendChild(toggle);
+
+    var tl = document.createElement("div");
+    tl.className = "chal-tl" + (open ? " open" : "");
+    tl.appendChild(buildTimeline(c, me));
+    card.appendChild(tl);
+
+    toggle.addEventListener("click", function(){
+      var nowOpen = !tl.classList.contains("open");
+      tl.classList.toggle("open", nowOpen);
+      toggle.classList.toggle("open", nowOpen);
+      toggle.innerHTML = (nowOpen ? "Hide the " : "Show all ") + c.days + ' days <span class="cv">\u25BE</span>';
+      setChalTimelineOpen(nowOpen);
+    });
+
+    wrap.appendChild(card);
+  }
+
+  // ---- challenge setup ----
+  var chalModalBg = document.getElementById("chalModalBg");
+  var chalPendingTaskId = null;
+  function openChallengeModal(taskId){
+    var c = activeChallenge();
+    chalPendingTaskId = taskId || (c && c.taskId) || null;
+    document.getElementById("chalModalTitle").textContent = c ? "Edit the challenge" : "Start a challenge";
+    document.getElementById("chalTitle").value = c ? (c.title || "") : "30-day sober";
+    document.getElementById("chalEmoji").value = c ? (c.emoji || "\uD83C\uDF31") : "\uD83C\uDF31";
+    document.getElementById("chalStart").value = c ? c.startDate : todayISO();
+    document.getElementById("chalDays").value = c ? c.days : 30;
+    document.getElementById("chalSave").textContent = c ? "Save" : "Start it";
+    document.getElementById("chalEnd").style.display = c ? "" : "none";
+    chalModalBg.classList.add("show");
+  }
+  document.getElementById("chalCancel").addEventListener("click", function(){
+    chalModalBg.classList.remove("show"); chalPendingTaskId = null;
+  });
+  document.getElementById("chalSave").addEventListener("click", function(){
+    var title = document.getElementById("chalTitle").value.trim();
+    var start = document.getElementById("chalStart").value;
+    var days = parseInt(document.getElementById("chalDays").value, 10);
+    if(!title){ toast("Give it a name"); return; }
+    if(!start){ toast("Pick the day it started"); return; }
+    if(!(days > 0)){ toast("How many days?"); return; }
+    if(daysBetweenISO(start, todayISO()) < 0){ toast("Day one can't be in the future"); return; }
+    var existing = activeChallenge();
+    state.challenge = {
+      id: existing ? existing.id : ("chal-" + uid()),
+      title: title,
+      emoji: document.getElementById("chalEmoji").value.trim() || "\uD83C\uDF31",
+      startDate: start,
+      days: days,
+      taskId: chalPendingTaskId || (existing && existing.taskId) || null,
+      checkins: existing ? (existing.checkins || {}) : {},
+      markedAt: existing ? (existing.markedAt || {}) : {},
+      unticks: existing ? (existing.unticks || {}) : {},
+      mtime: Date.now(),
+      endedAt: null
+    };
+    save(); scheduleSync();
+    chalModalBg.classList.remove("show");
+    chalPendingTaskId = null;
+    renderAll();
+    if(!existing) announce("started \"" + title + "\" \uD83C\uDF31 — " + days + " days, together");
+    toast(existing ? "Challenge updated" : "Challenge started \uD83C\uDF31");
+  });
+  document.getElementById("chalEnd").addEventListener("click", function(){
+    var c = activeChallenge();
+    if(!c) return;
+    c.endedAt = Date.now(); c.mtime = Date.now();
+    save(); scheduleSync();
+    chalModalBg.classList.remove("show");
+    renderAll();
+    toast("Challenge ended — the days you marked are still yours");
+  });
+
+  function prettyShort(iso){
+    var p = String(iso).split("-");
+    var d = new Date(Date.UTC(+p[0], +p[1]-1, +p[2]));
+    return d.toLocaleDateString(undefined, {month:"short", day:"numeric", timeZone:"UTC"});
+  }
+
+  // the downward calendar. One row per day of the run, today marked, future faint.
+  function buildTimeline(c, me){
+    var frag = document.createDocumentFragment();
+    var rail = document.createElement("div");
+    rail.className = "tl-rail";
+    var holder = document.createElement("div");
+    holder.style.position = "relative";
+    holder.appendChild(rail);
+    var today = todayISO();
+    var partner = otherPerson(me);
+    for(var i = 0; i < c.days; i++){
+      var day = addDaysToISO(c.startDate, i);
+      var mineOn = challengeChecked(c, me, day);
+      var theirsOn = challengeChecked(c, partner, day);
+      var isToday = (day === today);
+      var isFuture = daysBetweenISO(today, day) > 0;
+      var row = document.createElement("div");
+      row.className = "tl-row" +
+        (mineOn && theirsOn ? " both" : (mineOn || theirsOn ? " one" : "")) +
+        (isToday ? " today" : "") + (isFuture ? " future" : "");
+      row.innerHTML =
+        '<span class="dot"></span>' +
+        '<span class="dnum">Day ' + (i + 1) + '</span>' +
+        '<span class="ddate">' + prettyShort(day) + (isToday ? " \u00b7 today" : "") + '</span>' +
+        '<span class="marks">' +
+          '<span class="mk' + (mineOn ? " yes" : "") + '">' + escapeHtml(initialOf(me)) + '</span>' +
+          '<span class="mk' + (theirsOn ? " yes" : "") + '">' + escapeHtml(initialOf(partner)) + '</span>' +
+        '</span>';
+      holder.appendChild(row);
+    }
+    frag.appendChild(holder);
+    var sum = document.createElement("div");
+    sum.className = "tl-sum";
+    var mineN = challengeMarkedCount(c, me), theirsN = challengeMarkedCount(c, partner);
+    var run = challengeRun(c, me);
+    sum.innerHTML = "<b>" + mineN + "</b> days marked by you \u00b7 <b>" + theirsN + "</b> by " +
+      escapeHtml(personName(partner)) +
+      (run > 1 ? "<br>You're on a run of <b>" + run + "</b> in a row" : "");
+    frag.appendChild(sum);
+    return frag;
+  }
+  function initialOf(pid){
+    var n = personName(pid) || "?";
+    return n.trim().charAt(0).toUpperCase();
+  }
+
   function renderAll(){
+    renderChallenge();
     renderSetupCard();
     renderBackupNag();
     renderNudges();
@@ -8170,10 +8735,44 @@
   // ---- the loud "your data isn't going anywhere" banner ----
   // Fires when sync IS set up but isn't working: the dangerous state, because the app looks
   // completely normal while nothing crosses between phones.
+  // Has this phone got anything on it that the other one ought to be seeing? Used to decide
+  // whether "not connected" is a problem worth shouting about or just a fresh install.
+  function hasUnsharedWork(){
+    var n = 0;
+    (state.tasks || []).forEach(function(t){
+      if(t && (t.mtime || t.photo)) n++;
+    });
+    if(n) return true;
+    var dp = state.dailyPhotos || {};
+    for(var k in dp){ if(dp[k]) return true; }
+    var tp = state.tripPhotos || {};
+    for(var k2 in tp){ if(tp[k2]) return true; }
+    return false;
+  }
+
   function renderSyncFail(){
     var card = document.getElementById("syncFailCard");
     if(!card) return;
-    if(!autoSyncOn()){ card.style.display = "none"; return; }
+    // A phone with no gist link or no token isn't "failing" — it was never connected, so the
+    // old code hid this card entirely and the phone looked perfectly healthy while quietly
+    // sharing nothing. That is exactly how two people each end up thinking the other never
+    // uploaded their photos.
+    if(!autoSyncOn()){
+      if(!hasUnsharedWork()){ card.style.display = "none"; return; }
+      var missing = [];
+      if(!gistIdFromUrl()) missing.push("the shared link");
+      if(!ghToken()) missing.push("the access token");
+      document.getElementById("syncFailWho").textContent =
+        personName(otherPerson(deviceOwner() || state.currentUser)) || "your person";
+      document.getElementById("syncFailDetail").innerHTML =
+        "This phone <strong>isn't connected to your shared data at all</strong> \u2014 it's missing " +
+        "<strong>" + missing.join(" and ") + "</strong>. Everything on here, photos included, " +
+        "exists only on this phone, and nothing from the other phone has ever arrived.";
+      document.getElementById("syncFailRetry").textContent = "Fix this";
+      card.style.display = "";
+      return;
+    }
+    document.getElementById("syncFailRetry").textContent = "Try now";
     var hrs = hoursSinceSyncOk();
     var failing = (lastSync.ok === false);
     var stale = (hrs == null) || (hrs >= 24);
@@ -8195,7 +8794,15 @@
     document.getElementById("syncFailDetail").innerHTML = detail;
     card.style.display = "";
   }
-  document.getElementById("syncFailRetry").addEventListener("click", function(){ syncNow(true); });
+  document.getElementById("syncFailRetry").addEventListener("click", function(){
+    if(!autoSyncOn()){
+      var panel = document.getElementById("syncPanel");
+      if(panel){ panel.open = true; panel.scrollIntoView({behavior:"smooth", block:"start"}); }
+      toast("Paste the link and token here");
+      return;
+    }
+    syncNow(true);
+  });
   document.getElementById("syncFailHelp").addEventListener("click", function(){
     var e = String((lastSync && lastSync.err) || "");
     showModal("🔴", "Why nothing is syncing",
