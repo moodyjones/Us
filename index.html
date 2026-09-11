@@ -1554,7 +1554,7 @@
   </div>
   <div class="sub tagline">Together – To Get There.</div>
   <div class="sub tagline motto">Together. <span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <div class="sub">Build 61 · Rae edition</div>
+  <div class="sub">Build 62 · Rae edition</div>
 </header>
 
 <main>
@@ -4004,7 +4004,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 61;
+  var BUILD_NUM = 62;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -4862,16 +4862,18 @@
         document.getElementById("chalWrap").scrollIntoView({behavior:"smooth", block:"center"});
       });
       wrap.appendChild(strip);
-    } else if(!chalT && t.status === "open" && t.listId === "list-todo" && openEditIds[t.id]){
-      // Only inside the edit panel. On every row it would be clutter on a page we're
-      // actively trying to make quieter.
+    } else if(!chalT && t.status === "open" && !list.priceBased && !list.experienceBased &&
+              (openEditIds[t.id] || looksLikeAChallenge(t.title))){
+      // Two ways in. Inside the edit panel for anything, so it's always reachable — and
+      // straight on the row when the task itself is obviously a daily run, because burying
+      // it behind the pencil meant Moody uploaded the build and couldn't find the feature
+      // he'd asked for. Discoverability beats tidiness when the thing is invisible.
       var startBtn = document.createElement("button");
       startBtn.className = "task-chal";
       startBtn.style.cssText = "width:100%;cursor:pointer;background:rgba(79,209,181,.07);";
       startBtn.innerHTML = '<span>\uD83C\uDF31</span><span>Make this a daily challenge</span>';
       startBtn.addEventListener("click", function(){
-        document.getElementById("chalTitle").value = t.title;
-        openChallengeModal(t.id);
+        openChallengeModal(t.id, t.title);
       });
       wrap.appendChild(startBtn);
     }
@@ -7898,11 +7900,11 @@
   // ---- challenge setup ----
   var chalModalBg = document.getElementById("chalModalBg");
   var chalPendingTaskId = null;
-  function openChallengeModal(taskId){
+  function openChallengeModal(taskId, suggestedTitle){
     var c = activeChallenge();
     chalPendingTaskId = taskId || (c && c.taskId) || null;
     document.getElementById("chalModalTitle").textContent = c ? "Edit the challenge" : "Start a challenge";
-    document.getElementById("chalTitle").value = c ? (c.title || "") : "30-day sober";
+    document.getElementById("chalTitle").value = c ? (c.title || "") : (suggestedTitle || "30-day sober");
     document.getElementById("chalEmoji").value = c ? (c.emoji || "\uD83C\uDF31") : "\uD83C\uDF31";
     document.getElementById("chalStart").value = c ? c.startDate : todayISO();
     document.getElementById("chalDays").value = c ? c.days : 30;
@@ -7999,6 +8001,13 @@
     frag.appendChild(sum);
     return frag;
   }
+  // Titles that read like a daily streak rather than a one-off errand. Deliberately narrow:
+  // a false positive puts a button on a row that doesn't want one.
+  var CHALLENGE_HINTS = /\b(sober|sobriety|dry|alcohol|no[- ]?drink\w*|teetotal|quit|streak|challenge|every ?day|daily|\d{1,3}[- ]?day|gym|run(ning)?|steps|meditat\w+|journal\w*|stretch\w*|no sugar|no smoking|vape|screen ?time)\b/i;
+  function looksLikeAChallenge(title){
+    return CHALLENGE_HINTS.test(String(title || ""));
+  }
+
   function initialOf(pid){
     var n = personName(pid) || "?";
     return n.trim().charAt(0).toUpperCase();
