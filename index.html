@@ -3818,7 +3818,82 @@
       "these alerts and send you fake ones. Don\u2019t paste it anywhere public.";
     wrap.appendChild(warn);
 
+    // Safari's own page-watcher, pointed at something it can actually see change
+    var sep = document.createElement("hr");
+    sep.style.cssText = "border:none;border-top:1px solid var(--border);margin:14px 0 12px;";
+    wrap.appendChild(sep);
+    var sfHead = document.createElement("p");
+    sfHead.style.cssText = "font-size:12px;color:var(--muted);line-height:1.55;";
+    sfHead.innerHTML = "<strong>Safari \u201cNotify Me\u201d (optional, iOS 27+).</strong> " +
+      "A second, slower net. Safari can\u2019t watch WeDO itself \u2014 the page never changes, " +
+      "everything is drawn after it loads \u2014 but it can watch this summary, which updates " +
+      "whenever either of you does something. Checks about once an hour.";
+    wrap.appendChild(sfHead);
+    var sfBtn = document.createElement("button");
+    sfBtn.className = "ghost";
+    sfBtn.style.cssText = "width:100%;margin-top:8px;";
+    sfBtn.textContent = "Copy the page for Safari to watch";
+    sfBtn.addEventListener("click", function(){
+      var gid = gistIdFromUrl();
+      if(!gid){ toast("Save your Gist link first"); return; }
+      var url = "https://gist.githubusercontent.com/raw/" + gid + "/" + STATUS_FILE;
+      // iOS only allows clipboard writes inside a user gesture, so write synchronously here
+      var ok = false;
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(url); ok = true;
+        }
+      }catch(e){}
+      toast(ok ? "Link copied" : "Couldn\u2019t reach the clipboard");
+      showModal("\uD83D\uDC41\uFE0F", "Let Safari watch it",
+        url + "\n\nTo set it up:\n\n" +
+        "1. Open it in Safari.\n" +
+        "2. Tap the \u24D8 or \u201cAa\u201d button in the address bar.\n" +
+        "3. Choose \u201cNotify Me When Page Updates\u201d.\n\n" +
+        "Safari will then nudge you when something new lands \u2014 roughly hourly, and not " +
+        "at all while your phone is idle or in Low Power Mode. It's a backstop, not a " +
+        "replacement: only the ntfy reminders above can arrive at a time you choose.");
+    });
+    wrap.appendChild(sfBtn);
+
     box.appendChild(wrap);
+  }
+
+  // ── The line Safari watches ──────────────────────────────────
+  // iOS 27's "Notify Me" can watch any public page and tell you when it changes, but it
+  // cannot see anything JavaScript draws — and WeDO's index.html is a static file whose
+  // bytes never move. So it would watch our app forever and never fire.
+  //
+  // The gist's raw file DOES change on every sync, and it's plain text with no login. So we
+  // write a small human-readable file alongside the state and let Safari watch that instead.
+  //
+  // Critically: this file must contain ONLY real activity. Put a "last synced" timestamp in
+  // it and it changes every hour whether or not anything happened, and Safari nags forever.
+  var STATUS_FILE = "wedo-status.txt";
+  function buildStatusFile(st){
+    var log = (st.activityLog || []).slice().sort(function(a, b){ return b.at - a.at; }).slice(0, 10);
+    var detail = !(st.ntfy && st.ntfy.detail === false);
+    var lines = ["WeDO — what's happened lately", ""];
+    if(!log.length){
+      lines.push("Nothing yet.");
+    } else if(!detail){
+      // same promise as the notifications: if they've asked for no names, no names anywhere
+      lines.push(log.length + " thing" + (log.length === 1 ? "" : "s") + " have happened recently.");
+      lines.push("Open WeDO to see them.");
+    } else {
+      log.forEach(function(a){
+        var d = new Date(a.at);
+        var when = d.toLocaleDateString(undefined, {month: "short", day: "numeric"}) + ", " +
+                   d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
+        lines.push(when + " — " + (personName(a.by) || "Someone") + " " + a.text);
+      });
+    }
+    var c = st.challenge;
+    if(c && c.startDate && !c.endedAt){
+      var dn = challengeDayNumber(c, todayISO());
+      if(dn > 0) lines.push("", (c.title || "Challenge") + " — day " + dn + " of " + c.days);
+    }
+    return lines.join("\n") + "\n";
   }
 
   function announce(text){
@@ -4442,13 +4517,18 @@
         // now is how you delete a picture you simply couldn't read a moment ago.
         var dead = photosFullyResolved ? orphanPhotoFiles(outState, gistFiles) : [];
 
+        // the plain-text summary Safari's "Notify Me" can actually watch
+        var statusText = buildStatusFile(merged);
+        var statusWire = gistFiles[STATUS_FILE] ? (gistFiles[STATUS_FILE].content || "") : "";
+
         // did anything actually change? compare against the remote as it was ON THE WIRE
         var remoteWire = gistFiles["wedo-state.json"] ? (gistFiles["wedo-state.json"].content || "") : "";
-        var nothingToDo = remote && outJson === remoteWire &&
+        var nothingToDo = remote && outJson === remoteWire && statusText === statusWire &&
           !Object.keys(ext.files).length && !dead.length;
         if(nothingToDo){ pendingPhotoUploads = 0; return; }
 
         var patch = {"wedo-state.json": {content: outJson}};
+        if(statusText !== statusWire) patch[STATUS_FILE] = {content: statusText};
         for(var name in ext.files){ patch[name] = {content: ext.files[name]}; }
         dead.forEach(function(n){ patch[n] = null; });
 
@@ -4530,7 +4610,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 69;
+  var BUILD_NUM = 70;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
