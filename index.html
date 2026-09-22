@@ -116,9 +116,15 @@
   .scope-src{font-size:10.5px;color:var(--faint);margin-top:6px;}
 
   /* ---- nudge card: unspent spins + weekly reward suggestion ---- */
+  /* These two cards tint themselves with their accent colour. That tint was written as a
+     near-white cream back when the app had a light background, and the dark repaint never
+     touched it — so the top of the card stayed almost white while the text on it went pale,
+     leaving the two most important cards in the app unreadable at the top and fine at the
+     bottom. The tint is now a low-alpha wash of the same accent OVER the dark card, which
+     reads the same way round in either theme. */
   .nudge-card{
-    border:1px solid rgba(148,117,207,.4)!important;
-    background:linear-gradient(168deg,#faf6ff,var(--card))!important;
+    border:1px solid rgba(167,139,250,.42)!important;
+    background:linear-gradient(168deg,rgba(167,139,250,.13),var(--card) 62%)!important;
   }
   .nudge-blk{padding:2px 0;}
   .nudge-blk.divided{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
@@ -128,7 +134,10 @@
   .nudge-blk input,.nudge-blk select{width:100%;}
 
   /* ---- "finish setting up" card: shows only the pieces still missing ---- */
-  .setup-card{border:1px solid rgba(201,138,31,.42)!important;background:linear-gradient(170deg,#fffaf0,var(--card))!important;}
+  .setup-card{
+    border:1px solid rgba(232,181,75,.42)!important;
+    background:linear-gradient(170deg,rgba(232,181,75,.12),var(--card) 62%)!important;
+  }
   .setup-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
   .setup-title{font-size:15.5px;font-weight:700;letter-spacing:-.01em;}
   .setup-count{font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap;}
@@ -4663,7 +4672,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 73;
+  var BUILD_NUM = 74;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -4941,7 +4950,7 @@
     if(!raw) return {error:"the file is there but empty"};
     // ; or newline or & all separate pairs, so a stray line break can't break the file
     var kv = {}, seen = 0;
-    raw.split(/[;&\n\r]+/).forEach(function(p){
+    raw.split(/[;&|\n\r]+/).forEach(function(p){
       var i = p.indexOf("=");
       if(i < 0) return;
       var k = p.slice(0, i).trim().toLowerCase().replace(/[^a-z]/g, "");
@@ -5126,7 +5135,11 @@
   function ntfyHealthUrl(pid){
     var t = ntfyHealthTopic(pid);
     if(!t) return "";
-    return NTFY_HEALTH_POLL + t + "/publish?message=steps=;cal=;sleep=";
+    // Separator is a pipe, not a semicolon. A semicolon is a legacy query-parameter
+    // delimiter and Go — which ntfy is written in — rejects a whole query string that
+    // contains one, so ?message=steps=…;cal=… was discarded entirely and ntfy stored its
+    // default body ("triggered") instead of the numbers. A pipe carries no such meaning.
+    return NTFY_HEALTH_POLL + t + "/publish?message=steps=|cal=|sleep=";
   }
 
   function readHealthFromNtfy(pid, done){
@@ -5335,7 +5348,7 @@
                         (d.error ? " — " + escapeHtml(d.error) : "") + ".");
       if(d.raw) out += code(d.raw);
       out += line("🔧", "The address should end with " +
-                        "<b>?message=steps=…;cal=…;sleep=…</b>, with the three values inserted " +
+                        "<b>?message=steps=…|cal=…|sleep=…</b>, with the three values inserted " +
                         "from the variable bar rather than typed.");
     } else if(d.reason === "offline"){
       out += line("·", "Couldn't reach the internet just now — this says nothing about the setup. " +
