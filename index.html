@@ -972,6 +972,44 @@
   .qa-past:first-child{border-top:none;padding-top:0;margin-top:0;}
   .qa-past-q{font-size:12.5px;color:var(--muted);font-weight:600;}
 
+  /* ---- build / update line ---- */
+  .ver-line{
+    display:block;margin:12px auto 0;padding:4px 10px;
+    background:none;border:1px solid transparent;border-radius:var(--r-control);
+    font-family:inherit;font-size:10.5px;font-weight:600;letter-spacing:.11em;
+    text-transform:uppercase;color:var(--faint);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  /* an update waiting is the only state worth looking at, so it is the only one that draws
+     the eye — the rest of the time this is the quietest thing on the page */
+  .ver-line.update{
+    color:var(--gold);border-color:rgba(232,181,75,.35);background:rgba(232,181,75,.08);
+  }
+  .ver-line.busy{opacity:.55;}
+
+  /* ---- health pipeline diagnostics ---- */
+  .health-diag{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;}
+  .health-diag summary{
+    cursor:pointer;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--faint);list-style:none;
+  }
+  .health-diag summary::-webkit-details-marker{display:none;}
+  .health-diag[open] summary{color:var(--muted);margin-bottom:10px;}
+  .hd-row{margin-bottom:12px;}
+  .hd-who{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .hd-line{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:3px;}
+  .hd-line b{color:var(--text);font-weight:600;}
+  /* the bytes actually received. Monospace and wrapped mid-word on purpose: this is the one
+     place where reading the exact characters back is the whole point, and a health file is
+     one long unbroken line that would otherwise run off a phone screen. */
+  .hd-code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.45;
+    background:var(--s1);border:1px solid var(--line);border-radius:var(--r-object);
+    padding:8px 10px;margin:5px 0 6px;color:var(--muted);
+    word-break:break-all;white-space:pre-wrap;
+  }
+  .hd-actions{margin-top:4px;}
+
   /* ---- health card ---- */
   .health-grid{
     display:grid;grid-template-columns:1fr 44px 1fr;gap:9px 6px;align-items:center;
@@ -1733,7 +1771,12 @@
   <!-- "Together" already opens the line above; saying it twice in two lines was the actual
        redundancy, not the second line itself -->
   <div class="sub tagline motto"><span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
-  <!-- the build number is developer chrome; it lives in the diagnostics panel now -->
+  <!-- I cut this in the Build 66 design pass as "developer chrome". It isn't. This project
+       has repeatedly had one phone running a build behind the other with no way to see it,
+       and the number is how you tell whether the thing you just uploaded is the thing you
+       are looking at. It earns its place — so it comes back, doing more than it used to:
+       it also says whether a newer build is waiting, and tapping it goes and gets it. -->
+  <button type="button" class="ver-line" id="verLine" aria-live="polite"></button>
 </header>
 
 <main>
@@ -2086,7 +2129,9 @@
     <!-- The Health shortcut needs BOTH the gist id and the token to hand a wiped Safari copy
          everything it needs. Copying them one at a time is where this went wrong, so this
          hands over the whole ending in a single paste. -->
-    <button class="ghost" id="shortcutTailBtn" style="width:100%;margin-top:6px;">Copy shortcut ending (gist + token)</button>
+    <button class="ghost" id="healthLinkBtn" style="width:100%;margin-top:6px;">Copy Health shortcut link for this phone</button>
+    <button class="ghost" id="shortcutSetupBtn" style="width:100%;margin-top:6px;opacity:.7;">Gist details (old Shortcut method)</button>
+    <button class="ghost" id="shortcutTailBtn" style="width:100%;margin-top:6px;opacity:.7;">Old Safari shortcut ending (gist + token)</button>
     <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Push notifications.</strong> Get notified when your person adds or finishes something — the setup guide (WeDO-Notifications-Setup.md) walks through creating a free OneSignal account. Paste the App ID (safe to share) and REST API key (stays on this phone, same trust level as your GitHub token above) below, then tap Enable on <em>each</em> phone.</p>
@@ -2546,6 +2591,7 @@
       photoReminderDate: null, // last day an evening photo reminder was scheduled
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
+      ntfyHealth: null,     // {p1,p2} — one ntfy topic per person for the Health shortcut
       activityLog: [],      // [{id, by, text, at}] — feeds "while you were away" + push notifications
       onesignalAppId: null, // OneSignal App ID (not secret, shared via sync — see WeDO-Notifications-Setup.md)
       // ntfy: a notification channel per person. The topic name IS the password — ntfy's own
@@ -4154,6 +4200,13 @@
     var lIns = L.installedAt, rIns = R.installedAt;
     m.installedAt = (lIns && rIns) ? (lIns < rIns ? lIns : rIns) : (lIns || rIns || todayISO());
     m.healthGistUrl = base.healthGistUrl || other.healthGistUrl;
+    // the health topics are the only way a reading reaches the other phone, so a side that
+    // has one always wins over a side that doesn't — same rule as the notification topics
+    (function(){
+      var lh = L.ntfyHealth || {}, rh = R.ntfyHealth || {};
+      if(!lh.p1 && !lh.p2 && !rh.p1 && !rh.p2){ m.ntfyHealth = null; return; }
+      m.ntfyHealth = {p1: lh.p1 || rh.p1 || null, p2: lh.p2 || rh.p2 || null};
+    })();
     m.onesignalAppId = base.onesignalAppId || other.onesignalAppId;
     // the ntfy topics are the whole point of the feature reaching the other phone at all —
     // whichever side has them wins, and once both have them the newer settings win
@@ -4610,7 +4663,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 70;
+  var BUILD_NUM = 73;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -4827,7 +4880,37 @@
     toast(retried ? ("Retrying photos for " + retried + " trip(s)…") : "No trips are missing photos");
   });
 
-  // ---------- Apple Health (via shared Gist that iOS Shortcuts update) ----------
+  // ---------- Apple Health ----------
+  // How the numbers get here, and why this shape.
+  //
+  // HealthKit is native-only: no web page can read it, so there will always be an iOS
+  // Shortcut in the middle. The only real question is what the Shortcut does with the
+  // numbers once it has them. For a long time it OPENED this page in Safari with the
+  // figures on the query string, and that failed permanently — for reasons that were never
+  // the Shortcut's fault:
+  //
+  //   * "Open URLs" lands in SAFARI, and iOS gives the Safari copy of this origin its own
+  //     localStorage, separate from the Home Screen app. The numbers arrived in a copy
+  //     nobody ever looks at.
+  //   * iOS clears script-written storage for sites unvisited for ~7 days, so that copy
+  //     kept losing its gist link and token and quietly stopped forwarding anything.
+  //   * It can never run unattended. An Automation that opens a URL has to bring Safari to
+  //     the front, so somebody has to be holding the phone and has to not swipe away before
+  //     the sync finishes.
+  //
+  // So the Shortcut now writes STRAIGHT to the shared gist over HTTPS and opens nothing.
+  // That makes it a silent daily Automation, and it makes the gist the single place health
+  // data lives. This app only ever reads.
+  //
+  // The Shortcut writes health-p1.txt / health-p2.txt: one line of key=value pairs.
+  //
+  //     date=2026-09-22;steps=5614;cal=433;sleepmin=412
+  //
+  // Deliberately not JSON. That line has to be assembled by hand in a text action on a
+  // phone keyboard, and every quote and brace is a chance to get it wrong — this format has
+  // neither. Sleep carries its unit IN THE KEY NAME (sleepmin / sleeph / sleepsec) because
+  // the old path had to infer the unit from magnitude, and inferring is exactly what put
+  // "223h sleep" on the card.
   function parseGistBase(url){
     if(!url) return null;
     var m = String(url).match(/gist\.github(?:usercontent)?\.com\/([^\/\s]+)\/([a-f0-9]+)/i);
@@ -4835,30 +4918,305 @@
     return "https://gist.githubusercontent.com/" + m[1] + "/" + m[2] + "/raw/";
   }
 
-  function fetchHealth(){
-    var base = parseGistBase(state.healthGistUrl);
-    if(!base || typeof fetch !== "function") return;
-    ["p1","p2"].forEach(function(pid){
-      fetch(base + "health-" + pid + ".json?t=" + Date.now())
-        .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
-        .then(function(j){
-          if(j && typeof j === "object" && (j.steps != null || j.sleepHours != null || j.calories != null)){
-            if(!state.healthCache) state.healthCache = {};
-            // the gist health files are the OLD delivery path (a Shortcut PATCHing them
-            // directly). The URL hand-off writes straight into state, so only let the gist
-            // win if it's actually for a later day — otherwise a stale health-p1.json
-            // would keep stomping on today's fresh numbers on every refresh.
-            var cur = state.healthCache[pid];
-            if(cur && String(cur.date||"") > String(j.date||"")) return;
-            state.healthCache[pid] = j;
-            save();
-            renderHealth();
-          }
-        })
-        .catch(function(){ /* offline or not set up yet — card shows what it has */ });
-    });
+  // Everything the last fetch attempt learned, per person. Never saved and never synced:
+  // it describes THIS phone's connection, and the question it exists to answer is "why is
+  // the number missing on MY screen". Pushing raw response text through the gist would also
+  // be pointless traffic.
+  var healthDiag = {p1:null, p2:null};
+
+  // Tolerant on purpose. Shortcuts renders numbers in the phone's locale, so "5,614" and
+  // "5 614" both turn up; Health values arrive with units attached ("433.03 kcal"); and
+  // anyone editing the text action will eventually put spaces around the = sign.
+  function healthNum(v){
+    if(v == null) return null;
+    var n = parseFloat(String(v).replace(/[\s,](?=\d)/g, "").replace(/[^0-9.\-]/g, ""));
+    return isFinite(n) ? n : null;
   }
 
+  // Returns a reading, or an object carrying .error that says what was wrong with the text.
+  // Never null-and-silent: a file that exists but doesn't parse is the likeliest failure
+  // once this is set up, so it has to be able to explain itself.
+  function parseHealthText(txt){
+    var raw = String(txt == null ? "" : txt).trim();
+    if(!raw) return {error:"the file is there but empty"};
+    // ; or newline or & all separate pairs, so a stray line break can't break the file
+    var kv = {}, seen = 0;
+    raw.split(/[;&\n\r]+/).forEach(function(p){
+      var i = p.indexOf("=");
+      if(i < 0) return;
+      var k = p.slice(0, i).trim().toLowerCase().replace(/[^a-z]/g, "");
+      if(!k) return;
+      kv[k] = p.slice(i + 1).trim();
+      seen++;
+    });
+    if(!seen) return {error:"there are no key=value pairs in it"};
+
+    var out = {};
+    var dm = String(kv.date || kv.day || kv.d || "").match(/\d{4}-\d{2}-\d{2}/);
+    out.date = dm ? dm[0] : todayISO();
+    out.steps = healthNum(kv.steps != null ? kv.steps : kv.step);
+    out.calories = healthNum(kv.cal != null ? kv.cal : (kv.calories != null ? kv.calories : kv.kcal));
+
+    // sleep, by descending confidence in the unit
+    var sh = null, sv;
+    if(kv.sleepsec != null || kv.sleepseconds != null){
+      sv = healthNum(kv.sleepsec != null ? kv.sleepsec : kv.sleepseconds);
+      if(sv != null) sh = sv / 3600;
+    }
+    if(sh == null && (kv.sleepmin != null || kv.sleepmins != null || kv.sleepminutes != null)){
+      sv = healthNum(kv.sleepmin != null ? kv.sleepmin : (kv.sleepmins != null ? kv.sleepmins : kv.sleepminutes));
+      if(sv != null) sh = sv / 60;
+    }
+    if(sh == null && (kv.sleeph != null || kv.sleephours != null)){
+      sv = healthNum(kv.sleeph != null ? kv.sleeph : kv.sleephours);
+      if(sv != null) sh = sv;
+    }
+    if(sh == null && kv.sleep != null){
+      // a bare "sleep=" carries no unit, so this is the one place a guess is unavoidable.
+      // It stays confined to the un-named key instead of being applied to everything.
+      sv = healthNum(kv.sleep);
+      if(sv != null) sh = sv > 20 ? (sv > 1200 ? sv / 3600 : sv / 60) : sv;
+    }
+    out.sleepHours = sh != null ? Math.round(sh * 100) / 100 : null;
+
+    if(out.steps == null && out.calories == null && out.sleepHours == null){
+      // overwhelmingly this is [Steps] arriving literally — the variables were typed into the
+      // text action rather than inserted from the variable bar above the keyboard
+      return {error:"none of the values came through as numbers"};
+    }
+    out.updatedAt = kv.at || new Date().toISOString();
+    return out;
+  }
+
+  // The older delivery format, kept so a gist written months ago still reads.
+  function parseHealthJson(txt){
+    var j;
+    try{ j = JSON.parse(txt); }catch(e){ return {error:"not valid JSON"}; }
+    if(!j || typeof j !== "object") return {error:"not a JSON object"};
+    if(j.steps == null && j.sleepHours == null && j.calories == null){
+      return {error:"JSON with no steps, calories or sleep in it"};
+    }
+    return {
+      date: /^\d{4}-\d{2}-\d{2}$/.test(String(j.date || "")) ? j.date : todayISO(),
+      steps: healthNum(j.steps),
+      calories: healthNum(j.calories),
+      sleepHours: j.sleepHours != null ? Math.round(healthNum(j.sleepHours) * 100) / 100 : null,
+      updatedAt: j.updatedAt || new Date().toISOString()
+    };
+  }
+
+  // ONE set of rules for accepting a reading, whichever path it arrived on. The gist reader
+  // and the URL reader each used to carry their own subtly different idea of when a new
+  // figure should win, which is how a stale file could stomp on good numbers down one path
+  // and not the other.
+  function healthShape(o){
+    return o ? [o.date, o.steps, o.calories, o.sleepHours].join("|") : "";
+  }
+  function acceptHealthReading(pid, r, src){
+    if(!r || r.error) return false;
+    if(!state.healthCache) state.healthCache = {};
+    var prev = state.healthCache[pid] || {};
+    if(prev.date && String(r.date) < String(prev.date)) return false;   // an older day never wins
+    var sameDay = prev.date === r.date;
+    var steps = r.steps != null ? Math.round(r.steps) : null;
+    var cal = r.calories != null ? Math.round(r.calories) : null;
+    // steps and calories only ever climb during a day, so a smaller figure for a day we
+    // already hold is a stale reading, not a correction
+    if(sameDay && steps != null && prev.steps != null && steps < prev.steps) steps = prev.steps;
+    if(sameDay && cal != null && prev.calories != null && cal < prev.calories) cal = prev.calories;
+    var next = {
+      date: r.date,
+      steps: steps != null ? steps : (sameDay ? prev.steps : null),
+      calories: cal != null ? cal : (sameDay ? prev.calories : null),
+      sleepHours: r.sleepHours != null ? r.sleepHours : (sameDay ? prev.sleepHours : null),
+      updatedAt: r.updatedAt || new Date().toISOString(),
+      src: src || "gist"
+    };
+    if(healthShape(next) === healthShape(prev)) return false;   // nothing actually moved
+    state.healthCache[pid] = next;
+    return true;
+  }
+
+  // Reads one person's file. Tries the plain-text file the Shortcut writes, then the older
+  // JSON one, and records what happened at every step — including the first 200 bytes it
+  // actually received. When this breaks, the answer belongs on screen, not in a chat.
+  var HEALTH_SOURCES = [
+    {name: function(pid){ return "health-" + pid + ".txt"; },  parse: parseHealthText, src:"shortcut"},
+    {name: function(pid){ return "health-" + pid + ".json"; }, parse: parseHealthJson, src:"legacy"}
+  ];
+
+  function readOneHealthFile(base, pid, done){
+    var tried = [], i = 0, changed = false;
+    function finish(ok, reason){
+      noteHealthDiag(pid, {src:"gist", reason: reason, tried: tried, applied: changed});
+      done(changed);
+    }
+    function next(){
+      if(i >= HEALTH_SOURCES.length){
+        // every source missing means the Shortcut has never successfully written. Every
+        // source present-but-unparseable is a different problem with a different fix, so
+        // don't collapse the two.
+        var anyFound = tried.some(function(t){ return t.status === 200; });
+        finish(false, anyFound ? "unreadable" : "no-file");
+        return;
+      }
+      var s = HEALTH_SOURCES[i++], name = s.name(pid);
+      fetch(base + name + "?t=" + Date.now(), {cache:"no-store"})
+        .then(function(r){
+          if(!r.ok){ tried.push({name:name, status:r.status}); next(); return; }
+          return r.text().then(function(t){
+            var parsed = s.parse(t);
+            var rec = {name:name, status:200, bytes:t.length, raw:t.slice(0, 200)};
+            if(parsed && parsed.error){ rec.error = parsed.error; tried.push(rec); next(); return; }
+            tried.push(rec);
+            changed = acceptHealthReading(pid, parsed, s.src);
+            noteHealthDiag(pid, {src:"gist", reason:"ok", file:name, reading:parsed, tried:tried, applied:changed});
+            done(changed);
+          });
+        })
+        .catch(function(e){
+          tried.push({name:name, error:"couldn't reach GitHub — " + ((e && e.message) || "offline")});
+          next();
+        });
+    }
+    next();
+  }
+
+
+  // ---------- health over ntfy: the delivery path that needs no body at all ----------
+  // Why this exists. Writing to the gist means PATCHing GitHub with {files:{name:{content}}},
+  // and building that in Shortcuts means a three-level nested dictionary in the Request Body
+  // editor. On at least some iOS builds the innermost value simply will not accept a
+  // variable — you tap the field and nothing happens — so the shortcut cannot be completed
+  // at all. That is not something a guide can fix.
+  //
+  // So the numbers now ride in on a URL instead: a plain GET, no request body, no headers,
+  // no JSON, nothing to escape. Shortcuts has always been able to build a URL out of
+  // variables — that is exactly what the old Safari hand-off did, and the one part of it
+  // that never failed. The difference is that this URL is fetched in the background and
+  // never opens anything, so it still runs as a silent daily automation.
+  //
+  //   https://ntfy.sh/<topic>/publish?message=steps=12246;cal=1245;sleep=412
+  //
+  // The topic is the address AND the password — ntfy's own docs say so — which is why it is
+  // generated here rather than typed, and lives in the synced state behind the secret gist
+  // rather than anywhere in this page's source. One topic per person, so neither phone can
+  // be confused about whose numbers arrived.
+  //
+  // ntfy only holds a message for a few hours, so this is a courier, not a filing cabinet:
+  // the moment a reading is read it goes into state and the normal gist sync makes it
+  // permanent. A day nobody opens the app is a day that reading is lost, which is the price
+  // of a shortcut that can actually be built.
+  var NTFY_HEALTH_POLL = "https://ntfy.sh/";
+
+  function ntfyHealthTopic(pid){
+    var h = state.ntfyHealth;
+    return (h && h[pid]) || "";
+  }
+  function ntfyHealthEnsure(){
+    var h = state.ntfyHealth || {};
+    if(!h.p1) h.p1 = ntfyNewTopic("h1");
+    if(!h.p2) h.p2 = ntfyNewTopic("h2");
+    state.ntfyHealth = h;
+    save(); scheduleSync();
+    return h;
+  }
+  // The whole shortcut, as one address. Everything after message= is the same key=value line
+  // the gist path used, so the parser is shared and nothing new had to be invented.
+  function ntfyHealthUrl(pid){
+    var t = ntfyHealthTopic(pid);
+    if(!t) return "";
+    return NTFY_HEALTH_POLL + t + "/publish?message=steps=;cal=;sleep=";
+  }
+
+  function readHealthFromNtfy(pid, done){
+    var topic = ntfyHealthTopic(pid);
+    if(!topic || typeof fetch !== "function"){ done(false, {src:"ntfy", reason:"no-topic"}); return; }
+    fetch(NTFY_HEALTH_POLL + topic + "/json?poll=1&since=24h", {cache:"no-store"})
+      .then(function(r){
+        if(!r.ok) throw new Error("http " + r.status);
+        return r.text();
+      })
+      .then(function(txt){
+        // newline-delimited JSON, one object per line, oldest first
+        var best = null;
+        txt.split(/\r?\n/).forEach(function(line){
+          if(!line.trim()) return;
+          var m; try{ m = JSON.parse(line); }catch(e){ return; }
+          if(!m || m.event !== "message" || !m.message) return;
+          if(!best || (m.time || 0) >= (best.time || 0)) best = m;
+        });
+        if(!best){ done(false, {src:"ntfy", reason:"no-message", topic:topic}); return; }
+        var parsed = parseHealthText(best.message);
+        if(parsed && parsed.error){
+          done(false, {src:"ntfy", reason:"unreadable", topic:topic, raw:best.message.slice(0,200), error:parsed.error});
+          return;
+        }
+        // the reading carries no date of its own — ntfy's own receive time is more
+        // trustworthy than anything the shortcut could format, and it removes the last
+        // action that had to produce text
+        var when = new Date((best.time || 0) * 1000);
+        if(isFinite(when.getTime())){
+          parsed.date = todayISO(when);
+          parsed.updatedAt = when.toISOString();
+        }
+        var changed = acceptHealthReading(pid, parsed, "shortcut");
+        done(changed, {src:"ntfy", reason:"ok", topic:topic, raw:best.message.slice(0,200),
+                       reading:parsed, at:(best.time||0)*1000});
+      })
+      .catch(function(e){
+        done(false, {src:"ntfy", reason:"offline", topic:topic,
+                     error:"couldn't reach ntfy — " + ((e && e.message) || "offline")});
+      });
+  }
+
+  // A successful read from either source beats a failed one, whichever lands first — the
+  // panel should report the path that WORKED, not whichever finished last.
+  function noteHealthDiag(pid, rec){
+    var cur = healthDiag[pid];
+    rec.at = rec.at || Date.now();
+    rec.ok = rec.reason === "ok";
+    if(cur){
+      // A success always beats a failure, whichever path produced it.
+      if(cur.ok && !rec.ok) return;
+      // Otherwise the health link is the story. The Gist is only a fallback for readings
+      // written by the old shortcut, so ITS failure says nothing the user needs to act on —
+      // and left unchecked it would overwrite the message that actually explains what to do.
+      if(!rec.ok && cur.src === "ntfy" && rec.src === "gist") return;
+    }
+    healthDiag[pid] = rec;
+  }
+
+  function fetchHealth(cb){
+    if(typeof fetch !== "function"){ if(cb) cb(false); return; }
+    var base = parseGistBase(state.healthGistUrl);
+    // Count every job BEFORE starting any of them. A source that fails synchronously would
+    // otherwise fire the finish handler while the counter was still being built up, and the
+    // save would happen before the other source had even been asked.
+    var jobs = [];
+    ["p1","p2"].forEach(function(pid){
+      jobs.push(function(step){
+        readHealthFromNtfy(pid, function(changed, rec){ noteHealthDiag(pid, rec); step(changed); });
+      });
+      if(base){
+        jobs.push(function(step){
+          readOneHealthFile(base, pid, function(changed){ step(changed); });
+        });
+      } else {
+        jobs.push(function(step){ noteHealthDiag(pid, {src:"gist", reason:"no-gist", tried:[]}); step(false); });
+      }
+    });
+    var pending = jobs.length, anyChange = false;
+    function step(didChange){
+      if(didChange) anyChange = true;
+      if(--pending === 0){
+        if(anyChange) save();
+        renderHealth();
+        if(cb) cb(anyChange);
+      }
+    }
+    jobs.forEach(function(j){ j(step); });
+  }
   function fmtSleep(h){
     if(h == null) return "—";
     var hh = Math.floor(h), mm = Math.round((h - hh) * 60);
@@ -4906,7 +5264,9 @@
     var a = (state.healthCache || {}).p1, b = (state.healthCache || {}).p2;
     if(!a && !b){
       body.innerHTML = '<div class="empty" style="font-style:normal;">Steps, calories &amp; sleep — side by side, straight from your iPhones. ' +
-        'Build the one-time <em>WeDO Health</em> shortcut (see the setup guide) and run it once. 🍎</div>';
+        'Build the one-time <em>WeDO Health</em> shortcut (see the setup guide) and let it run once. 🍎</div>' +
+        renderHealthDiag();
+      wireHealthDiag();
       return;
     }
     var ca = healthCol(a), cb = healthCol(b);
@@ -4926,24 +5286,103 @@
         '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">😴</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
       '</div>' +
       healthStaleWarning(a, b) +
-      healthNudges(a, b).map(function(n){ return '<div class="health-nudge">' + escapeHtml(n) + '</div>'; }).join("");
-    var rerun = document.getElementById("healthRerunBtn");
-    if(rerun) rerun.addEventListener("click", function(){
-      showModal("🍎", "Why the numbers are stuck",
-        "Your Health shortcut opens WeDO in Safari, not in the Home Screen app. iOS treats those " +
-        "as two separate apps with separate storage — and it wipes the Safari one's saved settings " +
-        "if you haven't opened Safari in about a week.\n\n" +
-        "So the shortcut saves your steps into the Safari copy, that copy has no GitHub token " +
-        "any more, and the numbers never reach the Gist that this app reads from.\n\n" +
-        "Two fixes — do the first now, the second so it stops happening:\n\n" +
-        "1. Run the shortcut. In the Safari page it opens, expand “Sync between two phones”, " +
-        "paste your Gist link and GitHub token, and tap Sync now.\n\n" +
-        "2. Add your token to the shortcut itself (append &ght=YOUR_TOKEN to the address in the " +
-        "Open URLs action). Then it re-arms that copy every single run, even after iOS clears it.");
-      var panel = document.getElementById("syncPanel");
-      if(panel){ panel.open = true; setTimeout(function(){ panel.scrollIntoView({behavior:"smooth", block:"start"}); }, 200); }
+      // "Moody leads by 900 steps — game on" is a taunt about a race that finished nine days
+      // ago. Nudges are only true of today's numbers, so they stay behind fresh data.
+      (healthFresh(a) && healthFresh(b)
+        ? healthNudges(a, b).map(function(n){ return '<div class="health-nudge">' + escapeHtml(n) + '</div>'; }).join("")
+        : "");
+    body.innerHTML += renderHealthDiag();
+    wireHealthDiag();
+  }
+
+  // ---- the diagnostics panel ----
+  // This exists because of how this feature failed for months: not loudly, but silently.
+  // A phone with no gist link, a Shortcut that had never once run, and a Shortcut writing a
+  // malformed file all produced exactly the same thing on screen — a dash. Every one of
+  // those has a different fix, so each one now says which it is, names the file it looked
+  // for, and shows the first bytes it actually got back.
+  function healthDiagRow(pid){
+    var nm = escapeHtml(personName(pid));
+    var d = healthDiag[pid];
+    var cur = (state.healthCache || {})[pid];
+    var out = '<div class="hd-row"><div class="hd-who">' + nm + "</div>";
+    function line(icon, text){ return '<div class="hd-line">' + icon + " " + text + "</div>"; }
+    function code(t){ return '<div class="hd-code">' + escapeHtml(t) + "</div>"; }
+
+    if(!d){
+      out += line("·", "Not checked yet — tap <b>Test the connection</b>.");
+    } else if(d.reason === "ok"){
+      var age = healthAgeDays(cur);
+      out += line("✅", "Numbers arriving — last reading " +
+        (age === 0 ? "today" : age != null ? age + " day" + (age === 1 ? "" : "s") + " ago"
+                                           : escapeHtml(String((d.reading||{}).date || "?"))));
+      if(d.raw) out += code(d.raw);
+      if(age != null && age >= 2){
+        out += line("⚠️", "Nothing newer has come in, so " + nm + "'s shortcut hasn't run since then. " +
+                          "Check the daily automation is still switched on.");
+      }
+    } else if(d.reason === "no-topic"){
+      out += line("⚠️", "No health link has been made for " + nm + " yet. Tap " +
+                        "<b>Create health links</b> below, then rebuild that phone's shortcut.");
+    } else if(d.reason === "no-message"){
+      out += line("⚠️", "The link is set up, but " + nm + "'s shortcut hasn't sent anything in the last " +
+                        "24 hours. Run it by hand once to check it reaches here.");
+    } else if(d.reason === "unreadable" && d.src === "gist"){
+      out += line("·", "Something is in the Gist for " + nm + " that WeDO can't read, but that's the " +
+                       "old path — what matters is the health link above.");
+    } else if(d.reason === "unreadable"){
+      out += line("❌", "A reading arrived but WeDO couldn't read it" +
+                        (d.error ? " — " + escapeHtml(d.error) : "") + ".");
+      if(d.raw) out += code(d.raw);
+      out += line("🔧", "The address should end with " +
+                        "<b>?message=steps=…;cal=…;sleep=…</b>, with the three values inserted " +
+                        "from the variable bar rather than typed.");
+    } else if(d.reason === "offline"){
+      out += line("·", "Couldn't reach the internet just now — this says nothing about the setup. " +
+                       "Try again when you're back online.");
+    } else if(d.reason === "no-gist"){
+      out += line("·", "No shared Gist link on this phone, so nothing to fall back on. " +
+                       "That's fine as long as the line above is green.");
+    } else if(d.reason === "no-file" || d.reason === "unreadable-gist"){
+      out += line("·", "Nothing in the Gist for " + nm + " — expected, now that readings come " +
+                       "in over the health link instead.");
+    }
+    return out + "</div>";
+  }
+
+  function renderHealthDiag(){
+    function mark(pid){
+      var d = healthDiag[pid];
+      if(!d) return "·";
+      if(d.reason === "ok") return "✅";
+      // "nothing has arrived yet" is a waiting state, not a fault — a red cross next to a
+      // phone that simply hasn't run its shortcut yet reads as something being broken
+      return (d.reason === "no-message" || d.reason === "no-topic" || d.reason === "no-file" ||
+              d.reason === "offline") ? "⚠️" : "❌";
+    }
+    return '<details class="health-diag" id="healthDiag"><summary>Health pipeline ' +
+      mark("p1") + " " + escapeHtml(personName("p1")) + " · " +
+      mark("p2") + " " + escapeHtml(personName("p2")) + "</summary>" +
+      healthDiagRow("p1") + healthDiagRow("p2") +
+      '<div class="hd-actions"><button class="ghost" id="healthDiagTest">Test the connection</button></div>' +
+      "</details>";
+  }
+
+  function wireHealthDiag(){
+    var btn = document.getElementById("healthDiagTest");
+    if(!btn) return;
+    btn.addEventListener("click", function(){
+      btn.disabled = true; btn.textContent = "Checking…";
+      // re-render replaces this whole panel, so re-open it afterwards or the result of the
+      // test the user just asked for would collapse out of sight the moment it arrived
+      fetchHealth(function(){
+        var det = document.getElementById("healthDiag");
+        if(det) det.open = true;
+      });
     });
   }
+
+  function healthFresh(d){ var a = healthAgeDays(d); return a != null && a < 2; }
 
   // How many whole days back a stored health entry is. Today = 0.
   function healthAgeDays(d){
@@ -4965,10 +5404,10 @@
     var who = stale.length === 2 ? "These numbers are" : (personName(worst.pid) + "'s numbers are");
     return '<div class="health-stale-warn">' +
       '<b>⚠️ ' + escapeHtml(who) + ' ' + days + ' days old.</b> ' +
-      'Last updated ' + escapeHtml(new Date(worst.d.date + "T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})) + '. ' +
-      'Usually this means the shortcut is opening WeDO in Safari, and that copy has lost its ' +
-      'GitHub token — so it saves the numbers where this app can\'t see them.' +
-      '<div><button class="ghost" id="healthRerunBtn">How to fix it</button></div>' +
+      'Last written ' + escapeHtml(new Date(worst.d.date + "T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})) + '. ' +
+      'The Shortcut writes into the shared Gist on its own, so a gap this long means it has ' +
+      'stopped running — usually the daily Automation being switched off, or Low Power Mode ' +
+      'holding it back. Open the pipeline panel below to see exactly where it stops.' +
       '</div>';
   }
 
@@ -8730,6 +9169,20 @@
   // page with a cache-busting query and no-store, read the BUILD_NUM out of the response,
   // and if the live one is newer, reload onto a URL the cache has never seen.
   var UPDATE_TRY_KEY = "us-update-attempt";
+
+  // The header line. Four states, and only one of them is meant to be noticed.
+  function setVerLine(kind, live){
+    var el = document.getElementById("verLine");
+    if(!el) return;
+    el.className = "ver-line" + (kind === "update" ? " update" : (kind === "busy" ? " busy" : ""));
+    el.textContent =
+      kind === "busy"   ? "Build " + BUILD_NUM + " · checking…" :
+      kind === "update" ? "Build " + live + " ready — tap to update" :
+      kind === "latest" ? "Build " + BUILD_NUM + " · latest" :
+      kind === "stuck"  ? "Build " + live + " blocked by cache — tap" :
+                          "Build " + BUILD_NUM;
+    el.dataset.kind = kind;
+  }
   function liveBuildNumber(){
     var url = location.pathname + "?_v=" + Date.now();
     return fetch(url, {cache: "no-store"})
@@ -8739,16 +9192,19 @@
         return m ? parseInt(m[1], 10) : null;
       });
   }
-  function checkForUpdate(manual){
+  function checkForUpdate(manual, quiet){
     if(location.protocol.indexOf("http") !== 0){
+      setVerLine("idle");
       if(manual) toast("Only works on the live site");
       return;
     }
+    setVerLine("busy");
     if(manual) toast("Checking for a newer version…");
     liveBuildNumber()
       .then(function(live){
-        if(live == null){ if(manual) toast("Couldn't read the version"); return; }
+        if(live == null){ setVerLine("idle"); if(manual) toast("Couldn't read the version"); return; }
         if(live <= BUILD_NUM){
+          setVerLine("latest");
           if(manual) toast("You're on the latest — Build " + BUILD_NUM + " ✅");
           return;
         }
@@ -8757,6 +9213,7 @@
         var tried = 0;
         try{ tried = parseInt(sessionStorage.getItem(UPDATE_TRY_KEY) || "0", 10); }catch(e){}
         if(tried === live){
+          setVerLine("stuck", live);
           showModal("⬆️", "Build " + live + " is available",
             "This phone keeps loading Build " + BUILD_NUM + " from its cache. Delete the WeDO icon " +
             "from your Home Screen, open the site in Safari, then Add to Home Screen again.\n\n" +
@@ -8764,16 +9221,40 @@
             "setup card will walk you through it.");
           return;
         }
+        // Reloading is fine when the app is starting up, and rude when it is already in
+        // someone's hands — a foreground check that yanks the page mid-sentence loses
+        // whatever they were typing. So: cold start updates itself, a live session is told.
+        if(quiet){
+          setVerLine("update", live);
+          return;
+        }
         try{ sessionStorage.setItem(UPDATE_TRY_KEY, String(live)); }catch(e){}
+        setVerLine("busy");
         toast("Updating to Build " + live + "…");
         setTimeout(function(){
           location.replace(location.pathname + "?_v=" + live);
         }, 600);
       })
-      .catch(function(){ if(manual) toast("Couldn't reach the site to check"); });
+      .catch(function(){ setVerLine("idle"); if(manual) toast("Couldn't reach the site to check"); });
   }
   document.getElementById("forceUpdateBtn").addEventListener("click", function(){ checkForUpdate(true); });
+  document.getElementById("verLine").addEventListener("click", function(){ checkForUpdate(true); });
+  setVerLine("idle");
   setTimeout(function(){ checkForUpdate(false); }, 1500);
+
+  // iOS keeps a Home Screen app resident for days, so "opening WeDO" is usually a foreground
+  // event, not a fresh load — and the startup check above would never run again. Without
+  // this, a phone can sit several builds behind indefinitely while appearing to have been
+  // opened every day. Coming back after a long gap counts as opening it, so that updates
+  // itself; a short switch away only lights the header line.
+  var hiddenSince = 0;
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "hidden"){ hiddenSince = Date.now(); return; }
+    if(!hiddenSince) return;
+    var away = Date.now() - hiddenSince;
+    hiddenSince = 0;
+    if(away > 5000) checkForUpdate(false, away < 30 * 60000);
+  });
 
   // repair trips that pre-date the `trip` flag before anything renders off it
   if(backfillTripFlags()) renderAll();
@@ -8810,6 +9291,52 @@
       try{ ok = document.execCommand("copy"); }catch(e){}
     }
     toast(ok ? "Token copied 📋" : "Couldn't copy — tap Show token and copy it by hand");
+  });
+  // The three things the Health Shortcut needs, filled in for THIS phone. Every one of them
+  // was previously copied by hand out of a chat message — the gist id from one place, the
+  // token from another, the person id from a third — and a single wrong character produced
+  // the same silent nothing as not setting it up at all. The app already knows all three.
+  // The entire shortcut, as one address. There is nothing else to configure — no method, no
+  // headers, no body — which is the whole point of moving off the gist write.
+  document.getElementById("healthLinkBtn").addEventListener("click", function(){
+    var me = deviceOwner() || state.currentUser;
+    if(!me){ toast("Pick whose phone this is first"); return; }
+    if(!ntfyHealthTopic(me)) ntfyHealthEnsure();
+    var url = ntfyHealthUrl(me);
+    var ok = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); ok = true; }
+    }catch(e){}
+    showModal("🍎", ok ? "Copied — paste it into the shortcut" : "Your health link",
+      "This is " + personName(me) + "'s address. In Shortcuts → WeDO Health, delete the whole " +
+      "Get Contents of URL action and add a fresh one, then paste this in as the address:\n\n" +
+      url + "\n\n" +
+      "Then put the cursor after each of the three = signs at the end and insert Steps, Cals and " +
+      "SleepMins from the variable bar. Nothing else — leave the method as GET and add no headers.\n\n" +
+      "Rae's phone has its own separate address; she taps this same button on hers." +
+      (ok ? "" : "\n\n(Couldn't reach the clipboard — copy it from here by hand.)"));
+  });
+  document.getElementById("shortcutSetupBtn").addEventListener("click", function(){
+    var id = gistIdFromUrl(), tok = ghToken(), me = deviceOwner() || state.currentUser;
+    if(!id){ toast("Save your Gist link on this phone first"); return; }
+    if(!tok){ toast("Save your GitHub token on this phone first"); return; }
+    if(!me){ toast("Pick whose phone this is first"); return; }
+    var url = "https://api.github.com/gists/" + id;
+    var file = "health-" + me + ".txt";
+    var block =
+      "URL\n" + url + "\n\n" +
+      "Header  Authorization\nBearer " + tok + "\n\n" +
+      "File name (this phone is " + personName(me) + ")\n" + file;
+    var ok = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(block); ok = true; }
+    }catch(e){}
+    showModal("🍎", ok ? "Copied — all three" : "Your Shortcut details",
+      "In Shortcuts → WeDO Health → the “Get Contents of URL” action, these are the three " +
+      "values for this phone:\n\n" + block + "\n\n" +
+      "Method is PATCH. Request Body is File, set to the Text action that builds this line:\n\n" +
+      '{\"files\":{\"' + file + '\":{\"content\":\"date=…;steps=…;cal=…;sleep=…\"}}}' + "\n\n" +
+      (ok ? "All three are on your clipboard." : "(Couldn't reach the clipboard — copy them from here by hand.)"));
   });
   document.getElementById("shortcutTailBtn").addEventListener("click", function(){
     var id = gistIdFromUrl(), tok = ghToken();
