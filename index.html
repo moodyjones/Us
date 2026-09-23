@@ -2621,7 +2621,47 @@
     "What's one way I could show up better for you this week?",
     "What's a small tradition you'd like us to start?",
     "What's something you appreciate about how we handle disagreements?",
-    "If you could plan our next date night, what would it look like?"
+    "If you could plan our next date night, what would it look like?",
+    "What's something you've wanted to ask me but haven't?",
+    "What do I do that makes you feel most understood?",
+    "What's a part of your day I never get to see?",
+    "What would you like us to spend less time on?",
+    "What's something you've changed your mind about this year?",
+    "When did you last feel properly rested?",
+    "What's a compliment you'd like to hear more often?",
+    "What do you think I worry about too much?",
+    "What's something about the future you're looking forward to?",
+    "What's a conversation we keep almost having?",
+    "What's the best decision we've made together?",
+    "What do you need from me when you're having a bad day?",
+    "What's something you'd like to be better at?",
+    "What's a place you'd like us to see before we're old?",
+    "What's the kindest thing anyone did for you recently?",
+    "What do you miss about how things used to be, if anything?",
+    "What's something you'd like me to notice more?",
+    "What's a small luxury that's worth the money to you?",
+    "What did you want to be when you were ten, and what's left of that?",
+    "What's the hardest thing about this year so far?",
+    "What's the best thing about this year so far?",
+    "What would you do with a completely free week?",
+    "What's something you're proud of that you've never told me?",
+    "What do you find hardest to say out loud?",
+    "What's a way we could be kinder to each other on busy days?",
+    "What's the last thing that made you feel really alive?",
+    "What's a fear you've mostly grown out of?",
+    "What do you think we're good at, as a pair?",
+    "What's something we should stop putting off?",
+    "What's the nicest place you've ever woken up?",
+    "What do you need more of that has nothing to do with me?",
+    "What's a story about your family you've never told me?",
+    "What would make the next month feel like a good one?",
+    "What's something you'd like us to argue about less?",
+    "What do you think I'd be doing if I'd made different choices?",
+    "What's a song that takes you straight back somewhere?",
+    "What's something you've been curious about lately?",
+    "What's the most useful thing anyone ever told you?",
+    "When do you feel most like yourself?",
+    "What's one thing you'd want us to always keep doing?"
   ];
 
   var QUEST_SUGGESTIONS = [
@@ -4959,7 +4999,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 77;
+  var BUILD_NUM = 78;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -8165,7 +8205,10 @@
   }
 
   function todaysQuestion(){
-    return DAILY_QUESTIONS[dayOfYear() % DAILY_QUESTIONS.length];
+    // dayNumberFor, not dayOfYear: the year boundary used to snap this back to question one
+    // regardless of where in the bank it had got to, so the first fortnight of January was
+    // always a repeat of the first fortnight of the year before.
+    return DAILY_QUESTIONS[dayNumberFor(todayISO()) % DAILY_QUESTIONS.length];
   }
 
   // an answer's text is only readable by its author, on the author's own phone
@@ -9061,48 +9104,307 @@
   // The bank alternates between questions about them and questions about your own day, so
   // it can't settle into a rhythm you learn to skip. Odd days ask about them; even days
   // ask about you. Both kinds end up in the same place.
-  var PHOTO_Q_THEM = [
-    "What did {them} do this week that you never got round to saying thank you for?",
-    "Name something {them} is quietly good at.",
-    "When did you last see {them} properly laugh? What set it off?",
-    "What does {them} need more of right now?",
-    "What's a small thing {them} does that you'd miss if it stopped?",
-    "What is {them} carrying at the moment that you could take off their plate?",
-    "What did {them} get right this week that nobody mentioned?",
-    "If {them} could hear one sentence from you today, what should it be?",
-    "What have you noticed about {them} lately but not said out loud?",
-    "What is {them} worried about but not saying?",
-    "What did {them} do today that made your day easier?",
-    "What do you admire about how {them} handles a bad day?"
-  ];
-  var PHOTO_Q_YOU = [
-    "What's actually going on in this picture?",
-    "What was the best minute of your day?",
-    "What's on your mind right now that you haven't told anyone?",
-    "What are you looking forward to this week?",
-    "What wore you out today?",
-    "What's one thing you'd do differently if today started again?",
-    "What made you smile today, however small?",
-    "What do you need this evening?",
-    "Where were you when you took this, and why there?",
-    "What's the thing you keep putting off?",
-    "What went better today than you expected?",
-    "What would make tomorrow a good day?"
-  ];
-  // Deterministic from the date, so the question doesn't change under you if the sheet is
-  // reopened, and so both phones show the same one on the same day.
-  function photoQuestionFor(dateISO, me){
-    var n = dayNumberFor(dateISO);
-    var them = personName(otherPerson(me));
-    var bank = (n % 2 === 1) ? PHOTO_Q_THEM : PHOTO_Q_YOU;
-    var q = bank[Math.floor(n / 2) % bank.length];
-    return q.replace(/\{them\}/g, them);
+  // The bank. The first version of this asked things like "what's the story behind this
+  // one?" and got one-word answers, because a question that could be asked on any day of
+  // any year isn't really being asked of anyone. These are modelled on the daily question
+  // in the Notes tab — which people do answer — and they're grouped by the situation
+  // they're worth asking in. What's happening today decides which pool is drawn from.
+  //
+  // {them} is replaced with the other person's name.
+  var PHOTO_Q_LIB = {
+    // away together: the pictures are of the same place, so the questions can be
+    "trip": [
+      "What's the bit of today you'll still be describing to people in a year?",
+      "What has {them} been like on this trip that you don't get to see at home?",
+      "What's the smallest good thing that happened today?",
+      "What would you change about today if you could do it again?",
+      "What has surprised you about being away together this time?",
+      "What's something {them} organised or sorted out that you haven't acknowledged?",
+      "Where would you come back to, and who with?",
+      "What did today cost you in energy, and was it worth it?",
+      "What's the thing you'll forget about this day unless you write it down now?",
+      "What have you not said to {them} today that you were thinking?"
+    ],
+    // both of you have posted — the day has two sides to it
+    "both": [
+      "You've both posted today. What do you think {them}'s day actually looked like?",
+      "What's {them} likely to say was the hardest part of today?",
+      "If you swapped days with {them}, what would you have found hard?",
+      "What did {them} handle today that you didn't have to?",
+      "What do you and {them} both need this evening?",
+      "What's one thing you'd want {them} to know about how today went for you?",
+      "What did you get wrong about {them}'s mood today?",
+      "What's the first thing you want to say to {them} when you next see them?"
+    ],
+    // you posted first — they're not in this day yet
+    "apart": [
+      "You're first today. What do you hope {them}'s day has looked like?",
+      "What's {them} doing right now, as far as you know?",
+      "What would make {them}'s evening easier when they get in?",
+      "What do you want to ask {them} about today, before you forget to?",
+      "What's something you'd rather say now than save up?",
+      "What have you been carrying today that you haven't mentioned to {them} yet?",
+      "What's the one thing you want {them} to know before the day ends?",
+      "If {them} walked in right now, what would you want them to do?"
+    ],
+    "monday": [
+      "What's the one thing that would make this week feel handled?",
+      "What's already worrying you about this week?",
+      "What could {them} take off you this week if you asked?",
+      "What are you hoping happens this week that you haven't said out loud?",
+      "What went unfinished last week that's still sitting there?",
+      "What would you like more of from {them} this week?",
+      "What's one thing you want to do differently from last week?",
+      "What's this week going to ask of {them}, and can you make it lighter?"
+    ],
+    "friday": [
+      "What did you get right this week?",
+      "What did {them} get right this week that nobody mentioned?",
+      "What are you carrying into the weekend that you'd rather put down?",
+      "What's the one thing you want from this weekend?",
+      "What did this week take out of you?",
+      "What's something {them} did this week that you meant to say thank you for?",
+      "What would make tomorrow feel like an actual day off?",
+      "What's the best thing that happened this week that you'd forgotten already?"
+    ],
+    "weekend": [
+      "What's the most restful thing you've done today?",
+      "What did you say yes to today that you should have said no to?",
+      "What would a perfect version of today have looked like?",
+      "What do you want to do with {them} that you keep not getting round to?",
+      "What's something you'd like to do together that costs nothing?",
+      "What did you notice about {them} today?",
+      "What's the thing you're putting off that would take twenty minutes?",
+      "What would make Monday easier if you did it before tonight?"
+    ],
+    // a long run of days, both of you turning up
+    "streak": [
+      "You've kept this going a while now. What's it changed, if anything?",
+      "What's the thing you've learned about {them} from these photos?",
+      "What day would you want back out of the last few weeks?",
+      "What's become easier between you lately?",
+      "What's a small habit you've both fallen into that you'd like to keep?",
+      "What would you miss most if this stopped?"
+    ],
+    "monthend": [
+      "What's the month been like, honestly?",
+      "What did you not get to this month that still matters?",
+      "What was the best day of this month, and why that one?",
+      "What did {them} do this month that you should say out loud?",
+      "What do you want next month to be different about?",
+      "What's one thing you'd like the two of you to have done by this time next month?"
+    ],
+    "newmonth": [
+      "What's one thing you want this month to hold?",
+      "What would make this a good month for {them}?",
+      "What are you not going to repeat from last month?",
+      "What's something you'd like to plan with {them} while there's still time to?",
+      "What do you want to have done by the end of this month?",
+      "What's worth starting now rather than later?"
+    ],
+    // nothing's been written between you in a while
+    "quiet": [
+      "It's been a bit since either of you wrote anything. What's been going on?",
+      "What have you been meaning to say to {them} and haven't?",
+      "What's changed for you in the last couple of weeks?",
+      "What would you want {them} to ask you about?",
+      "What's the honest answer to \"how are you\" today?",
+      "What have you been quiet about lately?"
+    ],
+    // the deep pool. Drawn from on any day, and often — otherwise every Monday feels
+    // like a Monday and the whole thing becomes predictable.
+    "any": [
+      "What did {them} do today that made your day easier?",
+      "What's something {them} is quietly good at?",
+      "When did you last see {them} properly laugh? What set it off?",
+      "What does {them} need more of right now?",
+      "What's a small thing {them} does that you'd miss if it stopped?",
+      "What is {them} carrying at the moment that you could take off their plate?",
+      "If {them} could hear one sentence from you today, what should it be?",
+      "What have you noticed about {them} lately but not said out loud?",
+      "What is {them} worried about but not saying?",
+      "What do you admire about how {them} handles a bad day?",
+      "What's something you've changed your mind about because of {them}?",
+      "What does {them} do that you've started doing too?",
+      "What's a thing {them} said once that stuck with you?",
+      "What would {them} say they need from you this week?",
+      "What's the last thing {them} did that surprised you?",
+      "What do you think {them} is proudest of right now?",
+      "What's something you find easy that {them} finds hard, or the other way round?",
+      "When did {them} last look genuinely relaxed?",
+      "What's a decision {them} made that you were wrong to doubt?",
+      "What do you want to understand better about {them}?",
+      "What was the best minute of your day?",
+      "What wore you out today?",
+      "What's on your mind that you haven't told anyone?",
+      "What went better today than you expected?",
+      "What would make tomorrow a good day?",
+      "What did you avoid doing today?",
+      "What do you need this evening?",
+      "What's the thing you keep putting off?",
+      "What made you laugh today, however small?",
+      "What would you do differently if today started again?",
+      "What are you looking forward to, and what's in the way of it?",
+      "What's something you're better at than you were a year ago?",
+      "What do you keep saying yes to that you'd rather not?",
+      "What's the last thing that genuinely annoyed you, and is it still annoying you?",
+      "What's something you're proud of this week that nobody noticed?",
+      "Where were you when you took this, and why there?",
+      "What's the thing you'd fix about this week if you could fix one thing?",
+      "What have you been putting energy into that isn't giving any back?",
+      "What's something small you could do tomorrow that future-you would thank you for?",
+      "What are you pretending to be fine about?",
+      "What's a habit of yours you'd like to drop?",
+      "What's the nicest thing anyone said to you recently?",
+      "What did you learn today, about anything at all?",
+      "What would you like the two of you to be doing this time next year?",
+      "What's a place you'd like to take {them}?",
+      "What do you want more of in your life generally?",
+      "What's something you two used to do that you should start again?",
+      "What's a tradition you'd like to start together?",
+      "What's something you'd like to be braver about?",
+      "What's the last thing {them} did that you're still thinking about?",
+      "What do you think {them} finds hardest about this stretch of life?",
+      "What's a way {them} has changed since you met that you like?",
+      "What does {them} do when they think nobody's watching?",
+      "What's something {them} keeps apologising for that doesn't need an apology?",
+      "What would {them} do with a completely free day?",
+      "What's the kindest thing {them} has done that {them} has probably forgotten?",
+      "What does {them} do better than you, that you'd never admit out loud?",
+      "What's something you'd like {them} to stop worrying about?",
+      "What's a question you've never asked {them} and probably should?",
+      "What's the version of you that {them} brings out?",
+      "What do you think {them} is putting off?",
+      "What's the thing you'd defend {them} on to anyone?",
+      "What did you get wrong recently, and has it been sorted?",
+      "What's taking up more of your head than it deserves?",
+      "What's something you've been meaning to do for yourself?",
+      "What's the last thing you did purely because you wanted to?",
+      "What are you actually good at that you never give yourself credit for?",
+      "What would this week look like if it went well?",
+      "What's the conversation you've been avoiding?",
+      "What have you said yes to that you'd like to get out of?",
+      "What's the best thing about where you live right now?",
+      "What's something from this year you'd want to remember in ten years?",
+      "What's one thing you'd want said about you at the end of all this?",
+      "What's a small thing that reliably makes your day worse?",
+      "What's a small thing that reliably makes your day better?",
+      "What do you want the next three months to look like?",
+      "What's something you used to care about that you don't any more?"
+    ]
+  };
+
+  // Which pools are live today, most specific first. The general pool is always in the mix
+  // so a Monday isn't always a Monday question.
+  function photoQContexts(me, dateISO){
+    var out = [];
+    var d = new Date(dateISO + "T12:00:00");
+    var dow = isFinite(d.getTime()) ? d.getDay() : 1;      // 0 Sun … 6 Sat
+    var other = otherPerson(me);
+
+    if(togetherMode() || (state.tripPhotos || {})[dateISO]) out.push("trip");
+
+    var theirs = (state.dailyPhotos || {})[other];
+    if(theirs && theirs.date === dateISO) out.push("both");
+    else out.push("apart");
+
+    if(dow === 1) out.push("monday");
+    if(dow === 5) out.push("friday");
+    if(dow === 0 || dow === 6) out.push("weekend");
+
+    var st = (state.streaks || {})[me] || {};
+    if((st.current || 0) >= 7) out.push("streak");
+
+    var dayNum = parseInt(dateISO.slice(8, 10), 10);
+    var lastDay = new Date(parseInt(dateISO.slice(0,4),10), parseInt(dateISO.slice(5,7),10), 0).getDate();
+    if(lastDay - dayNum <= 2) out.push("monthend");
+    if(dayNum <= 3) out.push("newmonth");
+
+    // nothing written either way for a fortnight
+    var newest = "";
+    (state.notes || []).forEach(function(n){
+      if(String(n.date || "") > newest) newest = String(n.date || "");
+    });
+    if(!newest || (Date.parse(dateISO) - Date.parse(newest.slice(0,10))) > 14 * 86400000) out.push("quiet");
+
+    out.push("any");
+    return out;
   }
+
+  // When each question was last asked, as a day number. Notes carry the question they
+  // answered, which is what makes this cheap to work out.
+  function lastAskedMap(){
+    var seen = {};
+    (state.notes || []).forEach(function(n){
+      if(!n.q) return;
+      var d = String(n.date || "").slice(0, 10);
+      var day = dayNumberFor(d);
+      if(!day) return;
+      if(!seen[n.q] || day > seen[n.q]) seen[n.q] = day;
+    });
+    return seen;
+  }
+
   // days since epoch — a stable integer per calendar day that doesn't reset each year the
   // way dayOfYear() does, so the bank keeps advancing instead of repeating every January.
   function dayNumberFor(dateISO){
     var t = Date.parse(String(dateISO) + "T00:00:00Z");
     return isFinite(t) ? Math.floor(t / 86400000) : 0;
+  }
+
+  // Being away, or having gone quiet, is the thing worth asking about — those win most
+  // days. Monday-ness is worth asking about sometimes. Everything else shares the rota with
+  // the general pool, or every Monday would feel like the same Monday.
+  var PHOTO_Q_STRONG = {trip: 1, quiet: 1};
+
+  function photoQuestionFor(dateISO, me){
+    var them = personName(otherPerson(me));
+    var ctxs = photoQContexts(me, dateISO);
+    var n = dayNumberFor(dateISO);
+    var special = ctxs.filter(function(c){ return c !== "any"; });
+    var strong = special.filter(function(c){ return PHOTO_Q_STRONG[c]; });
+
+    // Which pool to try FIRST. The rest still get used — see the fall-through below.
+    var first;
+    if(strong.length && n % 3 !== 0){
+      first = strong[n % strong.length];
+    } else if(special.length && n % 2 === 0){
+      first = special[n % special.length];
+    } else {
+      first = "any";
+    }
+
+    // Order of preference: the chosen pool, then the general pool, then whatever else is
+    // live today. Without the fall-through a small pool like "apart" — which is true on
+    // most days, because you often post before they do — got asked to carry a month on
+    // eight questions and started repeating inside a fortnight.
+    var order = [first];
+    if(order.indexOf("any") < 0) order.push("any");
+    special.forEach(function(c){ if(order.indexOf(c) < 0) order.push(c); });
+
+    // Never-asked wins over asked-a-while-ago, and that rule alone is what makes the whole
+    // library get used. Taking "the first unasked one, scanning forward from an index"
+    // looks equivalent and isn't: it kept landing in the same stretch of the pool, so over
+    // four months a third of the questions were never asked once.
+    var asked = lastAskedMap();
+    var oldest = null, oldestAt = Infinity;
+    for(var p = 0; p < order.length; p++){
+      var pool = PHOTO_Q_LIB[order[p]] || [];
+      if(!pool.length) continue;
+      var fresh = [];
+      for(var i = 0; i < pool.length; i++){
+        var cand = pool[i].replace(/\{them\}/g, them);
+        var when = asked[cand];
+        if(when == null){ fresh.push(cand); }
+        else if(when < oldestAt){ oldestAt = when; oldest = cand; }
+      }
+      if(fresh.length) return fresh[Math.floor(n / 2) % fresh.length];
+    }
+    // every question in every live pool has been asked before: take the one asked longest
+    // ago, so it still moves rather than sticking
+    if(oldest) return oldest;
+    var fb = PHOTO_Q_LIB[first] || PHOTO_Q_LIB["any"];
+    return fb[Math.floor(n / 2) % fb.length].replace(/\{them\}/g, them);
   }
 
   var PHOTO_Q_SKIP_KEY = "us-photoq-skipped-v1";
@@ -9111,6 +9413,11 @@
   }
   var photoQBg = document.getElementById("photoQBg");
   var photoQFor = null;
+  // The question shown and the question stored on the note have to be the same string.
+  // They're both worked out from today's context, and context can move between opening the
+  // sheet and sending it — the other person posting their photo is enough to change it —
+  // so it's decided once, on open, and held.
+  var photoQAsked = "";
 
   function closePhotoQ(){
     photoQBg.classList.remove("show");
@@ -9123,8 +9430,8 @@
   function openPhotoQ(pid){
     if(photoQSkippedToday()) return;
     photoQFor = pid;
-    var q = photoQuestionFor(todayISO(), pid);
-    document.getElementById("photoQText").textContent = q;
+    photoQAsked = photoQuestionFor(todayISO(), pid);
+    document.getElementById("photoQText").textContent = photoQAsked;
     document.getElementById("photoQSub").textContent =
       "One question before you go — your answer goes straight to " +
       personName(otherPerson(pid)) + "'s notes.";
@@ -9147,7 +9454,7 @@
     // a week later — "the bins, mostly" means nothing on its own.
     var note = {
       fromId: me, toId: to, text: txt,
-      q: photoQuestionFor(todayISO(), me),
+      q: photoQAsked,
       photoDate: todayISO(),
       date: new Date().toISOString()
     };
@@ -9219,6 +9526,9 @@
     for(var d in al){ if(al.hasOwnProperty(d)) ms[d.slice(0, 7)] = 1; }
     var tp = state.tripPhotos || {};
     for(var td in tp){ if(tp.hasOwnProperty(td)) ms[td.slice(0, 7)] = 1; }
+    // trophies are pictures too, and they are the oldest ones either of you has — they were
+    // never caught by the daily overwrite, so they reach further back than the album does
+    trophyPhotos().forEach(function(t){ ms[t.date.slice(0, 7)] = 1; });
     ms[monthKeyNow()] = 1;             // the current month is always offerable, even if empty
     return Object.keys(ms).sort();
   }
@@ -9248,17 +9558,21 @@
   function loadAlbumMonth(mk){
     if(memLoading[mk] || !autoSyncOn()) return;
     var want = {};
+    function need(v){
+      if(!isPhotoRef(v)) return;
+      var id = v.slice(PHOTO_REF.length);
+      if(!memBytes[id]) want[id] = 1;
+    }
     var al = state.album || {};
     for(var d in al){
       if(!al.hasOwnProperty(d) || d.slice(0,7) !== mk) continue;
-      for(var who in al[d]){
-        var v = al[d][who] && al[d][who].photo;
-        if(isPhotoRef(v)){
-          var id = v.slice(PHOTO_REF.length);
-          if(!memBytes[id]) want[id] = 1;
-        }
-      }
+      for(var who in al[d]){ if(al[d][who]) need(al[d][who].photo); }
     }
+    // trips and trophies are normally resolved during sync, but a phone that hasn't
+    // finished downloading still has them as refs and the grid would sit there blank
+    var tp = state.tripPhotos || {};
+    for(var td in tp){ if(td.slice(0,7) === mk && tp[td]) need(tp[td].photo); }
+    trophyPhotos().forEach(function(x){ if(x.date.slice(0,7) === mk) need(x.task.photo); });
     var ids = Object.keys(want);
     if(!ids.length) return;
     memLoading[mk] = true;
@@ -9286,14 +9600,29 @@
       .catch(function(){ memLoading[mk] = false; if(memMonth === mk) renderMemories(); });
   }
 
+  // Every completed task that has a picture on it, dated by when it was finished.
+  function trophyPhotos(){
+    return (state.tasks || []).filter(function(t){
+      return t && t.photo && t.status === "done" && t.completedAt;
+    }).map(function(t){
+      return {task: t, date: todayISO(new Date(t.completedAt))};
+    }).filter(function(x){ return /^\d{4}-\d{2}-\d{2}$/.test(x.date); });
+  }
+  function trophiesOn(dateISO){
+    return trophyPhotos().filter(function(x){ return x.date === dateISO; });
+  }
+
   function memDayData(dateISO){
-    var trip = (state.tripPhotos || {})[dateISO];
-    var day = (state.album || {})[dateISO] || {};
-    return {trip: trip, day: day};
+    return {
+      trip: (state.tripPhotos || {})[dateISO],
+      day: (state.album || {})[dateISO] || {},
+      trophies: trophiesOn(dateISO)
+    };
   }
   function memDayHasAnything(dateISO){
     var d = memDayData(dateISO);
     if(d.trip && d.trip.photo) return true;
+    if(d.trophies.length) return true;
     for(var k in d.day){ if(d.day.hasOwnProperty(k) && d.day[k] && d.day[k].photo) return true; }
     return false;
   }
@@ -9338,11 +9667,14 @@
         cell.disabled = true;
       }
 
+      var hasDaily = false;
+      for(var who in data.day){ if(data.day[who] && data.day[who].photo) hasDaily = true; }
+
       if(data.trip && data.trip.photo){
         var src = memSrc(data.trip.photo);
         cell.appendChild(memHalf(src));
         if(!src) pending++;
-      } else if(has){
+      } else if(hasDaily){
         var gotBoth = 0;
         people.forEach(function(p){
           var slot = data.day[p.id];
@@ -9352,24 +9684,34 @@
           if(slot && slot.photo && !sv) pending++;
         });
         if(gotBoth === 2) bothCount++;
+      } else if(data.trophies.length){
+        // a day with no daily photo but a trophy on it still belongs in the grid — for
+        // anything from before the album existed, this is the only picture of that day
+        var tsrc = memSrc(data.trophies[0].task.photo);
+        cell.appendChild(memHalf(tsrc, true));
+        if(!tsrc) pending++;
       }
 
       var lab = document.createElement("span");
       lab.className = "mem-day";
       lab.textContent = n;
       cell.appendChild(lab);
-      if(data.trip && data.trip.photo){
+      var badge = (data.trip && data.trip.photo) ? "✈️"
+                : (data.trophies.length && hasDaily) ? "🏆" : "";
+      if(badge){
         var dot = document.createElement("span");
-        dot.className = "mem-dot"; dot.textContent = "✈️";
+        dot.className = "mem-dot"; dot.textContent = badge;
         cell.appendChild(dot);
       }
       grid.appendChild(cell);
     }
 
+    var trophyCount = trophyPhotos().filter(function(t){ return t.date.slice(0,7) === memMonth; }).length;
     document.getElementById("memSub").textContent =
       filled === 0 ? "nothing here yet"
                    : filled + (filled === 1 ? " day" : " days") +
-                     (bothCount ? " · " + bothCount + " with both of you" : "");
+                     (bothCount ? " · " + bothCount + " with both of you" : "") +
+                     (trophyCount ? " · " + trophyCount + " 🏆" : "");
     document.getElementById("memNote").textContent =
       filled === 0
         ? "Post a photo on the home screen and the day lands here. Nothing is ever deleted."
@@ -9421,6 +9763,9 @@
         add(slot ? memSrc(slot.photo) : null, personName(p.id));
       });
     }
+    data.trophies.forEach(function(x){
+      add(memSrc(x.task.photo), "🏆 " + x.task.title);
+    });
     document.getElementById("memDaySub").textContent =
       shown ? "" : "The pictures for this day haven't come down from the other phone yet.";
 
