@@ -981,6 +981,113 @@
   .qa-past:first-child{border-top:none;padding-top:0;margin-top:0;}
   .qa-past-q{font-size:12.5px;color:var(--muted);font-weight:600;}
 
+  /* ---- the question after a daily photo ---- */
+  .photoq-q{
+    font-size:16px;line-height:1.45;font-weight:600;color:var(--text);
+    margin:4px 0 12px;
+  }
+  .note-q{
+    font-size:12px;line-height:1.45;color:var(--muted);font-style:italic;
+    margin-bottom:5px;
+  }
+  .note-arch-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .note-arch-count{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;}
+  .note-arch-filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .note-arch-filters button{
+    font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:999px;
+    border:1px solid var(--line);background:transparent;color:var(--faint);
+    font-family:inherit;cursor:pointer;
+  }
+  .note-arch-filters button.active{
+    background:var(--s3);color:var(--text);border-color:var(--line-2);
+  }
+  .note-arch{
+    border-top:1px solid var(--line);padding:11px 0 2px;
+  }
+  .note-arch:first-child{border-top:none;padding-top:0;}
+  .note-arch-meta{
+    font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);
+    display:flex;justify-content:space-between;gap:10px;margin-bottom:4px;
+  }
+  .note-arch-dir{font-weight:700;}
+  .note-arch-dir.out{color:var(--muted);}
+  .note-arch-text{font-size:14px;line-height:1.5;color:var(--text);}
+
+  /* ---- memories ---- */
+  .mem-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .mem-head > div{text-align:center;flex:1;min-width:0;}
+  .mem-month{font-size:16px;font-weight:700;color:var(--text);}
+  .mem-sub{font-size:12px;color:var(--faint);margin-top:2px;}
+  .mem-nav{
+    width:36px;height:36px;flex:0 0 36px;border-radius:999px;
+    border:1px solid var(--line);background:transparent;color:var(--muted);
+    font-size:18px;line-height:1;cursor:pointer;font-family:inherit;
+  }
+  .mem-nav:disabled{opacity:.28;cursor:default;}
+  .mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+  .mem-cell{
+    position:relative;aspect-ratio:1/1;border-radius:11px;overflow:hidden;
+    border:1px solid var(--line);background:var(--s1);padding:0;cursor:pointer;
+    display:flex;
+  }
+  .mem-cell.empty{cursor:default;opacity:.5;}
+  .mem-half{flex:1;min-width:0;overflow:hidden;position:relative;}
+  .mem-half + .mem-half{border-left:1px solid rgba(0,0,0,.35);}
+  .mem-half img{width:100%;height:100%;object-fit:cover;display:block;}
+  .mem-half.pending{
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;color:var(--faint);
+  }
+  .mem-day{
+    position:absolute;left:5px;bottom:4px;z-index:2;
+    font-size:10.5px;font-weight:700;color:#fff;
+    text-shadow:0 1px 3px rgba(0,0,0,.85);font-variant-numeric:tabular-nums;
+  }
+  .mem-cell.empty .mem-day{color:var(--faint);text-shadow:none;}
+  .mem-dot{
+    position:absolute;right:5px;bottom:5px;z-index:2;font-size:9px;
+    text-shadow:0 1px 3px rgba(0,0,0,.85);
+  }
+  .mem-note{font-size:12.5px;line-height:1.5;color:var(--faint);margin-top:14px;text-align:center;}
+  .mem-day-photos{display:flex;gap:8px;margin-bottom:4px;}
+  .mem-day-photos figure{flex:1;min-width:0;margin:0;}
+  .mem-day-photos img{width:100%;border-radius:12px;display:block;}
+  .mem-day-photos figcaption{font-size:11.5px;color:var(--faint);text-align:center;margin-top:5px;}
+  .mem-day-note{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;}
+
+
+  /* ---- task group headers ---- */
+  .task-group{
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);margin:16px 0 7px;padding-bottom:6px;
+    border-bottom:1px solid var(--line);
+  }
+  .task-group:first-child{margin-top:2px;}
+  /* the partner's own tasks are context, not a to-do — they read one step back */
+  .task-group.muted{color:var(--faint);}
+  .task-group-count{
+    font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:0;
+    color:var(--faint);font-size:12px;
+  }
+
+  /* ---- spin expiry note ---- */
+  .spin-expiry{
+    font-size:12.5px;line-height:1.5;color:var(--muted);text-align:center;
+    padding:9px 12px;margin-bottom:10px;border-radius:var(--r-object);
+    background:var(--s1);border:1px solid var(--line);
+  }
+  /* Only the last three days shout. A permanent warning is wallpaper — people stop seeing
+     it, and then the one month it actually matters it reads the same as every other month. */
+  .spin-expiry.urgent{
+    color:var(--text);background:rgba(232,181,75,.10);
+    border-color:rgba(232,181,75,.38);
+  }
+  .spin-expiry b{color:var(--gold);}
+  .quota-note{font-size:11.5px;color:var(--faint);margin-top:6px;text-align:center;}
+  .rarity-pick{display:flex;gap:6px;width:100%;margin-top:8px;}
+  .rarity-pick button{flex:1;font-size:11.5px;padding:7px 4px;}
+
   /* ---- build / update line ---- */
   .ver-line{
     display:block;margin:12px auto 0;padding:4px 10px;
@@ -1791,6 +1898,8 @@
 <main>
   <!-- daily photo duo: each of you posts one photo a day; you see each other first thing -->
   <div class="duo-row" id="duoRow"></div>
+  <!-- The note prompt only exists in the moment after you've posted. Notes lived in a
+       separate panel nobody opened; attaching them to the photo gives them an occasion. -->
 
   <!-- shared challenge: sits above everything because it's a today thing, not an archive -->
   <div class="chal-wrap" id="chalWrap" style="display:none;"></div>
@@ -1820,6 +1929,7 @@
     <button data-tab="rewards">🎡 Rewards</button>
     <button data-tab="board">🏆 Leaderboard</button>
     <button data-tab="notes">💌 Notes</button>
+    <button data-tab="memories">📅 Memories</button>
   </div>
 
   <!-- TASKS VIEW -->
@@ -2000,11 +2110,12 @@
   <div class="view" id="view-rewards">
     <div class="card">
       <h2>Spin the wheel</h2>
-      <p style="color:var(--muted);font-size:13px;margin-top:-4px;">Every 5 tasks you complete earns a spin. Common rewards are easy to land, big ones are rare.</p>
+      <p style="color:var(--muted);font-size:13px;margin-top:-4px;">Every 5 tasks earns a spin. Spins expire at the end of the month. You each add three reward ideas a month — the other one decides how rare it is.</p>
       <div class="stat-row" style="margin-bottom:10px;">
         <div class="stat"><div class="num" id="spinsAvailable">0</div><div class="label">Spins ready</div></div>
         <div class="stat"><div class="num" id="tasksToNextSpin">5</div><div class="label">Tasks to next spin</div></div>
       </div>
+      <div class="spin-expiry" id="spinExpiryNote" style="display:none;"></div>
       <div class="wheel-wrap">
         <div class="wheel-pointer"></div>
         <canvas id="wheelCanvas" width="260" height="260"></canvas>
@@ -2016,6 +2127,7 @@
       <h2>Requests</h2>
       <p style="color:var(--muted);font-size:13px;margin-top:-4px;">Reward ideas waiting on the other person to sign off before they hit the wheel.</p>
       <div id="rewardRequestList"></div>
+      <div class="quota-note" id="quotaNote"></div>
     </div>
 
     <div class="card">
@@ -2023,14 +2135,14 @@
       <div id="rewardList"></div>
       <form id="rewardForm" style="display:flex;gap:8px;margin-top:10px;">
         <input type="text" id="rewardName" placeholder="Propose a reward..." style="flex:1;">
-        <select id="rewardTier">
-          <option value="common">Common</option>
-          <option value="uncommon">Uncommon</option>
-          <option value="rare">Rare</option>
-        </select>
+        <!-- The rarity used to be chosen here, by the person asking for the reward. Asking
+             someone to rate their own request "big" is asking them to make it unlikely, so
+             nobody ever did — everything landed on the wheel as common. The other person
+             sets it at approval instead, which is what makes it a real price. -->
+        <select id="rewardTier" hidden><option value="common" selected>common</option></select>
         <button type="submit" class="ghost">Propose</button>
       </form>
-      <p style="color:var(--muted);font-size:12px;margin-top:6px;margin-bottom:0;">New rewards need a thumbs-up from the other person before they join the wheel.</p>
+      <p style="color:var(--muted);font-size:12px;margin-top:6px;margin-bottom:0;">Just name it — <span id="whoRates">the other one</span> decides how rare it is when they approve it.</p>
     </div>
 
     <div class="card">
@@ -2104,6 +2216,40 @@
     <div class="card">
       <h2>Notes to you</h2>
       <div id="notesList"></div>
+    </div>
+
+    <!-- Every note either of you has ever sent, both directions. "Notes to you" above is the
+         inbox — it answers "has she left me anything". This answers "what have we actually
+         said to each other", which is a different question and the reason notes are kept
+         forever rather than trimmed. -->
+    <div class="card" id="noteArchiveCard">
+      <div class="note-arch-head">
+        <h2 style="margin:0;">Everything you've written</h2>
+        <span class="note-arch-count" id="noteArchiveCount"></span>
+      </div>
+      <div class="note-arch-filters" id="noteArchiveFilters">
+        <button type="button" class="active" data-notes="all">All</button>
+        <button type="button" data-notes="in">To you</button>
+        <button type="button" data-notes="out">From you</button>
+      </div>
+      <div id="noteArchiveList"></div>
+      <button type="button" class="ghost" id="noteArchiveMore" style="width:100%;margin-top:10px;display:none;">Show older</button>
+    </div>
+  </div>
+
+  <!-- MEMORIES VIEW -->
+  <div class="view" id="view-memories">
+    <div class="card">
+      <div class="mem-head">
+        <button type="button" class="mem-nav" id="memPrev" aria-label="Previous month">‹</button>
+        <div>
+          <div class="mem-month" id="memMonth">—</div>
+          <div class="mem-sub" id="memSub"></div>
+        </div>
+        <button type="button" class="mem-nav" id="memNext" aria-label="Next month">›</button>
+      </div>
+      <div class="mem-grid" id="memGrid"></div>
+      <div class="mem-note" id="memNote"></div>
     </div>
   </div>
 
@@ -2194,6 +2340,41 @@
 
 <!-- Trip dates, editable after the fact. Until now they could only be set when the trip was
      first added, so a trip created without them could never switch together mode on. -->
+<!-- The question that follows a daily photo. A sheet, not a strip on the home screen:
+     it has to be answerable in the moment and then GONE. Nothing about it lives on the
+     main screen, because a prompt you walk past every day stops being an invitation. -->
+<div class="album-bg" id="memDayBg">
+  <div class="album-sheet" style="max-width:460px;">
+    <div class="album-head">
+      <div>
+        <div class="album-title" id="memDayTitle">A day</div>
+        <div class="album-sub" id="memDaySub"></div>
+      </div>
+      <button type="button" class="album-close" id="memDayClose" aria-label="Close">✕</button>
+    </div>
+    <div class="mem-day-photos" id="memDayPhotos"></div>
+    <div id="memDayNotes"></div>
+  </div>
+</div>
+
+<div class="album-bg" id="photoQBg">
+  <div class="album-sheet" style="max-width:420px;">
+    <div class="album-head">
+      <div>
+        <div class="album-title">Photo posted 📸</div>
+        <div class="album-sub" id="photoQSub">One question before you go — your answer lands in their notes.</div>
+      </div>
+      <button type="button" class="album-close" id="photoQClose" aria-label="Close">✕</button>
+    </div>
+    <div class="photoq-q" id="photoQText"></div>
+    <textarea id="photoQAnswer" rows="3" placeholder="However short you like…" style="width:100%;"></textarea>
+    <div class="row2" style="margin-top:14px;">
+      <button class="ghost" id="photoQSkip">Not today</button>
+      <button class="primary" id="photoQSend">Send it</button>
+    </div>
+  </div>
+</div>
+
 <div class="album-bg" id="tripDatesBg">
   <div class="album-sheet" style="max-width:420px;">
     <div class="album-head">
@@ -2585,12 +2766,22 @@
       // one photo per person, replaced each day (never a growing history) so the shared
       // gist stays small enough to keep syncing — see mergeStates for how the newer wins
       dailyPhotos: {},      // pid -> {photo, date:"YYYY-MM-DD", at:ISO}
+      // Every day either of you has posted, kept. dailyPhotos holds only the CURRENT slot
+      // and is overwritten each day, which meant yesterday's picture stopped being
+      // referenced and the orphan sweep deleted its file — a year of days quietly binned.
+      // The album holds a reference to each day instead, so the bytes stay alive in the gist
+      // and the Memories tab has something to show.
+      album: {},            // "YYYY-MM-DD" -> {pid: {photo, at:ISO}}
       // live daily horoscope, cached per sign per day. Synced, so whichever phone opens
       // first does the fetch and the other just reads it.
       horoscopes: {},       // "aquarius" -> {date:"YYYY-MM-DD", text, at:ISO}
       // last ISO week each person was asked to suggest a reward, so the prompt is weekly
       // rather than every time the app opens
       rewardIdeaWeek: {},   // pid -> "2026-W34"
+      // the month whose spins are currently live. When this no longer matches the calendar
+      // month, every unspent spin has expired — see expireSpinsIfNewMonth.
+      spinPeriod: null,     // "YYYY-MM"
+      spinWarnMonth: null,  // the month we've already sent the "use them" nudge for
       // "together mode": while a trip's dates cover today, the daily codes step aside and
       // the two photo slots become one shared frame. Keyed by DATE, not by person, because
       // there's only one of these a day and either phone may post it.
@@ -3135,6 +3326,9 @@
       btn.classList.add("active");
       document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active");});
       document.getElementById("view-"+btn.dataset.tab).classList.add("active");
+      // Memories is the one tab that may need the network. Kick the fetch on the way in
+      // rather than on load, so a tab nobody opens costs nothing.
+      if(btn.dataset.tab === "memories"){ renderMemories(); if(memMonth) loadAlbumMonth(memMonth); }
     });
   });
 
@@ -3323,6 +3517,28 @@
     if(who === "both") return t.assignedTo === "both";
     return t.assignedTo === who || t.assignedTo === "both";
   }
+  // ---- Yours / Together / theirs ----
+  // The list used to be one flat run with a filter chip above it, defaulting to "all" — so
+  // the default view was every task mixed together and you had to actively filter to see
+  // what was actually yours. Sections invert that: the split is the resting state, and the
+  // filter becomes the thing you reach for rather than the thing you need.
+  function groupTasksForView(list, me){
+    var other = otherPerson(me);
+    var mine = [], ours = [], theirs = [];
+    list.forEach(function(t){
+      if(t.assignedTo === "both") ours.push(t);
+      else if(t.assignedTo === me) mine.push(t);
+      else theirs.push(t);
+    });
+    var groups = [];
+    if(mine.length)  groups.push({key:"mine",  label:"Yours",    items:mine});
+    if(ours.length)  groups.push({key:"ours",  label:"Together", items:ours});
+    // theirs sits last and quieter: it's there so you know what they're carrying, not
+    // because it's your problem
+    if(theirs.length) groups.push({key:"theirs", label:personName(other) + "'s", items:theirs, muted:true});
+    return groups;
+  }
+
   function sortTasksBy(list, sort){
     var out = list.slice();
     if(sort === "oldest"){
@@ -3439,9 +3655,22 @@
         g.items.forEach(function(t){ open.appendChild(taskRow(t)); });
       });
     } else {
-      openTasks.forEach(function(t){
-        open.appendChild(taskRow(t));
-      });
+      var meNow = deviceOwner() || state.currentUser;
+      var groups = groupTasksForView(openTasks, meNow);
+      // Only section when nothing is filtered — a filtered list is already one group, and
+      // stamping a header on it just adds a line that says what the chip above already says.
+      if(vf.assignee === "all" && groups.length > 1){
+        groups.forEach(function(g){
+          var h = document.createElement("div");
+          h.className = "task-group" + (g.muted ? " muted" : "");
+          h.innerHTML = '<span>' + escapeHtml(g.label) + '</span>' +
+                        '<span class="task-group-count">' + g.items.length + '</span>';
+          open.appendChild(h);
+          g.items.forEach(function(t){ open.appendChild(taskRow(t)); });
+        });
+      } else {
+        openTasks.forEach(function(t){ open.appendChild(taskRow(t)); });
+      }
     }
 
     if(doneTasks.length===0){
@@ -4116,7 +4345,9 @@
         totalCompleted: tc,
         spinsUsed: used,
         spinsAvailable: Math.max(0, Math.floor(tc/5) - used),
-        progressToSpin: tc % 5
+        progressToSpin: tc % 5,
+        // lifetime counters only ever climb, so max() is the whole merge rule
+        spinsExpired: Math.max(lp.spinsExpired||0, rp.spinsExpired||0)
       };
       var ls = (L.streaks||{})[pid] || {}, rs = (R.streaks||{})[pid] || {};
       if(String(ls.lastDate||"") === String(rs.lastDate||"")){
@@ -4208,6 +4439,10 @@
     // earliest wins — that's the true "day zero" for the missed-code lock on both phones
     var lIns = L.installedAt, rIns = R.installedAt;
     m.installedAt = (lIns && rIns) ? (lIns < rIns ? lIns : rIns) : (lIns || rIns || todayISO());
+    // Whichever phone has already rolled the month wins: expiry must not un-happen because
+    // the other phone hasn't opened yet and still thinks it's last month.
+    m.spinPeriod = (String(L.spinPeriod||"") > String(R.spinPeriod||"")) ? L.spinPeriod : (R.spinPeriod || L.spinPeriod || null);
+    m.spinWarnMonth = (String(L.spinWarnMonth||"") > String(R.spinWarnMonth||"")) ? L.spinWarnMonth : (R.spinWarnMonth || L.spinWarnMonth || null);
     m.healthGistUrl = base.healthGistUrl || other.healthGistUrl;
     // the health topics are the only way a reading reaches the other phone, so a side that
     // has one always wins over a side that doesn't — same rule as the notification topics
@@ -4254,6 +4489,28 @@
       if(!rp){ m.dailyPhotos[pid] = lp; return; }
       if(!lp){ m.dailyPhotos[pid] = rp; return; }
       m.dailyPhotos[pid] = String(lp.at||"") >= String(rp.at||"") ? lp : rp;
+    });
+
+    // The album is a union and never a subtraction. Dropping a day here would unreference
+    // its file, and the orphan sweep would then delete the only copy — so every day either
+    // side knows about survives, and a clash is settled by whichever entry is newer.
+    m.album = {};
+    var albDays = {};
+    [L.album, R.album].forEach(function(o){ for(var d in (o||{})) albDays[d] = 1; });
+    Object.keys(albDays).forEach(function(d){
+      var la = (L.album||{})[d] || {}, ra = (R.album||{})[d] || {};
+      var day = {};
+      var whos = {};
+      for(var k in la) whos[k] = 1;
+      for(var k2 in ra) whos[k2] = 1;
+      Object.keys(whos).forEach(function(who){
+        var a = la[who], b = ra[who];
+        if(!a && !b) return;
+        if(!b){ day[who] = a; return; }
+        if(!a){ day[who] = b; return; }
+        day[who] = String(a.at||"") >= String(b.at||"") ? a : b;
+      });
+      if(Object.keys(day).length) m.album[d] = day;
     });
     // trip photos: keyed by DATE and writable from either phone. Merged per-date so a day
     // one of you filled in is never dropped just because the other side saved later — only
@@ -4336,6 +4593,12 @@
   // Ids are content-derived, so the same picture posted twice costs one file, and a file that
   // already exists is never re-sent.
   var PHOTO_PREFIX = "photo-";
+  // Archived days get their own prefix rather than sharing "photo-". Two reasons. It keeps
+  // the album's files out of reach of an older build's orphan sweep, which only knows about
+  // "photo-" and would otherwise delete every archived day it couldn't see a reference for.
+  // And it makes the two lifetimes legible in the gist: "photo-" files are the current day
+  // and come and go, "alb-" files are the record and are meant to stay.
+  var ALBUM_PREFIX = "alb-";
   var PHOTO_REF = "ref:";
   // How many NEW photo FILES may ride along in one PATCH, and how many bytes of them.
   // The byte cap matters more than the count: GitHub rejects an oversized gist write
@@ -4346,18 +4609,35 @@
   function photoId(dataUrl){
     return mixSeed(dataUrl).toString(16) + "-" + dataUrl.length.toString(36);
   }
-  function photoFileName(id){ return PHOTO_PREFIX + id + ".txt"; }
+  function photoFileName(id, kind){
+    return (kind === "album" ? ALBUM_PREFIX : PHOTO_PREFIX) + id + ".txt";
+  }
+  function isPhotoStoreFile(name){
+    return name.indexOf(PHOTO_PREFIX) === 0 || name.indexOf(ALBUM_PREFIX) === 0;
+  }
   function isPhotoRef(v){ return typeof v === "string" && v.indexOf(PHOTO_REF) === 0; }
   function isInlinePhoto(v){ return typeof v === "string" && v.indexOf("data:") === 0; }
 
   // every place a photo can be stored. `task.image` is deliberately absent — that's a remote
   // Wikipedia URL, not our bytes.
-  function eachPhotoSlot(st, fn){
+  // `fn` receives (slot, kind). Kind is "album" for an archived day and "main" for
+  // everything else, and it matters in three places: which file name the bytes get, whether
+  // a sync resolves the ref eagerly, and whether the orphan sweep counts it as live.
+  //
+  // `opts.skipAlbum` exists for resolvePhotos alone. Every other caller must see the album
+  // or its files get treated as unreferenced and deleted.
+  function eachPhotoSlot(st, fn, opts){
     var dp = st.dailyPhotos || {};
-    for(var pid in dp){ if(dp.hasOwnProperty(pid) && dp[pid]) fn(dp[pid]); }
+    for(var pid in dp){ if(dp.hasOwnProperty(pid) && dp[pid]) fn(dp[pid], "main"); }
     var tp = st.tripPhotos || {};
-    for(var ds in tp){ if(tp.hasOwnProperty(ds) && tp[ds]) fn(tp[ds]); }
-    (st.tasks || []).forEach(function(t){ if(t) fn(t); });
+    for(var ds in tp){ if(tp.hasOwnProperty(ds) && tp[ds]) fn(tp[ds], "main"); }
+    (st.tasks || []).forEach(function(t){ if(t) fn(t, "main"); });
+    if(opts && opts.skipAlbum) return;
+    var al = st.album || {};
+    for(var d in al){
+      if(!al.hasOwnProperty(d) || !al[d]) continue;
+      for(var who in al[d]){ if(al[d].hasOwnProperty(who) && al[d][who]) fn(al[d][who], "album"); }
+    }
   }
 
   // Replace inline photos with refs, returning the files that must go up alongside.
@@ -4387,10 +4667,10 @@
     if(limit == null) limit = MAX_NEW_PHOTOS_PER_SYNC;
     if(byteLimit == null) byteLimit = MAX_PHOTO_BYTES_PER_SYNC;
     var files = {}, added = 0, bytes = 0, deferred = 0;
-    eachPhotoSlot(st, function(o){
+    eachPhotoSlot(st, function(o, kind){
       var v = o.photo;
       if(!isInlinePhoto(v)) return;
-      var id = photoId(v), name = photoFileName(id);
+      var id = photoId(v), name = photoFileName(id, kind);
       o.photo = PHOTO_REF + id;                       // the ref goes up either way
       if(existing[name] || files[name]) return;       // already in the gist
       if(added >= limit || (added > 0 && bytes + v.length > byteLimit)){ deferred++; return; }
@@ -4443,6 +4723,9 @@
     return idx;
   }
 
+  // The album is deliberately NOT resolved here. A year of archived days is a year of
+  // downloads on every sync, for pictures nobody has asked to look at. Album refs stay refs
+  // until the Memories tab opens a month, which fetches only that month — see loadAlbumMonth.
   function resolvePhotos(st, gistFiles){
     var waits = [], complete = true, mine = localPhotoIndex();
     eachPhotoSlot(st, function(o){
@@ -4460,7 +4743,7 @@
       } else {
         complete = false;
       }
-    });
+    }, {skipAlbum: true});
     var done = waits.length ? Promise.all(waits) : Promise.resolve();
     return done.then(function(){ return {complete: complete}; });
   }
@@ -4473,13 +4756,13 @@
   // a trophy photo replaced. Without this the gist would only ever grow.
   function orphanPhotoFiles(st, gistFiles){
     var live = {};
-    eachPhotoSlot(st, function(o){
-      if(isPhotoRef(o.photo)) live[photoFileName(o.photo.slice(PHOTO_REF.length))] = 1;
-      else if(isInlinePhoto(o.photo)) live[photoFileName(photoId(o.photo))] = 1;
+    eachPhotoSlot(st, function(o, kind){
+      if(isPhotoRef(o.photo)) live[photoFileName(o.photo.slice(PHOTO_REF.length), kind)] = 1;
+      else if(isInlinePhoto(o.photo)) live[photoFileName(photoId(o.photo), kind)] = 1;
     });
     var dead = [];
     for(var name in gistFiles){
-      if(name.indexOf(PHOTO_PREFIX) === 0 && !live[name]) dead.push(name);
+      if(isPhotoStoreFile(name) && !live[name]) dead.push(name);
     }
     return dead;
   }
@@ -4563,6 +4846,10 @@
           merged.viewFilter = state.viewFilter;
           state = merged;
           state.people.forEach(function(p){ ensurePerson(state, p.id); });
+          // A day that arrived from the other phone lands in dailyPhotos; if that phone was
+          // on an older build it brought no album entry with it, and tomorrow's post would
+          // be the last time anyone saw it.
+          backfillAlbum();
           save();
           // don't yank the UI around while the add-task sheet is open
           if(!document.getElementById("addTaskSheet").classList.contains("show")) renderAll();
@@ -4672,7 +4959,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 74;
+  var BUILD_NUM = 77;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -8092,9 +8379,13 @@
         var name = inp.value.trim();
         if(!name){ toast("Type an idea first"); return; }
         if(!state.rewardRequests) state.rewardRequests = [];
+        if(proposalsLeft(me) <= 0){
+          toast("That's your three for this month — next month resets"); return;
+        }
         state.rewardRequests.push({
           id: uid(), mtime: Date.now(), name: name, tier: tierSel.value,
-          emoji: emojiByTier[tierSel.value], proposedBy: me, date: new Date().toISOString()
+          emoji: emojiByTier[tierSel.value], proposedBy: me, month: monthKeyNow(),
+          date: new Date().toISOString()
         });
         announce('suggested a new reward: "' + name + '" \uD83D\uDCA1');
         markRewardIdeaAsked(me);
@@ -8144,6 +8435,16 @@
   }
 
   function renderRewardRequests(){
+    renderSpinExpiry();
+    var who = document.getElementById("whoRates");
+    if(who) who.textContent = personName(otherPerson(deviceOwner() || state.currentUser)) || "the other one";
+    var quota = document.getElementById("quotaNote");
+    if(quota){
+      var meQ = deviceOwner() || state.currentUser, leftQ = proposalsLeft(meQ);
+      quota.textContent = leftQ > 0
+        ? leftQ + (leftQ === 1 ? " reward idea" : " reward ideas") + " left to propose this month"
+        : "You've used all three of this month's reward ideas";
+    }
     var card = document.getElementById("rewardRequestsCard");
     var wrap = document.getElementById("rewardRequestList");
     wrap.innerHTML = "";
@@ -8157,18 +8458,29 @@
       var row = document.createElement("div");
       row.className = "reward-item";
       row.style.flexWrap = "wrap";
-      var canDecide = state.currentUser !== r.proposedBy;
+      // Deliberately deviceOwner(), not currentUser: "viewing as" is a debugging control,
+      // and if it disagreed with whose phone this is you could approve — and price — your
+      // own reward request, which defeats the point of the other person setting the cost.
+      var actor = deviceOwner() || state.currentUser;
+      var canDecide = actor !== r.proposedBy;
       var actionsHtml;
       if(canDecide){
-        actionsHtml = '<button type="button" class="ghost req-approve" data-id="'+r.id+'" style="padding:4px 10px;font-size:12px;">Approve</button>'+
-          '<button type="button" class="ghost req-decline" data-id="'+r.id+'" style="padding:4px 10px;font-size:12px;">Decline</button>';
+        // The approver sets the rarity, not the proposer — that is the "cost". Rating it big
+        // makes its slice thin, so asking for a weekend away is allowed but rarely lands.
+        actionsHtml = '<button type="button" class="ghost req-decline" data-id="'+r.id+'" style="padding:4px 10px;font-size:12px;">Decline</button>';
       } else {
-        actionsHtml = '<span class="pending-pill">awaiting '+personName(otherPerson(r.proposedBy))+'</span>'+
+        actionsHtml = '<span class="pending-pill">awaiting '+escapeHtml(personName(otherPerson(r.proposedBy)))+'</span>'+
           '<button type="button" class="ghost req-cancel" data-id="'+r.id+'" style="padding:4px 10px;font-size:12px;">Cancel</button>';
       }
-      row.innerHTML = '<div class="left"><span>'+r.emoji+'</span><span>'+r.name+' <span style="color:var(--muted);font-size:11px;">— proposed by '+personName(r.proposedBy)+'</span></span></div>'+
-        '<div style="display:flex;gap:6px;align-items:center;">'+
-        '<span class="tier-tag tier-'+r.tier+'">'+r.tier+'</span>'+actionsHtml+'</div>';
+      row.innerHTML = '<div class="left"><span>'+escapeHtml(r.emoji||"")+'</span><span>'+escapeHtml(r.name)+' <span style="color:var(--muted);font-size:11px;">— from '+escapeHtml(personName(r.proposedBy))+'</span></span></div>'+
+        '<div style="display:flex;gap:6px;align-items:center;">'+actionsHtml+'</div>' +
+        (canDecide
+          ? '<div class="rarity-pick">' +
+              '<button type="button" class="ghost req-approve" data-id="'+r.id+'" data-tier="common">Small · easy to land</button>' +
+              '<button type="button" class="ghost req-approve" data-id="'+r.id+'" data-tier="uncommon">Medium</button>' +
+              '<button type="button" class="ghost req-approve" data-id="'+r.id+'" data-tier="rare">Big · rare</button>' +
+            '</div>'
+          : '');
       wrap.appendChild(row);
     });
 
@@ -8178,11 +8490,14 @@
         var idx = state.rewardRequests.findIndex(function(r){return r.id===id;});
         if(idx<0) return;
         var r = state.rewardRequests[idx];
-        state.rewards.push({id:uid(), mtime:Date.now(), name:r.name, tier:r.tier, emoji:r.emoji});
+        var tier = btn.dataset.tier || r.tier || "common";
+        state.rewards.push({id:uid(), mtime:Date.now(), name:r.name, tier:tier,
+          emoji:emojiByTier[tier] || r.emoji, proposedBy:r.proposedBy, month:r.month || monthKeyNow()});
         tombstone(r.id);
         state.rewardRequests.splice(idx,1);
         save(); renderRewards(); drawWheel();
-        toast("Added \""+r.name+"\" to the wheel");
+        var how = tier === "rare" ? "a rare one" : (tier === "uncommon" ? "a medium one" : "an easy one");
+        toast("Added \""+r.name+"\" as "+how);
       });
     });
     wrap.querySelectorAll(".req-decline").forEach(function(btn){
@@ -8216,18 +8531,157 @@
     if(!name) return;
     var tier = document.getElementById("rewardTier").value;
     if(!state.rewardRequests) state.rewardRequests = [];
-    state.rewardRequests.push({id:uid(), mtime:Date.now(), name:name, tier:tier, emoji:emojiByTier[tier], proposedBy:state.currentUser, date:new Date().toISOString()});
+    var meProp = deviceOwner() || state.currentUser;
+    if(proposalsLeft(meProp) <= 0){
+      toast("That's your three for this month — next month resets"); return;
+    }
+    state.rewardRequests.push({id:uid(), mtime:Date.now(), name:name, tier:tier,
+      emoji:emojiByTier[tier], proposedBy:meProp, month:monthKeyNow(),
+      date:new Date().toISOString()});
     document.getElementById("rewardName").value = "";
     save(); renderRewards();
     toast("Sent \""+name+"\" to "+personName(otherPerson(state.currentUser))+" for approval");
   });
 
+
+  // ================= THE MONTHLY ECONOMY =================
+  // Spins are DERIVED, not stored: floor(totalCompleted / 5) - spinsUsed. That turned out
+  // to be lucky, because it makes expiry trivially merge-safe — expiring a spin just means
+  // incrementing spinsUsed, and the merge already takes max() of that field. Nothing has to
+  // be invented, and two phones expiring the same month independently converge on the same
+  // answer instead of double-charging.
+  function monthKeyNow(){ return todayISO().slice(0, 7); }
+
+  function daysLeftInMonth(){
+    var d = new Date();
+    var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    return last - d.getDate();
+  }
+
+  // Runs on open. Any spin still unspent when the month turns is gone — that is the whole
+  // point of the deadline — but the lifetime counters never move backwards, so nothing you
+  // actually earned is erased, only the right to cash it in late.
+  function expireSpinsIfNewMonth(){
+    var now = monthKeyNow();
+    if(!state.spinPeriod){ state.spinPeriod = now; save(); return false; }
+    if(state.spinPeriod === now) return false;
+    var report = [];
+    state.people.forEach(function(p){
+      var pts = state.points[p.id]; if(!pts) return;
+      var unspent = Math.max(0, Math.floor((pts.totalCompleted || 0) / 5) - (pts.spinsUsed || 0));
+      if(unspent > 0){
+        pts.spinsUsed = (pts.spinsUsed || 0) + unspent;
+        pts.spinsAvailable = 0;
+        pts.spinsExpired = (pts.spinsExpired || 0) + unspent;
+        report.push({pid: p.id, n: unspent});
+      }
+    });
+    state.spinPeriod = now;
+    state.spinWarnMonth = null;
+    save(); scheduleSync();
+    if(report.length){
+      var mine = report.filter(function(r){ return r.pid === deviceOwner(); })[0];
+      if(mine){
+        showModal("⏳", "The month turned",
+          mine.n + (mine.n === 1 ? " spin" : " spins") + " expired unused.\n\n" +
+          "Spins only last the month they're earned in — that's what stops them piling up " +
+          "into a number nobody ever cashes. Your lifetime totals are untouched.");
+      }
+    }
+    return report.length > 0;
+  }
+
+  // The nudge before the deadline. Fires once a month, three days out, and only if there is
+  // actually something to lose — a reminder about zero spins is just noise.
+  function spinExpiryWatch(){
+    var me = deviceOwner() || state.currentUser;
+    if(!me) return;
+    var pts = state.points[me] || {};
+    var unspent = pts.spinsAvailable || 0;
+    var left = daysLeftInMonth();
+    if(unspent <= 0 || left > 3) return;
+    var mk = monthKeyNow();
+    if(state.spinWarnMonth === mk) return;
+    state.spinWarnMonth = mk;
+    save(); scheduleSync();
+    if(typeof ntfySend === "function" && typeof ntfyOn === "function" && ntfyOn()){
+      ntfySend(me, {
+        title: "WeDO",
+        body: unspent + (unspent === 1 ? " spin expires" : " spins expire") +
+              (left === 0 ? " tonight" : " in " + left + (left === 1 ? " day" : " days")) + " — use them",
+        tags: "hourglass_flowing_sand",
+        click: location.origin + location.pathname
+      });
+    }
+  }
+
+  function renderSpinExpiry(){
+    var box = document.getElementById("spinExpiryNote");
+    if(!box) return;
+    var me = deviceOwner() || state.currentUser;
+    var pts = (state.points || {})[me] || {};
+    var unspent = pts.spinsAvailable || 0;
+    var left = daysLeftInMonth();
+    if(unspent <= 0){ box.style.display = "none"; return; }
+    box.style.display = "";
+    box.className = "spin-expiry" + (left <= 3 ? " urgent" : "");
+    box.innerHTML = left <= 3
+      ? "<b>⏳ " + unspent + (unspent === 1 ? " spin expires " : " spins expire ") +
+        (left === 0 ? "tonight" : "in " + left + (left === 1 ? " day" : " days")) + ".</b> " +
+        "Spins don't carry into next month."
+      : unspent + (unspent === 1 ? " spin" : " spins") + " to use before the month ends.";
+  }
+
+  // ---- monthly reward proposals ----
+  // Three each a month. The cap exists so the pool grows at a pace you'd actually want to
+  // spin through, rather than one person filling the wheel with their own ideas.
+  var PROPOSALS_PER_MONTH = 3;
+  function proposalsThisMonth(pid){
+    var mk = monthKeyNow(), n = 0;
+    (state.rewardRequests || []).forEach(function(r){
+      if(r.proposedBy === pid && String(r.month || "") === mk) n++;
+    });
+    (state.rewards || []).forEach(function(r){
+      if(r.proposedBy === pid && String(r.month || "") === mk) n++;
+    });
+    return n;
+  }
+  function proposalsLeft(pid){ return Math.max(0, PROPOSALS_PER_MONTH - proposalsThisMonth(pid)); }
+
+  // ---- the wheel's rotating sample ----
+  // The pool grows forever, so the wheel can't be the pool. Each draw takes a sample,
+  // weighted so a big reward is thin but genuinely reachable, and reshuffles next spin —
+  // every reward stays live and the wheel stays readable at eight slices.
+  var WHEEL_SLICES = 8;
+  function sampleRewards(){
+    var pool = (state.rewards || []).slice();
+    if(pool.length <= WHEEL_SLICES) return pool;
+    // always keep at least one of each tier present when the pool has them, so a big
+    // reward can never be sampled out of existence for a whole spin
+    var byTier = {common:[], uncommon:[], rare:[]}, picked = [], seen = {};
+    pool.forEach(function(r){ if(byTier[r.tier]) byTier[r.tier].push(r); });
+    ["rare","uncommon","common"].forEach(function(t){
+      var arr = byTier[t];
+      if(arr.length){
+        var r = arr[Math.floor(Math.random() * arr.length)];
+        picked.push(r); seen[r.id] = 1;
+      }
+    });
+    var rest = pool.filter(function(r){ return !seen[r.id]; });
+    for(var i = rest.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = rest[i]; rest[i] = rest[j]; rest[j] = tmp;
+    }
+    return picked.concat(rest.slice(0, WHEEL_SLICES - picked.length));
+  }
+
   // ---------- wheel ----------
   var wheelRotation = 0;
   function weightedRewardList(){
-    // build list with per-item weight = tier weight / count of items in that tier
+    // build list with per-item weight = tier weight / count of items in that tier.
+    // The input is a SAMPLE of the pool, not the pool — see sampleRewards for why.
     var byTier = {common:[], uncommon:[], rare:[]};
-    state.rewards.forEach(function(r){ if(byTier[r.tier]) byTier[r.tier].push(r); });
+    sampleRewards().forEach(function(r){ if(byTier[r.tier]) byTier[r.tier].push(r); });
     var list = [];
     Object.keys(byTier).forEach(function(tier){
       var items = byTier[tier];
@@ -8597,6 +9051,413 @@
       toast(personName(pid) + " hasn't posted one yet \uD83D\uDCF8");
     }
   }
+  // ---- the question that follows a daily photo ----
+  // This used to be a text strip under the photos asking "want to say something about it?".
+  // Two things were wrong with it. It sat on the home screen, so it was visible whether or
+  // not you'd just posted — and it produced a caption, which nobody else ever went looking
+  // for. Now it's a sheet that appears once, in the moment, and what you write becomes a
+  // NOTE to the other person, landing in the place they already check for notes.
+  //
+  // The bank alternates between questions about them and questions about your own day, so
+  // it can't settle into a rhythm you learn to skip. Odd days ask about them; even days
+  // ask about you. Both kinds end up in the same place.
+  var PHOTO_Q_THEM = [
+    "What did {them} do this week that you never got round to saying thank you for?",
+    "Name something {them} is quietly good at.",
+    "When did you last see {them} properly laugh? What set it off?",
+    "What does {them} need more of right now?",
+    "What's a small thing {them} does that you'd miss if it stopped?",
+    "What is {them} carrying at the moment that you could take off their plate?",
+    "What did {them} get right this week that nobody mentioned?",
+    "If {them} could hear one sentence from you today, what should it be?",
+    "What have you noticed about {them} lately but not said out loud?",
+    "What is {them} worried about but not saying?",
+    "What did {them} do today that made your day easier?",
+    "What do you admire about how {them} handles a bad day?"
+  ];
+  var PHOTO_Q_YOU = [
+    "What's actually going on in this picture?",
+    "What was the best minute of your day?",
+    "What's on your mind right now that you haven't told anyone?",
+    "What are you looking forward to this week?",
+    "What wore you out today?",
+    "What's one thing you'd do differently if today started again?",
+    "What made you smile today, however small?",
+    "What do you need this evening?",
+    "Where were you when you took this, and why there?",
+    "What's the thing you keep putting off?",
+    "What went better today than you expected?",
+    "What would make tomorrow a good day?"
+  ];
+  // Deterministic from the date, so the question doesn't change under you if the sheet is
+  // reopened, and so both phones show the same one on the same day.
+  function photoQuestionFor(dateISO, me){
+    var n = dayNumberFor(dateISO);
+    var them = personName(otherPerson(me));
+    var bank = (n % 2 === 1) ? PHOTO_Q_THEM : PHOTO_Q_YOU;
+    var q = bank[Math.floor(n / 2) % bank.length];
+    return q.replace(/\{them\}/g, them);
+  }
+  // days since epoch — a stable integer per calendar day that doesn't reset each year the
+  // way dayOfYear() does, so the bank keeps advancing instead of repeating every January.
+  function dayNumberFor(dateISO){
+    var t = Date.parse(String(dateISO) + "T00:00:00Z");
+    return isFinite(t) ? Math.floor(t / 86400000) : 0;
+  }
+
+  var PHOTO_Q_SKIP_KEY = "us-photoq-skipped-v1";
+  function photoQSkippedToday(){
+    try{ return localStorage.getItem(PHOTO_Q_SKIP_KEY) === todayISO(); }catch(e){ return false; }
+  }
+  var photoQBg = document.getElementById("photoQBg");
+  var photoQFor = null;
+
+  function closePhotoQ(){
+    photoQBg.classList.remove("show");
+    photoQFor = null;
+  }
+  function skipPhotoQ(){
+    try{ localStorage.setItem(PHOTO_Q_SKIP_KEY, todayISO()); }catch(e){}
+    closePhotoQ();
+  }
+  function openPhotoQ(pid){
+    if(photoQSkippedToday()) return;
+    photoQFor = pid;
+    var q = photoQuestionFor(todayISO(), pid);
+    document.getElementById("photoQText").textContent = q;
+    document.getElementById("photoQSub").textContent =
+      "One question before you go — your answer goes straight to " +
+      personName(otherPerson(pid)) + "'s notes.";
+    var ta = document.getElementById("photoQAnswer");
+    ta.value = "";
+    ta.placeholder = "However short you like…";
+    photoQBg.classList.add("show");
+    setTimeout(function(){ try{ ta.focus(); }catch(e){} }, 80);
+  }
+  document.getElementById("photoQClose").addEventListener("click", skipPhotoQ);
+  document.getElementById("photoQSkip").addEventListener("click", skipPhotoQ);
+  photoQBg.addEventListener("click", function(e){ if(e.target === photoQBg) skipPhotoQ(); });
+  document.getElementById("photoQSend").addEventListener("click", function(){
+    var me = photoQFor;
+    if(!me) return;
+    var txt = (document.getElementById("photoQAnswer").value || "").trim();
+    if(!txt){ skipPhotoQ(); return; }
+    var to = otherPerson(me);
+    // The question rides along with the answer. Without it the note reads as a non-sequitur
+    // a week later — "the bins, mostly" means nothing on its own.
+    var note = {
+      fromId: me, toId: to, text: txt,
+      q: photoQuestionFor(todayISO(), me),
+      photoDate: todayISO(),
+      date: new Date().toISOString()
+    };
+    state.notes.push(note);
+    if(!save()){
+      state.notes.splice(state.notes.indexOf(note), 1);
+      showModal("💾","That didn't save",
+        "This phone's storage is full, so the note wasn't kept. Free up some space and try again — your answer is still in the box.");
+      return;
+    }
+    scheduleSync();
+    announce("answered today's photo question 💌");
+    closePhotoQ();
+    renderNotes(); renderActivityFeed();
+    toast("Sent to " + personName(to) + " 💞");
+  });
+
+  // ---- the album ----
+  // One entry per person per day, holding the same value as the daily slot. They share
+  // content, so externalisePhotos gives them the same id and the bytes upload once; the two
+  // entries differ only in how long they live. The daily slot is replaced tomorrow. This one
+  // isn't replaced at all.
+  function albumRecord(pid, value, dateISO, atISO){
+    if(!value) return;
+    if(!state.album) state.album = {};
+    var d = dateISO || todayISO();
+    if(!state.album[d]) state.album[d] = {};
+    var prev = state.album[d][pid];
+    var at = atISO || new Date().toISOString();
+    // A second photo on the same day replaces the first, exactly as the daily slot does —
+    // the album is a record of days, not of every attempt.
+    if(prev && String(prev.at || "") > String(at)) return;
+    state.album[d][pid] = {photo: value, at: at};
+  }
+
+  // Days that were posted before the album existed, or on a phone still running an older
+  // build, are still sitting in dailyPhotos. Pull them in once on load rather than letting
+  // them fall off the end tomorrow. This is cheap — dailyPhotos holds at most one per
+  // person — and it is the only chance to catch them.
+  function backfillAlbum(){
+    var dp = state.dailyPhotos || {};
+    var changed = false;
+    for(var pid in dp){
+      if(!dp.hasOwnProperty(pid) || !dp[pid] || !dp[pid].photo || !dp[pid].date) continue;
+      var d = dp[pid].date;
+      if(state.album && state.album[d] && state.album[d][pid]) continue;
+      albumRecord(pid, dp[pid].photo, d, dp[pid].at);
+      changed = true;
+    }
+    return changed;
+  }
+
+  // ================= MEMORIES =================
+  // A month at a time. Each cell is one day, split down the middle: your photo on the left,
+  // theirs on the right. A trip day is one shared frame across the whole cell, matching how
+  // it was posted.
+  //
+  // Album entries arrive as unresolved "ref:" strings — resolvePhotos deliberately skips
+  // them during sync so a year of archive isn't downloaded every few minutes. Opening a
+  // month fetches only that month's missing files, once, into memory.
+  var memMonth = null;                 // "YYYY-MM" currently on screen
+  var memBytes = {};                   // photo id -> data URL, this session only
+  var memLoading = {};                 // month -> true while its fetch is in flight
+  var memDayBg = document.getElementById("memDayBg");
+
+  function albumMonths(){
+    var ms = {};
+    var al = state.album || {};
+    for(var d in al){ if(al.hasOwnProperty(d)) ms[d.slice(0, 7)] = 1; }
+    var tp = state.tripPhotos || {};
+    for(var td in tp){ if(tp.hasOwnProperty(td)) ms[td.slice(0, 7)] = 1; }
+    ms[monthKeyNow()] = 1;             // the current month is always offerable, even if empty
+    return Object.keys(ms).sort();
+  }
+  function monthLabel(mk){
+    var d = new Date(mk + "-01T00:00:00");
+    return isFinite(d.getTime())
+      ? d.toLocaleDateString(undefined, {month:"long", year:"numeric"})
+      : mk;
+  }
+  function daysInMonth(mk){
+    var y = parseInt(mk.slice(0,4), 10), m = parseInt(mk.slice(5,7), 10);
+    return new Date(y, m, 0).getDate();
+  }
+  // What to show for one slot: real bytes if we hold them, otherwise null and a placeholder.
+  function memSrc(v){
+    if(!v) return null;
+    if(isInlinePhoto(v)) return v;
+    if(isPhotoRef(v)){
+      var id = v.slice(PHOTO_REF.length);
+      return memBytes[id] || null;
+    }
+    return null;
+  }
+
+  // Fetch the files this month needs and nothing else. Silent on failure — a month you
+  // can't load yet shows placeholders and works again next time there's signal.
+  function loadAlbumMonth(mk){
+    if(memLoading[mk] || !autoSyncOn()) return;
+    var want = {};
+    var al = state.album || {};
+    for(var d in al){
+      if(!al.hasOwnProperty(d) || d.slice(0,7) !== mk) continue;
+      for(var who in al[d]){
+        var v = al[d][who] && al[d][who].photo;
+        if(isPhotoRef(v)){
+          var id = v.slice(PHOTO_REF.length);
+          if(!memBytes[id]) want[id] = 1;
+        }
+      }
+    }
+    var ids = Object.keys(want);
+    if(!ids.length) return;
+    memLoading[mk] = true;
+    var headers = {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json"};
+    fetch("https://api.github.com/gists/" + gistIdFromUrl(), {headers: headers})
+      .then(function(r){ if(!r.ok) throw new Error("read " + r.status); return r.json(); })
+      .then(function(g){
+        var files = g.files || {};
+        var waits = [];
+        ids.forEach(function(id){
+          // an archived day lives under "alb-", but a day archived before it was ever
+          // synced may still only exist as the "photo-" copy
+          var f = files[photoFileName(id, "album")] || files[photoFileName(id)];
+          if(!f) return;
+          if(f.truncated && f.raw_url){
+            waits.push(fetch(f.raw_url).then(function(r){ return r.text(); })
+              .then(function(t){ if(t) memBytes[id] = t; }).catch(function(){}));
+          } else if(f.content){
+            memBytes[id] = f.content;
+          }
+        });
+        return waits.length ? Promise.all(waits) : null;
+      })
+      .then(function(){ memLoading[mk] = false; if(memMonth === mk) renderMemories(); })
+      .catch(function(){ memLoading[mk] = false; if(memMonth === mk) renderMemories(); });
+  }
+
+  function memDayData(dateISO){
+    var trip = (state.tripPhotos || {})[dateISO];
+    var day = (state.album || {})[dateISO] || {};
+    return {trip: trip, day: day};
+  }
+  function memDayHasAnything(dateISO){
+    var d = memDayData(dateISO);
+    if(d.trip && d.trip.photo) return true;
+    for(var k in d.day){ if(d.day.hasOwnProperty(k) && d.day[k] && d.day[k].photo) return true; }
+    return false;
+  }
+
+  function memoriesVisible(){
+    var v = document.getElementById("view-memories");
+    return !!(v && v.classList.contains("active"));
+  }
+  function renderMemories(){
+    var grid = document.getElementById("memGrid");
+    if(!grid) return;
+    // renderAll() runs after every state change. Building a month of cells — and decoding
+    // whatever images are held locally — for a tab nobody is looking at is pure cost, and
+    // the tab handler re-renders on the way in anyway.
+    if(!memoriesVisible()) return;
+    var months = albumMonths();
+    if(!memMonth || months.indexOf(memMonth) < 0) memMonth = months[months.length - 1];
+    document.getElementById("memMonth").textContent = monthLabel(memMonth);
+
+    var idx = months.indexOf(memMonth);
+    document.getElementById("memPrev").disabled = idx <= 0;
+    document.getElementById("memNext").disabled = idx >= months.length - 1;
+
+    var total = daysInMonth(memMonth);
+    var isThisMonth = memMonth === monthKeyNow();
+    var lastDay = isThisMonth ? parseInt(todayISO().slice(8, 10), 10) : total;
+    var people = state.people.slice(0, 2);
+    var filled = 0, bothCount = 0, pending = 0;
+
+    grid.innerHTML = "";
+    for(var n = 1; n <= lastDay; n++){
+      var dateISO = memMonth + "-" + (n < 10 ? "0" + n : String(n));
+      var data = memDayData(dateISO);
+      var cell = document.createElement("button");
+      cell.type = "button";
+      var has = memDayHasAnything(dateISO);
+      cell.className = "mem-cell" + (has ? "" : " empty");
+      if(has){
+        filled++;
+        (function(ds){ cell.addEventListener("click", function(){ openMemDay(ds); }); })(dateISO);
+      } else {
+        cell.disabled = true;
+      }
+
+      if(data.trip && data.trip.photo){
+        var src = memSrc(data.trip.photo);
+        cell.appendChild(memHalf(src));
+        if(!src) pending++;
+      } else if(has){
+        var gotBoth = 0;
+        people.forEach(function(p){
+          var slot = data.day[p.id];
+          var sv = slot ? memSrc(slot.photo) : null;
+          if(slot && slot.photo) gotBoth++;
+          cell.appendChild(memHalf(sv, !!(slot && slot.photo)));
+          if(slot && slot.photo && !sv) pending++;
+        });
+        if(gotBoth === 2) bothCount++;
+      }
+
+      var lab = document.createElement("span");
+      lab.className = "mem-day";
+      lab.textContent = n;
+      cell.appendChild(lab);
+      if(data.trip && data.trip.photo){
+        var dot = document.createElement("span");
+        dot.className = "mem-dot"; dot.textContent = "✈️";
+        cell.appendChild(dot);
+      }
+      grid.appendChild(cell);
+    }
+
+    document.getElementById("memSub").textContent =
+      filled === 0 ? "nothing here yet"
+                   : filled + (filled === 1 ? " day" : " days") +
+                     (bothCount ? " · " + bothCount + " with both of you" : "");
+    document.getElementById("memNote").textContent =
+      filled === 0
+        ? "Post a photo on the home screen and the day lands here. Nothing is ever deleted."
+        : (pending ? "Still fetching " + pending + " from the other phone…" : "");
+    // only chase the missing files while someone is actually looking at them — otherwise
+    // every app open would pull the gist down for an archive nobody asked to see
+    if(pending && memoriesVisible()) loadAlbumMonth(memMonth);
+  }
+
+  function memHalf(src, expected){
+    var h = document.createElement("span");
+    h.className = "mem-half" + (!src && expected ? " pending" : "");
+    if(src){
+      var img = document.createElement("img");
+      img.src = src; img.loading = "lazy"; img.alt = "";
+      h.appendChild(img);
+    } else if(expected){
+      h.textContent = "…";
+    }
+    return h;
+  }
+
+  function openMemDay(dateISO){
+    var data = memDayData(dateISO);
+    var d = new Date(dateISO + "T00:00:00");
+    document.getElementById("memDayTitle").textContent = isFinite(d.getTime())
+      ? d.toLocaleDateString(undefined, {weekday:"long", day:"numeric", month:"long", year:"numeric"})
+      : dateISO;
+    var wrap = document.getElementById("memDayPhotos");
+    wrap.innerHTML = "";
+    var shown = 0;
+    function add(src, label){
+      if(!src) return;
+      shown++;
+      var fig = document.createElement("figure");
+      var img = document.createElement("img"); img.src = src; img.alt = "";
+      fig.appendChild(img);
+      if(label){
+        var cap = document.createElement("figcaption"); cap.textContent = label;
+        fig.appendChild(cap);
+      }
+      wrap.appendChild(fig);
+    }
+    if(data.trip && data.trip.photo){
+      add(memSrc(data.trip.photo), "away together ✈️");
+    } else {
+      state.people.slice(0, 2).forEach(function(p){
+        var slot = data.day[p.id];
+        add(slot ? memSrc(slot.photo) : null, personName(p.id));
+      });
+    }
+    document.getElementById("memDaySub").textContent =
+      shown ? "" : "The pictures for this day haven't come down from the other phone yet.";
+
+    // Whatever either of you wrote that day, so the day reads as a day rather than a picture.
+    var notes = (state.notes || []).filter(function(nt){
+      return nt.photoDate === dateISO || String(nt.date || "").slice(0, 10) === dateISO;
+    });
+    var nw = document.getElementById("memDayNotes");
+    nw.innerHTML = "";
+    notes.forEach(function(nt){
+      var el = document.createElement("div");
+      el.className = "mem-day-note";
+      el.innerHTML =
+        '<div class="note-arch-meta"><span class="note-arch-dir">' +
+          escapeHtml(personName(nt.fromId)) + " → " + escapeHtml(personName(nt.toId)) +
+        '</span></div>' +
+        (nt.q ? '<div class="note-q">' + escapeHtml(nt.q) + '</div>' : '') +
+        '<div class="note-arch-text">' + escapeHtml(nt.text) + '</div>';
+      nw.appendChild(el);
+    });
+    memDayBg.classList.add("show");
+  }
+  document.getElementById("memDayClose").addEventListener("click", function(){
+    memDayBg.classList.remove("show");
+  });
+  memDayBg.addEventListener("click", function(e){
+    if(e.target === memDayBg) memDayBg.classList.remove("show");
+  });
+  document.getElementById("memPrev").addEventListener("click", function(){
+    var ms = albumMonths(), i = ms.indexOf(memMonth);
+    if(i > 0){ memMonth = ms[i - 1]; renderMemories(); loadAlbumMonth(memMonth); }
+  });
+  document.getElementById("memNext").addEventListener("click", function(){
+    var ms = albumMonths(), i = ms.indexOf(memMonth);
+    if(i >= 0 && i < ms.length - 1){ memMonth = ms[i + 1]; renderMemories(); loadAlbumMonth(memMonth); }
+  });
+
   function pickDailyPhoto(pid){
     openFilePicker("image/*", function(f){
       toast("Adding your photo…");
@@ -8608,17 +9469,28 @@
         }
         if(!state.dailyPhotos) state.dailyPhotos = {};
         var prev = state.dailyPhotos[pid];
-        state.dailyPhotos[pid] = {photo: dataUrl, date: todayISO(), at: new Date().toISOString()};
+        var prevAlbum = (state.album && state.album[todayISO()]) ? state.album[todayISO()][pid] : null;
+        var at = new Date().toISOString();
+        state.dailyPhotos[pid] = {photo: dataUrl, date: todayISO(), at: at};
+        albumRecord(pid, dataUrl, todayISO(), at);
         try{
           saveOrThrow();
           announce("posted today's photo \uD83D\uDCF8");
           save();
           renderDailyPhotos();
           renderActivityFeed();
+          // a fresh post clears an earlier skip: skipping means "not for this photo",
+          // not "never ask me again today"
+          try{ localStorage.removeItem(PHOTO_Q_SKIP_KEY); }catch(e){}
+          openPhotoQ(pid);
           toast("Photo posted \u2014 " + personName(otherPerson(pid)) + " will see it \uD83D\uDC9E");
         }catch(err){
           // put the old one back rather than leaving the slot in a half-saved state
           if(prev) state.dailyPhotos[pid] = prev; else delete state.dailyPhotos[pid];
+          if(state.album && state.album[todayISO()]){
+            if(prevAlbum) state.album[todayISO()][pid] = prevAlbum;
+            else delete state.album[todayISO()][pid];
+          }
           save();
           renderDailyPhotos();
           showModal("\uD83D\uDCBE","Out of photo storage",
@@ -8718,12 +9590,91 @@
       var d = document.createElement("div");
       d.className = "note";
       var date = new Date(n.date);
+      // A note that answers a question is meaningless without the question. Showing it
+      // above the answer is the whole reason the photo prompt asks something specific
+      // rather than "say something".
       d.innerHTML = '<div class="from">From '+personName(n.fromId)+'</div>'+
+        (n.q ? '<div class="note-q">'+escapeHtml(n.q)+'</div>' : '')+
         '<div class="text">'+escapeHtml(n.text)+'</div>'+
         '<div class="date">'+date.toLocaleString()+'</div>';
       wrap.appendChild(d);
     });
+    renderNoteArchive();
   }
+
+  // ---- the full archive ----
+  // Notes have always been kept forever — the merge unions them and nothing trims the list —
+  // but until now the only way to see one was to be its recipient, and only in reverse order
+  // with no way back past the last handful. The history existed and was unreachable.
+  var NOTE_PAGE = 12;
+  var noteArchFilter = "all";
+  var noteArchShown = NOTE_PAGE;
+
+  function allNotesSorted(){
+    return (state.notes || []).slice().sort(function(a, b){
+      return String(b.date || "").localeCompare(String(a.date || ""));
+    });
+  }
+  function noteArchMatches(n, me){
+    if(noteArchFilter === "in")  return n.toId === me;
+    if(noteArchFilter === "out") return n.fromId === me;
+    return true;
+  }
+  function renderNoteArchive(){
+    var wrap = document.getElementById("noteArchiveList");
+    if(!wrap) return;
+    var me = deviceOwner() || state.currentUser;
+    var all = allNotesSorted().filter(function(n){ return noteArchMatches(n, me); });
+    var countEl = document.getElementById("noteArchiveCount");
+    if(countEl) countEl.textContent = all.length + (all.length === 1 ? " note" : " notes");
+    wrap.innerHTML = "";
+    if(!all.length){
+      wrap.innerHTML = '<div class="empty">Nothing here yet \u2014 post a photo and answer the question that follows, or leave one above \uD83D\uDC8C</div>';
+      document.getElementById("noteArchiveMore").style.display = "none";
+      return;
+    }
+    all.slice(0, noteArchShown).forEach(function(n){
+      var out = n.fromId === me;
+      var d = document.createElement("div");
+      d.className = "note-arch";
+      var when = new Date(n.date);
+      var whenTxt = isFinite(when.getTime())
+        ? when.toLocaleDateString(undefined, {day:"numeric", month:"short", year:"numeric"})
+        : "";
+      d.innerHTML =
+        '<div class="note-arch-meta">' +
+          '<span class="note-arch-dir' + (out ? " out" : "") + '">' +
+            (out ? "You \u2192 " + escapeHtml(personName(n.toId))
+                 : escapeHtml(personName(n.fromId)) + " \u2192 you") +
+          '</span>' +
+          '<span>' + escapeHtml(whenTxt) + (n.photoDate ? " \u00B7 \uD83D\uDCF8" : "") + '</span>' +
+        '</div>' +
+        (n.q ? '<div class="note-q">' + escapeHtml(n.q) + '</div>' : '') +
+        '<div class="note-arch-text">' + escapeHtml(n.text) + '</div>';
+      wrap.appendChild(d);
+    });
+    var more = document.getElementById("noteArchiveMore");
+    more.style.display = all.length > noteArchShown ? "" : "none";
+    more.textContent = "Show older (" + (all.length - noteArchShown) + " more)";
+  }
+  (function wireNoteArchive(){
+    var fil = document.getElementById("noteArchiveFilters");
+    if(fil) fil.addEventListener("click", function(e){
+      var b = e.target.closest("button[data-notes]");
+      if(!b) return;
+      noteArchFilter = b.getAttribute("data-notes");
+      noteArchShown = NOTE_PAGE;
+      Array.prototype.forEach.call(fil.querySelectorAll("button"), function(x){
+        x.classList.toggle("active", x === b);
+      });
+      renderNoteArchive();
+    });
+    var more = document.getElementById("noteArchiveMore");
+    if(more) more.addEventListener("click", function(){
+      noteArchShown += NOTE_PAGE * 2;
+      renderNoteArchive();
+    });
+  })();
 
   function escapeHtml(s){
     var d = document.createElement("div");
@@ -9158,6 +10109,7 @@
     drawWheel();
     renderNotes();
     renderDailyQuestion();
+    renderMemories();
     renderDeviceOwnerLabel();
     renderHealth();
     applyConnLock();
@@ -9166,12 +10118,16 @@
   randomQuote();
   applyLock();
   refreshRepeatingTasks();
+  // before the first render, so Memories is populated on the very first open of this build
+  if(backfillAlbum()) save();
 
   renderAll();
   document.getElementById("healthGistInput").value = state.healthGistUrl || "";
   document.getElementById("ghTokenInput").value = ghToken();
   document.getElementById("onesignalAppIdInput").value = state.onesignalAppId || "";
   document.getElementById("onesignalRestKeyInput").value = onesignalRestKey();
+  expireSpinsIfNewMonth();
+  spinExpiryWatch();
   fetchHealth();
   setInterval(fetchHealth, 30 * 60000); // keep health numbers fresh while the app is open
   fetchHoroscopes(false);
