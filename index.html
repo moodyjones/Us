@@ -621,6 +621,49 @@
   .task-wrap{margin-bottom:10px;}
   .task-wrap .task{margin-bottom:0;}
   .task-actions{display:flex;flex-direction:column;gap:4px;}
+  .act-fail{color:var(--faint);}
+  .act-fail:hover,.act-fail:active{color:var(--pink);}
+  /* ---- monthly recap ---- */
+  .recap-verdict{
+    text-align:center;padding:16px 12px 18px;border-radius:var(--r-object);
+    background:var(--s1);border:1px solid var(--line);margin-bottom:16px;
+  }
+  .recap-verdict .big{font-size:21px;font-weight:800;line-height:1.25;}
+  .recap-verdict .sub{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .recap-sec{margin-top:18px;}
+  .recap-sec h4{
+    font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);
+    margin:0 0 9px;font-weight:700;
+  }
+  .recap-line{
+    display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.55;
+    padding:6px 0;
+  }
+  .recap-line .ico{flex:0 0 20px;font-size:15px;line-height:1.35;}
+  .recap-line b{font-weight:700;}
+  .recap-words{
+    font-size:14px;line-height:1.6;color:var(--text);font-style:italic;
+    border-left:2px solid var(--purple);padding:2px 0 2px 12px;margin-top:6px;
+  }
+  .recap-empty{font-size:13px;color:var(--faint);line-height:1.55;}
+  /* ---- the month race ---- */
+  .race-row{display:flex;align-items:center;gap:10px;padding:9px 0;}
+  .race-row + .race-row{border-top:1px solid var(--line);}
+  .race-name{flex:0 0 74px;font-size:13px;font-weight:700;}
+  .race-name.p1{color:var(--coral);}
+  .race-name.p2{color:var(--purple);}
+  .race-bar{flex:1;height:10px;border-radius:999px;background:var(--s1);overflow:hidden;min-width:0;}
+  .race-fill{height:100%;border-radius:999px;}
+  .race-fill.p1{background:var(--coral);}
+  .race-fill.p2{background:var(--purple);}
+  .race-num{flex:0 0 auto;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .race-lost{font-size:11px;color:var(--pink);font-weight:600;margin-left:5px;}
+  .race-note{font-size:12.5px;color:var(--faint);margin-top:10px;line-height:1.5;}
+  .fail-tag{
+    display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+    color:var(--pink);border:1px solid currentColor;border-radius:999px;
+    padding:1px 7px;margin-right:6px;opacity:.85;
+  }
   .alt-panel{background:var(--card2);border-radius:12px;padding:2px 12px 10px;margin-top:4px;font-size:12px;}
   .alt-panel summary{cursor:pointer;color:var(--muted);padding:8px 0;list-style:none;}
   .alt-panel summary::-webkit-details-marker{display:none;}
@@ -2153,6 +2196,17 @@
 
   <!-- LEADERBOARD VIEW -->
   <div class="view" id="view-board">
+    <!-- The month, as a race. Lifetime points only ever climb, so they stopped being a
+         contest years of tasks ago; this resets on the 1st and is what the recap reads. -->
+    <div class="card" id="monthRaceCard">
+      <div class="note-arch-head">
+        <h2 style="margin:0;">This month</h2>
+        <span class="note-arch-count" id="monthRaceDays"></span>
+      </div>
+      <div id="monthRaceBody"></div>
+      <button type="button" class="ghost" id="monthRecapBtn" style="width:100%;margin-top:12px;">Read last month’s recap</button>
+    </div>
+
     <div class="card">
       <h2 id="monthLabel">This month · Power Couple progress</h2>
       <div class="stat-row">
@@ -2285,6 +2339,12 @@
          everything it needs. Copying them one at a time is where this went wrong, so this
          hands over the whole ending in a single paste. -->
     <button class="ghost" id="healthLinkBtn" style="width:100%;margin-top:6px;">Copy Health shortcut link for this phone</button>
+    <!-- Setting up the other phone used to mean physically holding it, opening WeDO on it,
+         making sure it had synced, and only then tapping the button above — and a phone that
+         had NOT synced would mint brand-new topics for both of you, quietly breaking the
+         shortcut that was already working. The address is in the shared state, so either
+         phone can read the other's. Nothing needs to happen in WeDO on their phone at all. -->
+    <button class="ghost" id="healthLinkOtherBtn" style="width:100%;margin-top:6px;">Copy the other phone’s Health link</button>
     <button class="ghost" id="shortcutSetupBtn" style="width:100%;margin-top:6px;opacity:.7;">Gist details (old Shortcut method)</button>
     <button class="ghost" id="shortcutTailBtn" style="width:100%;margin-top:6px;opacity:.7;">Old Safari shortcut ending (gist + token)</button>
     <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
@@ -2343,6 +2403,23 @@
 <!-- The question that follows a daily photo. A sheet, not a strip on the home screen:
      it has to be answerable in the moment and then GONE. Nothing about it lives on the
      main screen, because a prompt you walk past every day stops being an invitation. -->
+<!-- The month, told back to you. Everything in it is derived from tasks, photos, notes
+     and failures, so there is nothing extra to store and an old month can always be
+     rebuilt exactly as it was. -->
+<div class="album-bg" id="recapBg">
+  <div class="album-sheet" style="max-width:460px;">
+    <div class="album-head">
+      <div>
+        <div class="album-title" id="recapTitle">The month</div>
+        <div class="album-sub" id="recapSub"></div>
+      </div>
+      <button type="button" class="album-close" id="recapClose" aria-label="Close">✕</button>
+    </div>
+    <div id="recapBody"></div>
+    <button type="button" class="primary" id="recapDone" style="width:100%;margin-top:16px;">On to this month</button>
+  </div>
+</div>
+
 <div class="album-bg" id="memDayBg">
   <div class="album-sheet" style="max-width:460px;">
     <div class="album-head">
@@ -2417,6 +2494,21 @@
     <h3 id="modalTitle">Nice!</h3>
     <p id="modalText"></p>
     <button class="primary" id="modalClose" style="width:100%;">Sweet</button>
+  </div>
+</div>
+
+<!-- A yes/no the app didn't have. showModal only ever said "ok", so anything needing a
+     real decision had to be done first and undone after. Marking a failure charges points
+     to a named person, sometimes not the person tapping, so it asks first. -->
+<div class="modal-bg" id="confirmBg">
+  <div class="modal">
+    <div class="emoji" id="confirmEmoji">❓</div>
+    <h3 id="confirmTitle"></h3>
+    <p id="confirmText"></p>
+    <div class="row2" style="margin-top:4px;">
+      <button class="ghost" id="confirmNo">Cancel</button>
+      <button class="primary" id="confirmYes">Yes</button>
+    </div>
   </div>
 </div>
 
@@ -3349,6 +3441,25 @@
     }catch(e){}
   }
   var modalBg = document.getElementById("modalBg");
+  var confirmBg = document.getElementById("confirmBg");
+  var confirmCb = null;
+  function showConfirm(emoji, title, text, yesLabel, onYes){
+    document.getElementById("confirmEmoji").textContent = emoji;
+    document.getElementById("confirmTitle").textContent = title;
+    document.getElementById("confirmText").textContent = text;
+    document.getElementById("confirmYes").textContent = yesLabel || "Yes";
+    confirmCb = onYes || null;
+    confirmBg.classList.add("show");
+  }
+  function closeConfirm(){ confirmBg.classList.remove("show"); confirmCb = null; }
+  document.getElementById("confirmNo").addEventListener("click", closeConfirm);
+  confirmBg.addEventListener("click", function(e){ if(e.target === confirmBg) closeConfirm(); });
+  document.getElementById("confirmYes").addEventListener("click", function(){
+    var cb = confirmCb;
+    closeConfirm();
+    if(cb) cb();
+  });
+
   function showModal(emoji, title, text){
     document.getElementById("modalEmoji").textContent = emoji;
     document.getElementById("modalTitle").textContent = title;
@@ -3399,6 +3510,74 @@
 
   // ---------- difficulty points ----------
   var DIFF_POINTS = {easy:5, medium:10, hard:20};
+
+  // ================= FAILURES =================
+  // "Didn't happen" is a real outcome and the app had no way to say it. Without one the
+  // only honest options were to leave a task open forever or tick it off untruthfully, and
+  // a leaderboard nobody trusts isn't worth competing over.
+  //
+  // A failure costs exactly what finishing would have paid. It is NOT subtracted from the
+  // stored point totals, and that is deliberate: those merge with Math.max — lifetime
+  // counters only ever climb — so a deduction written into them would be silently undone
+  // the next time the other phone synced. Failures are stored as events on the task and
+  // the penalty is worked out from them at the moment it's shown.
+  //
+  // The task reopens afterwards. A 30-day goal that breaks on day 12 is a goal you start
+  // again, not one you delete.
+  function failPoints(t){ return DIFF_POINTS[t && t.difficulty] || 10; }
+
+  function taskFails(t){ return (t && t.fails) || []; }
+
+  // Who a failure is charged to. A shared task costs you both, the same way finishing one
+  // pays you both.
+  function failChargedTo(t){
+    return t.assignedTo === "both" ? state.people.slice(0,2).map(function(p){ return p.id; })
+                                   : [t.assignedTo];
+  }
+
+  // Every failure either person has recorded, newest first.
+  function allFailures(){
+    var out = [];
+    (state.tasks || []).forEach(function(t){
+      taskFails(t).forEach(function(f){
+        out.push({task: t, at: f.at, by: f.by, pts: f.pts || failPoints(t),
+                  who: f.charged || failChargedTo(t), id: f.id});
+      });
+    });
+    return out.sort(function(a, b){ return String(b.at).localeCompare(String(a.at)); });
+  }
+
+  // mk is optional: leave it out for the lifetime penalty, pass "YYYY-MM" for one month.
+  function penaltyFor(pid, mk){
+    var total = 0;
+    allFailures().forEach(function(f){
+      if(mk && String(f.at).slice(0, 7) !== mk) return;
+      if((f.who || []).indexOf(pid) < 0) return;
+      total += f.pts;
+    });
+    return total;
+  }
+
+  // What the leaderboard should actually show. Points earned, less what was dropped.
+  function netPoints(pid){
+    var p = (state.points || {})[pid] || {};
+    return (p.personal || 0) + (p.thoughtful || 0) - penaltyFor(pid);
+  }
+
+  // The month's score, derived from what happened rather than stored — so it needs no new
+  // synced field, and a phone that was offline for a fortnight still totals up correctly
+  // once its tasks arrive.
+  function monthPointsFor(pid, mk){
+    var earned = 0;
+    (state.tasks || []).forEach(function(t){
+      if(t.status !== "done" || !t.completedAt) return;
+      if(String(t.completedAt).slice(0, 7) !== mk) return;
+      var pts = t.awardedPoints || DIFF_POINTS[t.difficulty] || 10;
+      if(t.assignedTo === "both"){ earned += pts; return; }
+      if(t.completedBy === pid || t.assignedTo === pid) earned += pts;
+    });
+    return earned - penaltyFor(pid, mk);
+  }
 
   // ---------- task rendering ----------
   function renderAssigneeOptions(){
@@ -3726,7 +3905,8 @@
     edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
     trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
     link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3h7v7"/><path d="M21 3l-9 9"/><path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/></svg>',
-    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>'
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    cross:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
   };
 
   // Hand-drawn product illustrations. These show instantly and are what you see
@@ -4321,6 +4501,31 @@
 
   function mergeTasks(a, b, tomb){
     var all = unionById(a, b, tomb);
+    // unionById keeps whichever whole task was touched last, which is right for a title or
+    // a due date and wrong for failures: they're events, and two phones can each record one
+    // while offline. Union them back on by id so neither side's is dropped.
+    var failsById = {};
+    (a || []).concat(b || []).forEach(function(t){
+      if(!t || !t.id || !t.fails) return;
+      var bag = failsById[t.id] || (failsById[t.id] = {});
+      t.fails.forEach(function(f){ if(f && f.id) bag[f.id] = f; });
+    });
+    // Write the union onto a COPY, never onto the task object itself. unionById hands back
+    // live references into state.tasks, and the sync decides whether to apply a merge by
+    // stringifying it against the current state — so mutating in place would make the
+    // remote's new failure look like something this phone already had, and the merge would
+    // be discarded as a no-op with the failure only ever existing in memory.
+    all = all.map(function(t){
+      var bag = failsById[t.id];
+      if(!bag) return t;
+      var merged = Object.keys(bag).map(function(k){ return bag[k]; })
+        .sort(function(x, y){ return String(x.at).localeCompare(String(y.at)); });
+      if(merged.length === taskFails(t).length) return t;   // nothing new — leave it alone
+      var copy = {};
+      for(var k in t){ if(t.hasOwnProperty(k)) copy[k] = t[k]; }
+      copy.fails = merged;
+      return copy;
+    });
     // untouched starter tasks exist with different ids per phone — collapse
     // same-list same-title copies when at least one side was never touched,
     // and honor content-level tombstones for them
@@ -4999,7 +5204,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 78;
+  var BUILD_NUM = 80;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -5449,8 +5654,17 @@
     var h = state.ntfyHealth;
     return (h && h[pid]) || "";
   }
-  function ntfyHealthEnsure(){
+  // Minting an address on a phone that has never synced is how a working setup breaks: it
+  // creates a new topic for BOTH of you, and the merge takes whichever side it reads first,
+  // so the other phone's shortcut carries on posting to an address nobody is listening to.
+  // Silent, and indistinguishable from the shortcut not running.
+  function ntfyHealthEnsure(force){
     var h = state.ntfyHealth || {};
+    var fresh = !h.p1 && !h.p2;
+    if(fresh && !force && autoSyncOn() && !lastSyncOkAt()){
+      // connected but never synced — the addresses may already exist on the other phone
+      return null;
+    }
     if(!h.p1) h.p1 = ntfyNewTopic("h1");
     if(!h.p2) h.p2 = ntfyNewTopic("h2");
     state.ntfyHealth = h;
@@ -5459,14 +5673,20 @@
   }
   // The whole shortcut, as one address. Everything after message= is the same key=value line
   // the gist path used, so the parser is shared and nothing new had to be invented.
-  function ntfyHealthUrl(pid){
+  // Two addresses, same topic. Sleep is a MORNING measurement and steps are an EVENING one,
+  // and one run at 9pm cannot capture both: a 24-hour window double-counts last night, a
+  // 12-hour window misses a sleep that started at 10:48pm. That was diagnosed the hard way
+  // and then left as "delete the sleep bit by hand", which is a step that gets missed. So
+  // the app hands out the right address for the run being built.
+  function ntfyHealthUrl(pid, kind){
     var t = ntfyHealthTopic(pid);
     if(!t) return "";
+    if(kind === "morning") return NTFY_HEALTH_POLL + t + "/publish?message=sleepmin=";
     // Separator is a pipe, not a semicolon. A semicolon is a legacy query-parameter
     // delimiter and Go — which ntfy is written in — rejects a whole query string that
     // contains one, so ?message=steps=…;cal=… was discarded entirely and ntfy stored its
     // default body ("triggered") instead of the numbers. A pipe carries no such meaning.
-    return NTFY_HEALTH_POLL + t + "/publish?message=steps=|cal=|sleep=";
+    return NTFY_HEALTH_POLL + t + "/publish?message=steps=|cal=";
   }
 
   function readHealthFromNtfy(pid, done){
@@ -6214,7 +6434,12 @@
       var daysSince = Math.floor((Date.now() - new Date(t.lastCompletedAt).getTime()) / 86400000);
       assignText += daysSince<=0 ? (" · " + verb + " today") : (" · last " + verb + " " + daysSince + "d ago");
     }
-    meta.innerHTML = diffTag + repeatTag + priceTag + dueDateTag(t) + " &nbsp; " + assignText;
+    // A goal you're on your third attempt at reads completely differently from a fresh one,
+    // and the list was showing them identically.
+    var nFails = taskFails(t).length;
+    var failTag = nFails ? '<span class="fail-tag">\u00D7' + nFails +
+      (nFails === 1 ? " failed" : " failed") + '</span>' : "";
+    meta.innerHTML = diffTag + repeatTag + failTag + priceTag + dueDateTag(t) + " &nbsp; " + assignText;
     info.appendChild(title); info.appendChild(meta);
 
     var actions = document.createElement("div");
@@ -6224,6 +6449,11 @@
         if(openEditIds[t.id]) delete openEditIds[t.id]; else openEditIds[t.id] = true;
         renderAll();
       }));
+      // "didn't happen" sits between edit and remove on purpose: removing a task pretends
+      // it was never set, which is the thing this exists to stop.
+      var failBtn = iconBtn(ICON.cross, "Didn\u2019t happen", function(){ confirmFailTask(t); });
+      failBtn.classList.add("act-fail");
+      actions.appendChild(failBtn);
       actions.appendChild(iconBtn(ICON.trash, "Remove", function(){
         deleteTaskWithUndo(t);
       }));
@@ -7825,6 +8055,51 @@
     return true;
   }
 
+  // Either of you can mark anything — including the other person's. That's a deliberate
+  // choice and it needs a counterweight, so every failure is announced by name in the
+  // activity feed and pushed to the other phone. Nothing can be docked quietly.
+  function markTaskFailed(taskId){
+    var t = state.tasks.find(function(x){ return x.id === taskId; });
+    if(!t) return;
+    var actor = deviceOwner() || state.currentUser;
+    var pts = failPoints(t);
+    var charged = failChargedTo(t);
+    if(!t.fails) t.fails = [];
+    t.fails.push({id: uid(), at: new Date().toISOString(), by: actor, pts: pts, charged: charged});
+
+    // straight back on the list — the deduction stands, the goal doesn't disappear
+    t.status = "open";
+    t.completedBy = null;
+    t.completedAt = null;
+    t.completedDate = null;
+    t.awardedPoints = null;
+    t.awardedType = null;
+    t.locked = false;
+    t.pendingLock = false;
+    // a repeating goal starts its count again rather than carrying a broken run forward
+    if(t.repeat && t.repeat !== "none") t.lastCompletedAt = null;
+    touch(t);
+
+    save(); scheduleSync();
+    var whoTxt = charged.map(function(pid){ return personName(pid); }).join(" and ");
+    announce('marked "' + t.title + '" as didn’t happen — −' + pts + ' for ' + whoTxt);
+    renderAll();
+    toast("−" + pts + " · back on the list to try again");
+  }
+
+  function confirmFailTask(t){
+    var pts = failPoints(t);
+    var charged = failChargedTo(t).map(function(pid){ return personName(pid); }).join(" and ");
+    showConfirm(
+      "📉", "Didn’t happen?",
+      "“" + t.title + "” costs " + charged + " " + pts + " points this month, and goes " +
+      "straight back on the list to try again. " + personName(otherPerson(deviceOwner() || state.currentUser)) +
+      " will see that you marked it.",
+      "Mark it failed",
+      function(){ markTaskFailed(t.id); }
+    );
+  }
+
   function completeTask(taskId){
     var t = state.tasks.find(function(x){return x.id===taskId;});
     if(!t || t.status!=="open") return;
@@ -8034,9 +8309,20 @@
       if(hint) hint.textContent = nothingYet
         ? "Tick something off and your first points land here." : "";
     })();
-    countUp("statPersonal", p.personal);
+    // net, not gross: a leaderboard that ignores the failures isn't the leaderboard
+    countUp("statPersonal", Math.max(0, (p.personal || 0) - penaltyFor(uid_)));
     countUp("statThoughtful", p.thoughtful);
     countUp("statStreak", state.streaks[uid_].current);
+    // the Points tile now shows earned minus dropped, so it agrees with the month race
+    // sitting directly above it instead of quietly contradicting it
+    var pen_ = penaltyFor(uid_);
+    if(pen_){
+      var pel = document.getElementById("statPersonal");
+      if(pel && pel.parentNode){
+        var lab = pel.parentNode.querySelector(".label");
+        if(lab) lab.textContent = "Points (\u2212" + pen_ + ")";
+      }
+    }
     countUp("spinsAvailable", p.spinsAvailable || 0);
     countUp("tasksToNextSpin", 5 - (p.progressToSpin||0));
     document.getElementById("spinBtn").disabled = !(p.spinsAvailable > 0);
@@ -9507,6 +9793,277 @@
     return changed;
   }
 
+  // ================= THE MONTH =================
+  function monthStatsFor(mk){
+    var people = state.people.slice(0, 2);
+    var days = new Date(parseInt(mk.slice(0,4),10), parseInt(mk.slice(5,7),10), 0).getDate();
+    var inMonth = function(iso){ return String(iso || "").slice(0, 7) === mk; };
+
+    var done = (state.tasks || []).filter(function(t){
+      return t.status === "done" && inMonth(t.completedAt);
+    });
+    var fails = allFailures().filter(function(f){ return inMonth(f.at); });
+    var notes = (state.notes || []).filter(function(n){ return inMonth(n.date); });
+    var photoDays = Object.keys(state.album || {}).filter(inMonth);
+    var tripDays  = Object.keys(state.tripPhotos || {}).filter(inMonth);
+    var wins = (state.rewardsWon || []).filter(function(w){ return inMonth(w.date); });
+    var exps = done.filter(function(t){ return (listById(t.listId) || {}).experienceBased; });
+
+    var per = {};
+    people.forEach(function(p){
+      per[p.id] = {
+        pts: monthPointsFor(p.id, mk),
+        lost: penaltyFor(p.id, mk),
+        done: done.filter(function(t){
+          return t.assignedTo === "both" || t.completedBy === p.id || t.assignedTo === p.id;
+        }).length,
+        forOther: done.filter(function(t){
+          return t.assignedTo !== "both" && t.completedBy === p.id && t.assignedTo !== p.id;
+        }).length,
+        notes: notes.filter(function(n){ return n.fromId === p.id; }).length,
+        photos: photoDays.filter(function(d){ return (state.album[d] || {})[p.id]; }).length,
+        fails: fails.filter(function(f){ return (f.who || []).indexOf(p.id) >= 0; }).length
+      };
+    });
+
+    // the day either of you got the most done
+    var byDay = {};
+    done.forEach(function(t){
+      var d = String(t.completedAt).slice(0, 10);
+      byDay[d] = (byDay[d] || 0) + 1;
+    });
+    var bigDay = null, bigCount = 0;
+    Object.keys(byDay).forEach(function(d){ if(byDay[d] > bigCount){ bigCount = byDay[d]; bigDay = d; } });
+
+    // the task that broke the most times
+    var worst = null;
+    (state.tasks || []).forEach(function(t){
+      var n = taskFails(t).filter(function(f){ return inMonth(f.at); }).length;
+      if(n > 1 && (!worst || n > worst.n)) worst = {task: t, n: n};
+    });
+
+    var bothDays = photoDays.filter(function(d){
+      return people.every(function(p){ return (state.album[d] || {})[p.id]; });
+    }).length;
+
+    return {
+      mk: mk, days: days, people: people, per: per,
+      done: done, fails: fails, notes: notes, wins: wins, exps: exps,
+      photoDays: photoDays.length, bothDays: bothDays, tripDays: tripDays.length,
+      bigDay: bigDay, bigCount: bigCount, worst: worst
+    };
+  }
+
+  function monthName(mk){
+    var d = new Date(mk + "-01T12:00:00");
+    return isFinite(d.getTime()) ? d.toLocaleDateString(undefined, {month:"long", year:"numeric"}) : mk;
+  }
+  function prevMonthKey(mk){
+    var y = parseInt(mk.slice(0,4),10), m = parseInt(mk.slice(5,7),10) - 1;
+    if(m < 1){ m = 12; y--; }
+    return y + "-" + (m < 10 ? "0" + m : String(m));
+  }
+
+  // ---- the race, on the leaderboard ----
+  function renderMonthRace(){
+    var wrap = document.getElementById("monthRaceBody");
+    if(!wrap) return;
+    var mk = monthKeyNow();
+    var st = monthStatsFor(mk);
+    var top = Math.max(1, Math.max.apply(null, st.people.map(function(p){
+      return Math.max(0, st.per[p.id].pts);
+    })));
+    document.getElementById("monthRaceDays").textContent = daysLeftInMonth() + " days left";
+
+    wrap.innerHTML = "";
+    st.people.forEach(function(p){
+      var d = st.per[p.id];
+      var row = document.createElement("div");
+      row.className = "race-row";
+      row.innerHTML =
+        '<span class="race-name ' + p.id + '">' + escapeHtml(p.name) + '</span>' +
+        '<span class="race-bar"><span class="race-fill ' + p.id + '" style="width:' +
+          Math.round(Math.max(0, d.pts) / top * 100) + '%;"></span></span>' +
+        '<span class="race-num">' + d.pts + '</span>' +
+        (d.lost ? '<span class="race-lost">−' + d.lost + '</span>' : '');
+      wrap.appendChild(row);
+    });
+
+    var a = st.per[st.people[0].id].pts, b = st.per[st.people[1].id].pts;
+    var note = document.createElement("div");
+    note.className = "race-note";
+    note.textContent = a === b
+      ? "Dead level."
+      : (a > b ? st.people[0].name : st.people[1].name) + " is ahead by " + Math.abs(a - b) +
+        (st.fails.length ? " · " + st.fails.length + (st.fails.length === 1 ? " thing didn’t happen this month" : " things didn’t happen this month") : "");
+    wrap.appendChild(note);
+  }
+
+  // ---- the recap ----
+  var recapBg = document.getElementById("recapBg");
+  var recapMk = null;
+
+  function recapLine(ico, html){
+    return '<div class="recap-line"><span class="ico">' + ico + '</span><span>' + html + '</span></div>';
+  }
+
+  // Encouragement that actually refers to the month it's in. A generic "keep it up" is
+  // worse than nothing — it's obvious the app isn't reading anything.
+  function recapWords(st){
+    var people = st.people, A = people[0], B = people[1];
+    var pa = st.per[A.id], pb = st.per[B.id];
+    var totalDone = st.done.length, totalFails = st.fails.length;
+
+    if(totalDone === 0 && totalFails === 0)
+      return "A quiet one. No tasks, no photos, nothing ticked — which happens, and the month doesn’t hold it against you. Put one thing on the list today and the next recap has something to say.";
+    if(totalFails === 0 && totalDone >= 10)
+      return "Not one thing marked as didn’t happen all month. Either you’re both being honest and it was a good month, or the goals were too easy — you’ll know which.";
+    var dropped = pa.lost + pb.lost;
+    var earned = pa.pts + pb.pts + dropped;
+    if(dropped > 0 && earned > 0 && dropped >= earned / 2)
+      return "Nearly half of what you earned this month went back out the door \u2014 " + dropped +
+             " points dropped against " + earned + " earned. Nothing wrong with the effort; the goals " +
+             "were just bigger than the month. Pick fewer and make them stick.";
+    if(totalFails > totalDone)
+      return "More didn’t happen than did. That’s worth a conversation rather than a shrug: usually it means the list was written by an optimist on a Sunday. Fewer things, bigger things.";
+    if(pa.forOther + pb.forOther >= 3)
+      return "The number worth looking at here isn’t the score — it’s that " + (pa.forOther + pb.forOther) +
+             " of these were things one of you did off the other’s list. That’s the part that isn’t a game.";
+    if(Math.abs(pa.pts - pb.pts) <= 5 && totalDone >= 6)
+      return "Within a handful of points of each other over a whole month. Whatever you’re doing, it’s even — keep the goals honest and next month is a real race.";
+    if(st.bothDays >= 15)
+      return "You both showed up in the photos on " + st.bothDays + " days. That’s the habit that makes the rest of this work.";
+    return "A solid month with a few things left on the floor, which is what most months look like. The list resets, the streaks don’t — carry the ones that are working.";
+  }
+
+  function renderRecap(mk){
+    recapMk = mk;
+    var st = monthStatsFor(mk);
+    var A = st.people[0], B = st.people[1];
+    var pa = st.per[A.id], pb = st.per[B.id];
+
+    document.getElementById("recapTitle").textContent = monthName(mk);
+    document.getElementById("recapSub").textContent =
+      st.done.length + (st.done.length === 1 ? " thing done" : " things done") +
+      " · " + st.fails.length + " didn’t" +
+      " · " + st.photoDays + (st.photoDays === 1 ? " day pictured" : " days pictured");
+
+    var html = "";
+
+    // who took it
+    var lead = pa.pts === pb.pts ? null : (pa.pts > pb.pts ? A : B);
+    html += '<div class="recap-verdict">' +
+      '<div class="big">' + (lead ? escapeHtml(lead.name) + " took " + monthName(mk).split(" ")[0]
+                                  : "A dead heat") + '</div>' +
+      '<div class="sub">' + escapeHtml(A.name) + " " + pa.pts + " · " +
+        escapeHtml(B.name) + " " + pb.pts +
+        (pa.lost + pb.lost ? " · " + (pa.lost + pb.lost) + " points dropped between you" : "") +
+      '</div></div>';
+
+    // milestones
+    var ms = "";
+    st.people.forEach(function(p){
+      var stk = (state.streaks || {})[p.id] || {};
+      if((stk.current || 0) >= 3) ms += recapLine("🔥",
+        "<b>" + escapeHtml(p.name) + "</b> is on a " + stk.current + "-day streak");
+    });
+    st.exps.forEach(function(t){ ms += recapLine("🎟️", "You did <b>" + escapeHtml(t.title) + "</b>"); });
+    if(st.tripDays) ms += recapLine("✈️", "<b>" + st.tripDays + "</b> " +
+      (st.tripDays === 1 ? "day" : "days") + " away together");
+    st.wins.forEach(function(w){ ms += recapLine("🎁",
+      "<b>" + escapeHtml(personName(w.personId)) + "</b> won " + escapeHtml(w.name)); });
+    if(st.bothDays) ms += recapLine("💞", "<b>" + st.bothDays + "</b> " +
+      (st.bothDays === 1 ? "day" : "days") + " you both posted a photo");
+    if(ms) html += '<div class="recap-sec"><h4>Milestones</h4>' + ms + '</div>';
+
+    // the odd numbers
+    var fun = "";
+    if(st.bigDay && st.bigCount > 1){
+      var bd = new Date(st.bigDay + "T12:00:00");
+      fun += recapLine("⚡", "Busiest day was <b>" +
+        bd.toLocaleDateString(undefined, {weekday:"long", day:"numeric", month:"long"}) +
+        "</b> — " + st.bigCount + " things crossed off");
+    }
+    var helper = pa.forOther === pb.forOther ? null : (pa.forOther > pb.forOther ? A : B);
+    if(helper && Math.max(pa.forOther, pb.forOther) > 0){
+      fun += recapLine("💛", "<b>" + escapeHtml(helper.name) + "</b> did " +
+        Math.max(pa.forOther, pb.forOther) + " " +
+        (Math.max(pa.forOther, pb.forOther) === 1 ? "thing" : "things") +
+        " off the other’s list");
+    }
+    if(st.worst){
+      fun += recapLine("😬", "<b>" + escapeHtml(st.worst.task.title) +
+        "</b> didn’t happen " + st.worst.n + " separate times. It might be the task, not you.");
+    }
+    if(st.notes.length){
+      var chatty = pa.notes === pb.notes ? null : (pa.notes > pb.notes ? A : B);
+      fun += recapLine("💌", st.notes.length + " " +
+        (st.notes.length === 1 ? "note" : "notes") + " written" +
+        (chatty ? ", " + Math.round(Math.max(pa.notes, pb.notes) / st.notes.length * 100) +
+          "% of them by <b>" + escapeHtml(chatty.name) + "</b>" : ""));
+    }
+    var missed = st.days - st.photoDays;
+    if(st.photoDays && missed > 0){
+      fun += recapLine("📸", st.photoDays + " of " + st.days +
+        " days pictured — " + missed + " went unrecorded");
+    }
+    if(fun) html += '<div class="recap-sec"><h4>The odd numbers</h4>' + fun + '</div>';
+
+    // what didn't happen
+    if(st.fails.length){
+      var fl = "";
+      // grouped by task, not one line per event — three lines saying "Gym" reads like a
+      // bug, and the header counts events, so the two would disagree on screen
+      var byTask = {}, taskOrder = [];
+      st.fails.forEach(function(f){
+        var g = byTask[f.task.id];
+        if(!g){ g = byTask[f.task.id] = {task: f.task, n: 0, pts: 0, who: f.who || []}; taskOrder.push(f.task.id); }
+        g.n++; g.pts += f.pts;
+      });
+      taskOrder.slice(0, 6).forEach(function(id){
+        var g = byTask[id];
+        fl += recapLine("\u2716\uFE0F", escapeHtml(g.task.title) +
+          (g.n > 1 ? " \u00D7" + g.n : "") + " \u2014 \u2212" + g.pts +
+          " for " + escapeHtml(g.who.map(personName).join(" and ")));
+      });
+      html += '<div class="recap-sec"><h4>Didn’t happen</h4>' + fl +
+        '<div class="recap-empty" style="margin-top:8px;">All of these are back on the list.</div></div>';
+    }
+
+    html += '<div class="recap-sec"><h4>Where that leaves you</h4>' +
+      '<div class="recap-words">' + escapeHtml(recapWords(st)) + '</div></div>';
+
+    document.getElementById("recapBody").innerHTML = html;
+    recapBg.classList.add("show");
+  }
+
+  // Shown once per phone per month. The key is local, not synced, because each of you
+  // should get to read it on your own phone rather than one of you marking it read for
+  // both — the same reasoning as the spin-expiry notice.
+  var RECAP_SEEN_KEY = "us-recap-seen-v1";
+  function recapSeen(){ try{ return localStorage.getItem(RECAP_SEEN_KEY) || ""; }catch(e){ return ""; } }
+  function markRecapSeen(mk){ try{ localStorage.setItem(RECAP_SEEN_KEY, mk); }catch(e){} }
+
+  function maybeShowRecap(){
+    var last = prevMonthKey(monthKeyNow());
+    if(recapSeen() === last) return;
+    var st = monthStatsFor(last);
+    // nothing at all happened last month — don't open a sheet to say so
+    if(!st.done.length && !st.fails.length && !st.photoDays && !st.notes.length){
+      markRecapSeen(last);
+      return;
+    }
+    markRecapSeen(last);
+    setTimeout(function(){ renderRecap(last); }, 900);
+  }
+
+  document.getElementById("recapClose").addEventListener("click", function(){ recapBg.classList.remove("show"); });
+  document.getElementById("recapDone").addEventListener("click", function(){ recapBg.classList.remove("show"); });
+  recapBg.addEventListener("click", function(e){ if(e.target === recapBg) recapBg.classList.remove("show"); });
+  document.getElementById("monthRecapBtn").addEventListener("click", function(){
+    renderRecap(prevMonthKey(monthKeyNow()));
+  });
+
   // ================= MEMORIES =================
   // A month at a time. Each cell is one day, split down the middle: your photo on the left,
   // theirs on the right. A trip day is one shared frame across the whole cell, matching how
@@ -10454,6 +11011,7 @@
     drawWheel();
     renderNotes();
     renderDailyQuestion();
+    renderMonthRace();
     renderMemories();
     renderDeviceOwnerLabel();
     renderHealth();
@@ -10472,6 +11030,9 @@
   document.getElementById("onesignalAppIdInput").value = state.onesignalAppId || "";
   document.getElementById("onesignalRestKeyInput").value = onesignalRestKey();
   expireSpinsIfNewMonth();
+  // after the expiry notice, not before — one sheet at a time, and the recap is the part
+  // worth reading
+  maybeShowRecap();
   spinExpiryWatch();
   fetchHealth();
   setInterval(fetchHealth, 30 * 60000); // keep health numbers fresh while the app is open
@@ -10615,20 +11176,57 @@
   document.getElementById("healthLinkBtn").addEventListener("click", function(){
     var me = deviceOwner() || state.currentUser;
     if(!me){ toast("Pick whose phone this is first"); return; }
-    if(!ntfyHealthTopic(me)) ntfyHealthEnsure();
+    if(!ntfyHealthTopic(me) && !ntfyHealthEnsure()){
+      showModal("\uD83D\uDD04", "Sync first",
+        "This phone is connected but hasn't finished a sync yet, and the Health addresses " +
+        "may already exist on the other phone. Tap Sync now, then come back \u2014 otherwise " +
+        "this would mint new addresses for both of you and stop the other phone's shortcut " +
+        "from working.");
+      return;
+    }
     var url = ntfyHealthUrl(me);
     var ok = false;
     try{
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); ok = true; }
     }catch(e){}
     showModal("🍎", ok ? "Copied — paste it into the shortcut" : "Your health link",
-      "This is " + personName(me) + "'s address. In Shortcuts → WeDO Health, delete the whole " +
-      "Get Contents of URL action and add a fresh one, then paste this in as the address:\n\n" +
+      "This is " + personName(me) + "'s EVENING address — steps and calories, run at 9pm:\n\n" +
       url + "\n\n" +
-      "Then put the cursor after each of the three = signs at the end and insert Steps, Cals and " +
-      "SleepMins from the variable bar. Nothing else — leave the method as GET and add no headers.\n\n" +
-      "Rae's phone has its own separate address; she taps this same button on hers." +
+      "Put the cursor after steps= and after cal= and insert Steps and Cals from the variable " +
+      "bar. Leave the method as GET and add no headers.\n\n" +
+      "Sleep is a separate shortcut, run in the morning, because a 9pm run can't measure a " +
+      "sleep that started at 10:48pm. Its address is:\n\n" + ntfyHealthUrl(me, "morning") + "\n\n" +
+      "with SleepMins inserted after sleepmin=." +
       (ok ? "" : "\n\n(Couldn't reach the clipboard — copy it from here by hand.)"));
+  });
+  document.getElementById("healthLinkOtherBtn").addEventListener("click", function(){
+    var me = deviceOwner() || state.currentUser;
+    if(!me){ toast("Pick whose phone this is first"); return; }
+    var them = otherPerson(me);
+    // deliberately NOT ntfyHealthEnsure(): if their address doesn't exist yet it has to be
+    // minted on a phone that has already synced, or the two phones end up with different
+    // topics and whichever syncs last wins
+    var url = ntfyHealthUrl(them);
+    if(!url){
+      showModal("\uD83C\uDF4E", "No address yet",
+        personName(them) + " doesn't have a Health address in the shared state yet. Tap " +
+        "\u201CCopy Health shortcut link for this phone\u201D once on this phone first \u2014 that " +
+        "creates one for each of you \u2014 then let it sync and come back here.");
+      return;
+    }
+    var ok = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); ok = true; }
+    }catch(e){}
+    showModal("\uD83C\uDF4E", ok ? "Copied \u2014 " + personName(them) + "'s link" : personName(them) + "'s health link",
+      "Build the shortcut on " + personName(them) + "'s phone in the Shortcuts app.\n\n" +
+      "EVENING (steps + calories, 9pm):\n" + url + "\n\n" +
+      "MORNING (sleep only, ~10am):\n" + ntfyHealthUrl(them, "morning") + "\n\n" +
+      "Insert Steps and Cals after their = signs in the evening one, and SleepMins after " +
+      "sleepmin= in the morning one. Leave the method as GET and add no headers.\n\n" +
+      "Nothing needs setting up in WeDO on their phone \u2014 whichever phone has WeDO open " +
+      "picks the readings up for both of you." +
+      (ok ? "" : "\n\n(Couldn't reach the clipboard \u2014 copy it from here by hand.)"));
   });
   document.getElementById("shortcutSetupBtn").addEventListener("click", function(){
     var id = gistIdFromUrl(), tok = ghToken(), me = deviceOwner() || state.currentUser;
