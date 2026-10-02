@@ -1056,6 +1056,30 @@
   .note-arch-dir.out{color:var(--muted);}
   .note-arch-text{font-size:14px;line-height:1.5;color:var(--text);}
 
+  .note .text.locked,.note-arch-text.locked{color:var(--faint);font-style:italic;}
+
+  /* ---- push diagnostics ---- */
+  .push-diag{font-size:11.5px;line-height:1.6;color:var(--muted);margin-top:8px;}
+  .push-diag .pd-row{padding:5px 0;border-top:1px solid var(--line);}
+  .push-diag .pd-row:first-child{border-top:none;}
+  .push-diag .pd-bad{color:var(--pink);}
+  .push-diag .pd-ok{color:var(--jade,#8ee6c8);}
+  .push-diag .pd-detail{color:var(--faint);font-family:ui-monospace,Menlo,monospace;font-size:10.5px;word-break:break-all;}
+
+  /* ---- the note under a photo ---- */
+  .duo-note{
+    font-size:11.5px;line-height:1.45;color:var(--muted);font-style:italic;
+    margin-top:5px;text-align:center;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .duo-note.locked{color:var(--faint);font-style:normal;}
+
+  /* ---- a trip's two half-day frames ---- */
+  .trip-pair{display:flex;gap:10px;width:100%;}
+  .duo-slot.half{flex:1;min-width:0;}
+  .duo-slot.half.ahead{opacity:.45;}
+  .duo-slot.half.is-now .duo-frame{box-shadow:0 0 0 2px var(--coral);}
+
   /* ---- memories ---- */
   .mem-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
   .mem-head > div{text-align:center;flex:1;min-width:0;}
@@ -2356,7 +2380,14 @@
       <button class="ghost" id="onesignalSaveBtn">Save</button>
       <button class="ghost" id="onesignalEnableBtn">Enable on this phone</button>
     </div>
+    <div class="row2" style="margin-top:6px;">
+      <button class="ghost" id="pushTestMeBtn">Test → this phone</button>
+      <button class="ghost" id="pushTestThemBtn">Test → other phone</button>
+    </div>
     <div id="onesignalStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
+    <!-- What OneSignal actually said. Until this existed the send was fire-and-forget and
+         every refusal looked exactly like a working app with a quiet phone. -->
+    <div id="pushDiag" class="push-diag"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <p style="font-size:12px;color:var(--muted);"><strong>Reminders &amp; alerts (ntfy).</strong>
       Delivers through the free <em>ntfy</em> app instead of the browser, which is why it actually
@@ -3480,6 +3511,9 @@
       // Memories is the one tab that may need the network. Kick the fetch on the way in
       // rather than on load, so a tab nobody opens costs nothing.
       if(btn.dataset.tab === "memories"){ renderMemories(); if(memMonth) loadAlbumMonth(memMonth); }
+      // Notes too: posting a photo unseals today's note, and the inbox was still showing
+      // the locked version it rendered on load.
+      if(btn.dataset.tab === "notes") renderNotes();
     });
   });
 
@@ -4412,10 +4446,34 @@
       ntfyNotifyPartner(owner, text);
     }catch(e){}
   }
-  function sendPushToPartner(owner, text){
-    if(!pushConfigured()) return;
+  // Every push this phone has tried to send, and what OneSignal said back. Never synced.
+  //
+  // This is the single reason notifications stayed broken for weeks. The send was
+  // fire-and-forget with a bare .catch(), and fetch only rejects on a network failure — so
+  // OneSignal could answer "0 recipients" or "invalid external_user_ids" on every single
+  // send and nothing, anywhere, would say so. The app looked like it was sending. It was
+  // being refused, silently, every time.
+  var pushLog = [];
+  function notePush(rec){
+    rec.at = Date.now();
+    pushLog.unshift(rec);
+    if(pushLog.length > 8) pushLog.length = 8;
+    try{ renderPushDiag(); }catch(e){}
+  }
+  function lastPush(){ return pushLog[0] || null; }
+
+  function sendPushToPartner(owner, text, done){
+    if(!pushConfigured()){
+      notePush({ok:false, reason:"not configured", detail:"no App ID or REST key on this phone"});
+      if(done) done(false, "not configured");
+      return;
+    }
     var to = otherPerson(owner);
-    if(!to) return;
+    if(!to){
+      notePush({ok:false, reason:"no partner", detail:"this phone doesn't know who the other person is"});
+      if(done) done(false, "no partner");
+      return;
+    }
     fetch("https://api.onesignal.com/notifications?c=push", {
       method: "POST",
       headers: {
@@ -4429,7 +4487,30 @@
         headings: {en: "WeDO"},
         contents: {en: personName(owner) + " " + text}
       })
-    }).catch(function(){ /* best-effort — the in-app feed still has it */ });
+    })
+    .then(function(r){ return r.text().then(function(t){ return {status: r.status, body: t}; }); })
+    .then(function(res){
+      var j = null; try{ j = JSON.parse(res.body); }catch(e){}
+      var recipients = j && typeof j.recipients === "number" ? j.recipients : null;
+      // A 200 with zero recipients is the commonest failure and the least visible: the
+      // request was perfectly valid, there was simply nobody registered under that name.
+      var errs = j && j.errors;
+      var errTxt = errs ? (Array.isArray(errs) ? errs.join("; ") : JSON.stringify(errs)) : "";
+      var ok = res.status < 300 && recipients > 0 && !errTxt;
+      notePush({
+        ok: ok, to: to, status: res.status, recipients: recipients,
+        reason: ok ? "delivered to OneSignal"
+              : errTxt ? errTxt
+              : recipients === 0 ? "0 recipients \u2014 " + personName(to) + "'s phone isn't registered"
+              : "HTTP " + res.status,
+        detail: res.body.slice(0, 300)
+      });
+      if(done) done(ok, errTxt || (recipients === 0 ? "no recipients" : ""));
+    })
+    .catch(function(e){
+      notePush({ok:false, reason:"couldn't reach OneSignal", detail:String(e && e.message || e)});
+      if(done) done(false, String(e && e.message || e));
+    });
   }
 
   // Ask OneSignal to deliver a reminder at 8pm tonight, to BOTH phones. Scheduled rather than
@@ -5204,7 +5285,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 80;
+  var BUILD_NUM = 81;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -6126,8 +6207,13 @@
   // while a phone was on an older build, still gather into the right album.
   function tripAlbumDays(t){
     if(!t || !isTrip(t) || !t.tripStart || !t.tripEnd) return [];
+    // tripDateOf, not the raw key: an evening slot is "2026-10-05~pm", which sorts after
+    // "2026-10-05" and would be judged to fall outside its own trip's last day.
     return Object.keys(state.tripPhotos || {})
-      .filter(function(ds){ return ds >= t.tripStart && ds <= t.tripEnd && photoSrc((state.tripPhotos[ds]||{}).photo); })
+      .filter(function(k){
+        var d = tripDateOf(k);
+        return d >= t.tripStart && d <= t.tripEnd && photoSrc((state.tripPhotos[k]||{}).photo);
+      })
       .sort();
   }
   // The trip that just ended and hasn't been celebrated yet. Only trips with something in the
@@ -7453,11 +7539,18 @@
     return Math.round((b - a) / 86400000) + 1;
   }
   // every date from the trip's start through today (never past it — no empty future slots)
+  // Every slot from the start of the trip up to the one we're in now — two per day, with
+  // the rest of today's second half left off until noon so the strip doesn't show a gap
+  // for a window that hasn't opened yet.
   function tripDatesSoFar(trip){
     var out = [], d = trip.tripStart, today = todayISO();
     var stop = trip.tripEnd < today ? trip.tripEnd : today;
     var guard = 0;
-    while(d <= stop && guard++ < 400){ out.push(d); d = addDaysToISO(d, 1); }
+    while(d <= stop && guard++ < 400){
+      var lastHalf = (d === today && trip.tripEnd >= today) ? tripHalfNow() : 1;
+      for(var h = 0; h <= lastHalf; h++) out.push(tripSlotKey(d, h));
+      d = addDaysToISO(d, 1);
+    }
     return out;
   }
 
@@ -9109,6 +9202,74 @@
     var d = (state.dailyPhotos || {})[pid];
     return (d && photoSrc(d.photo)) ? d : null;
   }
+  // ---- two shared photos a day on a trip ----
+  // One a day was fine for a long weekend. It isn't for a week away: a morning on the water
+  // and an evening in town become one picture, and whichever gets posted second quietly
+  // replaces the first.
+  //
+  // The key keeps its shape for the first half of the day — "2026-10-02" — so every trip
+  // already in the album still reads correctly, and the second half gets a suffix. Anything
+  // that compares a key against the trip's start and end has to take the date part only;
+  // "2026-10-05~pm" sorts AFTER "2026-10-05" and would fall outside its own trip.
+  var TRIP_HALF_SUFFIX = "~pm";
+  function tripSlotKey(dateISO, half){ return half ? dateISO + TRIP_HALF_SUFFIX : dateISO; }
+  function tripDateOf(key){ return String(key || "").slice(0, 10); }
+  function tripHalfOf(key){ return String(key || "").indexOf(TRIP_HALF_SUFFIX) > 0 ? 1 : 0; }
+  // Which 12-hour window we're in right now, by the phone's own clock.
+  function tripHalfNow(){ return new Date().getHours() < 12 ? 0 : 1; }
+  function tripHalfLabel(half){ return half ? "Evening" : "Morning"; }
+  function tripHalfWindow(half){ return half ? "noon \u2192 midnight" : "midnight \u2192 noon"; }
+  // Every slot key that belongs to one calendar day, in order.
+  function tripSlotsOn(dateISO){
+    var out = [];
+    [0, 1].forEach(function(h){
+      var k = tripSlotKey(dateISO, h);
+      if((state.tripPhotos || {})[k]) out.push({key: k, half: h, photo: state.tripPhotos[k]});
+    });
+    return out;
+  }
+  // How long until the current window closes — what turns "post a photo" into something
+  // with a deadline attached.
+  function tripHalfEndsIn(){
+    var now = new Date();
+    var end = new Date(now);
+    if(now.getHours() < 12) end.setHours(12, 0, 0, 0);
+    else { end.setHours(24, 0, 0, 0); }
+    var mins = Math.max(0, Math.round((end - now) / 60000));
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return h ? (h + "h " + m + "m") : (m + "m");
+  }
+
+  // ---- the note that comes with a photo ----
+  // What someone wrote after posting is attached to their picture, but it stays sealed until
+  // you've posted yours. Same bargain as the daily question in Notes: you don't get to read
+  // theirs by lurking. It only applies to TODAY \u2014 a day that has passed is just history,
+  // and locking it would mean a note you never posted against is sealed for good.
+  function photoNoteFrom(pid, dateISO){
+    var found = null;
+    (state.notes || []).forEach(function(n){
+      if(n.fromId !== pid || !n.q) return;
+      if(String(n.photoDate || "") !== dateISO) return;
+      if(!found || String(n.date) > String(found.date)) found = n;
+    });
+    return found;
+  }
+  function hasPostedToday(pid){
+    var d = (state.dailyPhotos || {})[pid];
+    if(d && d.date === todayISO() && d.photo) return true;
+    // On a trip there's one shared frame per half-day and either of you can fill it, so
+    // "a photo exists today" is not the same as "you posted today" — crediting yourself for
+    // their picture would unseal their note without you having done anything.
+    return tripSlotsOn(todayISO()).some(function(t){ return t.photo && t.photo.by === pid; });
+  }
+  // A note is sealed only when it's today's AND you haven't posted yet.
+  function photoNoteLocked(fromPid, dateISO){
+    if(dateISO !== todayISO()) return false;
+    var me = deviceOwner() || state.currentUser;
+    if(fromPid === me) return false;        // your own words are never hidden from you
+    return !hasPostedToday(me);
+  }
+
   function tripPhotoFor(dateISO){
     var d = (state.tripPhotos || {})[dateISO];
     return (d && photoSrc(d.photo)) ? d : null;
@@ -9154,44 +9315,68 @@
     var today = todayISO();
     row.className = "duo-row together";
 
+    var nowHalf = tripHalfNow();
     var banner = document.createElement("div");
     banner.className = "trip-banner";
-    banner.textContent = "✈️ " + trip.title + " · Day " + tripDayNumber(trip, today);
+    banner.textContent = "✈️ " + trip.title + " · Day " + tripDayNumber(trip, today) +
+      " · " + tripHalfLabel(nowHalf).toLowerCase();
     row.appendChild(banner);
 
-    var slot = document.createElement("button");
-    slot.type = "button";
-    slot.className = "duo-slot us";
-    var frame = document.createElement("div");
-    frame.className = "duo-frame";
-    var d = tripPhotoFor(today);
-    if(d){
-      var img = document.createElement("img");
-      img.src = photoSrc(d.photo);
-      img.loading = "lazy"; img.decoding = "async";
-      img.alt = "Today on " + trip.title;
-      frame.appendChild(img);
-    } else {
-      var empty = document.createElement("div");
-      empty.className = "duo-empty";
-      empty.innerHTML = '<span class="plus">+</span>Add today\'s photo of you two';
-      frame.appendChild(empty);
-    }
-    slot.appendChild(frame);
+    // Two frames, morning and evening. The window you're in sits first and is the live one;
+    // the other is still tappable, because a morning you forgot at 2pm is worth filling in
+    // late rather than losing.
+    var pair = document.createElement("div");
+    pair.className = "trip-pair";
+    [0, 1].forEach(function(half){
+      var key = tripSlotKey(today, half);
+      var d = tripPhotoFor(key);
+      var isNow = half === nowHalf;
+      var future = half > nowHalf;
 
-    var name = document.createElement("div");
-    name.className = "duo-name";
-    name.textContent = d ? "Today, together 💞" : "Today's photo";
-    slot.appendChild(name);
+      var slot = document.createElement("button");
+      slot.type = "button";
+      slot.className = "duo-slot us half" + (isNow ? " is-now" : "") + (future ? " ahead" : "");
 
-    var when = document.createElement("div");
-    when.className = "duo-when" + (d ? " today" : "");
-    when.textContent = d ? ("posted by " + personName(d.by) + " · tap to replace")
-                         : "either of you can post it — tap to add";
-    slot.appendChild(when);
+      var frame = document.createElement("div");
+      frame.className = "duo-frame";
+      if(d){
+        var img = document.createElement("img");
+        img.src = photoSrc(d.photo);
+        img.loading = "lazy"; img.decoding = "async";
+        img.alt = tripHalfLabel(half) + " on " + trip.title;
+        frame.appendChild(img);
+      } else {
+        var empty = document.createElement("div");
+        empty.className = "duo-empty";
+        empty.innerHTML = '<span class="plus">+</span>' +
+          (future ? "Opens at noon" : "Add it");
+        frame.appendChild(empty);
+      }
+      slot.appendChild(frame);
 
-    slot.addEventListener("click", function(){ pickTripPhoto(trip, today); });
-    row.appendChild(slot);
+      var name = document.createElement("div");
+      name.className = "duo-name";
+      name.textContent = tripHalfLabel(half) + (d ? " 💞" : "");
+      slot.appendChild(name);
+
+      var when = document.createElement("div");
+      when.className = "duo-when" + (d ? " today" : (isNow ? " today" : ""));
+      when.textContent = d ? ("by " + personName(d.by))
+        : future ? tripHalfWindow(half)
+        : isNow ? (tripHalfEndsIn() + " left")
+        : "missed — still add it";
+      slot.appendChild(when);
+
+      slot.addEventListener("click", function(){
+        if(future){
+          toast("The evening slot opens at noon — morning one first 📸");
+          return;
+        }
+        pickTripPhoto(trip, key);
+      });
+      pair.appendChild(slot);
+    });
+    row.appendChild(pair);
 
     // the album so far. Empty days show as dashed placeholders you can still fill in, so a
     // day you forgot isn't lost the moment midnight passes.
@@ -9203,7 +9388,8 @@
         var p = tripPhotoFor(ds);
         var th = document.createElement("button");
         th.type = "button";
-        th.className = "trip-thumb" + (p ? "" : " blank") + (ds === today ? " is-today" : "");
+        th.className = "trip-thumb" + (p ? "" : " blank") +
+          (tripDateOf(ds) === today ? " is-today" : "");
         var box = document.createElement("div");
         box.className = "tt-img";
         if(p){
@@ -9217,7 +9403,8 @@
         th.appendChild(box);
         var lab = document.createElement("div");
         lab.className = "tt-day";
-        lab.textContent = "D" + tripDayNumber(trip, ds);
+        lab.textContent = "D" + tripDayNumber(trip, tripDateOf(ds)) +
+          (tripHalfOf(ds) ? "\u00B7pm" : "\u00B7am");
         th.appendChild(lab);
         th.addEventListener("click", function(){
           if(p) openPhotoView(p.photo, trip.title + " · Day " + tripDayNumber(trip, ds) +
@@ -9227,7 +9414,7 @@
               tombstone(TRIP_PHOTO_TOMB + ds);
               save();
               renderDailyPhotos();
-              toast("Day " + tripDayNumber(trip, ds) + " removed");
+              toast(tripHalfLabel(tripHalfOf(ds)) + " of day " + tripDayNumber(trip, tripDateOf(ds)) + " removed");
             });
           else pickTripPhoto(trip, ds);
         });
@@ -9255,11 +9442,14 @@
         // binding limit is this phone's own browser storage, which saveOrThrow reports below.
         try{
           saveOrThrow();
-          announce("posted Day " + tripDayNumber(trip, dateISO) + " of " + trip.title + " 📸");
+          announce("posted the " + tripHalfLabel(tripHalfOf(dateISO)).toLowerCase() +
+            " of Day " + tripDayNumber(trip, tripDateOf(dateISO)) + " on " + trip.title + " \uD83D\uDCF8");
           save();
           renderDailyPhotos();
           renderActivityFeed();
-          toast("Day " + tripDayNumber(trip, dateISO) + " saved 💞");
+          renderNotes();
+          toast(tripHalfLabel(tripHalfOf(dateISO)) + " of day " +
+            tripDayNumber(trip, tripDateOf(dateISO)) + " saved \uD83D\uDC9E");
         }catch(err){
           if(prev) state.tripPhotos[dateISO] = prev; else delete state.tripPhotos[dateISO];
           save();
@@ -9322,6 +9512,20 @@
       when.textContent = !d ? (isMe ? "tap to post" : "nothing yet")
         : (d.date === today ? "today" : friendlyPhotoDate(d.date));
       slot.appendChild(when);
+
+      // whatever they wrote when they posted, sealed until you've posted yours
+      var pn = d ? photoNoteFrom(p.id, d.date) : null;
+      if(pn){
+        var noteEl = document.createElement("div");
+        if(photoNoteLocked(p.id, d.date)){
+          noteEl.className = "duo-note locked";
+          noteEl.textContent = "\uD83D\uDD12 " + personName(p.id) + " left a note \u2014 post yours to read it";
+        } else {
+          noteEl.className = "duo-note";
+          noteEl.textContent = "\u201C" + pn.text + "\u201D";
+        }
+        slot.appendChild(noteEl);
+      }
 
       // today's Health numbers right under this person's photo (only if there are any)
       var hc = (state.healthCache || {})[p.id];
@@ -9588,7 +9792,7 @@
     var dow = isFinite(d.getTime()) ? d.getDay() : 1;      // 0 Sun … 6 Sat
     var other = otherPerson(me);
 
-    if(togetherMode() || (state.tripPhotos || {})[dateISO]) out.push("trip");
+    if(togetherMode() || tripSlotsOn(dateISO).length) out.push("trip");
 
     var theirs = (state.dailyPhotos || {})[other];
     if(theirs && theirs.date === dateISO) out.push("both");
@@ -9805,7 +10009,8 @@
     var fails = allFailures().filter(function(f){ return inMonth(f.at); });
     var notes = (state.notes || []).filter(function(n){ return inMonth(n.date); });
     var photoDays = Object.keys(state.album || {}).filter(inMonth);
-    var tripDays  = Object.keys(state.tripPhotos || {}).filter(inMonth);
+    var tripDays  = Object.keys(state.tripPhotos || {})
+      .filter(function(k){ return tripDateOf(k).slice(0, 7) === mk; });
     var wins = (state.rewardsWon || []).filter(function(w){ return inMonth(w.date); });
     var exps = done.filter(function(t){ return (listById(t.listId) || {}).experienceBased; });
 
@@ -10082,7 +10287,7 @@
     var al = state.album || {};
     for(var d in al){ if(al.hasOwnProperty(d)) ms[d.slice(0, 7)] = 1; }
     var tp = state.tripPhotos || {};
-    for(var td in tp){ if(tp.hasOwnProperty(td)) ms[td.slice(0, 7)] = 1; }
+    for(var td in tp){ if(tp.hasOwnProperty(td)) ms[tripDateOf(td).slice(0, 7)] = 1; }
     // trophies are pictures too, and they are the oldest ones either of you has — they were
     // never caught by the daily overwrite, so they reach further back than the album does
     trophyPhotos().forEach(function(t){ ms[t.date.slice(0, 7)] = 1; });
@@ -10128,7 +10333,7 @@
     // trips and trophies are normally resolved during sync, but a phone that hasn't
     // finished downloading still has them as refs and the grid would sit there blank
     var tp = state.tripPhotos || {};
-    for(var td in tp){ if(td.slice(0,7) === mk && tp[td]) need(tp[td].photo); }
+    for(var td in tp){ if(tripDateOf(td).slice(0,7) === mk && tp[td]) need(tp[td].photo); }
     trophyPhotos().forEach(function(x){ if(x.date.slice(0,7) === mk) need(x.task.photo); });
     var ids = Object.keys(want);
     if(!ids.length) return;
@@ -10170,15 +10375,16 @@
   }
 
   function memDayData(dateISO){
+    var slots = tripSlotsOn(dateISO);
     return {
-      trip: (state.tripPhotos || {})[dateISO],
+      trips: slots,
       day: (state.album || {})[dateISO] || {},
       trophies: trophiesOn(dateISO)
     };
   }
   function memDayHasAnything(dateISO){
     var d = memDayData(dateISO);
-    if(d.trip && d.trip.photo) return true;
+    if(d.trips.length) return true;
     if(d.trophies.length) return true;
     for(var k in d.day){ if(d.day.hasOwnProperty(k) && d.day[k] && d.day[k].photo) return true; }
     return false;
@@ -10227,10 +10433,13 @@
       var hasDaily = false;
       for(var who in data.day){ if(data.day[who] && data.day[who].photo) hasDaily = true; }
 
-      if(data.trip && data.trip.photo){
-        var src = memSrc(data.trip.photo);
-        cell.appendChild(memHalf(src));
-        if(!src) pending++;
+      if(data.trips.length){
+        // one frame if only one half was captured, split down the middle if both were
+        data.trips.forEach(function(t){
+          var src = memSrc(t.photo.photo);
+          cell.appendChild(memHalf(src, true));
+          if(!src) pending++;
+        });
       } else if(hasDaily){
         var gotBoth = 0;
         people.forEach(function(p){
@@ -10253,7 +10462,7 @@
       lab.className = "mem-day";
       lab.textContent = n;
       cell.appendChild(lab);
-      var badge = (data.trip && data.trip.photo) ? "✈️"
+      var badge = data.trips.length ? "✈️"
                 : (data.trophies.length && hasDaily) ? "🏆" : "";
       if(badge){
         var dot = document.createElement("span");
@@ -10312,8 +10521,10 @@
       }
       wrap.appendChild(fig);
     }
-    if(data.trip && data.trip.photo){
-      add(memSrc(data.trip.photo), "away together ✈️");
+    if(data.trips.length){
+      data.trips.forEach(function(t){
+        add(memSrc(t.photo.photo), tripHalfLabel(t.half) + " ✈️");
+      });
     } else {
       state.people.slice(0, 2).forEach(function(p){
         var slot = data.day[p.id];
@@ -10381,6 +10592,7 @@
           save();
           renderDailyPhotos();
           renderActivityFeed();
+          renderNotes();          // posting unseals whatever they left on theirs
           // a fresh post clears an earlier skip: skipping means "not for this photo",
           // not "never ask me again today"
           try{ localStorage.removeItem(PHOTO_Q_SKIP_KEY); }catch(e){}
@@ -10495,9 +10707,13 @@
       // A note that answers a question is meaningless without the question. Showing it
       // above the answer is the whole reason the photo prompt asks something specific
       // rather than "say something".
+      // A lock on the photo that the Notes tab cheerfully ignores isn't a lock.
+      var sealed = n.photoDate && photoNoteLocked(n.fromId, n.photoDate);
       d.innerHTML = '<div class="from">From '+personName(n.fromId)+'</div>'+
         (n.q ? '<div class="note-q">'+escapeHtml(n.q)+'</div>' : '')+
-        '<div class="text">'+escapeHtml(n.text)+'</div>'+
+        (sealed
+          ? '<div class="text locked">\uD83D\uDD12 Sealed until you post today\u2019s photo</div>'
+          : '<div class="text">'+escapeHtml(n.text)+'</div>')+
         '<div class="date">'+date.toLocaleString()+'</div>';
       wrap.appendChild(d);
     });
@@ -10552,7 +10768,9 @@
           '<span>' + escapeHtml(whenTxt) + (n.photoDate ? " \u00B7 \uD83D\uDCF8" : "") + '</span>' +
         '</div>' +
         (n.q ? '<div class="note-q">' + escapeHtml(n.q) + '</div>' : '') +
-        '<div class="note-arch-text">' + escapeHtml(n.text) + '</div>';
+        (n.photoDate && photoNoteLocked(n.fromId, n.photoDate)
+          ? '<div class="note-arch-text locked">\uD83D\uDD12 Sealed until you post today\u2019s photo</div>'
+          : '<div class="note-arch-text">' + escapeHtml(n.text) + '</div>');
       wrap.appendChild(d);
     });
     var more = document.getElementById("noteArchiveMore");
@@ -11381,6 +11599,48 @@
       renderSetupCard();
     });
   }
+  function renderPushDiag(){
+    var el = document.getElementById("pushDiag");
+    if(!el) return;
+    if(!pushLog.length){ el.innerHTML = ""; return; }
+    el.innerHTML = pushLog.map(function(r){
+      var t = new Date(r.at).toLocaleTimeString();
+      return '<div class="pd-row"><span class="' + (r.ok ? "pd-ok" : "pd-bad") + '">' +
+        (r.ok ? "✅" : "❌") + " " + escapeHtml(r.reason) + '</span> · ' + t +
+        (r.recipients != null ? " · " + r.recipients + " recipient" + (r.recipients === 1 ? "" : "s") : "") +
+        (r.detail ? '<div class="pd-detail">' + escapeHtml(r.detail) + '</div>' : '') +
+        '</div>';
+    }).join("");
+  }
+
+  // A test that goes the whole way: the real send, the real response, printed. Targeting
+  // THIS phone is the important one — it separates "OneSignal won't accept the send" from
+  // "iOS won't show the banner", which are completely different problems and have looked
+  // identical from the outside this whole time.
+  function runPushTest(toSelf){
+    var me = deviceOwner() || state.currentUser;
+    if(!me){ toast("Tell WeDO whose phone this is first"); return; }
+    if(!pushConfigured()){ setOnesignalStatus("No App ID / REST key saved on this phone"); return; }
+    var target = toSelf ? me : otherPerson(me);
+    setOnesignalStatus("sending a test to " + personName(target) + "…");
+    // sendPushToPartner targets the OTHER person, so for a self-test we pass the partner as
+    // the "owner" and let it flip back to us
+    sendPushToPartner(toSelf ? otherPerson(me) : me,
+      toSelf ? "— test push, you should see this as a banner"
+             : "— test push from " + personName(me),
+      function(ok, err){
+        if(ok){
+          setOnesignalStatus(toSelf
+            ? "OneSignal accepted it. If no banner appears within ~10s, the problem is on this phone (iOS), not the send."
+            : "OneSignal accepted it — check " + personName(target) + "'s phone.");
+        } else {
+          setOnesignalStatus("Refused: " + (err || "see below"));
+        }
+      });
+  }
+  document.getElementById("pushTestMeBtn").addEventListener("click", function(){ runPushTest(true); });
+  document.getElementById("pushTestThemBtn").addEventListener("click", function(){ runPushTest(false); });
+
   document.getElementById("onesignalEnableBtn").addEventListener("click", function(){
     enablePushOnThisPhone();
   });
