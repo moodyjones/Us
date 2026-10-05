@@ -2362,6 +2362,10 @@
     <!-- The Health shortcut needs BOTH the gist id and the token to hand a wiped Safari copy
          everything it needs. Copying them one at a time is where this went wrong, so this
          hands over the whole ending in a single paste. -->
+    <!-- The phone's copy of a photo is only ever a convenience: the gist has the original.
+         This hands back everything already safely up there. -->
+    <button class="ghost" id="freeSpaceBtn" style="width:100%;margin-top:6px;">Free up space on this phone</button>
+    <div id="spaceLabel" style="font-size:11px;color:var(--muted);margin:6px 0 2px;text-align:center;"></div>
     <button class="ghost" id="healthLinkBtn" style="width:100%;margin-top:6px;">Copy Health shortcut link for this phone</button>
     <!-- Setting up the other phone used to mean physically holding it, opening WeDO on it,
          making sure it had synced, and only then tapping the button above — and a phone that
@@ -3372,10 +3376,13 @@
     hideSaveWarn();
     scheduleSync();
   }
-  function storageKB(){
-    try{ return Math.round((localStorage.getItem(STORAGE_KEY)||"").length/1024); }
-    catch(e){ return 0; }
+  // localStorage stores UTF-16 — two bytes per character — so the length of the string is
+  // HALF what the quota is actually counting. "2378 KB used" was a phone sitting on ~4.6 MB
+  // against a ~5 MB limit, which is why it read as plenty of room right up until it wasn't.
+  function storageChars(){
+    try{ return (localStorage.getItem(STORAGE_KEY) || "").length; }catch(e){ return 0; }
   }
+  function storageKB(){ return Math.round(storageChars() * 2 / 1024); }
 
   // ---------- device owner ----------
   // Stored OUTSIDE the synced state on purpose: it never travels through
@@ -5005,6 +5012,108 @@
     return {files: files, deferred: deferred};
   }
 
+  // ================= KEEPING THE PHONE'S COPY SMALL =================
+  // externalisePhotos runs on a DEEP CLONE of the state on its way to the gist, which means
+  // the phone's own copy has always kept every photo inline, forever. That was survivable
+  // while the only photos were two daily slots and a handful of trophies. Build 77 added an
+  // album that keeps every day — so from then on each day added about 120 KB of base64 to
+  // localStorage and never gave any of it back. Roughly a fortnight later: quota exceeded,
+  // mid-trip, with "Out of photo storage" and no way to post.
+  //
+  // The bytes are safe in the gist. What the phone needs to hold is the REFERENCE, plus the
+  // few pictures actually on screen. So once a sync has confirmed a photo's file exists in
+  // the gist, the local copy goes back to being a ref.
+  var confirmedPhotoFiles = {};        // file name -> 1, learned from each sync
+  function noteConfirmedFiles(gistFiles){
+    for(var n in gistFiles){ if(isPhotoStoreFile(n)) confirmedPhotoFiles[n] = 1; }
+  }
+  function photoFileConfirmed(id, kind){
+    return !!confirmedPhotoFiles[photoFileName(id, kind)];
+  }
+
+  // Today's pictures stay inline: they're on the home screen, and a ref there would mean a
+  // blank frame and a network round-trip every time the app opens.
+  function photoSlotIsHot(o, kind, dateHint){
+    var today = todayISO();
+    if(kind === "album") return String(dateHint || "").slice(0, 10) === today;
+    if(o && o.date) return o.date === today;                 // a daily slot
+    if(dateHint) return String(dateHint).slice(0, 10) === today;  // a trip slot
+    return false;
+  }
+
+  // Returns how many characters were handed back. Safe by construction: a photo is only
+  // ever turned into a ref when its file is known to be in the gist.
+  function dehydrateLocalPhotos(){
+    var before = storageChars();
+    var freed = 0;
+    function maybe(o, kind, dateHint){
+      if(!o || !isInlinePhoto(o.photo)) return;
+      if(photoSlotIsHot(o, kind, dateHint)) return;
+      var id = photoId(o.photo);
+      if(!photoFileConfirmed(id, kind)) return;              // not uploaded yet — leave it
+      memBytes[id] = o.photo;                                // keep it for this session
+      freed += o.photo.length;
+      o.photo = PHOTO_REF + id;
+    }
+    var dp = state.dailyPhotos || {};
+    for(var pid in dp){ if(dp[pid]) maybe(dp[pid], "main"); }
+    var tp = state.tripPhotos || {};
+    for(var k in tp){ if(tp[k]) maybe(tp[k], "main", tripDateOf(k)); }
+    (state.tasks || []).forEach(function(t){ if(t) maybe(t, "main"); });
+    var al = state.album || {};
+    for(var d in al){
+      if(!al[d]) continue;
+      for(var who in al[d]){ if(al[d][who]) maybe(al[d][who], "album", d); }
+    }
+    if(freed){
+      try{ saveOrThrow(); }catch(e){ /* nothing gained, nothing lost — refs are still valid */ }
+    }
+    return {freed: freed, beforeKB: Math.round(before*2/1024), afterKB: storageKB()};
+  }
+
+  // "Out of photo storage" used to be a dead end: it told you the number and left you to go
+  // and delete your own memories by hand, in the middle of whatever you were doing. Almost
+  // all of that space is photos the gist already has a copy of, so the first move is to hand
+  // those back and try the save again. Only if that doesn't free enough is it really full.
+  function saveWithRoom(attempt, onFail){
+    try{ attempt(); return true; }catch(e){}
+    var r;
+    try{ r = dehydrateLocalPhotos(); }catch(e2){ r = {freed: 0}; }
+    if(r.freed){
+      try{
+        attempt();
+        toast("Freed " + Math.round(r.freed * 2 / 1024) + " KB \u2014 saved \u2705");
+        return true;
+      }catch(e3){}
+    }
+    if(onFail) onFail(r);
+    return false;
+  }
+
+  // Any ref, fetched once and kept in memory for the session. This is what lets a photo
+  // live as a ref on the phone and still appear the moment something asks for it.
+  var fetchingPhoto = {};
+  function ensurePhotoBytes(v, then){
+    if(!isPhotoRef(v)) return;
+    var id = v.slice(PHOTO_REF.length);
+    if(memBytes[id] || fetchingPhoto[id] || !autoSyncOn()) return;
+    fetchingPhoto[id] = 1;
+    fetch("https://api.github.com/gists/" + gistIdFromUrl(),
+          {headers: {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json"}})
+      .then(function(r){ if(!r.ok) throw new Error("read " + r.status); return r.json(); })
+      .then(function(g){
+        var files = g.files || {};
+        noteConfirmedFiles(files);
+        var f = files[photoFileName(id, "album")] || files[photoFileName(id)];
+        if(!f) return null;
+        if(f.truncated && f.raw_url) return fetch(f.raw_url).then(function(r){ return r.text(); });
+        return f.content || null;
+      })
+      .then(function(txt){ if(txt) memBytes[id] = txt; })
+      .catch(function(){})
+      .then(function(){ fetchingPhoto[id] = 0; if(then) then(); });
+  }
+
   // Turn refs back into real data URLs. Returns a promise because a photo file over 1 MB
   // comes back truncated with only a raw_url to follow.
   // Resolves to {complete:true} only if EVERY ref turned back into a real image.
@@ -5076,7 +5185,18 @@
 
   // a "ref:" that hasn't been resolved yet is not a displayable image — never hand it to an
   // <img>, or the trophy shows a broken-image icon instead of "no photo yet"
-  function photoSrc(v){ return isInlinePhoto(v) ? v : null; }
+  function photoSrc(v){
+    if(isInlinePhoto(v)) return v;
+    // A ref the phone has already fetched this session displays immediately; one it hasn't
+    // starts a fetch and re-renders when it lands. This is what makes it safe for the local
+    // copy to hold references instead of megabytes of base64.
+    if(isPhotoRef(v)){
+      var id = v.slice(PHOTO_REF.length);
+      if(memBytes[id]) return memBytes[id];
+      ensurePhotoBytes(v, function(){ try{ renderAll(); }catch(e){} });
+    }
+    return null;
+  }
 
   // photo files in the gist that nothing points at any more — a day removed from the album,
   // a trophy photo replaced. Without this the gist would only ever grow.
@@ -5143,6 +5263,7 @@
       .then(function(r){ if(!r.ok) throw new Error("read " + r.status); return r.json(); })
       .then(function(g){
         gistFiles = g.files || {};
+        noteConfirmedFiles(gistFiles);
         var f = gistFiles["wedo-state.json"];
         if(!f) return null;
         if(f.truncated) return fetch(f.raw_url).then(function(r){ return r.text(); });
@@ -5214,11 +5335,18 @@
           method: "PATCH",
           headers: {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json", "Content-Type": "application/json"},
           body: JSON.stringify({files: patch})
-        }).then(function(r){ if(!r.ok) throw new Error("write " + r.status); });
+        }).then(function(r){
+          if(!r.ok) throw new Error("write " + r.status);
+          // a file this phone just wrote is as confirmed as one it read
+          for(var pn in patch){ if(patch[pn] && isPhotoStoreFile(pn)) confirmedPhotoFiles[pn] = 1; }
+        });
       })
       .then(function(){
         lastSync = {at: new Date(), ok: true, err: null};
         markSyncOk();
+        // Everything that just went up, or was already up there, no longer needs a full copy
+        // on this phone. Without this the local state only ever grows.
+        try{ dehydrateLocalPhotos(); renderSpaceLabel(); }catch(e){}
         setSyncStatus("ok");
         if(manual) toast("Synced with " + personName(otherPerson(state.currentUser)) + "'s phone ✅");
       })
@@ -5285,7 +5413,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 81;
+  var BUILD_NUM = 82;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -5378,6 +5506,7 @@
     var tpN = Object.keys(state.tripPhotos || {}).length;
     if(tpN) add(null, "Trip album days", tpN);
     // the single line that answers "why isn't the shared photo frame showing?"
+    try{ renderSpaceLabel(); }catch(e){}
     var ts = togetherStatus();
     add(ts.on, "Together mode", ts.text);
     if(ts.trip) add(!!(ts.trip.tripStart && ts.trip.tripEnd), "Trip dates",
@@ -8021,11 +8150,10 @@
         var prevPhoto = t.photo, prevType = t.photoType, prevMtime = t.mtime;
         touch(t); // newer than whatever's on the other phone, so this photo wins the merge
         t.photo = dataUrl; t.photoType = kind;
-        try{
-          saveOrThrow();
+        if(saveWithRoom(saveOrThrow, null)){
           renderAll();
           toast("Memory saved 📸");
-        }catch(err){
+        } else {
           t.photo = prevPhoto; t.photoType = prevType; t.mtime = prevMtime;
           save();
           renderAll();
@@ -9440,8 +9568,7 @@
         // The gist-size guard that used to live here is gone: photos are their own files now,
         // so the album no longer competes with tasks and notes for one 1 MB budget. The
         // binding limit is this phone's own browser storage, which saveOrThrow reports below.
-        try{
-          saveOrThrow();
+        if(saveWithRoom(saveOrThrow, null)){
           announce("posted the " + tripHalfLabel(tripHalfOf(dateISO)).toLowerCase() +
             " of Day " + tripDayNumber(trip, tripDateOf(dateISO)) + " on " + trip.title + " \uD83D\uDCF8");
           save();
@@ -9450,7 +9577,7 @@
           renderNotes();
           toast(tripHalfLabel(tripHalfOf(dateISO)) + " of day " +
             tripDayNumber(trip, tripDateOf(dateISO)) + " saved \uD83D\uDC9E");
-        }catch(err){
+        } else {
           if(prev) state.tripPhotos[dateISO] = prev; else delete state.tripPhotos[dateISO];
           save();
           renderDailyPhotos();
@@ -10586,8 +10713,7 @@
         var at = new Date().toISOString();
         state.dailyPhotos[pid] = {photo: dataUrl, date: todayISO(), at: at};
         albumRecord(pid, dataUrl, todayISO(), at);
-        try{
-          saveOrThrow();
+        if(saveWithRoom(saveOrThrow, null)){
           announce("posted today's photo \uD83D\uDCF8");
           save();
           renderDailyPhotos();
@@ -10598,7 +10724,7 @@
           try{ localStorage.removeItem(PHOTO_Q_SKIP_KEY); }catch(e){}
           openPhotoQ(pid);
           toast("Photo posted \u2014 " + personName(otherPerson(pid)) + " will see it \uD83D\uDC9E");
-        }catch(err){
+        } else {
           // put the old one back rather than leaving the slot in a half-saved state
           if(prev) state.dailyPhotos[pid] = prev; else delete state.dailyPhotos[pid];
           if(state.album && state.album[todayISO()]){
@@ -10608,7 +10734,9 @@
           save();
           renderDailyPhotos();
           showModal("\uD83D\uDCBE","Out of photo storage",
-            "This phone's browser storage is full (~"+storageKB()+" KB used). Remove a photo from an older trophy to make room, then try again.");
+            "This phone's storage is genuinely full (~"+storageKB()+" KB) and everything that " +
+            "could be handed back to the cloud already has been. Remove a photo from an older " +
+            "trophy to make room, then try again.");
         }
       }, {maxDim: 620, quality: 0.7, noVideo: true});
     });
@@ -11391,6 +11519,56 @@
   // the same silent nothing as not setting it up at all. The app already knows all three.
   // The entire shortcut, as one address. There is nothing else to configure — no method, no
   // headers, no body — which is the whole point of moving off the gist write.
+  function renderSpaceLabel(){
+    var el = document.getElementById("spaceLabel");
+    if(!el) return;
+    if(pendingPhotoUploads > 0){
+      el.textContent = storageKB() + " KB used \u00B7 " + pendingPhotoUploads +
+        " photo" + (pendingPhotoUploads === 1 ? "" : "s") + " still uploading\u2026";
+      el.style.color = "var(--muted)";
+      return;
+    }
+    var kb = storageKB();
+    var pct = Math.min(100, Math.round(kb / 5120 * 100));
+    el.textContent = kb + " KB used on this phone (~" + pct + "% of what iOS allows)";
+    el.style.color = pct >= 85 ? "var(--pink)" : "var(--muted)";
+  }
+  document.getElementById("freeSpaceBtn").addEventListener("click", function(){
+    // A sync first, so the photos being handed back are definitely up there. Without it a
+    // picture taken five minutes ago could be dropped before it was ever uploaded.
+    //
+    // This can take a while, and it has to be allowed to. Only six photo files ride along
+    // per write — GitHub rejects an oversized gist request outright, and a rejected write
+    // takes the whole sync down with it — so a backlog drains over several rounds. The
+    // label counts down live rather than leaving a frozen screen.
+    var btn = document.getElementById("freeSpaceBtn");
+    btn.disabled = true;
+    var startKB = storageKB();
+    var tick = setInterval(renderSpaceLabel, 1500);
+    setSyncStatus("syncing");
+    syncNow(false, function(ok){
+      clearInterval(tick);
+      btn.disabled = false;
+      var r = dehydrateLocalPhotos();
+      r.freed = Math.max(r.freed, (startKB - storageKB()) * 512);  // count what earlier rounds freed too
+      renderSpaceLabel();
+      renderAll();
+      if(!ok && !r.freed){
+        showModal("\uD83D\uDCBE", "Couldn't free anything",
+          "This phone couldn't reach the gist, so it can't tell which photos are safely " +
+          "backed up \u2014 and it won't drop one it isn't sure about. Get a signal and try again.");
+        return;
+      }
+      showModal("\uD83D\uDCBE", r.freed ? "Freed " + Math.max(0, startKB - storageKB()) + " KB" : "Nothing to free",
+        r.freed
+          ? ("This phone was using " + startKB + " KB and is now using " + storageKB() + " KB. " +
+             "Nothing was deleted \u2014 the pictures live in the shared gist and come back " +
+             "the moment you look at them.")
+          : ("Everything that can be handed back already has been. This phone is using " +
+             r.afterKB + " KB; the rest is today's photos and the app itself."));
+    });
+  });
+
   document.getElementById("healthLinkBtn").addEventListener("click", function(){
     var me = deviceOwner() || state.currentUser;
     if(!me){ toast("Pick whose phone this is first"); return; }
