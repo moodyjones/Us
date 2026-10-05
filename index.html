@@ -21,6 +21,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800;1,62..125,400..600&display=swap" rel="stylesheet">
+<!-- Applied before the first paint, not in the main script. The main script runs after
+     the body has already been laid out, so setting the skin there made every cold open
+     flash the original look for a frame. -->
+<script>(function(){try{var l=localStorage.getItem("us-look-v1")||"a";if(l!=="orig"){document.documentElement.setAttribute("data-skin","pe");document.documentElement.setAttribute("data-type",l);}}catch(e){}})();</script>
+<!-- The Private Edition faces. Loaded alongside Archivo so switching the look is instant and
+     the original is always one tap away. -->
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
 <!-- OneSignal Web Push — only activates once you paste an App ID in Sync settings; see WeDO-Notifications-Setup.md -->
 <script>window.OneSignalDeferred = window.OneSignalDeferred || [];</script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
@@ -1066,6 +1073,82 @@
   .push-diag .pd-ok{color:var(--jade,#8ee6c8);}
   .push-diag .pd-detail{color:var(--faint);font-family:ui-monospace,Menlo,monospace;font-size:10.5px;word-break:break-all;}
 
+  .row-entry{
+    display:block;width:100%;margin:0 0 14px;padding:11px;
+    background:transparent;border:1px solid var(--line);border-radius:var(--r-object);
+    color:var(--faint);font-size:13px;font-family:inherit;cursor:pointer;
+  }
+  .row-entry.live{color:var(--coral);border-color:var(--coral);font-weight:600;}
+
+  /* ---- the fairness nudge ---- */
+  .fair-card{
+    background:linear-gradient(168deg,rgba(232,181,75,.11),var(--card) 62%)!important;
+    border:1px solid var(--line-2);margin-top:12px;
+  }
+  .fair-head{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .fair-body{font-size:13.5px;line-height:1.6;color:var(--muted);}
+  .fair-skip{
+    background:none;border:none;color:var(--faint);font-size:12.5px;font-family:inherit;
+    padding:12px 2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+    display:block;margin:0 auto;
+  }
+
+  /* ---- after a row ---- */
+  .row-timer{
+    font-size:46px;font-weight:800;text-align:center;color:var(--text);
+    font-variant-numeric:tabular-nums;margin:18px 0 6px;
+  }
+  .row-note{font-size:13.5px;line-height:1.6;color:var(--muted);text-align:center;}
+  .row-q{font-size:16px;line-height:1.45;font-weight:600;color:var(--text);margin:6px 0 12px;}
+  .row-sealed{
+    font-size:13px;line-height:1.6;color:var(--faint);text-align:center;
+    border:1px dashed var(--line-2);border-radius:var(--r-object);padding:14px;margin-top:4px;
+  }
+  .row-theirs{
+    font-size:14.5px;line-height:1.6;color:var(--text);
+    border-left:2px solid var(--purple);padding:4px 0 4px 13px;margin-top:10px;
+  }
+  .row-open{
+    background:none;border:none;color:var(--faint);font-size:12px;font-family:inherit;
+    padding:6px 2px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+  }
+
+  /* ---- recap awards ---- */
+  .sup-row{display:flex;gap:11px;align-items:flex-start;padding:8px 0;}
+  .sup-ico{flex:0 0 22px;font-size:17px;line-height:1.3;}
+  .sup-row b{font-size:14px;color:var(--text);font-weight:700;}
+  .sup-who{font-size:14px;color:var(--coral);font-weight:600;}
+  .sup-why{font-size:12.5px;color:var(--faint);line-height:1.5;margin-top:2px;}
+
+  /* ---- reminders ---- */
+  .rem-strip{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;}
+  .rem-row{
+    display:flex;gap:9px;align-items:flex-start;
+    font-size:13px;line-height:1.5;color:var(--muted);
+    background:var(--s1);border:1px solid var(--line);border-radius:var(--r-object);
+    padding:10px 13px;
+  }
+  .rem-row b{color:var(--text);font-weight:700;}
+  .rem-dot{
+    flex:0 0 7px;width:7px;height:7px;border-radius:999px;margin-top:6px;
+    background:var(--faint);
+  }
+  .rem-row.save{border-color:var(--line-2);}
+  .rem-row.save .rem-dot{background:var(--coral);}
+
+  /* ---- streak repair ---- */
+  .repair-card{
+    background:linear-gradient(168deg,rgba(142,230,200,.12),var(--card) 62%)!important;
+    border:1px solid var(--line-2);margin-top:12px;
+  }
+  .repair-head{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .repair-body{font-size:13.5px;line-height:1.55;color:var(--muted);}
+  .repair-skip{
+    background:none;border:none;color:var(--faint);font-size:12.5px;font-family:inherit;
+    padding:10px 2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+    display:block;margin:0 auto;
+  }
+
   /* ---- the note under a photo ---- */
   .duo-note{
     font-size:11.5px;line-height:1.45;color:var(--muted);font-style:italic;
@@ -1901,6 +1984,549 @@
     text-decoration:underline;text-underline-offset:2px;cursor:pointer;
     background:none;border:none;padding:0;font-size:13px;
   }
+
+  /* ============================================================================
+     THE PRIVATE EDITION  —  an alternate skin, not a replacement.
+
+     The app already had a deliberate type decision (see the comment on --display
+     above: one grotesk, no serif, because a display-serif-over-geometric-sans
+     pairing is the most recognisable "generated" look there is). That judgment
+     stands, so this does not overwrite it — it sits behind [data-skin="pe"] and
+     is switched on from the sync panel. Both of you can look at both on a phone
+     and settle it there, which is the only place a typeface argument gets won.
+
+     Two attributes, on <html>:
+       data-skin="pe"            the ground, the surfaces, the rules
+       data-type="a" | "b" | "c" which display face sits on top of it
+
+     The skin is where the real difference lives. Dropping the gradients and the
+     big radii turns a stack of floating pills into a page with a spine: content
+     separated by hairlines instead of by boxes. The face is secondary and
+     swappable precisely because the skin is carrying the weight.
+     ============================================================================ */
+
+  :root[data-skin="pe"]{
+    /* Ground. Deeper and cooler than the original plum-black, so the coral and
+       the iris read as light sources rather than as fills. */
+    --bg:#0E0B13; --night:#0E0B13; --ink:#0E0B13;
+    --card:#151119; --card2:#1D1824;
+    --s1:#151119; --s2:#1D1824; --s3:#262033;
+
+    /* Rules, not borders. Solid hairlines at a fixed value hold their weight on
+       an OLED screen; translucent white over a near-black ground disappears. */
+    --line:#241E2E; --line-2:#332B42; --border:#241E2E;
+
+    --text:#F2EDE4; --muted:#ADA4BA; --faint:#8A8198;
+
+    /* Both owner colours lifted a step: against #0E0B13 the old pair sat too
+       close to the ground to carry a numeral. Checked for AA on body text. */
+    --rose:#FF7A5E; --rose-deep:#E55F45; --moody:#FF7A5E; --pink:#FF7A5E;
+    --pink-dim:#E55F45;
+    --plum:#A594FF; --rae:#A594FF; --purple:#A594FF;
+    --gold:#E9B84E; --jade:#74D6AC; --teal:#74D6AC; --both:#74D6AC;
+
+    --ui:"Instrument Sans",-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --display:"Instrument Serif","Iowan Old Style",Georgia,serif;
+
+    /* Shadows go nearly flat. The separation comes from the rules now; keeping
+       the old drop shadows as well is what makes a design look like two designs. */
+    --sh-1:none;
+    --sh-2:0 1px 0 rgba(255,255,255,.03);
+    --sh-3:0 20px 60px rgba(0,0,0,.6);
+
+    --radius:10px; --r-object:10px;
+  }
+  /* The display face is the one thing worth arguing about, so it is its own switch. */
+  :root[data-skin="pe"][data-type="b"]{ --display:"Fraunces","Iowan Old Style",Georgia,serif; }
+  :root[data-skin="pe"][data-type="c"]{ --display:"Bricolage Grotesque","Instrument Sans",-apple-system,sans-serif; }
+
+  /* ---- surfaces: panels, not pills ---- */
+  :root[data-skin="pe"] .card{
+    background:var(--s1);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:none;
+    padding:18px 16px;
+  }
+  /* the original's top-edge highlight belongs to the glossy look, not this one */
+  :root[data-skin="pe"] .card::before{ display:none; }
+  :root[data-skin="pe"] .card h2{
+    font-family:var(--display);
+    font-weight:400;
+    font-size:21px;
+    letter-spacing:0;
+    color:var(--text);
+    margin:0 0 14px;
+  }
+  :root[data-skin="pe"][data-type="c"] .card h2{ font-weight:600; font-size:19px; }
+
+  /* ---- header ---- */
+  :root[data-skin="pe"] header h1{
+    font-family:var(--display);
+    font-weight:400;
+    letter-spacing:-0.01em;
+  }
+  :root[data-skin="pe"][data-type="c"] header h1{ font-weight:700; }
+  :root[data-skin="pe"] header .sub{
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); font-weight:500;
+  }
+
+  /* ---- tasks: ruled entries, not filled cards ----
+     This is the single biggest change and the reason the skin is worth having.
+     A to-do list is a list; giving every row its own background, border, radius
+     and shadow makes eight rows read as eight objects to be dealt with one at a
+     time. A hairline between them reads as one list. */
+  :root[data-skin="pe"] .task{
+    background:none;
+    border:none;
+    border-bottom:1px solid var(--line);
+    /* The left edge carries urgency (below). Every row reserves it, urgent or not, so the
+       stripe appearing doesn't shunt that one row's text two millimetres to the right of
+       its neighbours — which is exactly the kind of misalignment the eye reads as a bug. */
+    border-left:2px solid transparent;
+    border-radius:0;
+    box-shadow:none;
+    padding:15px 2px 15px 11px;
+    margin-bottom:0;
+  }
+  :root[data-skin="pe"] .task:last-child{ border-bottom:none; }
+  /* Urgency was carried by a background wash, which there is no longer room for.
+     It moves to the left edge — a stripe the eye finds just as fast and which
+     doesn't fight the text for contrast. */
+  :root[data-skin="pe"] .task.due-soon,
+  :root[data-skin="pe"] .task.due-today,
+  :root[data-skin="pe"] .task.due-overdue{
+    background:none;
+    border-bottom:1px solid var(--line);
+  }
+  :root[data-skin="pe"] .task.due-soon{ border-left-color:rgba(233,184,78,.45); }
+  :root[data-skin="pe"] .task.due-today{ border-left-color:var(--gold); }
+  :root[data-skin="pe"] .task.due-overdue{ border-left-color:var(--rose); }
+  :root[data-skin="pe"] .task .check{
+    width:22px;height:22px;border-radius:50%;
+    border:1.5px solid var(--line-2);background:none;
+  }
+  :root[data-skin="pe"] .task.done .check{
+    background:var(--jade);border-color:var(--jade);color:var(--ink);
+  }
+  :root[data-skin="pe"] .task.done{ opacity:.42; }
+
+  /* ---- stats: the numbers do the talking ---- */
+  :root[data-skin="pe"] .stat{
+    background:none;
+    border:none;
+    border-radius:0;
+    box-shadow:none;
+    padding:4px 0;
+    text-align:left;
+  }
+  :root[data-skin="pe"] .stat-row{ gap:0; }
+  :root[data-skin="pe"] .stat + .stat{
+    border-left:1px solid var(--line);
+    padding-left:14px;
+  }
+  :root[data-skin="pe"] .stat .num{
+    font-family:var(--display);
+    font-weight:400;
+    font-size:34px;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-0.02em;
+    line-height:1;
+  }
+  :root[data-skin="pe"][data-type="b"] .stat .num{ font-weight:500; }
+  :root[data-skin="pe"][data-type="c"] .stat .num{ font-weight:700; font-size:31px; }
+  :root[data-skin="pe"] .stat .label{
+    font-size:9px; letter-spacing:.14em; margin-top:8px; color:var(--faint);
+  }
+
+  /* ---- tabs: a rail, not a row of pills ---- */
+  :root[data-skin="pe"] .tabs{
+    gap:0;
+    border-bottom:1px solid var(--line);
+    margin:22px 0 18px;
+  }
+  :root[data-skin="pe"] .tabs button{
+    background:none;
+    border:none;
+    border-bottom:2px solid transparent;
+    border-radius:0;
+    padding:10px 14px;
+    box-shadow:none;
+    color:var(--faint);
+    margin-bottom:-1px;
+  }
+  :root[data-skin="pe"] .tabs button.active{
+    background:none;
+    color:var(--text);
+    border-bottom-color:var(--rose);
+  }
+
+  /* ---- the two of you ---- */
+  :root[data-skin="pe"] .switcher button{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:10px;
+    box-shadow:none;
+  }
+  :root[data-skin="pe"] .switcher button.active{
+    background:none;
+    border-color:var(--rose);
+    color:var(--rose);
+    box-shadow:inset 0 0 0 1px var(--rose);
+  }
+  :root[data-skin="pe"] .switcher button.person-p2.active{
+    background:none;
+    border-color:var(--plum);
+    color:var(--plum);
+    box-shadow:inset 0 0 0 1px var(--plum);
+  }
+
+  /* ---- list pills ---- */
+  :root[data-skin="pe"] .list-pills button{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:999px;
+    box-shadow:none;
+  }
+  :root[data-skin="pe"] .list-pills button.active{
+    background:var(--text);
+    color:var(--ink);
+    border-color:var(--text);
+  }
+
+  /* ---- badges and small chrome ---- */
+  :root[data-skin="pe"] .badge-pill{
+    background:none;
+    border:1px solid var(--line-2);
+    box-shadow:none;
+  }
+  :root[data-skin="pe"] a.ghost,
+  :root[data-skin="pe"] button.ghost{
+    background:none;
+    border:1px solid var(--line-2);
+    box-shadow:none;
+  }
+
+  /* The skin switcher itself. Four swatches, each previewing its own ground and
+     face, because the words "sharp editorial" mean nothing until you see it. */
+  .look-row{ display:flex; gap:8px; margin-top:8px; }
+  .look-opt{
+    flex:1; cursor:pointer; padding:11px 6px 9px; text-align:center;
+    border:1px solid var(--border); border-radius:10px;
+    background:var(--card2); color:var(--muted);
+    font-size:10px; font-weight:600; line-height:1.25;
+  }
+  .look-opt .look-a{
+    display:block; font-size:21px; line-height:1; margin-bottom:6px; color:var(--text);
+  }
+  .look-opt[data-look="orig"] .look-a{ font-family:'Archivo',sans-serif; font-weight:700; }
+  .look-opt[data-look="a"] .look-a{ font-family:"Instrument Serif",Georgia,serif; }
+  .look-opt[data-look="b"] .look-a{ font-family:"Fraunces",Georgia,serif; font-weight:500; }
+  .look-opt[data-look="c"] .look-a{ font-family:"Bricolage Grotesque",sans-serif; font-weight:700; }
+  .look-opt.on{ border-color:var(--rose); color:var(--text); }
+
+  /* ============================================================================
+     BUILD 87 — the part that was missing.
+
+     Build 86 removed things: gradients, radii, shadows. That made the app
+     cleaner and not one bit better, because "fewer boxes" is a tidy-up, not a
+     design. What a dark interface actually needs to stop looking like flat CSS
+     is the three things below, and none of them are subtraction.
+
+       1. LIGHT.    Something has to be emitting. Two soft fields in your two
+                    colours sit behind the top of the page, so the screen has a
+                    source and a direction instead of being evenly grey.
+       2. TEXTURE.  A fine grain over everything. It is almost invisible on its
+                    own and it is the whole difference between "a dark app" and
+                    "a flat #111 rectangle" — it kills the banding in the glows
+                    and gives the surface something to be.
+       3. CONTRAST. Not colour contrast: size contrast. 44px numbers against
+                    9px tracked-out labels. Everything in here was between 13
+                    and 17px, which is why nothing looked important.
+     ============================================================================ */
+
+  /* ---- 1. light ---- */
+  :root[data-skin="pe"] body{
+    background:
+      radial-gradient(118% 62% at 8% -8%,  rgba(255,122,94,.16) 0%, rgba(255,122,94,0) 58%),
+      radial-gradient(118% 62% at 94% -4%, rgba(165,148,255,.15) 0%, rgba(165,148,255,0) 58%),
+      radial-gradient(160% 100% at 50% 120%, rgba(116,214,172,.05) 0%, rgba(116,214,172,0) 60%),
+      var(--bg);
+    background-attachment:fixed;
+  }
+  /* ---- 2. grain ----
+     Generated, not fetched. A 140x140 turbulence tile at 3.5% over the whole
+     viewport: enough to break up the gradients' banding, far too little to see
+     as noise. pointer-events:none so it never eats a tap. */
+  :root[data-skin="pe"] body::after{
+    content:"";
+    position:fixed; inset:0; z-index:9999; pointer-events:none;
+    opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---- icons ---- */
+  .wd-i{ display:inline-block; vertical-align:-0.18em; flex:none; }
+  .tabs button{ display:inline-flex; align-items:center; gap:7px; }
+  .list-pills button .pill-ico{ display:inline-flex; align-items:center; }
+  .list-pills button .pill-ico .wd-i{ vertical-align:0; }
+  header .sub.motto .wd-i{ vertical-align:-0.12em; }
+  /* The active tab's icon brightens with its label, which a fixed-colour emoji
+     could never do — that is the entire argument for drawing them. */
+  :root[data-skin="pe"] .tabs button .wd-i{ opacity:.75; transition:opacity .18s ease; }
+  :root[data-skin="pe"] .tabs button.active .wd-i{ opacity:1; }
+
+  /* ---- 3. type: real size contrast ---- */
+  :root[data-skin="pe"] .stat .num{
+    font-size:44px;
+    line-height:.92;
+    letter-spacing:-0.035em;
+  }
+  :root[data-skin="pe"][data-type="c"] .stat .num{ font-size:39px; }
+  :root[data-skin="pe"] .stat .label{
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--faint); margin-top:10px;
+  }
+  :root[data-skin="pe"] .card h2{ font-size:23px; }
+  :root[data-skin="pe"][data-type="c"] .card h2{ font-size:20px; }
+  :root[data-skin="pe"] .hero-greet{
+    font-family:var(--display); font-weight:400; font-size:30px; letter-spacing:-0.02em;
+  }
+  :root[data-skin="pe"] .hero-quote{
+    font-family:var(--display); font-size:19px; line-height:1.4; color:var(--text);
+  }
+  :root[data-skin="pe"] .cue-label{
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  }
+
+  /* ---- surfaces: one card is lit, the rest are quiet ----
+     Every card being an identical grey rectangle is why the page had no focus.
+     The hero gets a hairline of light along its top edge and a touch of lift;
+     nothing else does, so the eye has somewhere to land first. */
+  :root[data-skin="pe"] .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.022), rgba(255,255,255,0) 120px), var(--s1);
+  }
+  :root[data-skin="pe"] .hero-card{
+    position:relative;
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0) 160px), var(--s1);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px 18px;
+    overflow:hidden;
+  }
+  :root[data-skin="pe"] .hero-card::before{
+    content:""; position:absolute; inset:0 0 auto 0; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,122,94,.55) 28%, rgba(165,148,255,.55) 72%, transparent);
+  }
+
+  /* ---- controls: no native dropdowns ----
+     A system <select> on a styled dark page is the single most obvious seam
+     there is. Same element, same behaviour, same accessibility — just not
+     wearing the OS's clothes. */
+  :root[data-skin="pe"] select{
+    -webkit-appearance:none; appearance:none;
+    background-color:transparent;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ADA4BA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 13px center;
+    border:1px solid var(--line-2);
+    border-radius:10px;
+    padding:12px 38px 12px 14px;
+    color:var(--text);
+    font-family:var(--ui); font-size:14px; font-weight:500;
+  }
+  :root[data-skin="pe"] select:focus{ outline:none; border-color:var(--rose); }
+  :root[data-skin="pe"] input[type="text"],
+  :root[data-skin="pe"] input[type="url"],
+  :root[data-skin="pe"] input[type="password"],
+  :root[data-skin="pe"] input[type="number"],
+  :root[data-skin="pe"] textarea{
+    background:rgba(255,255,255,.025);
+    border:1px solid var(--line-2);
+    border-radius:10px;
+    color:var(--text);
+    font-family:var(--ui);
+  }
+  :root[data-skin="pe"] input:focus,
+  :root[data-skin="pe"] textarea:focus{ outline:none; border-color:var(--rose); background:rgba(255,255,255,.04); }
+
+  /* ---- the checkbox ----
+     The one control in this app that gets tapped every day, and it was a ring
+     that filled with a colour. Now the tick is drawn on: the dash offset runs
+     to zero over 260ms, so finishing something has a small moment to it. */
+  :root[data-skin="pe"] .task .check{
+    position:relative;
+    border:1.5px solid var(--line-2);
+    transition:border-color .2s ease, background .2s ease, transform .2s var(--pe-ease, cubic-bezier(.16,1,.3,1));
+    font-size:0;
+  }
+  :root[data-skin="pe"] .task .check::after{
+    content:"";
+    position:absolute; inset:0;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230E0B13' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/62% no-repeat;
+    opacity:0; transform:scale(.5);
+    transition:opacity .16s ease, transform .26s cubic-bezier(.16,1,.3,1);
+  }
+  :root[data-skin="pe"] .task.done .check{
+    background:var(--jade); border-color:var(--jade); transform:scale(1.04);
+  }
+  :root[data-skin="pe"] .task.done .check::after{ opacity:1; transform:scale(1); }
+  :root[data-skin="pe"] .task .check:active{ transform:scale(.88); }
+
+  /* ---- rows ---- */
+  :root[data-skin="pe"] .task{ transition:background .18s ease; }
+  :root[data-skin="pe"] .task:active{ background:rgba(255,255,255,.02); }
+  :root[data-skin="pe"] .task.done .title,
+  :root[data-skin="pe"] .task.done .task-title{ text-decoration:none; }
+
+  /* ---- difficulty + meta pills: outlined, not filled blocks ---- */
+  :root[data-skin="pe"] .pill,
+  :root[data-skin="pe"] .diff,
+  :root[data-skin="pe"] .tag{
+    background:transparent;
+    border:1px solid currentColor;
+    border-radius:999px;
+    font-size:10px; font-weight:700;
+    letter-spacing:.07em; text-transform:uppercase;
+    padding:3px 9px;
+    opacity:.85;
+  }
+
+  /* ---- the add button ----
+     Still the one solid object on the page — it should be. It just stops
+     being a flat disc: a light source has a glow, and it lands softly. */
+  :root[data-skin="pe"] .fab,
+  :root[data-skin="pe"] #addBtn{
+    background:linear-gradient(145deg, #FF8E6F, #F2603F);
+    box-shadow:0 10px 30px rgba(255,122,94,.34), 0 2px 6px rgba(0,0,0,.4),
+               inset 0 1px 0 rgba(255,255,255,.25);
+    border:none;
+  }
+  :root[data-skin="pe"] .fab:active,
+  :root[data-skin="pe"] #addBtn:active{
+    transform:scale(.93);
+    box-shadow:0 4px 14px rgba(255,122,94,.3), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+
+  /* ---- primary buttons ---- */
+  :root[data-skin="pe"] .btn-primary,
+  :root[data-skin="pe"] button.primary{
+    background:linear-gradient(145deg, #FF8E6F, #F2603F);
+    border:none; color:#1A0E09; font-weight:700;
+    box-shadow:0 6px 20px rgba(255,122,94,.26), inset 0 1px 0 rgba(255,255,255,.22);
+  }
+
+  /* ---- the us bar (see renderUsBar) ---- */
+  .us-bar{
+    display:flex; align-items:center; gap:11px;
+    padding:13px 2px 15px;
+    margin:2px 0 4px;
+  }
+  .us-bar .us-end{ flex:none; min-width:66px; }
+  .us-bar .us-end.r{ text-align:right; }
+  .us-bar .us-who{
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--faint); margin-bottom:3px;
+  }
+  .us-bar .us-pts{
+    font-family:var(--display); font-weight:400; font-size:27px; line-height:1;
+    letter-spacing:-0.03em; font-variant-numeric:tabular-nums;
+  }
+  :root[data-type="c"] .us-bar .us-pts{ font-weight:700; font-size:25px; }
+  .us-bar .us-end.l .us-pts{ color:var(--moody); }
+  .us-bar .us-end.r .us-pts{ color:var(--rae); }
+  .us-bar .us-track{
+    flex:1; height:5px; border-radius:999px; position:relative; overflow:hidden;
+    background:rgba(255,255,255,.07);
+  }
+  .us-bar .us-fill{
+    position:absolute; inset:0 auto 0 0; border-radius:999px;
+    background:linear-gradient(90deg, var(--moody), #C97BD1 62%, var(--rae));
+    transition:width .7s cubic-bezier(.16,1,.3,1);
+  }
+  /* The marker is where the split actually sits; the gradient behind it is just
+     the two of you meeting. Without it a 52/48 month and a 70/30 month look
+     identical, which defeats the point of showing it at all. */
+  .us-bar .us-mark{
+    position:absolute; top:-4px; width:2px; height:13px; border-radius:2px;
+    background:var(--text); box-shadow:0 0 0 3px var(--bg);
+    transition:left .7s cubic-bezier(.16,1,.3,1);
+  }
+  .us-caption{
+    text-align:center; font-size:11px; color:var(--faint);
+    margin:-6px 0 14px; letter-spacing:.01em;
+  }
+  .us-caption b{ color:var(--muted); font-weight:600; }
+
+  /* ---- header: stop it eating the first screen ---- */
+  :root[data-skin="pe"] header{ padding:26px 20px 4px; }
+  :root[data-skin="pe"] .brand-row img{ height:42px; }
+  :root[data-skin="pe"] header h1{ font-size:30px; }
+  :root[data-skin="pe"] .ver-line{
+    font-size:9px; letter-spacing:.14em; opacity:.5;
+  }
+  /* The motto was two full lines of strapline above the fold. It keeps its line,
+     at the size a strapline should actually be. */
+  :root[data-skin="pe"] header .sub.motto{ font-size:10.5px; letter-spacing:.1em; opacity:.8; }
+
+  /* ---- section labels ---- */
+  :root[data-skin="pe"] .sec-label,
+  :root[data-skin="pe"] .group-label{
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--faint);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    :root[data-skin="pe"] .task .check,
+    :root[data-skin="pe"] .task .check::after,
+    .us-bar .us-fill, .us-bar .us-mark{ transition:none; }
+  }
+
+  /* A card heading's icon is set in the heading's own colour at its own size, which is the
+     thing an emoji could never do: it used to arrive as a fixed-colour cartoon at whatever
+     scale the system felt like. */
+  .hd-i{ vertical-align:-0.14em; opacity:.9; }
+  :root[data-skin="pe"] .hd-i{ color:var(--gold); opacity:1; }
+
+  /* ---- meta tags: outlined, not filled ----
+     Six filled chips in six different tinted colours on one row is more colour information
+     than the row carries. Outlined in their own hue, they still say easy/medium/hard at a
+     glance and stop competing with the task's own title for attention. */
+  :root[data-skin="pe"] .diff-tag,
+  :root[data-skin="pe"] .due-tag,
+  :root[data-skin="pe"] .repeat-tag,
+  :root[data-skin="pe"] .tier-tag,
+  :root[data-skin="pe"] .pending-pill,
+  :root[data-skin="pe"] .bricked-pill{
+    background:transparent;
+    border:1px solid currentColor;
+    border-radius:999px;
+    font-size:9.5px; font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase;
+    padding:2.5px 8px;
+  }
+  :root[data-skin="pe"] .diff-easy{ color:var(--jade); }
+  :root[data-skin="pe"] .diff-medium{ color:var(--gold); }
+  :root[data-skin="pe"] .diff-hard{ color:var(--rose); }
+  :root[data-skin="pe"] .due-tag{ color:var(--jade); }
+  :root[data-skin="pe"] .due-tag.overdue{ color:var(--rose); }
+  /* "Due today" is the only one of these that is urgent, so it is the only one that fills. */
+  :root[data-skin="pe"] .task.due-today .due-tag{
+    background:var(--gold); border-color:var(--gold); color:var(--ink);
+  }
+  :root[data-skin="pe"] .buy-sub,
+  :root[data-skin="pe"] .task .for-who{ color:var(--faint); font-size:11.5px; }
+
+  .due-tag .dt-i{ vertical-align:-0.16em; margin-right:1px; }
+  .due-tag{ display:inline-flex; align-items:center; gap:3px; }
+
+  /* The pair between the two rings: yours in coral, hers in iris, offset so they overlap
+     the way the rings do. */
+  .duo-heart{ position:relative; width:30px; height:24px; }
+  .duo-heart .wd-i{ position:absolute; top:0; stroke-width:2; }
+  .duo-heart .dh-a{ left:0;  color:var(--moody); transform:rotate(-9deg); }
+  .duo-heart .dh-b{ left:11px; color:var(--rae); transform:rotate(9deg); opacity:.95; }
 </style>
 </head>
 <body>
@@ -1953,7 +2579,7 @@
   <div class="sub tagline">Together <span class="dash">—</span> To Get There.</div>
   <!-- "Together" already opens the line above; saying it twice in two lines was the actual
        redundancy, not the second line itself -->
-  <div class="sub tagline motto"><span class="m-red">❤</span> <span class="m-red">Plan.</span> <span class="m-purple">💜</span> <span class="m-purple">Do.</span> <span class="m-red">❤</span> Grow.</div>
+  <div class="sub tagline motto" id="mottoLine"><span class="m-red" data-ico="heart"></span> <span class="m-red">Plan.</span> <span class="m-purple" data-ico="heart"></span> <span class="m-purple">Do.</span> <span class="m-red" data-ico="heart"></span> Grow.</div>
   <!-- I cut this in the Build 66 design pass as "developer chrome". It isn't. This project
        has repeatedly had one phone running a build behind the other with no way to see it,
        and the number is how you tell whether the thing you just uploaded is the thing you
@@ -1964,7 +2590,20 @@
 
 <main>
   <!-- daily photo duo: each of you posts one photo a day; you see each other first thing -->
+  <!-- What the app would have pushed, shown where it can actually be read. It is here and
+       not buried in a tab because a reminder you have to go looking for isn't one. -->
+  <div class="rem-strip" id="reminderStrip" style="display:none;"></div>
   <div class="duo-row" id="duoRow"></div>
+  <!-- The thing the whole app is about, and until now it was two numbers on a tab nobody
+       opened. Who is ahead this month, how far, and how many days are left to do something
+       about it — directly under the two of you, where the question gets asked. -->
+  <div class="us-bar" id="usBar" style="display:none;"></div>
+  <div class="us-caption" id="usCaption" style="display:none;"></div>
+  <!-- Only ever rendered on the partner's phone. Whoever broke the streak never sees a
+       button about it. -->
+  <div class="card repair-card" id="repairCard" style="display:none;"></div>
+  <!-- Shown only to whoever is ahead. The other person never sees it and is never told. -->
+  <div class="card fair-card" id="fairNudge" style="display:none;"></div>
   <!-- The note prompt only exists in the moment after you've posted. Notes lived in a
        separate panel nobody opened; attaching them to the photo gives them an occasion. -->
 
@@ -1982,21 +2621,18 @@
         <div class="cue-label" id="cueLabel">Today's considerate cue</div>
         <div id="heroCue"></div>
       </div>
-      <!-- live daily horoscope; stays hidden unless a real one has been fetched -->
-      <div class="hero-scope" id="heroScopeWrap" style="display:none;">
-        <div class="cue-label" id="scopeLabel">Today's horoscope</div>
-        <div id="heroScope"></div>
-        <div class="scope-src" id="scopeSrc"></div>
-      </div>
     </div>
   </div>
 
+  <!-- The emoji that used to label these are in data-ico now; the script swaps each for the
+       drawn icon on boot. Keeping the name here rather than hard-coding SVG in markup means
+       one icon set, one place, and a tab label that is still readable in the source. -->
   <div class="tabs">
-    <button data-tab="tasks" class="active">✅ Tasks</button>
-    <button data-tab="rewards">🎡 Rewards</button>
-    <button data-tab="board">🏆 Leaderboard</button>
-    <button data-tab="notes">💌 Notes</button>
-    <button data-tab="memories">📅 Memories</button>
+    <button data-tab="tasks" class="active" data-ico="check"><span class="tab-t">Tasks</span></button>
+    <button data-tab="rewards" data-ico="gift"><span class="tab-t">Rewards</span></button>
+    <button data-tab="board" data-ico="trophy"><span class="tab-t">Leaderboard</span></button>
+    <button data-tab="notes" data-ico="mail"><span class="tab-t">Notes</span></button>
+    <button data-tab="memories" data-ico="images"><span class="tab-t">Memories</span></button>
   </div>
 
   <!-- TASKS VIEW -->
@@ -2283,6 +2919,8 @@
       <button class="ghost" id="newQuoteBtn" style="width:100%;margin-top:10px;">New quote</button>
     </div>
 
+    <button type="button" class="row-entry" id="rowEntry">Had a row?</button>
+
     <div class="card">
       <h2>Leave a note</h2>
       <form id="noteForm">
@@ -2334,6 +2972,17 @@
   <details class="sync" id="syncPanel">
     <summary>Sync between two phones (tap to expand)</summary>
     <p style="font-size:12px;color:var(--muted);"><strong>Do this once to pair.</strong> Tap "Copy my data", send it to your person, and have them paste it into Import on their phone. This gives you both the same secret, which is what makes your daily codes line up. After that, re-sync whenever you want to share progress.</p>
+    <!-- The look lives here rather than in a settings screen because it is a thing the two
+         of you decide together once, not a thing either of you changes often. Original is
+         always the first swatch: nothing here is a one-way door. -->
+    <p style="font-size:12px;color:var(--muted);margin-bottom:2px;"><strong>Look.</strong> Pick how WeDO reads. This is per phone — you can each run a different one.</p>
+    <div class="look-row" id="lookRow">
+      <div class="look-opt" data-look="orig"><span class="look-a">Aa</span>Original</div>
+      <div class="look-opt" data-look="a"><span class="look-a">Aa</span>Sharp</div>
+      <div class="look-opt" data-look="b"><span class="look-a">Aa</span>Warm</div>
+      <div class="look-opt" data-look="c"><span class="look-a">Aa</span>No serif</div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
     <button class="ghost" id="exportBtn" style="width:100%;">Copy my data</button>
     <textarea id="syncBox" placeholder="Paste their code (or a backup file's contents) here..."></textarea>
     <button class="ghost" id="importBtn" style="width:100%;margin-top:6px;">Import (merges, never wipes)</button>
@@ -2364,6 +3013,7 @@
          hands over the whole ending in a single paste. -->
     <!-- The phone's copy of a photo is only ever a convenience: the gist has the original.
          This hands back everything already safely up there. -->
+    <button class="ghost" id="fetchPhotosBtn" style="width:100%;margin-top:6px;">Fetch photos now</button>
     <button class="ghost" id="freeSpaceBtn" style="width:100%;margin-top:6px;">Free up space on this phone</button>
     <div id="spaceLabel" style="font-size:11px;color:var(--muted);margin:6px 0 2px;text-align:center;"></div>
     <button class="ghost" id="healthLinkBtn" style="width:100%;margin-top:6px;">Copy Health shortcut link for this phone</button>
@@ -2373,6 +3023,11 @@
          shortcut that was already working. The address is in the shared state, so either
          phone can read the other's. Nothing needs to happen in WeDO on their phone at all. -->
     <button class="ghost" id="healthLinkOtherBtn" style="width:100%;margin-top:6px;">Copy the other phone’s Health link</button>
+    <!-- One shortcut instead of three services. OneSignal needs a registration iOS keeps
+         dropping, ntfy needs its own app to stay subscribed, and Safari's Notify Me needs a
+         tab left open. The Shortcuts app is the one thing on these phones that has never
+         failed, and a notification it raises itself is local — nothing to deliver. -->
+    <button class="ghost" id="bridgeBtn" style="width:100%;margin-top:6px;">Notifications the easy way — set up</button>
     <button class="ghost" id="shortcutSetupBtn" style="width:100%;margin-top:6px;opacity:.7;">Gist details (old Shortcut method)</button>
     <button class="ghost" id="shortcutTailBtn" style="width:100%;margin-top:6px;opacity:.7;">Old Safari shortcut ending (gist + token)</button>
     <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
@@ -2441,6 +3096,22 @@
 <!-- The month, told back to you. Everything in it is derived from tasks, photos, notes
      and failures, so there is nothing extra to store and an old month can always be
      rebuilt exactly as it was. -->
+<!-- After a row. The hard rule here is that nothing is kept: no score, no history, no
+     record of who said what. Anything stored would eventually be read back during the NEXT
+     argument, and an app that hands you ammunition is worse than no app. -->
+<div class="album-bg" id="rowBg">
+  <div class="album-sheet" style="max-width:420px;">
+    <div class="album-head">
+      <div>
+        <div class="album-title" id="rowTitle">Give it a minute</div>
+        <div class="album-sub" id="rowSub"></div>
+      </div>
+      <button type="button" class="album-close" id="rowClose" aria-label="Close">✕</button>
+    </div>
+    <div id="rowBody"></div>
+  </div>
+</div>
+
 <div class="album-bg" id="recapBg">
   <div class="album-sheet" style="max-width:460px;">
     <div class="album-head">
@@ -2451,7 +3122,10 @@
       <button type="button" class="album-close" id="recapClose" aria-label="Close">✕</button>
     </div>
     <div id="recapBody"></div>
-    <button type="button" class="primary" id="recapDone" style="width:100%;margin-top:16px;">On to this month</button>
+    <div class="row2" style="margin-top:16px;">
+      <button type="button" class="ghost" id="recapShare">Save as image</button>
+      <button type="button" class="primary" id="recapDone">On to this month</button>
+    </div>
   </div>
 </div>
 
@@ -2636,6 +3310,76 @@
 </div>
 
 <script>
+  /* ====================================================================
+     ICONS
+
+     Every piece of chrome in this app was a system emoji: ✅ Tasks, 🎡
+     Rewards, 🏆 Leaderboard, 🛒 Shopping. Emoji are the single loudest
+     signal that something was assembled rather than designed — they
+     arrive at different sizes, in someone else's colours, with a style
+     that changes under you when Apple ships a new set, and they cannot
+     be made to agree with each other.
+
+     These are one set: 24px grid, 1.75 stroke, round caps, drawn to the
+     same optical weight, and they take their colour from the text around
+     them — so an active tab's icon goes bright with its label instead of
+     staying a fixed cartoon.
+
+     The emoji aren't deleted, they're mapped. Anything in EMOJI_ICON is
+     upgraded wherever it's rendered; a list someone gives a 🦕 to keeps
+     its 🦕, because that one was a choice.
+     ==================================================================== */
+  var WD_ICONS = {
+    check:    '<path d="M20 6 9 17l-5-5"/>',
+    circle:   '<circle cx="12" cy="12" r="9"/>',
+    gift:     '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8M12 8v13"/><path d="M12 8S10.5 3 8 3a2.5 2.5 0 0 0 0 5zM12 8s1.5-5 4-5a2.5 2.5 0 0 1 0 5z"/>',
+    trophy:   '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5A1.5 1.5 0 0 0 3 7.5C3 9.4 4.6 11 6.5 11H7M17 6h2.5A1.5 1.5 0 0 1 21 7.5c0 1.9-1.6 3.5-3.5 3.5H17"/>',
+    mail:     '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 7.6 5.3a1.5 1.5 0 0 0 1.8 0L20.5 7"/>',
+    images:   '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m4 17 4.5-4.5a1.5 1.5 0 0 1 2 0L15 17M14 15l1.8-1.8a1.5 1.5 0 0 1 2 0L20 15.5"/>',
+    plane:    '<path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8z"/>',
+    ticket:   '<path d="M3 9V7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5V9a3 3 0 0 0 0 6v1.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 16.5V15a3 3 0 0 0 0-6z"/><path d="M9.5 9.5v5"/>',
+    cart:     '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h2.2l2.3 11.1a1.5 1.5 0 0 0 1.5 1.2h9.1a1.5 1.5 0 0 0 1.5-1.2L21 7.5H6"/>',
+    list:     '<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+    flame:    '<path d="M12 21c3.6 0 6-2.4 6-5.6 0-3.9-3.3-5.6-4.2-9.4-.2-.8-1.2-1-1.6-.3-1 1.7-1.5 3.1-1.5 4.3 0 1.1-.9 1.5-1.5.8-.4-.5-.7-1.1-.8-1.8-.1-.6-.8-.8-1.2-.3A8.3 8.3 0 0 0 6 15.4C6 18.6 8.4 21 12 21z"/>',
+    bulb:     '<path d="M9.5 18h5M10 21h4M8 11a4 4 0 1 1 8 0c0 1.7-1 2.4-1.5 3.3-.3.6-.5 1.1-.5 1.7h-4c0-.6-.2-1.1-.5-1.7C9 13.4 8 12.7 8 11z"/>',
+    camera:   '<path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2a1 1 0 0 0 .8-.4l1-1.3a1 1 0 0 1 .8-.4h5.4a1 1 0 0 1 .8.4l1 1.3a1 1 0 0 0 .8.4h2.2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.5" r="3.4"/>',
+    heart:    '<path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
+    spark:    '<path d="M12 3v5M12 16v5M3 12h5M16 12h5M6.2 6.2l3 3M14.8 14.8l3 3M17.8 6.2l-3 3M9.2 14.8l-3 3"/>',
+    clock:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>',
+    bolt:     '<path d="M13.5 2.5 4 13.8h6.4l-.9 7.7L19 10.2h-6.4z"/>'
+  };
+  /* Known emoji get the drawn equivalent. Anything not listed is left exactly as it is. */
+  var EMOJI_ICON = {
+    "✅":"check", "☑️":"check", "✔️":"check",
+    "🎡":"gift", "🎁":"gift",
+    "🏆":"trophy", "🥇":"trophy",
+    "💌":"mail", "✉️":"mail", "📧":"mail",
+    "📅":"images", "📸":"camera", "🖼️":"images", "📷":"camera",
+    "✈️":"plane", "🛫":"plane",
+    "🎟️":"ticket", "🎫":"ticket",
+    "🛒":"cart", "🛍️":"cart",
+    "📋":"list", "📝":"list",
+    "🔥":"flame",
+    "💡":"bulb",
+    "⚡":"bolt", "⚡️":"bolt",
+    "❤":"heart", "❤️":"heart", "💜":"heart", "💞":"heart", "💕":"heart"
+  };
+  /* Inline SVG rather than a font or sprite sheet: this app is one file that has to work
+     from a cold cache on a phone with no signal, so anything that needs a second request
+     is a thing that can fail. currentColor is the whole point — the icon is text. */
+  function icon(name, size, cls){
+    var d = WD_ICONS[name];
+    if(!d) return "";
+    var s = size || 18;
+    return '<svg class="wd-i'+(cls ? " "+cls : "")+'" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" '+
+      'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" '+
+      'stroke-linejoin="round" aria-hidden="true" focusable="false">'+d+'</svg>';
+  }
+  function iconForEmoji(e, size, cls){
+    var n = EMOJI_ICON[String(e || "").trim()];
+    return n ? icon(n, size, cls) : null;
+  }
+
 (function(){
   "use strict";
 
@@ -2839,7 +3583,9 @@
   function dueDateTag(t){
     if(!t.dueDate || t.status === "done") return "";
     var overdue = isOverdue(t);
-    return ' <span class="due-tag'+(overdue?" overdue":"")+'">'+(overdue?"⚠️ was due ":"📅 due ")+fmtDueDate(t.dueDate)+'</span>';
+    // The clock reads the same whether it's a warning or not — urgency is carried by the
+    // tag's own colour, which means one icon instead of two and no emoji in a data row.
+    return ' <span class="due-tag'+(overdue?" overdue":"")+'">'+icon("clock",11,"dt-i")+(overdue?" was due ":" due ")+fmtDueDate(t.dueDate)+'</span>';
   }
   // ---- due-date urgency: open tasks read as calm → warm → alert as the date closes in ----
   function taskUrgencyClass(t){
@@ -2921,7 +3667,19 @@
       signs: {p1:"Aquarius", p2:"Sagittarius"}, // built in: Moody ♒, Rae ♐
       tasks: [],
       points: {}, // personId -> {personal, thoughtful, totalCompleted, spinsAvailable, spinsUsedTowardNext}
-      streaks: {}, // personId -> {current, lastDate}
+      streaks: {}, // personId -> {current, lastDate, brokeFrom, brokeDate}
+      // One streak repair each per month, and you can only ever spend it on the OTHER
+      // person. Resetting a long run to zero is the single most reliable way to make
+      // someone stop altogether — the shame of the reset does more damage than the missed
+      // day ever did. Making it a gift rather than a self-service undo turns a bad day into
+      // being covered by someone, which is the thing this app is actually for.
+      repairs: {},  // "YYYY-MM" -> {pid: {by, at, covered}}
+      // When each person last had the app open, SYNCED. The per-phone key does the same job
+      // for the in-app feed, but the status file is read by the other phone's Shortcut and
+      // has to say what is unread for each of you, which only shared state can answer.
+      seenAt: {},   // pid -> epoch ms
+      row: null,          // a live "after a row" exchange — deleted the moment it closes
+      rowClosedAt: null,  // the start-time of the last one closed, so it can't be resurrected
       dailyCompletions: {}, // personId -> {date: count}
       monthly: {}, // "YYYY-MM" -> {assigned, completed, badgeAwarded}
       badges: {}, // personId -> [{key,label,at}]
@@ -3520,7 +4278,7 @@
       if(btn.dataset.tab === "memories"){ renderMemories(); if(memMonth) loadAlbumMonth(memMonth); }
       // Notes too: posting a photo unseals today's note, and the inbox was still showing
       // the locked version it rendered on load.
-      if(btn.dataset.tab === "notes") renderNotes();
+      if(btn.dataset.tab === "notes"){ renderNotes(); renderRowEntry(); }
     });
   });
 
@@ -3653,7 +4411,10 @@
     wrap.innerHTML = "";
     state.lists.forEach(function(l){
       var b = document.createElement("button");
-      b.innerHTML = '<span class="pill-ico">'+escapeHtml(l.emoji||"📋")+'</span>'+escapeHtml(l.name);
+      // A list's emoji is the owner's choice, so it is only replaced when we have a drawn
+      // equivalent — a custom list someone gave a 🦕 to keeps its 🦕.
+      var pill = iconForEmoji(l.emoji || "📋", 17);
+      b.innerHTML = '<span class="pill-ico">'+(pill || escapeHtml(l.emoji||"📋"))+'</span>'+escapeHtml(l.name);
       if(l.id === state.currentList) b.classList.add("active");
       b.addEventListener("click", function(){
         state.currentList = l.id;
@@ -4415,10 +5176,35 @@
   // Critically: this file must contain ONLY real activity. Put a "last synced" timestamp in
   // it and it changes every hour whether or not anything happened, and Safari nags forever.
   var STATUS_FILE = "wedo-status.txt";
+  // Counts what the OTHER person has done since this one last had the app open.
+  function unreadFor(st, pid){
+    var since = ((st.seenAt || {})[pid]) || 0;
+    return (st.activityLog || []).filter(function(a){ return a.by !== pid && a.at > since; });
+  }
+
   function buildStatusFile(st){
     var log = (st.activityLog || []).slice().sort(function(a, b){ return b.at - a.at; }).slice(0, 10);
     var detail = !(st.ntfy && st.ntfy.detail === false);
-    var lines = ["WeDO — what's happened lately", ""];
+
+    // A short machine-readable header above the prose. This is what an iOS Shortcut reads:
+    // three fetches and a Match Text, no push service anywhere in the chain. Local
+    // notifications are the only kind that have ever been reliable on these two phones.
+    var head = ["WEDO/1"];
+    (st.people || []).slice(0, 2).forEach(function(p){
+      var un = unreadFor(st, p.id);
+      var newest = un.length ? un[un.length - 1] : null;
+      // the list is newest-first after the sort above, so take index 0 of a re-sort
+      un.sort(function(a, b){ return b.at - a.at; });
+      newest = un[0] || null;
+      head.push(p.id + "unread=" + un.length);
+      head.push(p.id + "line=" + (newest
+        ? (detail ? ((personName(newest.by) || "Someone") + " " + newest.text) : "Something happened in WeDO")
+        : "Nothing new"));
+    });
+    head.push("updated=" + new Date().toISOString());
+    head.push("---");
+
+    var lines = head.concat(["WeDO — what's happened lately", ""]);
     if(!log.length){
       lines.push("Nothing yet.");
     } else if(!detail){
@@ -4689,6 +5475,47 @@
         m.streaks[pid] = (String(ls.lastDate||"") > String(rs.lastDate||"")) ? {current:ls.current||0,lastDate:ls.lastDate} : {current:rs.current||0,lastDate:rs.lastDate};
       }
       m.badges[pid] = unionByKey((L.badges||{})[pid], (R.badges||{})[pid], function(b){ return b.key; });
+      // A live row: same one on both sides means union the answers, or whoever wrote second
+      // would overwrite the first and the pair would never both be in. A row CLOSED on
+      // either phone is closed for both — ending it is always allowed to win.
+      (function(){
+        var lr = L.row, rr = R.row;
+        if(!lr && !rr){ delete m.row; return; }
+        // Ending it always wins, and it has to win from EITHER side. The first version only
+        // checked the side that no longer had the row, so a phone that still held a copy
+        // could hand it straight back on its own next sync and the thing would not die.
+        var closed = String(L.rowClosedAt || "") > String(R.rowClosedAt || "")
+                   ? L.rowClosedAt : (R.rowClosedAt || L.rowClosedAt || "");
+        var at = (lr && lr.at) || (rr && rr.at) || "";
+        if(closed && String(closed) >= String(at)){ delete m.row; return; }
+        if(lr && rr && lr.at === rr.at){
+          var ans = {};
+          for(var k1 in (rr.answers || {})) ans[k1] = rr.answers[k1];
+          for(var k2 in (lr.answers || {})) ans[k2] = lr.answers[k2];
+          m.row = {at: lr.at, by: lr.by || rr.by, answers: ans};
+          return;
+        }
+        // different rows, or one side closed it — the newer start wins, a close wins outright
+        if(lr && rr){ m.row = String(lr.at) >= String(rr.at) ? lr : rr; return; }
+        m.row = lr || rr;
+      })();
+
+      // a repair is a one-off gift: whichever side recorded one, it happened
+      m.rowClosedAt = (String(L.rowClosedAt || "") > String(R.rowClosedAt || "")) ? L.rowClosedAt : (R.rowClosedAt || L.rowClosedAt || null);
+      // later wins — "seen" only ever moves forward
+      m.seenAt = m.seenAt || {};
+      [L.seenAt, R.seenAt].forEach(function(o){
+        for(var who in (o || {})){ m.seenAt[who] = Math.max(m.seenAt[who] || 0, o[who] || 0); }
+      });
+      m.repairs = m.repairs || {};
+      [L.repairs, R.repairs].forEach(function(o){
+        for(var mk in (o || {})){
+          if(!m.repairs[mk]) m.repairs[mk] = {};
+          for(var who in o[mk]){
+            if(!m.repairs[mk][who]) m.repairs[mk][who] = o[mk][who];
+          }
+        }
+      });
       var lock = {};
       [(L.lockins||{})[pid], (R.lockins||{})[pid]].forEach(function(o){ for(var d in (o||{})) lock[d] = true; });
       m.lockins[pid] = lock;
@@ -4905,6 +5732,9 @@
   // fields that stay per-phone and never sync
   function stripLocal(s){
     var c = {};
+    // `row` is synced on purpose — both phones need to see the same cool-down and the same
+    // sealed state — but it is deleted the moment it closes, and nothing reads it anywhere
+    // else in the app.
     for(var k in s){ if(s.hasOwnProperty(k)) c[k] = s[k]; }
     delete c.currentUser;
     delete c.currentList;
@@ -5031,13 +5861,25 @@
     return !!confirmedPhotoFiles[photoFileName(id, kind)];
   }
 
-  // Today's pictures stay inline: they're on the home screen, and a ref there would mean a
-  // blank frame and a network round-trip every time the app opens.
+  // Recent pictures stay inline. The first version of this kept only TODAY, which was wrong
+  // in the one situation that matters most: on a trip, yesterday's photos are still being
+  // looked at constantly, and turning them into references meant a network round-trip for
+  // each one — from a cabin in Tahoe with two bars. Keeping a few days local costs a few
+  // hundred KB and means the trip works with no signal at all. The long tail of the album,
+  // which is what actually filled the phone up, is still handed back.
+  var PHOTO_KEEP_DAYS = 4;
+  function photoIsRecent(dateISO){
+    if(!dateISO) return false;
+    var d = String(dateISO).slice(0, 10);
+    var t = Date.parse(d + "T12:00:00Z");
+    if(!isFinite(t)) return false;
+    return (Date.now() - t) < PHOTO_KEEP_DAYS * 86400000;
+  }
   function photoSlotIsHot(o, kind, dateHint){
-    var today = todayISO();
-    if(kind === "album") return String(dateHint || "").slice(0, 10) === today;
-    if(o && o.date) return o.date === today;                 // a daily slot
-    if(dateHint) return String(dateHint).slice(0, 10) === today;  // a trip slot
+    if(kind === "album") return photoIsRecent(dateHint);
+    if(o && o.date) return photoIsRecent(o.date);                 // a daily slot
+    if(dateHint) return photoIsRecent(dateHint);                  // a trip slot
+    if(o && o.completedAt) return photoIsRecent(String(o.completedAt).slice(0, 10)); // a trophy
     return false;
   }
 
@@ -5090,28 +5932,113 @@
     return false;
   }
 
-  // Any ref, fetched once and kept in memory for the session. This is what lets a photo
-  // live as a ref on the phone and still appear the moment something asks for it.
-  var fetchingPhoto = {};
-  function ensurePhotoBytes(v, then){
+  // Any ref, fetched and kept in memory for the session.
+  //
+  // The first version of this fetched the WHOLE GIST once per missing photo, and every
+  // arrival called renderAll, which asked for every photo again. Twenty missing pictures
+  // meant twenty full gist downloads and twenty full re-renders fighting each other — on a
+  // phone with a weak signal that resolves to a screen of empty frames. So: one request,
+  // however many photos are waiting on it, and one re-render at the end.
+  var photoWanted = {};          // id -> 1, queued for the next round trip
+  var photoFetchTimer = null;
+  var photoFetchInFlight = false;
+  var photoRerenderTimer = null;
+  // A failed fetch used to re-queue itself the moment the re-render asked for the picture
+  // again, which with no signal is an infinite loop hammering the network — and on a phone
+  // that is the battery. Give up on an id after a few tries and let a later sync, or the
+  // Fetch photos button, start it again.
+  var photoTries = {};
+  var PHOTO_MAX_TRIES = 3;
+
+  function schedulePhotoRerender(){
+    clearTimeout(photoRerenderTimer);
+    photoRerenderTimer = setTimeout(function(){ try{ renderAll(); }catch(e){} }, 120);
+  }
+
+  function ensurePhotoBytes(v){
     if(!isPhotoRef(v)) return;
     var id = v.slice(PHOTO_REF.length);
-    if(memBytes[id] || fetchingPhoto[id] || !autoSyncOn()) return;
-    fetchingPhoto[id] = 1;
+    if(memBytes[id] || photoWanted[id] || !autoSyncOn()) return;
+    if((photoTries[id] || 0) >= PHOTO_MAX_TRIES) return;
+    photoWanted[id] = 1;
+    if(photoFetchTimer || photoFetchInFlight) return;
+    // a beat to let the rest of this render queue up its misses too
+    photoFetchTimer = setTimeout(runPhotoFetch, 60);
+  }
+
+  // The counterpart to dehydrating. Build 82 shrank photos to references using a window of
+  // "today only", so a phone that ran it mid-trip is now holding references for days it is
+  // still looking at — and would re-fetch them every session, over whatever signal a cabin
+  // in Tahoe has. Once the bytes are in hand, anything inside the keep window goes back to
+  // being stored on the phone, and stays there.
+  function rehydrateRecentPhotos(){
+    var changed = 0;
+    function maybe(o, kind, dateHint){
+      if(!o || !isPhotoRef(o.photo)) return;
+      if(!photoSlotIsHot(o, kind, dateHint)) return;
+      var id = o.photo.slice(PHOTO_REF.length);
+      if(!memBytes[id]) return;
+      o.photo = memBytes[id];
+      changed++;
+    }
+    var dp = state.dailyPhotos || {};
+    for(var pid in dp){ if(dp[pid]) maybe(dp[pid], "main"); }
+    var tp = state.tripPhotos || {};
+    for(var k in tp){ if(tp[k]) maybe(tp[k], "main", tripDateOf(k)); }
+    (state.tasks || []).forEach(function(t){ if(t) maybe(t, "main"); });
+    var al = state.album || {};
+    for(var d in al){
+      if(!al[d]) continue;
+      for(var who in al[d]){ if(al[d][who]) maybe(al[d][who], "album", d); }
+    }
+    // If the phone is too full to take them back, leaving them as refs is correct — they
+    // still display from memory this session.
+    if(changed){ try{ saveOrThrow(); }catch(e){} }
+    return changed;
+  }
+
+  function runPhotoFetch(){
+    photoFetchTimer = null;
+    var ids = Object.keys(photoWanted);
+    if(!ids.length || photoFetchInFlight) return;
+    photoFetchInFlight = true;
     fetch("https://api.github.com/gists/" + gistIdFromUrl(),
           {headers: {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json"}})
       .then(function(r){ if(!r.ok) throw new Error("read " + r.status); return r.json(); })
       .then(function(g){
         var files = g.files || {};
         noteConfirmedFiles(files);
-        var f = files[photoFileName(id, "album")] || files[photoFileName(id)];
-        if(!f) return null;
-        if(f.truncated && f.raw_url) return fetch(f.raw_url).then(function(r){ return r.text(); });
-        return f.content || null;
+        var waits = [];
+        ids.forEach(function(id){
+          delete photoWanted[id];
+          photoTries[id] = (photoTries[id] || 0) + 1;
+          var f = files[photoFileName(id, "album")] || files[photoFileName(id)];
+          if(!f) return;
+          if(f.truncated && f.raw_url){
+            waits.push(fetch(f.raw_url).then(function(r){ return r.text(); })
+              .then(function(t){ if(t) memBytes[id] = t; }).catch(function(){}));
+          } else if(f.content){
+            memBytes[id] = f.content;
+            photoTries[id] = 0;
+          }
+        });
+        return waits.length ? Promise.all(waits) : null;
       })
-      .then(function(txt){ if(txt) memBytes[id] = txt; })
-      .catch(function(){})
-      .then(function(){ fetchingPhoto[id] = 0; if(then) then(); });
+      .catch(function(){
+        ids.forEach(function(id){
+          delete photoWanted[id];
+          photoTries[id] = (photoTries[id] || 0) + 1;
+        });
+      })
+      .then(function(){
+        photoFetchInFlight = false;
+        try{ rehydrateRecentPhotos(); }catch(e){}
+        schedulePhotoRerender();
+        // anything that came in while that was running
+        if(Object.keys(photoWanted).length && !photoFetchTimer){
+          photoFetchTimer = setTimeout(runPhotoFetch, 400);
+        }
+      });
   }
 
   // Turn refs back into real data URLs. Returns a promise because a photo file over 1 MB
@@ -5193,7 +6120,7 @@
     if(isPhotoRef(v)){
       var id = v.slice(PHOTO_REF.length);
       if(memBytes[id]) return memBytes[id];
-      ensurePhotoBytes(v, function(){ try{ renderAll(); }catch(e){} });
+      ensurePhotoBytes(v);
     }
     return null;
   }
@@ -5346,7 +6273,7 @@
         markSyncOk();
         // Everything that just went up, or was already up there, no longer needs a full copy
         // on this phone. Without this the local state only ever grows.
-        try{ dehydrateLocalPhotos(); renderSpaceLabel(); }catch(e){}
+        try{ photoTries = {}; dehydrateLocalPhotos(); renderSpaceLabel(); }catch(e){}
         setSyncStatus("ok");
         if(manual) toast("Synced with " + personName(otherPerson(state.currentUser)) + "'s phone ✅");
       })
@@ -5413,7 +6340,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 82;
+  var BUILD_NUM = 87;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -5498,8 +6425,14 @@
     // saved in the first place. Those need completely different fixes, and until now they
     // looked identical from the outside.
     var pc = photoStats();
-    add(pc.real > 0 || pc.refs === 0, "Photos on this phone",
-      pc.real + " downloaded, " + pc.refs + " still to download, " + storageKB() + " KB used");
+    add(pc.lost === 0, "Photos",
+      (pc.real + pc.cached) + " ready to show" +
+      (pc.refs ? ", " + pc.refs + " in the cloud (fetched when you look)" : "") +
+      (pc.lost ? ", " + pc.lost + " MISSING from the gist" : "") +
+      " \u00B7 " + storageKB() + " KB on this phone");
+    if(pc.lost) add(false, "Missing photos",
+      pc.lost + " picture" + (pc.lost === 1 ? " has" : "s have") + " no file in the gist \u2014 " +
+      "they were never uploaded, or were swept. Nothing here can bring those back.");
     add(null, "Trophy photos", pc.trophyReal + " of " + pc.trophyTotal + " trophies have one");
     if(pendingPhotoUploads > 0) add(false, "Photos still uploading", pendingPhotoUploads + " waiting — leave the app open a moment");
     if(!photosFullyResolved) add(false, "Photo download", "some photos didn't come down last sync — tap Sync now again");
@@ -5577,27 +6510,6 @@
           lines[wikiIdx] = "❌ Wikipedia unreachable — " + e.message + " (trip photos can't load)";
           out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
         });
-      add(null, "Testing horoscope feed…");
-      var hIdx = lines.length - 1;
-      var hDirect = HOROSCOPE_API + "?day=TODAY&sign=aquarius";
-      function diagHoro(url, label, isLast){
-        fetch(url)
-          .then(function(r){ return r.json(); })
-          .then(function(j){
-            if(!(j && j.data && j.data.horoscope)) throw new Error("no text");
-            lines[hIdx] = "✅ Horoscope feed reachable (" + label + ")";
-            out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
-          })
-          .catch(function(e){
-            if(!isLast){
-              diagHoro("https://api.allorigins.win/raw?url=" + encodeURIComponent(hDirect), "via relay", true);
-              return;
-            }
-            lines[hIdx] = "❌ Horoscope feed unreachable — " + e.message + " (the built-in cue still works)";
-            out.innerHTML = lines.map(function(l){ return "<div>" + escapeHtml(l) + "</div>"; }).join("");
-          });
-      }
-      diagHoro(hDirect, "direct", false);
       if(autoSyncOn()){
         add(null, "Testing gist connection…");
         var gIdx = lines.length - 1;
@@ -6034,7 +6946,7 @@
     var a = (state.healthCache || {}).p1, b = (state.healthCache || {}).p2;
     if(!a && !b){
       body.innerHTML = '<div class="empty" style="font-style:normal;">Steps, calories &amp; sleep — side by side, straight from your iPhones. ' +
-        'Build the one-time <em>WeDO Health</em> shortcut (see the setup guide) and let it run once. 🍎</div>' +
+        'Build the one-time <em>WeDO Health</em> shortcut (see the setup guide) and let it run once.</div>' +
         renderHealthDiag();
       wireHealthDiag();
       return;
@@ -6994,7 +7906,7 @@
 
   var GREETINGS = [
     "Morning, {me} ☀️",
-    "Hey {me} 👋",
+    "Hey {me}",
     "New day, {me}",
     "Let's go, {me} ⚡",
     "Good to see you, {me}",
@@ -8379,7 +9291,13 @@
       // streaks
       var st = state.streaks[pid];
       if(st.lastDate !== today){
-        if(st.lastDate === yesterday){ st.current++; } else { st.current = 1; }
+        if(st.lastDate === yesterday){ st.current++; }
+        else {
+          // Remember what was lost. Without this the number is simply gone the instant you
+          // tick anything off, and there is nothing left for the other person to restore.
+          if(st.current > 0){ st.brokeFrom = st.current; st.brokeDate = todayISO(); }
+          st.current = 1;
+        }
         st.lastDate = today;
       }
       var streakMilestones = [3,7,14,30];
@@ -8872,7 +9790,7 @@
       blk.className = "nudge-blk" + (shown ? " divided" : "");
       var t = document.createElement("div");
       t.className = "nudge-title";
-      t.innerHTML = "\uD83C\uDFA1 " + (spins === 1 ? "You've got a spin waiting" : "You've got " + spins + " spins waiting");
+      t.innerHTML = icon("gift", 19, "hd-i") + " " + (spins === 1 ? "You've got a spin waiting" : "You've got " + spins + " spins waiting");
       var sub = document.createElement("div");
       sub.className = "nudge-sub";
       sub.textContent = spins === 1
@@ -8880,7 +9798,7 @@
         : "They don't expire, but they're no fun stacking up either.";
       var go = document.createElement("button");
       go.className = "primary nudge-btn";
-      go.textContent = spins === 1 ? "Spin it \uD83C\uDFA1" : "Spin them \uD83C\uDFA1";
+      go.innerHTML = (spins === 1 ? "Spin it" : "Spin them") + " " + icon("gift", 17, "hd-i");
       go.addEventListener("click", function(){
         var tab = document.querySelector('.tabs button[data-tab="rewards"]');
         if(tab) tab.click();
@@ -8900,7 +9818,7 @@
       if(shown) blk2.className += " divided";
       var t2 = document.createElement("div");
       t2.className = "nudge-title";
-      t2.innerHTML = "\uD83D\uDCA1 What would you actually want this week?";
+      t2.innerHTML = icon("bulb", 19, "hd-i") + " What would you actually want this week?";
       var sub2 = document.createElement("div");
       sub2.className = "nudge-sub";
       sub2.textContent = "Add one thing to the wheel. " + personName(otherPerson(me)) +
@@ -9323,6 +10241,527 @@
     save();
   });
 
+  // ================= THE QUIET ONE =================
+  // The app has had fairness bars for months and has never once acted on them. A bar is a
+  // fact; it doesn't change anything.
+  //
+  // The addressing is the whole point: this is shown ONLY to the person who is ahead. Telling
+  // someone they're behind is what the leaderboard already does, and it lands as blame on the
+  // person most likely already to be having a hard few weeks. Telling the person carrying it
+  // gives them something to do about it — say it out loud before it banks into resentment.
+  var FAIR_WINDOW_DAYS = 21;
+  var FAIR_MIN_TASKS = 8;
+  var FAIR_THRESHOLD = 0.68;
+  var FAIR_SEEN_KEY = "us-fairness-seen-v1";
+
+  function fairnessSplit(){
+    var cut = Date.now() - FAIR_WINDOW_DAYS * 86400000;
+    var per = {};
+    state.people.slice(0, 2).forEach(function(p){ per[p.id] = 0; });
+    var total = 0;
+    (state.tasks || []).forEach(function(t){
+      if(!t || t.status !== "done" || !t.completedAt) return;
+      if(Date.parse(t.completedAt) < cut) return;
+      // a shared task is nobody's to be ahead on
+      if(t.assignedTo === "both") return;
+      var who = t.completedBy || t.assignedTo;
+      if(per[who] == null) return;
+      per[who]++; total++;
+    });
+    return {per: per, total: total};
+  }
+
+  function fairnessNudge(){
+    var me = deviceOwner() || state.currentUser;
+    if(!me) return null;
+    var f = fairnessSplit();
+    if(f.total < FAIR_MIN_TASKS) return null;
+    var mine = f.per[me] || 0;
+    var share = mine / f.total;
+    if(share < FAIR_THRESHOLD) return null;              // not lopsided enough to mention
+    return {mine: mine, total: f.total, pct: Math.round(share * 100),
+            them: personName(otherPerson(me))};
+  }
+
+  function renderFairnessNudge(){
+    var el = document.getElementById("fairNudge");
+    if(!el) return;
+    var n = fairnessNudge();
+    var seen = "";
+    try{ seen = localStorage.getItem(FAIR_SEEN_KEY) || ""; }catch(e){}
+    // once a week at most — it's an observation, not a campaign
+    var weekAgo = todayISO(new Date(Date.now() - 7 * 86400000));
+    if(!n || seen >= weekAgo){ el.style.display = "none"; el.innerHTML = ""; return; }
+    el.style.display = "";
+    el.innerHTML =
+      '<div class="fair-head">You’ve been carrying it</div>' +
+      '<div class="fair-body">' + n.mine + ' of the last ' + n.total + ' things were yours — ' +
+      n.pct + '%. That might be fine; some weeks are just like that. But if it’s started to ' +
+      'grate, this is the moment to say so, rather than in three weeks’ time when it’s ' +
+      'about something else.<br><br>' + escapeHtml(n.them) + ' isn’t being told any of this.</div>' +
+      '<button type="button" class="fair-skip" id="fairSkip">Noted</button>';
+    document.getElementById("fairSkip").addEventListener("click", function(){
+      try{ localStorage.setItem(FAIR_SEEN_KEY, todayISO()); }catch(e){}
+      el.style.display = "none";
+    });
+  }
+
+  // ================= AFTER A ROW =================
+  // Couples apps are, almost without exception, maintenance tools — daily questions and
+  // date-night prompts — with nothing at all for the evening it actually goes wrong. This is
+  // the smallest useful thing for that evening.
+  //
+  // Three rules it has to keep:
+  //   1. A cool-down first. Twenty minutes, because nothing said in the first ten is any use.
+  //   2. Sealed until you've both written. Reading theirs first turns it into a rebuttal.
+  //   3. Nothing is kept. Not in notes, not in the activity feed, not in the recap. The
+  //      moment this becomes a record, it becomes evidence for the next one.
+  //
+  // It lives in synced state only while it's live, and is deleted the moment it's done.
+  var ROW_COOLDOWN_MIN = 20;
+  var ROW_PROMPTS = [
+    "What were you actually feeling, underneath the thing you said?",
+    "What do you think they were trying to tell you?",
+    "What's one thing you'd take back?",
+    "What do you need from them right now — not an apology, something practical?",
+    "What's the version of this where you're both right about something?",
+    "What would you want them to understand, if they only took one thing from it?"
+  ];
+  function rowPromptFor(startedAt){
+    var n = Math.floor(Date.parse(startedAt || "") / 60000) || 0;
+    return ROW_PROMPTS[Math.abs(n) % ROW_PROMPTS.length];
+  }
+
+  var rowBg = document.getElementById("rowBg");
+  var rowTick = null;
+
+  function liveRow(){
+    var r = state.row;
+    if(!r) return null;
+    // Belt and braces. A row that has been closed is closed, whatever arrives from the other
+    // phone afterwards — this is the one thing in the app that must never come back.
+    if(state.rowClosedAt && String(state.rowClosedAt) >= String(r.at)){
+      delete state.row;
+      return null;
+    }
+    return r;
+  }
+  function rowReady(r){ return Date.now() >= Date.parse(r.at) + ROW_COOLDOWN_MIN * 60000; }
+  function rowMinsLeft(r){
+    return Math.max(0, Math.ceil((Date.parse(r.at) + ROW_COOLDOWN_MIN * 60000 - Date.now()) / 60000));
+  }
+
+  function startRow(){
+    var me = deviceOwner() || state.currentUser;
+    if(!state.row){
+      state.row = {at: new Date().toISOString(), by: me, answers: {}};
+      save(); scheduleSync();
+    }
+    openRow();
+  }
+  function endRow(quietly){
+    // remembered so the other phone's copy doesn't hand it straight back on the next sync
+    if(state.row) state.rowClosedAt = state.row.at;
+    delete state.row;
+    save(); scheduleSync();
+    clearInterval(rowTick); rowTick = null;
+    rowBg.classList.remove("show");
+    renderAll();
+    if(!quietly) toast("Closed — nothing kept 🤍");
+  }
+
+  function openRow(){
+    if(!state.row) return;
+    rowBg.classList.add("show");
+    renderRow();
+    clearInterval(rowTick);
+    rowTick = setInterval(function(){ if(rowBg.classList.contains("show")) renderRow(); }, 1000);
+  }
+
+  function renderRow(){
+    var r = liveRow();
+    if(!r){ rowBg.classList.remove("show"); return; }
+    var me = deviceOwner() || state.currentUser;
+    var them = otherPerson(me);
+    var body = document.getElementById("rowBody");
+    var mine = r.answers[me], theirs = r.answers[them];
+
+    // ---- still cooling down ----
+    if(!rowReady(r) && !mine){
+      document.getElementById("rowTitle").textContent = "Give it a minute";
+      document.getElementById("rowSub").textContent =
+        "Twenty minutes before either of you writes anything.";
+      var left = rowMinsLeft(r);
+      body.innerHTML =
+        '<div class="row-timer">' + left + (left === 1 ? " min" : " mins") + '</div>' +
+        '<div class="row-note">Nothing said in the first ten minutes of a row is much use to ' +
+        'anyone. Put the phone down, go and do something else, and come back.<br><br>' +
+        'Neither of you can see what the other writes until you’ve both written.</div>' +
+        '<button type="button" class="ghost" id="rowCancel" style="width:100%;margin-top:18px;">Call it off</button>' +
+        '<button type="button" class="row-open" id="rowSkip">Skip the wait</button>';
+      document.getElementById("rowCancel").addEventListener("click", function(){ endRow(); });
+      document.getElementById("rowSkip").addEventListener("click", function(){
+        r.at = new Date(Date.now() - ROW_COOLDOWN_MIN * 60000).toISOString();
+        save(); renderRow();
+      });
+      return;
+    }
+
+    // ---- your turn ----
+    if(!mine){
+      document.getElementById("rowTitle").textContent = "One question each";
+      document.getElementById("rowSub").textContent =
+        "Sealed until you’ve both answered. Nothing is saved afterwards.";
+      body.innerHTML =
+        '<div class="row-q">' + escapeHtml(rowPromptFor(r.at)) + '</div>' +
+        '<textarea id="rowAnswer" rows="5" placeholder="However it comes out…" style="width:100%;"></textarea>' +
+        '<div class="row2" style="margin-top:14px;">' +
+          '<button class="ghost" id="rowCancel2">Call it off</button>' +
+          '<button class="primary" id="rowSend">Done</button>' +
+        '</div>';
+      document.getElementById("rowCancel2").addEventListener("click", function(){ endRow(); });
+      document.getElementById("rowSend").addEventListener("click", function(){
+        var txt = (document.getElementById("rowAnswer").value || "").trim();
+        if(!txt) return;
+        r.answers[me] = txt;
+        save(); scheduleSync();
+        renderRow();
+      });
+      return;
+    }
+
+    // ---- waiting on them ----
+    if(!theirs){
+      document.getElementById("rowTitle").textContent = "Waiting on " + personName(them);
+      document.getElementById("rowSub").textContent = "Yours is sealed until theirs is in.";
+      body.innerHTML =
+        '<div class="row-sealed">You’ve written yours. It stays sealed until ' +
+        escapeHtml(personName(them)) + ' has written theirs — on their phone, when they’re ready.' +
+        '<br><br>There’s nothing else to do here tonight.</div>' +
+        '<button type="button" class="ghost" id="rowCancel3" style="width:100%;margin-top:16px;">Call it off</button>';
+      document.getElementById("rowCancel3").addEventListener("click", function(){ endRow(); });
+      return;
+    }
+
+    // ---- both in ----
+    document.getElementById("rowTitle").textContent = "Both in";
+    document.getElementById("rowSub").textContent = "Read it, then go and talk. This closes for good.";
+    body.innerHTML =
+      '<div class="row-q">' + escapeHtml(rowPromptFor(r.at)) + '</div>' +
+      '<div class="row-note" style="text-align:left;"><b>' + escapeHtml(personName(them)) + '</b></div>' +
+      '<div class="row-theirs">' + escapeHtml(theirs) + '</div>' +
+      '<div class="row-note" style="text-align:left;margin-top:16px;"><b>You</b></div>' +
+      '<div class="row-theirs" style="border-color:var(--coral);">' + escapeHtml(mine) + '</div>' +
+      '<div class="row-note" style="margin-top:18px;">Nothing here is saved. Close it and it’s gone ' +
+      '— it isn’t going into the notes, the feed or the recap.</div>' +
+      '<button type="button" class="primary" id="rowFinish" style="width:100%;margin-top:14px;">Close it</button>';
+    document.getElementById("rowFinish").addEventListener("click", function(){ endRow(true); });
+  }
+
+  (function(){
+    var e = document.getElementById("rowEntry");
+    if(e) e.addEventListener("click", function(){ startRow(); });
+  })();
+  document.getElementById("rowClose").addEventListener("click", function(){
+    rowBg.classList.remove("show");
+    clearInterval(rowTick); rowTick = null;
+  });
+
+  // The way in, and the only place it is ever mentioned.
+  function renderRowEntry(){
+    var el = document.getElementById("rowEntry");
+    if(!el) return;
+    var r = liveRow();
+    if(r){
+      var me = deviceOwner() || state.currentUser;
+      var mine = r.answers[me], theirs = r.answers[otherPerson(me)];
+      el.className = "row-entry live";
+      el.textContent = !rowReady(r) && !mine ? ("Cooling down · " + rowMinsLeft(r) + " mins")
+        : (mine && theirs) ? "Both of you have written — open it"
+        : mine ? ("Waiting on " + personName(otherPerson(me)))
+        : "Your turn — one question";
+    } else {
+      el.className = "row-entry";
+      el.textContent = "Had a row?";
+    }
+  }
+
+  // ================= REMINDERS =================
+  // Two kinds, and keeping them apart is the whole trick.
+  //
+  //   routine — low-urgency, sent once in the window this person actually uses the app.
+  //             It keeps the channel warm and asks nothing.
+  //   save    — only when something real is about to expire. A spin that dies on the 1st,
+  //             a photo window closing at midnight, a streak with hours left on it.
+  //
+  // Hard cap of two a day. A reminder that fires because the clock said 8pm teaches people
+  // to ignore the app; one that fires because something is genuinely about to be lost is the
+  // only kind worth interrupting someone for. The window is inferred from when they open the
+  // app rather than asked for, because what people say they want and when they actually
+  // reach for their phone are different things.
+  var REMINDER_CAP = 2;
+  var REMINDER_LOG_KEY = "us-reminder-log-v1";
+  var OPEN_HOURS_KEY = "us-open-hours-v1";
+
+  function noteAppOpen(){
+    try{
+      var h = new Date().getHours();
+      var raw = JSON.parse(localStorage.getItem(OPEN_HOURS_KEY) || "{}");
+      raw[h] = (raw[h] || 0) + 1;
+      localStorage.setItem(OPEN_HOURS_KEY, JSON.stringify(raw));
+    }catch(e){}
+  }
+  // The hour this person most often opens WeDO, ignoring the small hours. Falls back to 7pm
+  // until there's enough to go on.
+  function usualHour(){
+    try{
+      var raw = JSON.parse(localStorage.getItem(OPEN_HOURS_KEY) || "{}");
+      var best = null, bestN = 0, total = 0;
+      for(var h in raw){
+        var n = raw[h] | 0; total += n;
+        if(parseInt(h, 10) < 7 || parseInt(h, 10) > 22) continue;
+        if(n > bestN){ bestN = n; best = parseInt(h, 10); }
+      }
+      return (total >= 5 && best != null) ? best : 19;
+    }catch(e){ return 19; }
+  }
+
+  function reminderLog(){
+    try{
+      var l = JSON.parse(localStorage.getItem(REMINDER_LOG_KEY) || "{}");
+      return l.date === todayISO() ? l : {date: todayISO(), sent: []};
+    }catch(e){ return {date: todayISO(), sent: []}; }
+  }
+  function noteReminderSent(key){
+    try{
+      var l = reminderLog();
+      l.sent.push(key);
+      localStorage.setItem(REMINDER_LOG_KEY, JSON.stringify(l));
+    }catch(e){}
+  }
+  function remindersSentToday(){ return reminderLog().sent.length; }
+  function reminderAlreadySent(key){ return reminderLog().sent.indexOf(key) >= 0; }
+
+  // Everything that might be worth saying today, most urgent first. Each carries its own
+  // key so the same thing is never said twice in a day.
+  function candidateReminders(){
+    var me = deviceOwner() || state.currentUser;
+    if(!me) return [];
+    var out = [];
+    var today = todayISO();
+    var hour = new Date().getHours();
+
+    // --- save: a spin about to expire ---
+    try{
+      var left = daysLeftInMonth();
+      var spins = ((state.points || {})[me] || {}).spinsAvailable || 0;
+      if(spins > 0 && left <= 3){
+        out.push({kind:"save", key:"spin", urgency: 100 - left,
+          title:"Spins expire " + (left <= 1 ? "tonight" : "in " + left + " days"),
+          body: spins + (spins === 1 ? " spin goes" : " spins go") + " unspent at the end of the month."});
+      }
+    }catch(e){}
+
+    // --- save: a trip photo window closing ---
+    try{
+      var trip = activeTrip();
+      if(trip){
+        var half = tripHalfNow();
+        if(!tripPhotoFor(tripSlotKey(today, half)) && hour >= (half ? 20 : 10)){
+          out.push({kind:"save", key:"trip-" + half, urgency: 90,
+            title: trip.title + " · " + tripHalfLabel(half).toLowerCase() + " photo",
+            body: tripHalfEndsIn() + " left on this one."});
+        }
+      }
+    }catch(e){}
+
+    // --- save: a streak with hours left ---
+    try{
+      var st = (state.streaks || {})[me] || {};
+      if((st.current || 0) >= 3 && st.lastDate !== today && hour >= 18){
+        out.push({kind:"save", key:"streak", urgency: 80,
+          title: st.current + "-day streak ends tonight",
+          body:"One thing ticked off keeps it going."});
+      }
+    }catch(e){}
+
+    // --- save: the other person is waiting on a photo ---
+    try{
+      var them = otherPerson(me);
+      var theirs = (state.dailyPhotos || {})[them];
+      var mine = (state.dailyPhotos || {})[me];
+      if(theirs && theirs.date === today && !(mine && mine.date === today) && hour >= 12){
+        out.push({kind:"save", key:"photo-waiting", urgency: 70,
+          title: personName(them) + " posted today",
+          body:"Yours unlocks whatever they wrote with it."});
+      }
+    }catch(e){}
+
+    // --- routine: one gentle one, in their own window ---
+    try{
+      var openTasks = (state.tasks || []).filter(function(t){ return t && t.status === "open"; }).length;
+      if(hour >= usualHour() && hour < usualHour() + 2){
+        out.push({kind:"routine", key:"routine", urgency: 10,
+          title:"WeDO",
+          body: openTasks ? (openTasks + " open — anything you can close today?")
+                          : "Nothing outstanding. Post a photo?"});
+      }
+    }catch(e){}
+
+    return out.sort(function(a, b){ return b.urgency - a.urgency; });
+  }
+
+  // What this phone should say right now, respecting the cap and the one-per-day rule.
+  function dueReminders(){
+    if(remindersSentToday() >= REMINDER_CAP) return [];
+    return candidateReminders().filter(function(r){ return !reminderAlreadySent(r.key); })
+      .slice(0, REMINDER_CAP - remindersSentToday());
+  }
+
+  // Push them if push works; show them either way. The in-app strip is not a consolation
+  // prize — it is what actually gets read while notifications are still broken.
+  function runReminders(){
+    var due = dueReminders();
+    if(!due.length){ renderReminderStrip([]); return; }
+    var me = deviceOwner() || state.currentUser;
+    due.forEach(function(r){
+      noteReminderSent(r.key);
+      if(pushConfigured()){
+        // addressed to this phone, not the partner's — these are your own nudges
+        sendPushToSelf(me, r.title, r.body);
+      }
+    });
+    renderReminderStrip(due);
+  }
+
+  function sendPushToSelf(me, title, body){
+    try{
+      fetch("https://api.onesignal.com/notifications?c=push", {
+        method: "POST",
+        headers: {"Authorization": "Key " + onesignalRestKey(), "Content-Type": "application/json"},
+        body: JSON.stringify({
+          app_id: state.onesignalAppId,
+          include_aliases: {external_id: [me]},
+          target_channel: "push",
+          headings: {en: title},
+          contents: {en: body}
+        })
+      }).then(function(r){ return r.text(); })
+        .then(function(t){ notePush({ok: true, to: me, reason: "reminder sent", detail: t.slice(0, 200)}); })
+        .catch(function(e){ notePush({ok: false, reason: "reminder failed", detail: String(e && e.message || e)}); });
+    }catch(e){}
+  }
+
+  function renderReminderStrip(list){
+    var el = document.getElementById("reminderStrip");
+    if(!el) return;
+    if(!list.length){ el.style.display = "none"; el.innerHTML = ""; return; }
+    el.style.display = "";
+    el.innerHTML = list.map(function(r){
+      return '<div class="rem-row ' + r.kind + '">' +
+        '<span class="rem-dot"></span>' +
+        '<span><b>' + escapeHtml(r.title) + '</b> ' + escapeHtml(r.body) + '</span>' +
+      '</div>';
+    }).join("");
+  }
+
+  // ================= STREAK REPAIR =================
+  // You cannot repair your own. That restriction is the whole design: a self-service undo is
+  // just a weaker streak, whereas someone else spending their one repair of the month on you
+  // is a small act of being looked after on exactly the day you needed it.
+  function repairsThisMonth(){
+    var mk = monthKeyNow();
+    return (state.repairs || {})[mk] || {};
+  }
+  function repairUsedFor(pid){ return !!repairsThisMonth()[pid]; }
+
+  // What a repair would restore, or null if there is nothing to put back.
+  // Two shapes, because a break looks different before and after the next tick-off:
+  //   gap   — they haven't completed anything since, so the old number is still sitting there
+  //   reset — they've ticked something off, the count is back to 1, and brokeFrom holds it
+  function repairableStreak(pid){
+    var st = (state.streaks || {})[pid];
+    if(!st || repairUsedFor(pid)) return null;
+    var today = todayISO();
+    var yest = todayISO(new Date(Date.now() - 86400000));
+
+    if(st.brokeFrom && st.brokeFrom >= 3 && st.brokeDate && daysBetweenISO(st.brokeDate, today) <= 2){
+      return {kind: "reset", lost: st.brokeFrom, restoreTo: st.brokeFrom + 1};
+    }
+    if(st.lastDate && st.lastDate !== today && st.lastDate !== yest && (st.current || 0) >= 3){
+      var gap = daysBetweenISO(st.lastDate, today);
+      if(gap >= 2 && gap <= 3) return {kind: "gap", lost: st.current, restoreTo: st.current, gap: gap - 1};
+    }
+    return null;
+  }
+  function daysBetweenISO(a, b){
+    var ta = Date.parse(String(a).slice(0,10) + "T12:00:00Z");
+    var tb = Date.parse(String(b).slice(0,10) + "T12:00:00Z");
+    if(!isFinite(ta) || !isFinite(tb)) return 999;
+    return Math.round((tb - ta) / 86400000);
+  }
+
+  function grantRepair(forPid){
+    var me = deviceOwner() || state.currentUser;
+    if(forPid === me){ toast("You can't repair your own — that's the point 💞"); return; }
+    var r = repairableStreak(forPid);
+    if(!r) return;
+    var mk = monthKeyNow();
+    if(!state.repairs) state.repairs = {};
+    if(!state.repairs[mk]) state.repairs[mk] = {};
+    if(state.repairs[mk][forPid]) return;                 // already spent this month
+    state.repairs[mk][forPid] = {by: me, at: new Date().toISOString(), covered: r.lost};
+
+    var st = state.streaks[forPid];
+    if(r.kind === "reset"){
+      st.current = r.restoreTo;
+    } else {
+      // bridge the gap rather than inventing a completion: the next thing they tick off
+      // carries on from where they were
+      st.current = r.restoreTo;
+      st.lastDate = todayISO(new Date(Date.now() - 86400000));
+    }
+    delete st.brokeFrom; delete st.brokeDate;
+
+    save(); scheduleSync();
+    announce("covered " + personName(forPid) + "'s " + r.lost + "-day streak 🛟");
+    renderAll();
+    showModal("🛟", "Covered",
+      personName(forPid) + "'s " + r.lost + "-day streak is back. That's your one for " +
+      monthName(mk) + " — " + personName(forPid) + " gets told who did it.");
+  }
+
+  // Shown on the OTHER person's phone. Deliberately not on the phone of whoever broke it:
+  // nothing here should read as "you failed, here's the button".
+  function renderRepairOffer(){
+    var card = document.getElementById("repairCard");
+    if(!card) return;
+    var me = deviceOwner() || state.currentUser;
+    var them = otherPerson(me);
+    var r = repairableStreak(them);
+    if(!r){ card.style.display = "none"; card.innerHTML = ""; return; }
+    card.style.display = "";
+    card.innerHTML =
+      '<div class="repair-head">🛟 ' + escapeHtml(personName(them)) + "'s streak broke</div>" +
+      '<div class="repair-body">' +
+        escapeHtml(personName(them)) + ' had ' + r.lost + ' days going' +
+        (r.kind === "gap" ? ' and missed ' + r.gap + (r.gap === 1 ? ' day' : ' days') : ' and it reset') +
+        '. You can put it back — one repair each per month, and you can only spend it on ' +
+        'each other.' +
+      '</div>' +
+      '<button type="button" class="primary" id="repairBtn" style="width:100%;margin-top:12px;">' +
+        'Cover ' + escapeHtml(personName(them)) + '</button>' +
+      '<button type="button" class="repair-skip" id="repairSkip">Not this time</button>';
+    document.getElementById("repairBtn").addEventListener("click", function(){ grantRepair(them); });
+    document.getElementById("repairSkip").addEventListener("click", function(){
+      try{ localStorage.setItem("us-repair-skip-v1", todayISO()); }catch(e){}
+      card.style.display = "none";
+    });
+    try{
+      if(localStorage.getItem("us-repair-skip-v1") === todayISO()) card.style.display = "none";
+    }catch(e){}
+  }
+
   // ---------- daily photo duo ----------
   // Each person posts one photo per day. Only your own phone can fill your own slot, so
   // the two sides never fight over the same key in the sync merge.
@@ -9420,16 +10859,29 @@
   // real = a downloaded image we can display; refs = known to exist in the gist but not
   // fetched yet. Trophies counted separately because that's where they're most missed.
   function photoStats(){
-    var out = {real: 0, refs: 0, trophyReal: 0, trophyTotal: 0};
+    // Three states, not two. Since the phone started handing photos back to the gist, "it's
+    // a reference" is the NORMAL case and says nothing about whether you can see it — what
+    // matters is whether the bytes are to hand. A picture already pulled down this session
+    // displays instantly; only one that is neither inline nor cached is actually waiting.
+    var out = {real: 0, cached: 0, refs: 0, lost: 0, trophyReal: 0, trophyTotal: 0};
+    var know = Object.keys(confirmedPhotoFiles).length > 0;
     try{
-      eachPhotoSlot(state, function(o){
+      eachPhotoSlot(state, function(o, kind){
         if(isInlinePhoto(o.photo)) out.real++;
-        else if(isPhotoRef(o.photo)) out.refs++;
+        else if(isPhotoRef(o.photo)){
+          var id = o.photo.slice(PHOTO_REF.length);
+          if(memBytes[id]) out.cached++;
+          // A reference the gist has no file for is the only genuinely bad case, and it was
+          // being counted alongside "hasn't been looked at yet" — which is the normal state
+          // for an album going back months.
+          else if(know && !photoFileConfirmed(id, kind) && !photoFileConfirmed(id, "main")) out.lost++;
+          else out.refs++;
+        }
       });
       (state.tasks || []).forEach(function(t){
         if(!t || t.status !== "done" || t.trip) return;
         out.trophyTotal++;
-        if(isInlinePhoto(t.photo)) out.trophyReal++;
+        if(photoSrc(t.photo)) out.trophyReal++;
       });
     }catch(e){}
     return out;
@@ -9684,7 +11136,9 @@
       if(i === 0 && people.length > 1){
         var heart = document.createElement("div");
         heart.className = "duo-heart";
-        heart.textContent = "\uD83D\uDC9E";
+        // Two hearts, one in each of your colours, overlapping — the same idea the emoji
+        // was carrying, except it's in the app's own palette and at the app's own weight.
+        heart.innerHTML = icon("heart", 17, "dh-a") + icon("heart", 17, "dh-b");
         row.appendChild(heart);
       }
     });
@@ -10268,6 +11722,200 @@
     return "A solid month with a few things left on the floor, which is what most months look like. The list resets, the streaks don’t — carry the ones that are working.";
   }
 
+  // ---- superlatives ----
+  // A stat line says what happened. A superlative says something about the two of you, which
+  // is the part anyone actually reads twice. Each one only appears if it's true and the
+  // number behind it is big enough to mean anything.
+  function recapSuperlatives(st){
+    var A = st.people[0], B = st.people[1];
+    var pa = st.per[A.id], pb = st.per[B.id];
+    var out = [];
+
+    function award(ico, title, who, why){ out.push({ico: ico, title: title, who: who, why: why}); }
+
+    if(pa.forOther !== pb.forOther){
+      var helper = pa.forOther > pb.forOther ? A : B;
+      var n = Math.max(pa.forOther, pb.forOther);
+      if(n >= 2) award("💛", "Did it without being asked", helper.name,
+        n + " things off the other's list");
+    }
+    if(pa.fails !== pb.fails && Math.max(pa.fails, pb.fails) >= 2){
+      var brave = pa.fails > pb.fails ? A : B;
+      award("🎯", "Aimed highest", brave.name,
+        "took on the most that didn't come off — which is what aiming high looks like");
+    }
+    if(st.bigDay && st.bigCount >= 3){
+      var bd = new Date(st.bigDay + "T12:00:00");
+      award("⚡", "Best day's work", bd.toLocaleDateString(undefined, {weekday:"long"}),
+        st.bigCount + " things crossed off in one day");
+    }
+    if(pa.photos !== pb.photos && Math.max(pa.photos, pb.photos) >= 5){
+      var snapper = pa.photos > pb.photos ? A : B;
+      award("📸", "Never missed a photo", snapper.name,
+        Math.max(pa.photos, pb.photos) + " days posted");
+    }
+    if(pa.notes !== pb.notes && Math.max(pa.notes, pb.notes) >= 3){
+      var writer = pa.notes > pb.notes ? A : B;
+      award("💌", "Had the most to say", writer.name,
+        Math.max(pa.notes, pb.notes) + " notes written");
+    }
+    st.people.forEach(function(p){
+      var stk = (state.streaks || {})[p.id] || {};
+      if((stk.current || 0) >= 14) award("🔥", "Longest run going", p.name, stk.current + " days");
+    });
+    if(!out.length && st.done.length) {
+      award("🤝", "Evenly matched", A.name + " & " + B.name,
+        "nothing between you this month");
+    }
+    return out.slice(0, 4);
+  }
+
+  // ---- this time last year ----
+  function sameMonthLastYear(mk){
+    var y = parseInt(mk.slice(0, 4), 10) - 1;
+    var prev = y + mk.slice(4);
+    var st = monthStatsFor(prev);
+    if(!st.done.length && !st.photoDays && !st.notes.length) return null;
+    return {mk: prev, st: st};
+  }
+
+  // ---- the year ----
+  function yearStatsFor(year){
+    var months = [], totals = {done: 0, fails: 0, photoDays: 0, bothDays: 0, tripDays: 0, notes: 0};
+    var per = {};
+    state.people.slice(0, 2).forEach(function(p){ per[p.id] = {pts: 0, done: 0, forOther: 0}; });
+    for(var m = 1; m <= 12; m++){
+      var mk = year + "-" + (m < 10 ? "0" + m : String(m));
+      var st = monthStatsFor(mk);
+      months.push({mk: mk, st: st});
+      totals.done += st.done.length;
+      totals.fails += st.fails.length;
+      totals.photoDays += st.photoDays;
+      totals.bothDays += st.bothDays;
+      totals.tripDays += st.tripDays;
+      totals.notes += st.notes.length;
+      state.people.slice(0, 2).forEach(function(p){
+        per[p.id].pts += st.per[p.id].pts;
+        per[p.id].done += st.per[p.id].done;
+        per[p.id].forOther += st.per[p.id].forOther;
+      });
+    }
+    var best = null;
+    months.forEach(function(m){ if(!best || m.st.done.length > best.st.done.length) best = m; });
+    return {year: year, months: months, totals: totals, per: per, best: best};
+  }
+
+  // A recap people keep is a recap they can send. Everything in it is derived, so a month
+  // from any year can be redrawn exactly as it was — the picture is just a view of the data,
+  // not a snapshot that has to be stored.
+  function recapPoster(mk){
+    var st = monthStatsFor(mk);
+    var A = st.people[0], B = st.people[1];
+    var pa = st.per[A.id], pb = st.per[B.id];
+    var W = 1080, H = 1350, c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    var x = c.getContext("2d");
+
+    var g = x.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, "#1b1726"); g.addColorStop(1, "#120f1a");
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+    x.textAlign = "center";
+    x.fillStyle = "#8a83a3";
+    x.font = "600 26px -apple-system, system-ui, sans-serif";
+    x.fillText("W E D O", W/2, 110);
+
+    x.fillStyle = "#f2effa";
+    x.font = "800 76px -apple-system, system-ui, sans-serif";
+    x.fillText(monthName(mk), W/2, 215);
+
+    var lead = pa.pts === pb.pts ? null : (pa.pts > pb.pts ? A : B);
+    x.fillStyle = "#ff6f61";
+    x.font = "800 54px -apple-system, system-ui, sans-serif";
+    x.fillText(lead ? lead.name + " took it" : "A dead heat", W/2, 310);
+
+    // the two scores, side by side
+    function score(cx, name, pts, colour){
+      x.fillStyle = colour;
+      x.font = "800 108px -apple-system, system-ui, sans-serif";
+      x.fillText(String(pts), cx, 470);
+      x.fillStyle = "#b9b2cc";
+      x.font = "600 30px -apple-system, system-ui, sans-serif";
+      x.fillText(name, cx, 520);
+    }
+    score(W*0.3, A.name, pa.pts, "#ff6f61");
+    score(W*0.7, B.name, pb.pts, "#a78bfa");
+
+    x.strokeStyle = "#2c2540"; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(120, 590); x.lineTo(W-120, 590); x.stroke();
+
+    // the handful of numbers worth putting on a wall
+    var lines = [];
+    lines.push([String(st.done.length), st.done.length === 1 ? "thing done" : "things done"]);
+    if(st.fails.length) lines.push([String(st.fails.length), "didn't happen"]);
+    if(st.photoDays) lines.push([String(st.photoDays), st.photoDays === 1 ? "day pictured" : "days pictured"]);
+    if(st.bothDays) lines.push([String(st.bothDays), "with both of you"]);
+    if(st.tripDays) lines.push([String(st.tripDays), st.tripDays === 1 ? "day away" : "days away"]);
+    if(st.notes.length) lines.push([String(st.notes.length), st.notes.length === 1 ? "note written" : "notes written"]);
+    // five, not six: the closing line needs the bottom of the poster, and a sentence cut
+    // off mid-word is worse than one fewer number
+    lines = lines.slice(0, 5);
+
+    x.textAlign = "left";
+    var y = 680;
+    lines.forEach(function(L){
+      x.fillStyle = "#f2effa";
+      x.font = "800 56px -apple-system, system-ui, sans-serif";
+      x.fillText(L[0], 150, y);
+      var w = x.measureText(L[0]).width;
+      x.fillStyle = "#9b93b3";
+      x.font = "500 34px -apple-system, system-ui, sans-serif";
+      x.fillText(L[1], 150 + w + 22, y);
+      y += 86;
+    });
+
+    // the closing line, wrapped by hand because canvas won't do it
+    x.fillStyle = "#b9b2cc";
+    x.font = "italic 500 32px -apple-system, system-ui, sans-serif";
+    // Four lines of room, and the sentence is trimmed at a word boundary to fit rather than
+    // running off the edge of the image.
+    var words = recapWords(st).split(" "), line = "", ly = 1150, drawn = 0, MAXL = 4;
+    for(var i = 0; i < words.length && drawn < MAXL; i++){
+      var test = line ? line + " " + words[i] : words[i];
+      if(x.measureText(test).width > W - 300 && line){
+        var last = (drawn === MAXL - 1);
+        x.fillText(last ? line.replace(/[,.;:\s]+$/, "") + "\u2026" : line, 150, ly);
+        ly += 46; drawn++; line = words[i];
+      } else line = test;
+    }
+    if(line && drawn < MAXL) x.fillText(line, 150, ly);
+    return c;
+  }
+
+  function shareRecap(mk){
+    var c;
+    try{ c = recapPoster(mk); }
+    catch(e){ toast("Couldn't draw that one"); return; }
+    c.toBlob(function(blob){
+      if(!blob){ toast("Couldn't save the image"); return; }
+      var name = "WeDO-" + mk + ".png";
+      var file = null;
+      try{ file = new File([blob], name, {type: "image/png"}); }catch(e){}
+      // the share sheet on a phone, a download anywhere else
+      if(file && navigator.canShare && navigator.canShare({files: [file]}) && navigator.share){
+        navigator.share({files: [file], title: "WeDO · " + monthName(mk)})
+          .catch(function(){ /* dismissed */ });
+        return;
+      }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 1500);
+      toast("Saved 💾");
+    }, "image/png");
+  }
+
   function renderRecap(mk){
     recapMk = mk;
     var st = monthStatsFor(mk);
@@ -10341,6 +11989,32 @@
     }
     if(fun) html += '<div class="recap-sec"><h4>The odd numbers</h4>' + fun + '</div>';
 
+    // awards before the failures: the month should read as a month, not a charge sheet
+    var sup = recapSuperlatives(st);
+    if(sup.length){
+      html += '<div class="recap-sec"><h4>Awards</h4>' +
+        sup.map(function(a){
+          return '<div class="sup-row"><span class="sup-ico">' + a.ico + '</span>' +
+            '<span><b>' + escapeHtml(a.title) + '</b><span class="sup-who"> \u2014 ' +
+            escapeHtml(a.who) + '</span><div class="sup-why">' + escapeHtml(a.why) + '</div></span></div>';
+        }).join("") + '</div>';
+    }
+
+    // the callback. Only once there is a year to call back to.
+    var last = sameMonthLastYear(mk);
+    if(last){
+      var dThen = last.st.done.length, dNow = st.done.length;
+      var pThen = last.st.photoDays, pNow = st.photoDays;
+      html += '<div class="recap-sec"><h4>This time last year</h4>' +
+        recapLine("\u23EA", monthName(last.mk) + ": <b>" + dThen + "</b> " +
+          (dThen === 1 ? "thing" : "things") + " done, <b>" + pThen + "</b> days pictured") +
+        recapLine(dNow >= dThen ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
+          dNow === dThen ? "Exactly the same this year."
+          : dNow > dThen ? ("<b>" + (dNow - dThen) + " more</b> this year.")
+          : ("<b>" + (dThen - dNow) + " fewer</b> this year \u2014 not every month is the same shape.")) +
+        '</div>';
+    }
+
     // what didn't happen
     if(st.fails.length){
       var fl = "";
@@ -10391,6 +12065,7 @@
 
   document.getElementById("recapClose").addEventListener("click", function(){ recapBg.classList.remove("show"); });
   document.getElementById("recapDone").addEventListener("click", function(){ recapBg.classList.remove("show"); });
+  document.getElementById("recapShare").addEventListener("click", function(){ if(recapMk) shareRecap(recapMk); });
   recapBg.addEventListener("click", function(e){ if(e.target === recapBg) recapBg.classList.remove("show"); });
   document.getElementById("monthRecapBtn").addEventListener("click", function(){
     renderRecap(prevMonthKey(monthKeyNow()));
@@ -10955,7 +12630,11 @@
   function randomQuote(){
     var q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
     document.getElementById("quoteText").textContent = '"' + q.q + '"';
-    document.getElementById("quoteAuthor").textContent = "— " + q.a;
+    // Most of these are the app's own lines and carry no author, which was rendering as a
+    // literal "— undefined" under two thirds of them.
+    var who = document.getElementById("quoteAuthor");
+    who.textContent = q.a ? ("\u2014 " + q.a) : "";
+    who.style.display = q.a ? "" : "none";
   }
   document.getElementById("newQuoteBtn").addEventListener("click", randomQuote);
 
@@ -11332,7 +13011,56 @@
     }, {passive:true});
   })();
 
+  /* The month's race, as one line.
+
+     It reads the SAME monthPointsFor() the leaderboard does — penalties included — rather
+     than keeping a second count that could drift from it. If the two ever disagreed, the
+     one on the home screen is the one you'd both believe, so there is only one.
+
+     Hidden until there is something to show: a bar reading 0 - 0 on the 1st is noise, and
+     this sits at the top of the screen where noise costs the most. */
+  function renderUsBar(){
+    var bar = document.getElementById("usBar");
+    var cap = document.getElementById("usCaption");
+    if(!bar || !cap) return;
+    var mk = monthKey();
+    var a = monthPointsFor("p1", mk);
+    var b = monthPointsFor("p2", mk);
+    if(a <= 0 && b <= 0){ bar.style.display = "none"; cap.style.display = "none"; return; }
+
+    var total = Math.max(a + b, 1);
+    // Clamped so a runaway month still leaves the trailing name's end of the bar visible.
+    var pct = Math.max(6, Math.min(94, Math.round((Math.max(a,0) / total) * 100)));
+
+    bar.innerHTML =
+      '<div class="us-end l"><div class="us-who">' + escapeHtml(personName("p1")) + '</div>' +
+        '<div class="us-pts">' + a + '</div></div>' +
+      '<div class="us-track"><div class="us-fill" style="width:' + pct + '%"></div>' +
+        '<div class="us-mark" style="left:calc(' + pct + '% - 1px)"></div></div>' +
+      '<div class="us-end r"><div class="us-who">' + escapeHtml(personName("p2")) + '</div>' +
+        '<div class="us-pts">' + b + '</div></div>';
+    bar.style.display = "flex";
+
+    var lead = Math.abs(a - b);
+    var now = new Date();
+    var daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
+    var who = escapeHtml(a > b ? personName("p1") : personName("p2"));
+    var line;
+    if(lead === 0){
+      line = "<b>Dead level.</b> " + (daysLeft === 0 ? "Last day." : daysLeft + " days left.");
+    }else if(lead <= 20){
+      line = "<b>" + who + " by " + lead + "</b> \u2014 " +
+             (daysLeft === 0 ? "last day of the month." : "anyone's with " + daysLeft + " days to go.");
+    }else{
+      line = "<b>" + who + " by " + lead + "</b> \u2014 " +
+             (daysLeft === 0 ? "that's the month." : daysLeft + " days left.");
+    }
+    cap.innerHTML = line;
+    cap.style.display = "block";
+  }
+
   function renderAll(){
+    renderUsBar();
     renderNtfy();
     renderChallenge();
     renderSetupCard();
@@ -11357,6 +13085,10 @@
     drawWheel();
     renderNotes();
     renderDailyQuestion();
+    renderRowEntry();
+    renderRepairOffer();
+    renderFairnessNudge();
+    try{ renderReminderStrip(dueReminders()); }catch(e){}
     renderMonthRace();
     renderMemories();
     renderDeviceOwnerLabel();
@@ -11375,14 +13107,25 @@
   document.getElementById("ghTokenInput").value = ghToken();
   document.getElementById("onesignalAppIdInput").value = state.onesignalAppId || "";
   document.getElementById("onesignalRestKeyInput").value = onesignalRestKey();
+  noteAppOpen();
+  // Tell the shared state this person has now seen things, so the other phone's Shortcut
+  // stops notifying about them. Written before the first sync so it goes up with it.
+  (function(){
+    var me = deviceOwner() || state.currentUser;
+    if(!me) return;
+    if(!state.seenAt) state.seenAt = {};
+    state.seenAt[me] = Date.now();
+    save();
+  })();
   expireSpinsIfNewMonth();
   // after the expiry notice, not before — one sheet at a time, and the recap is the part
   // worth reading
   maybeShowRecap();
   spinExpiryWatch();
+  // after the first render, so the strip appears with everything else rather than jumping in
+  setTimeout(function(){ try{ runReminders(); }catch(e){} }, 1200);
   fetchHealth();
   setInterval(fetchHealth, 30 * 60000); // keep health numbers fresh while the app is open
-  fetchHoroscopes(false);
 
   // ---------- self-update ----------
   // iOS caches a Home Screen app's HTML aggressively and keeps serving it even after a
@@ -11533,6 +13276,22 @@
     el.textContent = kb + " KB used on this phone (~" + pct + "% of what iOS allows)";
     el.style.color = pct >= 85 ? "var(--pink)" : "var(--muted)";
   }
+  document.getElementById("fetchPhotosBtn").addEventListener("click", function(){
+    // Queue every reference this phone holds and pull them in one request.
+    var n = 0;
+    photoTries = {};                 // an explicit tap clears whatever gave up earlier
+    eachPhotoSlot(state, function(o){
+      if(isPhotoRef(o.photo) && !memBytes[o.photo.slice(PHOTO_REF.length)]){ ensurePhotoBytes(o.photo); n++; }
+    });
+    if(!n){ toast("Every photo is already here \u2705"); return; }
+    toast("Fetching " + n + " photo" + (n === 1 ? "" : "s") + "\u2026");
+    setTimeout(function(){
+      var left = photoStats().refs;
+      toast(left ? (left + " still missing \u2014 check the diagnostics") : "All photos here \u2705");
+      renderAll();
+    }, 6000);
+  });
+
   document.getElementById("freeSpaceBtn").addEventListener("click", function(){
     // A sync first, so the photos being handed back are definitely up there. Without it a
     // picture taken five minutes ago could be dropped before it was ever uploaded.
@@ -11595,6 +13354,77 @@
       "with SleepMins inserted after sleepmin=." +
       (ok ? "" : "\n\n(Couldn't reach the clipboard — copy it from here by hand.)"));
   });
+  /* ---- the look switcher ----
+     Per device, deliberately. It is written to its own localStorage key and never goes
+     into the synced blob: a visual preference is not shared state, and pushing it through
+     the merge would mean one of you quietly restyling the other's phone on the next sync.
+     It is also applied before first paint (see the inline snippet in <head>) so switching
+     the app open doesn't flash the other skin. */
+  var LOOK_KEY = "us-look-v1";
+  function currentLook(){
+    try{ return localStorage.getItem(LOOK_KEY) || "a"; }catch(e){ return "a"; }
+  }
+  function applyLook(look){
+    var r = document.documentElement;
+    if(look === "orig"){
+      r.removeAttribute("data-skin");
+      r.removeAttribute("data-type");
+    }else{
+      r.setAttribute("data-skin", "pe");
+      r.setAttribute("data-type", look);
+    }
+    var opts = document.querySelectorAll("#lookRow .look-opt");
+    for(var i=0;i<opts.length;i++){
+      opts[i].classList.toggle("on", opts[i].getAttribute("data-look") === look);
+    }
+  }
+  /* Anything carrying data-ico gets its icon injected once, on boot. Doing it here rather
+     than in each renderer means a new icon never has to be threaded through five functions. */
+  (function(){
+    var nodes = document.querySelectorAll("[data-ico]");
+    for(var i=0;i<nodes.length;i++){
+      var n = nodes[i], nm = n.getAttribute("data-ico");
+      var sz = n.classList.contains("m-red") || n.classList.contains("m-purple") ? 12 : 17;
+      n.insertAdjacentHTML("afterbegin", icon(nm, sz));
+    }
+  })();
+
+  (function(){
+    var row = document.getElementById("lookRow");
+    if(!row) return;
+    row.addEventListener("click", function(e){
+      var el = e.target.closest ? e.target.closest(".look-opt") : null;
+      if(!el) return;
+      var look = el.getAttribute("data-look");
+      try{ localStorage.setItem(LOOK_KEY, look); }catch(err){}
+      applyLook(look);
+    });
+    applyLook(currentLook());
+  })();
+
+  document.getElementById("bridgeBtn").addEventListener("click", function(){
+    var me = deviceOwner() || state.currentUser;
+    var gid = gistIdFromUrl();
+    if(!me){ toast("Pick whose phone this is first"); return; }
+    if(!gid){ toast("Save your Gist link on this phone first"); return; }
+    var url = "https://gist.githubusercontent.com/raw/" + gid + "/" + STATUS_FILE;
+    var ok = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); ok = true; }
+    }catch(e){}
+    showModal("\uD83D\uDD14", ok ? "Copied \u2014 paste it into the shortcut" : "Your status address",
+      "No push service, no extra app. One shortcut on this phone reads the shared file and " +
+      "raises the notification itself.\n\n" + url + "\n\n" +
+      "In Shortcuts, new shortcut:\n" +
+      "1. Get Contents of URL \u2014 paste the address above\n" +
+      "2. Match Text \u2014 pattern:  " + me + "unread=(\\d+)\n" +
+      "3. If  Match 1  is not  0  then:\n" +
+      "4.   Match Text on the contents again \u2014 pattern:  " + me + "line=(.+)\n" +
+      "5.   Show Notification with that match\n\n" +
+      "Then add it as a Time of Day automation at 8am, 1pm and 8pm, with Run Immediately ON " +
+      "and Notify When Run OFF. Opening WeDO marks things read, so it goes quiet by itself.");
+  });
+
   document.getElementById("healthLinkOtherBtn").addEventListener("click", function(){
     var me = deviceOwner() || state.currentUser;
     if(!me){ toast("Pick whose phone this is first"); return; }
@@ -12398,7 +14228,6 @@
       refreshRepeatingTasks();
       renderAll();
       syncNow(false); fetchHealth();
-      fetchHoroscopes(false); // no-op unless the day has rolled over
     }
   });
 
