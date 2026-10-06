@@ -2527,6 +2527,79 @@
   .duo-heart .wd-i{ position:absolute; top:0; stroke-width:2; }
   .duo-heart .dh-a{ left:0;  color:var(--moody); transform:rotate(-9deg); }
   .duo-heart .dh-b{ left:11px; color:var(--rae); transform:rotate(9deg); opacity:.95; }
+
+  /* Modal body text.
+
+     showModal() sets textContent, which is the right call — these strings carry URLs and
+     task titles and must never be parsed as markup. But that made every "\n" in them
+     collapse, so the health-link and calendar instructions arrived as one centred
+     paragraph with the numbered steps run together. pre-line restores the breaks without
+     giving up the escaping.
+
+     anywhere is for the URLs: a gist raw address has no spaces in it, so without this it
+     pushes the modal wider than the phone and the right-hand end is simply gone. */
+  #modalText{
+    white-space:pre-line;
+    text-align:left;
+    overflow-wrap:anywhere;
+    line-height:1.55;
+  }
+
+  /* ============================================================================
+     MODALS THAT ARE TALLER THAN THE PHONE
+
+     Bug: attach a photo to an experience and "Cross it off" becomes unreachable.
+     Not hidden behind something — genuinely gone, with no way to scroll to it.
+
+     The cause is the classic flex-centering overflow. .modal-bg is a fixed,
+     full-screen flex container with align-items:center; when the child is taller
+     than the container, centring pushes it out BOTH ends, so the top is cut off
+     above the viewport and the buttons sit below it. Measured on a 390x844
+     screen with a portrait photo attached: a 1037px modal starting at y=-97,
+     with the confirm button's bottom edge at y=918. Nothing had overflow:auto,
+     so there was nothing to scroll.
+
+     Three parts to the fix, and all three are needed:
+       1. the modal is capped at the viewport and scrolls its own content
+       2. the action row sticks to the bottom, so the button a person came for is
+          never the thing they have to go hunting for
+       3. the photo preview is capped, so one tall picture can't take the screen
+     ============================================================================ */
+  .modal{
+    max-height:calc(100vh - 40px);
+    max-height:calc(100dvh - 40px);   /* dvh: excludes Safari's toolbars, which vh does not */
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;      /* don't let a flick at the end scroll the page behind */
+  }
+  /* The row carrying Cancel / Confirm. Sticky rather than fixed so it stays inside the
+     modal's rounded corners, and it keeps the modal's own background or the content
+     scrolls visibly underneath the buttons. */
+  .modal .row2:last-child,
+  .modal .modal-actions{
+    position:sticky;
+    /* bottom:0 pins it flush to the bottom of the scroll area. A negative bottom (to "cancel
+       the padding") pins it BELOW that edge instead, which looks like sticky doing nothing —
+       the negative margin is what reclaims the modal's padding, not the offset. */
+    bottom:0;
+    margin:0 -22px -22px;
+    padding:12px 22px 22px;
+    background:var(--card);
+    z-index:2;
+  }
+  :root[data-skin="pe"] .modal .row2:last-child,
+  :root[data-skin="pe"] .modal .modal-actions{ background:var(--s1); }
+  /* A hairline so the buttons read as a bar once there is content behind them. */
+  .modal .row2:last-child::before,
+  .modal .modal-actions::before{
+    content:"";position:absolute;left:0;right:0;top:0;height:1px;
+    background:var(--line,rgba(255,255,255,.1));
+  }
+  .photo-preview{
+    max-height:38vh;
+    object-fit:contain;
+    background:rgba(0,0,0,.25);
+  }
 </style>
 </head>
 <body>
@@ -3028,6 +3101,11 @@
          tab left open. The Shortcuts app is the one thing on these phones that has never
          failed, and a notification it raises itself is local — nothing to deliver. -->
     <button class="ghost" id="bridgeBtn" style="width:100%;margin-top:6px;">Notifications the easy way — set up</button>
+    <!-- Subscribing is a one-time thing per phone, and the URL is the whole of it — so this
+         copies the address and shows the four taps rather than explaining iCalendar. -->
+    <button class="ghost" id="calFeedBtn" style="width:100%;margin-top:6px;">Due dates in your Calendar — set up</button>
+    <button class="ghost" id="calTitlesBtn" style="width:100%;margin-top:6px;display:none;font-size:13px;"></button>
+    <button class="ghost" id="calOffBtn" style="width:100%;margin-top:6px;display:none;font-size:13px;opacity:.75;">Delete the calendar feed</button>
     <button class="ghost" id="shortcutSetupBtn" style="width:100%;margin-top:6px;opacity:.7;">Gist details (old Shortcut method)</button>
     <button class="ghost" id="shortcutTailBtn" style="width:100%;margin-top:6px;opacity:.7;">Old Safari shortcut ending (gist + token)</button>
     <div id="syncStatusLabel" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
@@ -3348,6 +3426,136 @@
     clock:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>',
     bolt:     '<path d="M13.5 2.5 4 13.8h6.4l-.9 7.7L19 10.2h-6.4z"/>'
   };
+  var ICS_FILE = "wedo-due.ics";
+  var ICS_DIFF_POINTS = {easy: 5, medium: 10, hard: 20};
+  var ICS_ALARM_HOUR = 9;           // 9am on the day it's due
+  /* A UID has to be stable for the life of the task and unique to this gist, or a second
+     subscribed calendar from another couple could collide with ours. The task id is already
+     unique within a gist; the domain half is what keeps it unique outside one. */
+  function icsUid(t){ return "wedo-" + String(t.id).replace(/[^A-Za-z0-9._-]/g, "") + "@wedo.local"; }
+
+  /* RFC 5545 §3.3.11: backslash, semicolon and comma are escapes inside a text value, and a
+     newline becomes a literal \\n. Miss any one of these and a task called "Milk, eggs" turns
+     into an event with a stray second property — which Calendar either drops or imports as
+     garbage, silently. */
+  function icsText(v){
+    return String(v == null ? "" : v)
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\;")
+      .replace(/,/g, "\\,")
+      .replace(/\r?\n/g, "\\n");
+  }
+  /* §3.1: no line may exceed 75 OCTETS, and a continuation starts with one space. Folding on
+     characters rather than bytes is the usual bug — an emoji in a task title is four bytes
+     and would push the line over while the character count still looked fine. */
+  function icsFold(line){
+    var out = "", cur = "", bytes = 0;
+    for(var i = 0; i < line.length; i++){
+      var ch = line[i];
+      // surrogate pair: keep the two halves together or the character is destroyed
+      if(ch.charCodeAt(0) >= 0xD800 && ch.charCodeAt(0) <= 0xDBFF && i + 1 < line.length){
+        ch += line[++i];
+      }
+      var n = unescape(encodeURIComponent(ch)).length;   // byte length of this character
+      if(bytes + n > 73){ out += cur + "\r\n "; cur = ""; bytes = 0; }
+      cur += ch; bytes += n;
+    }
+    return out + cur;
+  }
+  function icsDate(iso){ return String(iso || "").replace(/-/g, ""); }
+  /* No argument means now (used nowhere in the feed on purpose — see DTSTAMP below). A
+     falsy timestamp floors to a fixed date rather than 1970, so a task that somehow has no
+     mtime still produces a stamp a calendar will accept. */
+  var ICS_EPOCH = Date.parse("2026-01-01T00:00:00Z");
+  function icsStamp(ms){
+    var t = (ms == null) ? Date.now() : (ms || ICS_EPOCH);
+    return new Date(t).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  }
+  /* An all-day event's DTEND is EXCLUSIVE. A task due the 9th is DTSTART 20261009 and DTEND
+     20261010 — write the same date in both and Calendar shows a zero-length event that some
+     clients render on the previous day. */
+  function icsNextDay(iso){
+    var d = new Date(iso + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function dueTasksFor(st){
+    return (st.tasks || []).filter(function(t){
+      return t && t.dueDate && t.status === "open" && /^\d{4}-\d{2}-\d{2}$/.test(t.dueDate);
+    });
+  }
+
+  /* Returns "" when there is nothing due, so the caller can skip writing the file at all
+     rather than publishing an empty calendar. */
+  /* Takes the two things it needs rather than reaching into the app for them. That is
+     what lets the test suite drive THIS function instead of a copy of it — and the ICS
+     format is exactly the place where a copy diverges and nobody notices, because a
+     malformed calendar does not throw, it just quietly imports nothing. */
+  function buildIcsFile(st, nameOf, hideTitles){
+    nameOf = nameOf || function(id){ return id; };
+    var tasks = dueTasksFor(st);
+    if(!tasks.length) return "";
+
+    var L = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//WeDO//Due dates//EN",
+      "CALSCALE:GREGORIAN",
+      // No METHOD: this is a published feed, not an invitation. METHOD:PUBLISH makes some
+      // clients treat each refresh as a fresh set of invites.
+      "X-WR-CALNAME:WeDO",
+      "X-WR-CALDESC:Due dates from WeDO",
+      // A hint, not a promise — iPhone refreshes subscribed calendars on its own Fetch New
+      // Data schedule whatever this says. It costs one line and some clients do honour it.
+      "X-PUBLISHED-TTL:PT1H",
+      "REFRESH-INTERVAL;VALUE=DURATION:PT1H"
+    ];
+
+    tasks.slice().sort(function(a, b){ return a.dueDate < b.dueDate ? -1 : 1; }).forEach(function(t){
+      var who = t.assignedTo === "both" ? "Together" : nameOf(t.assignedTo);
+      var tierLabel = (ICS_DIFF_POINTS[t.difficulty] || 10) + " pts";
+      L.push("BEGIN:VEVENT");
+      L.push("UID:" + icsUid(t));
+      // DTSTAMP must come from the DATA, never from the clock. Build it from Date.now() and
+      // the file differs on every single sync, so every sync PATCHes the gist and every
+      // subscribed phone re-downloads a calendar that didn't change — the exact trap the
+      // status file above carries a comment about. The task's own mtime is the honest
+      // answer to "when was this last touched" and it only moves when something really did.
+      L.push("DTSTAMP:" + icsStamp(t.mtime || 0));
+      L.push("DTSTART;VALUE=DATE:" + icsDate(t.dueDate));
+      L.push("DTEND;VALUE=DATE:" + icsDate(icsNextDay(t.dueDate)));
+      // With titles hidden, neither SUMMARY nor DESCRIPTION may carry the task name — the
+      // description sits right there in the event, so moving it rather than dropping it
+      // would be a privacy setting that does nothing.
+      L.push("SUMMARY:" + icsText(hideTitles ? "WeDO · something due" : t.title));
+      L.push("DESCRIPTION:" + icsText(hideTitles
+        ? "Open WeDO to see what."
+        : who + " · " + tierLabel + "\nFrom WeDO"));
+      // SEQUENCE has to climb whenever the event changes or a client that has already seen
+      // this UID keeps showing the old one. mtime is already the app's "when did this last
+      // change" clock, so it is exactly the right number — reduced to minutes to stay well
+      // inside the 32-bit range clients assume.
+      L.push("SEQUENCE:" + Math.floor((t.mtime || 0) / 60000));
+      L.push("TRANSP:TRANSPARENT");   // a due date shouldn't make you look busy
+      L.push("CATEGORIES:WeDO");
+      if(ICS_ALARM_HOUR != null){
+        // Relative to DTSTART, which for an all-day event is midnight — so 9am is +9h.
+        L.push("BEGIN:VALARM");
+        L.push("ACTION:DISPLAY");
+        L.push("DESCRIPTION:" + icsText(hideTitles ? "WeDO · something due" : t.title));
+        L.push("TRIGGER;RELATED=START:PT" + ICS_ALARM_HOUR + "H");
+        L.push("END:VALARM");
+      }
+      L.push("END:VEVENT");
+    });
+
+    L.push("END:VCALENDAR");
+    // CRLF throughout, per the spec, and a trailing one. Calendar is forgiving about this
+    // and other parsers are not.
+    return L.map(icsFold).join("\r\n") + "\r\n";
+  }
+
   /* Known emoji get the drawn equivalent. Anything not listed is left exactly as it is. */
   var EMOJI_ICON = {
     "✅":"check", "☑️":"check", "✔️":"check",
@@ -5175,6 +5383,112 @@
   //
   // Critically: this file must contain ONLY real activity. Put a "last synced" timestamp in
   // it and it changes every hour whether or not anything happened, and Safari nags forever.
+  /* ====================================================================
+     THE CALENDAR FEED
+
+     Every due-dated task, written into the gist as an iCalendar file on
+     each sync, so iOS Calendar can subscribe to it once and then keep
+     itself current without anybody exporting anything again.
+
+     Why a subscription and not a downloaded file: a file is a snapshot.
+     Move a due date and the calendar still shows the old one; finish a
+     task and the event sits there forever. A subscribed feed is read
+     fresh, so the calendar is a view of the list rather than a copy of
+     it — nothing to re-export, and finishing something clears it.
+
+     The alarm is the part that actually matters here. Push has never
+     worked on either of these phones; a VALARM in a subscribed calendar
+     is delivered by iOS itself, with no service to register with, no
+     token to keep alive and nothing to stay subscribed to. It is the
+     same reasoning as the Shortcut bridge in Build 85: the notification
+     that works is the one that was never sent anywhere.
+     ==================================================================== */
+  /* THE CALENDAR LIVES IN ITS OWN GIST, AND THIS IS THE WHOLE REASON WHY.
+
+     A subscribed-calendar URL cannot be authenticated — iOS Calendar sends no token and no
+     header, so whatever address you give it has to be readable by an anonymous request.
+     That is a hard constraint of the format, not a GitHub thing.
+
+     Which makes the address a password. And in the first version of this I pointed it at
+     the main gist, so that password was ALSO the key to wedo-state.json — the notes, the
+     activity log, the pair secret, and every photo file sitting beside it. Anyone who ever
+     saw the calendar URL could delete "wedo-due.ics" off the end, put "wedo-state.json"
+     there instead, and read the lot. A calendar subscription URL is not a secret you can
+     keep: it sits in iOS settings, in backups, in whatever you pasted it into to get it
+     onto the second phone.
+
+     So the calendar gets a gist of its own, holding nothing but due dates. Leaking that
+     address now costs you a list of task titles rather than the entire app. */
+  /* The calendar address has to be anonymously readable, so the one real lever left is how
+     much it actually says. Titles off means the feed still tells you WHEN something is due
+     and still rings at 9am — it just doesn't spell out what, to anyone holding the URL. */
+  function icsTitlesHidden(){ return !!((state.calendar || {}).hideTitles); }
+
+  function calendarGistId(){
+    var c = state.calendar || {};
+    return c.gist || "";
+  }
+  function icsFeedUrl(){
+    var gid = calendarGistId();
+    return gid ? "https://gist.githubusercontent.com/raw/" + gid + "/" + ICS_FILE : "";
+  }
+  /* Created on demand, the first time the setup button is tapped — never in the background.
+     Nothing should quietly publish your task titles to a second address because a sync
+     happened to run; it should happen because you asked for it, once, and can see it work. */
+  /* Writes the feed into the calendar gist, and only when it has actually changed — a
+     rewrite is a fresh download for every subscribed phone, every time.
+
+     Never creates anything: if there is no calendar gist, there is no subscription, and
+     publishing due dates to a brand-new public-ish address because a sync ran would be
+     exactly the thing this whole change is trying to prevent. */
+  var lastIcsPublished = null;
+  function publishCalendar(icsText){
+    var gid = calendarGistId();
+    var tok = ghToken();
+    if(!gid || !tok) return;
+    if(icsText === lastIcsPublished) return;
+    // An empty calendar still has to be published — as an empty calendar. Deleting the only
+    // file would delete the gist and break the subscription on both phones; leaving the old
+    // content would keep showing events for tasks that are finished.
+    var body = icsText || "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//WeDO//Due dates//EN\r\nEND:VCALENDAR\r\n";
+    var files = {}; files[ICS_FILE] = {content: body};
+    fetch("https://api.github.com/gists/" + gid, {
+      method: "PATCH",
+      headers: {Authorization: "Bearer " + tok, Accept: "application/vnd.github+json"},
+      body: JSON.stringify({files: files})
+    }).then(function(r){
+      if(r.ok) lastIcsPublished = icsText;
+    }).catch(function(){ /* the calendar is a convenience; never let it break a sync */ });
+  }
+
+  function ensureCalendarGist(){
+    var have = calendarGistId();
+    if(have) return Promise.resolve(have);
+    var tok = ghToken();
+    if(!tok) return Promise.reject(new Error("no-token"));
+    return fetch("https://api.github.com/gists", {
+      method: "POST",
+      headers: {Authorization: "Bearer " + tok, Accept: "application/vnd.github+json"},
+      body: JSON.stringify({
+        // "secret", which on GitHub means unlisted, not private. It is the strongest thing
+        // available for something that must stay anonymously readable.
+        "public": false,
+        description: "WeDO due dates",
+        files: (function(){ var f = {}; f[ICS_FILE] = {content: buildIcsFile(state, personName, icsTitlesHidden()) ||
+          "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//WeDO//Due dates//EN\r\nEND:VCALENDAR\r\n"}; return f; })()
+      })
+    }).then(function(r){
+      if(!r.ok) throw new Error("create failed (" + r.status + ")");
+      return r.json();
+    }).then(function(g){
+      if(!g || !g.id) throw new Error("no id back");
+      // Stamped so the merge can settle it if both phones somehow made one at once.
+      state.calendar = {gist: g.id, at: Date.now()};
+      save();
+      return g.id;
+    });
+  }
+
   var STATUS_FILE = "wedo-status.txt";
   // Counts what the OTHER person has done since this one last had the app open.
   function unreadFor(st, pid){
@@ -5432,6 +5746,16 @@
     var cutoff = Date.now() - 90*86400000;
     for(var tk in tomb){ if(tomb[tk] < cutoff) delete tomb[tk]; }
     m.tombstones = tomb;
+
+    // The calendar gist. If both phones somehow created one (two people tapping setup while
+    // offline), the EARLIER one wins and the later is abandoned — picking "whichever synced
+    // last" would let the two phones keep handing the choice back and forth, and each flip
+    // silently breaks whichever subscription is already set up.
+    (function(){
+      var a = L.calendar, b = R.calendar;
+      var pick = (a && a.gist && b && b.gist) ? ((a.at || 0) <= (b.at || 0) ? a : b) : ((a && a.gist) ? a : b);
+      if(pick && pick.gist) m.calendar = pick; else delete m.calendar;
+    })();
 
     m.people = unionById(base.people, other.people, {});
     m.lists = unionById(base.lists, other.lists, {});
@@ -6244,6 +6568,10 @@
         var statusText = buildStatusFile(merged);
         var statusWire = gistFiles[STATUS_FILE] ? (gistFiles[STATUS_FILE].content || "") : "";
 
+        // The calendar is published to its own gist (see icsFeedUrl), so it is NOT part of
+        // this patch and no longer compared against this gist's files.
+        var icsText = buildIcsFile(merged, personName, icsTitlesHidden());
+
         // did anything actually change? compare against the remote as it was ON THE WIRE
         var remoteWire = gistFiles["wedo-state.json"] ? (gistFiles["wedo-state.json"].content || "") : "";
         var nothingToDo = remote && outJson === remoteWire && statusText === statusWire &&
@@ -6252,6 +6580,10 @@
 
         var patch = {"wedo-state.json": {content: outJson}};
         if(statusText !== statusWire) patch[STATUS_FILE] = {content: statusText};
+        // The calendar goes to its own gist, after this one lands. It is deliberately not
+        // allowed to fail the main sync: due dates in a calendar are a convenience, the
+        // shared state is the app.
+        publishCalendar(icsText);
         for(var name in ext.files){ patch[name] = {content: ext.files[name]}; }
         dead.forEach(function(n){ patch[n] = null; });
 
@@ -6340,7 +6672,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 87;
+  var BUILD_NUM = 90;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -8935,6 +9267,13 @@
 
       var actions = document.createElement("div");
       actions.className = "exp-actions";
+      // First action on the row, because a wrong date is the thing people actually come
+      // back to a trophy to fix — not the photo.
+      var editBtn = document.createElement("button");
+      editBtn.className = "go";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", function(){ openExpModal(t.id, true); });
+      actions.appendChild(editBtn);
       var addPhotoBtn = document.createElement("button");
       addPhotoBtn.textContent = (t.photo && !photoIsLost(t.photo)) ? "Change photo" : "＋ Add photo";
       if(!t.photo || photoIsLost(t.photo)) addPhotoBtn.className = "needs-photo";
@@ -9080,27 +9419,48 @@
   var expModalBg = document.getElementById("expModalBg");
   var pendingPhotoData = null, pendingPhotoType = null;
 
-  function openExpModal(taskId){
+  /* Two jobs, one sheet: crossing an experience off for the first time, and going back to
+     a trophy afterwards to correct it. They share every field, so they share the form —
+     but they must NOT share what happens on save. Crossing off awards points to both of
+     you, mints a badge and hands the speech duty over; doing any of that a second time
+     because somebody fixed a typo in a venue name would quietly inflate the scores, and
+     points merge with Math.max, so an inflated total can never be brought back down. */
+  var expEditMode = false;
+  function openExpModal(taskId, editing){
     var t = state.tasks.find(function(x){ return x.id === taskId; });
     if(!t) return;
     pendingExpId = taskId;
+    expEditMode = !!editing;
     pendingPhotoData = null; pendingPhotoType = null;
     document.getElementById("expModalEmoji").textContent = t.emoji || "🥂";
     document.getElementById("expModalTitle").textContent = t.title;
-    document.getElementById("expDate").value = todayISO();
-    document.getElementById("expVenue").value = "";
+    // Editing opens on the date it actually happened, not today — the whole reason to come
+    // back here is usually that the date is wrong.
+    document.getElementById("expDate").value = expEditMode && t.completedAt
+      ? String(t.completedAt).slice(0, 10)
+      : todayISO();
+    document.getElementById("expVenue").value = (expEditMode && t.venue) ? t.venue : "";
     document.getElementById("expPhoto").value = "";
-    document.getElementById("expPhotoPreview").style.display = "none";
+    var pv0 = document.getElementById("expPhotoPreview");
+    var existing = expEditMode ? photoSrc(t.photo) : null;
+    if(existing && t.photoType !== "video"){ pv0.src = existing; pv0.style.display = "block"; }
+    else { pv0.removeAttribute("src"); pv0.style.display = "none"; }
+    document.getElementById("expConfirm").textContent = expEditMode ? "Save changes" : "Cross it off \u{1F3C6}";
     var sel = document.getElementById("expSpeaker");
     sel.innerHTML = "";
+    // When editing, preselect who DID give the speech. Falling back to whoever's turn it is
+    // would silently rewrite history every time somebody opened the sheet to fix a date.
+    var want = (expEditMode && t.speakerId) ? t.speakerId : state.speechTurn;
     state.people.forEach(function(p){
       var o = document.createElement("option");
       o.value = p.id;
-      o.textContent = p.name + (p.id === state.speechTurn ? "  (their turn)" : "");
-      if(p.id === state.speechTurn) o.selected = true;
+      o.textContent = p.name + (!expEditMode && p.id === state.speechTurn ? "  (their turn)" : "");
+      if(p.id === want) o.selected = true;
       sel.appendChild(o);
     });
     expModalBg.classList.add("show");
+    // Anything taller than the phone now scrolls inside the sheet, so start it at the top.
+    var box = expModalBg.querySelector(".modal"); if(box) box.scrollTop = 0;
   }
 
   document.getElementById("expPhoto").addEventListener("change", function(){
@@ -9116,7 +9476,7 @@
 
   document.getElementById("expCancel").addEventListener("click", function(){
     expModalBg.classList.remove("show");
-    pendingExpId = null;
+    pendingExpId = null; expEditMode = false;
   });
 
   document.getElementById("expConfirm").addEventListener("click", function(){
@@ -9130,6 +9490,29 @@
     t.venue = document.getElementById("expVenue").value.trim() || null;
     t.speakerId = document.getElementById("expSpeaker").value;
     if(pendingPhotoData){ t.photo = pendingPhotoData; t.photoType = pendingPhotoType; }
+
+    /* Editing stops here. Everything below this line is the ceremony of crossing something
+       off for the FIRST time — the points, the badge, the handover of speech duty, the
+       announcement, and the house rule that a new dream goes on the list. Running any of
+       it again on an edit would pay you both twice for one night out. */
+    if(expEditMode){
+      try{ saveOrThrow(); }
+      catch(err){
+        // The edit itself is safe; only a newly-attached photo can overflow storage.
+        if(pendingPhotoData){ t.photo = null; t.photoType = null; }
+        save();
+        toast("Saved \u2014 but storage was full, so the new photo didn't stick");
+        expModalBg.classList.remove("show");
+        pendingExpId = null; expEditMode = false;
+        renderAll();
+        return;
+      }
+      expModalBg.classList.remove("show");
+      pendingExpId = null; expEditMode = false;
+      renderAll();
+      toast("Trophy updated");
+      return;
+    }
 
     // both partners get the big reward
     state.people.forEach(function(p){
@@ -9155,7 +9538,7 @@
       toast("Trophy saved — but storage was full, so the photo didn't stick");
     }
     expModalBg.classList.remove("show");
-    pendingExpId = null;
+    pendingExpId = null; expEditMode = false;
     renderAll();
 
     var doneCount = state.tasks.filter(function(x){ return x.listId==="list-exp" && x.status==="done"; }).length;
@@ -13401,6 +13784,102 @@
     });
     applyLook(currentLook());
   })();
+
+  document.getElementById("calFeedBtn").addEventListener("click", function(){
+    var btn = this;
+    if(!ghToken() || !gistIdFromUrl()){
+      showModal("", "Connect the Gist first",
+        "The calendar needs your GitHub token and Gist link saved above \u2014 it creates a " +
+        "second, separate Gist to publish the due dates into, so that address can never be " +
+        "used to read anything else.");
+      return;
+    }
+    btn.disabled = true;
+    var was = btn.textContent;
+    btn.textContent = "Setting up\u2026";
+    ensureCalendarGist().then(function(){
+      publishCalendar(buildIcsFile(state, personName, icsTitlesHidden()));
+      var url = icsFeedUrl();
+      var ok = false;
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); ok = true; }
+      }catch(e){}
+      var due = dueTasksFor(state).length;
+      showModal("", ok ? "Address copied" : "Your calendar address",
+        "On THIS phone:\n\n" +
+        "1. Settings \u2192 Apps \u2192 Calendar \u2192 Calendar Accounts\n" +
+        "2. Add Account \u2192 Other \u2192 Add Subscribed Calendar\n" +
+        "3. Paste this in the Server box, then Next, then Save:\n\n" + url + "\n\n" +
+        "4. Leave \"Remove Alarms\" switched OFF \u2014 that switch is the 9am reminder.\n\n" +
+        "Then the same on the other phone; the address is the same for both of you.\n\n" +
+        "This is a SEPARATE Gist from your WeDO data, holding nothing but due dates \u2014 so " +
+        "this address can't be used to read your notes or photos. Treat it as a password " +
+        "all the same: anyone who has it can read " +
+        (icsTitlesHidden() ? "your due dates." : "your task titles.") + "\n\n" +
+        (due ? due + " due date" + (due === 1 ? "" : "s") + " are in there now. "
+             : "Nothing has a due date yet \u2014 add one and it appears on the next sync. ") +
+        "Finishing a task removes its event. iPhone refreshes subscribed calendars on its " +
+        "own schedule (Settings \u2192 Apps \u2192 Calendar \u2192 Calendar Accounts \u2192 Fetch " +
+        "New Data; Hourly is the fastest it offers), so a change can take up to an hour." +
+        (ok ? "" : "\n\n(Couldn't reach the clipboard \u2014 copy the address from here by hand.)"));
+    }).catch(function(err){
+      showModal("", "Couldn't set that up",
+        "WeDO couldn't create the calendar Gist.\n\n" + (err && err.message ? err.message : "Unknown error") +
+        "\n\nIf that says 401 or 403, the token on this phone has expired or lost its gist " +
+        "permission \u2014 make a new one and paste it in above.");
+    }).then(function(){
+      btn.disabled = false; btn.textContent = was;
+      renderCalendarRow();
+    });
+  });
+
+  /* Stop publishing and delete the feed. Deleting the gist outright is the only version of
+     "off" worth having: emptying the file would leave the address alive and still readable. */
+  document.getElementById("calOffBtn").addEventListener("click", function(){
+    var gid = calendarGistId();
+    if(!gid) return;
+    if(!confirm("Delete the calendar feed?\n\nThe address stops working for good and both " +
+                "phones' subscriptions go empty. Your tasks and due dates are untouched.")) return;
+    var tok = ghToken();
+    fetch("https://api.github.com/gists/" + gid, {
+      method: "DELETE",
+      headers: {Authorization: "Bearer " + tok, Accept: "application/vnd.github+json"}
+    }).then(function(r){
+      // 404 means it is already gone, which is the state we wanted anyway.
+      if(!r.ok && r.status !== 404) throw new Error("status " + r.status);
+      delete state.calendar; lastIcsPublished = null; save(); renderCalendarRow();
+      showModal("", "Calendar feed deleted",
+        "The address no longer works. Remove the subscription on each phone when you get a " +
+        "moment: Settings \u2192 Apps \u2192 Calendar \u2192 Calendar Accounts \u2192 the WeDO one \u2192 " +
+        "Delete Account.");
+    }).catch(function(err){
+      showModal("", "Couldn't delete it",
+        "GitHub wouldn't delete the calendar Gist (" + (err.message || "error") + ").\n\n" +
+        "You can remove it by hand at gist.github.com \u2014 it's the one called \"WeDO due dates\".");
+    });
+  });
+
+  document.getElementById("calTitlesBtn").addEventListener("click", function(){
+    state.calendar = state.calendar || {};
+    state.calendar.hideTitles = !icsTitlesHidden();
+    save();
+    publishCalendar(buildIcsFile(state, personName, icsTitlesHidden()));
+    renderCalendarRow();
+  });
+
+  function renderCalendarRow(){
+    var on = !!calendarGistId();
+    var setup = document.getElementById("calFeedBtn");
+    var off = document.getElementById("calOffBtn");
+    var titles = document.getElementById("calTitlesBtn");
+    setup.textContent = on ? "Due dates in your Calendar \u2014 show address" : "Due dates in your Calendar \u2014 set up";
+    off.style.display = on ? "block" : "none";
+    titles.style.display = on ? "block" : "none";
+    titles.textContent = icsTitlesHidden()
+      ? "Calendar shows: \u201CWeDO \u00b7 something due\u201D"
+      : "Calendar shows: the task's real name";
+  }
+  renderCalendarRow();
 
   document.getElementById("bridgeBtn").addEventListener("click", function(){
     var me = deviceOwner() || state.currentUser;
