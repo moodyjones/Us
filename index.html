@@ -3525,10 +3525,18 @@
       L.push("DTSTAMP:" + icsStamp(t.mtime || 0));
       L.push("DTSTART;VALUE=DATE:" + icsDate(t.dueDate));
       L.push("DTEND;VALUE=DATE:" + icsDate(icsNextDay(t.dueDate)));
-      // With titles hidden, neither SUMMARY nor DESCRIPTION may carry the task name — the
-      // description sits right there in the event, so moving it rather than dropping it
-      // would be a privacy setting that does nothing.
-      L.push("SUMMARY:" + icsText(hideTitles ? "WeDO · something due" : t.title));
+      // Whose it is goes in the SUMMARY, not just the DESCRIPTION.
+      //
+      // One calendar carries both your lists, and iOS only shows the summary in month and
+      // week view — the description needs a tap. Without the name, "Book the cabin" and
+      // "Call the plumber" sitting next to each other tell you a thing is due but not which
+      // of you has to do it, which is the one question this app exists to answer.
+      //
+      // Hidden mode stays fully anonymous: a name is still information about the two of you,
+      // and the point of that switch is that the address gives up nothing.
+      L.push("SUMMARY:" + icsText(hideTitles
+        ? "WeDO · something due"
+        : who + " · " + t.title));
       L.push("DESCRIPTION:" + icsText(hideTitles
         ? "Open WeDO to see what."
         : who + " · " + tierLabel + "\nFrom WeDO"));
@@ -6672,7 +6680,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 90;
+  var BUILD_NUM = 91;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
