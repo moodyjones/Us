@@ -2600,6 +2600,74 @@
     object-fit:contain;
     background:rgba(0,0,0,.25);
   }
+
+  /* ---- the missed-photo notice ----
+     Deliberately not styled as an error. It is a scoreboard fact, not a telling-off, so it
+     borrows the gold the points use rather than the red that means something broke. */
+  .miss-card{ border-color:rgba(232,181,75,.55); }
+  :root[data-skin="pe"] .miss-card{
+    border-color:rgba(233,184,78,.5);
+    background:linear-gradient(180deg, rgba(233,184,78,.07), rgba(233,184,78,0) 120px), var(--s1);
+  }
+  .miss-head{
+    display:flex; align-items:center; gap:8px;
+    font-family:var(--display); font-size:19px; color:var(--gold); margin-bottom:8px;
+  }
+  .miss-head .wd-i{ flex:none; }
+  .miss-body{ font-size:13.5px; color:var(--muted); line-height:1.6; }
+  .miss-days{
+    margin:11px 0 0; padding:0; list-style:none;
+    border-top:1px solid var(--line,rgba(255,255,255,.1));
+  }
+  .miss-days li{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 0; font-size:13.5px;
+    border-bottom:1px solid var(--line,rgba(255,255,255,.08));
+  }
+  .miss-days li:last-child{ border-bottom:none; }
+  .miss-days .md-cost{ color:var(--gold); font-weight:700; font-variant-numeric:tabular-nums; }
+  .miss-total{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-top:12px; padding-top:11px;
+    border-top:1px solid var(--line-2,rgba(255,255,255,.16));
+  }
+  .miss-total .mt-l{ font-size:9px; font-weight:700; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--faint); }
+  .miss-total .mt-v{ font-family:var(--display); font-size:27px; line-height:1;
+    color:var(--gold); font-variant-numeric:tabular-nums; }
+  .miss-ack{
+    width:100%; margin-top:14px; background:none; border:1px solid var(--line-2);
+    color:var(--text); border-radius:12px; padding:11px; font-weight:600;
+    font-size:14px; font-family:var(--ui); cursor:pointer;
+  }
+
+  /* The reason line under a missed day, when it needs one. */
+  .miss-days .md-why{
+    display:block; font-size:10.5px; color:var(--faint); margin-top:2px;
+    letter-spacing:.01em;
+  }
+  .miss-days li > span:first-child{ display:block; }
+
+  /* The live, still-fixable version of the notice. Coral rather than gold: gold is the
+     colour the points are already written in, and this one is not a receipt, it is a thing
+     about to happen. */
+  .miss-card.is-live{ border-color:rgba(255,122,94,.55); }
+  :root[data-skin="pe"] .miss-card.is-live{
+    border-color:rgba(255,122,94,.5);
+    background:linear-gradient(180deg, rgba(255,122,94,.08), rgba(255,122,94,0) 130px), var(--s1);
+  }
+  .miss-card.is-live .miss-head{ color:var(--rose); }
+  .miss-days li.md-today .md-cost{ color:var(--rose); }
+  .miss-sub{
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--faint); margin:14px 0 -4px;
+  }
+  .miss-sub:empty{ display:none; }
+  .miss-ack.is-go{
+    background:linear-gradient(145deg,#FF8E6F,#F2603F); border:none; color:#1A0E09;
+    font-weight:700;
+    box-shadow:0 6px 20px rgba(255,122,94,.26), inset 0 1px 0 rgba(255,255,255,.22);
+  }
 </style>
 </head>
 <body>
@@ -2674,6 +2742,10 @@
   <div class="us-caption" id="usCaption" style="display:none;"></div>
   <!-- Only ever rendered on the partner's phone. Whoever broke the streak never sees a
        button about it. -->
+  <!-- Why your score moved while you weren't looking. Shown to whoever's phone this is,
+       about their OWN missed days only — being told off on someone else's behalf is not a
+       thing this app should do. -->
+  <div class="card miss-card" id="photoMissCard" style="display:none;"></div>
   <div class="card repair-card" id="repairCard" style="display:none;"></div>
   <!-- Shown only to whoever is ahead. The other person never sees it and is never told. -->
   <div class="card fair-card" id="fairNudge" style="display:none;"></div>
@@ -3564,6 +3636,108 @@
     return L.map(icsFold).join("\r\n") + "\r\n";
   }
 
+  /* Days inside a trip that one of you has already covered.
+
+     When you're together you are not two people with two obligations, you are two people
+     in the same place. ONE photo is the day done, from either of you, and it counts for
+     both — which is the whole difference between being away together and being apart.
+
+     So a trip day is covered by ANY of:
+       • a photo in either of that day's joint windows, posted by either of you
+       • either person's own daily photo on that day
+
+     That last one matters more than it looks. The joint slot is what the app asks for on a
+     trip, but someone who posts to their own slot out of habit has still put a picture of
+     that day up, and the other person was standing next to them. Charging the pair 50 for
+     a day that has a photo on it would be the app marking its own paperwork.
+
+     Either window counts rather than both: the twelve-hour rhythm is something the app
+     nudges, not something it fines, and a day together should never cost more than a day
+     apart — which charging per window would make it.
+
+     Only days ACTUALLY inside a trip qualify. A joint photo stuck on an ordinary day
+     excuses nobody from their own. */
+  function togetherCoveredIn(tripPhotos, trips, mk, album){
+    var out = {};
+    tripPhotos = tripPhotos || {};
+    album = album || {};
+    trips = trips || [];
+    var inTrip = function(day){
+      return (trips || []).some(function(t){
+        return t && t.from && t.to && day >= t.from && day <= t.to;
+      });
+    };
+    var consider = function(day, hasPhoto){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(day)) return;
+      if(mk && day.slice(0, 7) !== mk) return;
+      if(!hasPhoto) return;
+      if(!inTrip(day)) return;
+      out[day] = true;
+    };
+    // the joint windows ("YYYY-MM-DD" and "YYYY-MM-DD~pm")
+    for(var key in tripPhotos){
+      if(!tripPhotos.hasOwnProperty(key)) continue;
+      // The photo EXISTING is what matters, not whether this phone has finished downloading
+      // it. A "ref:" still on its way across counts — charging someone 25 because their
+      // phone is behind on a sync would be indefensible.
+      consider(String(key).slice(0, 10), !!(tripPhotos[key] && tripPhotos[key].photo));
+    }
+    // ...and either person's own photo on a day you were together
+    for(var day in album){
+      if(!album.hasOwnProperty(day)) continue;
+      var entry = album[day] || {};
+      var any = Object.keys(entry).some(function(pid){ return !!(entry[pid] && entry[pid].photo); });
+      consider(day, any);
+    }
+    return out;
+  }
+
+  /* Which days in a month somebody owes the daily-photo penalty for.
+
+     Pure on purpose: give it a floor, a notion of today, the album and the excused days,
+     and it will say the same thing on both phones forever. Everything about WHY those
+     inputs look the way they do lives with photoMissDays inside the app. */
+  function photoMissDaysIn(o){
+    o = o || {};
+    var mk = o.mk, floor = o.floor, today = o.today;
+    if(!mk || !floor || !today) return [];
+    var album = o.album || {}, skipped = o.skipped || {};
+    // "YYYY-MM-DD" -> true for a day that was a together day AND has a joint photo on it.
+    // Worked out by the caller, because knowing which days were trip days means reading the
+    // task list and this function is deliberately ignorant of all that.
+    var together = o.togetherCovered || {};
+    var out = [];
+    // Walked day by day rather than read off the album's keys: a day NOBODY posted on has
+    // no album entry at all, and those are precisely the days being looked for.
+    var y = +String(mk).slice(0, 4), m = +String(mk).slice(5, 7);
+    if(!y || !m) return [];
+    var last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    for(var d = 1; d <= last; d++){
+      var iso = mk + "-" + String(d).padStart(2, "0");
+      if(iso < floor) continue;                      // before the rule, or before the app
+      // TODAY COUNTS, from the moment the day starts.
+      //
+      // It used to be exempt on the reasoning that you have until midnight. That made the
+      // rule invisible exactly when it could still change what you do: you only ever heard
+      // about a missed photo the morning after, when there was nothing to be done about it.
+      // Now the 25 is already off, and posting puts it back — the whole penalty is derived
+      // from the album, so the moment a photo lands the deduction stops existing. Nothing
+      // needs to be refunded because nothing was ever spent.
+      //
+      // Tomorrow is still not chargeable. You cannot miss a day that has not happened.
+      if(iso > today) continue;
+      if(skipped[iso]) continue;                     // already excused once
+      if(album[iso] && album[iso][o.pid]) continue;  // they posted their own
+      // A day spent together is a JOINT obligation. On a trip the app stops asking for two
+      // separate photos and asks for one of the pair, so charging each of them for not
+      // posting an individual photo would fine them both for following the app's own
+      // instructions — every day of a holiday, at 25 a head.
+      if(together[iso]) continue;
+      out.push(iso);
+    }
+    return out;
+  }
+
   /* Known emoji get the drawn equivalent. Anything not listed is left exactly as it is. */
   var EMOJI_ICON = {
     "✅":"check", "☑️":"check", "✔️":"check",
@@ -4016,6 +4190,11 @@
   // save (upgrading from an older build) is grandfathered in as of today, so
   // nobody gets retroactively locked out for days before the feature existed
   if(!state.installedAt) state.installedAt = todayISO();
+  // Same grandfathering idea, one rule later: the daily-photo penalty records the 1st of
+  // the month the first time this build runs. Written down once, here, rather than worked
+  // out lazily inside the penalty — otherwise a pair of phones that both skipped a month
+  // would quietly re-base the rule to a later month and forget days already charged for.
+  ensurePhotoRuleFrom();
   if(!state.activityLog) state.activityLog = [];
   if(!state.signs) state.signs = {};
   state.lists.forEach(function(l){
@@ -4563,6 +4742,81 @@
   }
 
   // mk is optional: leave it out for the lifetime penalty, pass "YYYY-MM" for one month.
+  /* ============================================================================
+     THE DAILY PHOTO RULE
+
+     Miss a day's photo, lose 25 points off that month.
+
+     Derived, never stored — same reason as task failures. Point totals merge with
+     Math.max because lifetime counters only ever climb, so a deduction written
+     into them would be silently undone the next time the other phone synced. The
+     album already records who posted on which day, so the miss is a fact about
+     history that both phones can recompute identically and neither can lose.
+
+     Four things are deliberately NOT a miss:
+
+       • today, until it's over. You have until midnight, so the day you're
+         standing in never counts against you.
+       • anything before the rule existed. It starts at the top of the month the
+         rule first ran in — see photoRuleFrom. Landing this build and instantly
+         charging someone for a hundred days they never knew were counted would
+         make the whole thing feel like a punishment rather than a game.
+       • anything before WeDO was on the phone at all (installedAt).
+       • a day already excused by the missed-code flow (skippedDays). If the app
+         has already forgiven a day once, charging for it here would be the app
+         contradicting itself.
+     ============================================================================ */
+  var PHOTO_MISS_POINTS = 25;
+
+  /* The floor, recorded once and SYNCED so both phones charge the same days. Merged by
+     taking the EARLIER of the two: whichever phone ran the new build first is when the
+     rule actually began, and a later phone must not quietly move the line forward and
+     erase days the first one has already counted. */
+  function photoRuleFrom(){
+    var v = state.photoRuleFrom;
+    return (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? v : null;
+  }
+  function ensurePhotoRuleFrom(){
+    if(photoRuleFrom()) return;
+    state.photoRuleFrom = todayISO().slice(0, 7) + "-01";   // the 1st of the current month
+  }
+
+  /* The day each person's clock starts. The latest of: the rule's start, the day WeDO was
+     installed, and — for a past month — nothing, because a month that ended before the
+     rule began has no missable days in it at all. */
+  function photoChargeFloor(){
+    var floor = photoRuleFrom();
+    if(!floor) return null;
+    var inst = state.installedAt;
+    if(typeof inst === "string" && /^\d{4}-\d{2}-\d{2}$/.test(inst) && inst > floor) floor = inst;
+    return floor;
+  }
+
+  /* The app-facing pair. The date arithmetic underneath is pure (photoMissDaysIn, up with
+     the other constants) so the test suite drives the real rule rather than a copy of it —
+     a scoring rule that silently diverges from its own tests is worth nothing. */
+  /* The app-side wrapper: pulls the trip windows off the task list and hands the pure rule
+     a plain {date: true} map. See togetherCoveredIn for the reasoning. */
+  function togetherCoveredDays(mk){
+    var trips = (state.tasks || []).filter(function(t){
+      return isTrip(t) && t.tripStart && t.tripEnd;
+    }).map(function(t){ return {from: t.tripStart, to: t.tripEnd}; });
+    return togetherCoveredIn(state.tripPhotos, trips, mk, state.album);
+  }
+  function photoMissDays(pid, mk){
+    return photoMissDaysIn({
+      pid: pid, mk: mk,
+      floor: photoChargeFloor(),
+      today: todayISO(),
+      album: state.album,
+      skipped: state.skippedDays,
+      togetherCovered: togetherCoveredDays(mk)
+    });
+  }
+  function photoMissPenalty(pid, mk){
+    return photoMissDays(pid, mk).length * PHOTO_MISS_POINTS;
+  }
+
   function penaltyFor(pid, mk){
     var total = 0;
     allFailures().forEach(function(f){
@@ -4591,7 +4845,9 @@
       if(t.assignedTo === "both"){ earned += pts; return; }
       if(t.completedBy === pid || t.assignedTo === pid) earned += pts;
     });
-    return earned - penaltyFor(pid, mk);
+    // Both deductions come off here and ONLY here, so the leaderboard, the home-screen race
+    // bar and the monthly recap can never disagree about what somebody actually has.
+    return earned - penaltyFor(pid, mk) - photoMissPenalty(pid, mk);
   }
 
   // ---------- task rendering ----------
@@ -5755,6 +6011,19 @@
     for(var tk in tomb){ if(tomb[tk] < cutoff) delete tomb[tk]; }
     m.tombstones = tomb;
 
+    // When the daily-photo rule started. The EARLIER of the two wins: whichever phone ran
+    // the new build first is when the rule really began, and letting a later phone move the
+    // line forward would erase days the first one has already charged for — so somebody's
+    // score would change depending on whose phone happened to sync last.
+    (function(){
+      var a = L.photoRuleFrom, b = R.photoRuleFrom;
+      var good = function(v){ return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v); };
+      if(good(a) && good(b)) m.photoRuleFrom = a < b ? a : b;
+      else if(good(a)) m.photoRuleFrom = a;
+      else if(good(b)) m.photoRuleFrom = b;
+      else delete m.photoRuleFrom;
+    })();
+
     // The calendar gist. If both phones somehow created one (two people tapping setup while
     // offline), the EARLIER one wins and the later is abandoned — picking "whichever synced
     // last" would let the two phones keep handing the choice back and forth, and each flip
@@ -6680,7 +6949,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 91;
+  var BUILD_NUM = 95;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -11124,6 +11393,138 @@
 
   // Shown on the OTHER person's phone. Deliberately not on the phone of whoever broke it:
   // nothing here should read as "you failed, here's the button".
+  /* "It should be clear they were penalised, and why, next time they log in."
+
+     Per device, not synced: this is a receipt for the person holding the phone, and an
+     acknowledgement on one phone should not silently clear the notice on the other. It
+     lists the actual dates rather than a total, because "−75 this month" invites an
+     argument and "Sunday, Monday, Wednesday" ends one.
+
+     Acknowledging only hides the notice. It does NOT forgive anything — the penalty is
+     derived from the album every time the score is worked out, so there is nothing a tap
+     could undo even if it wanted to. */
+  var PHOTO_MISS_ACK_KEY = "us-photo-miss-ack-v1";
+  function photoMissAcked(){
+    try{ return JSON.parse(localStorage.getItem(PHOTO_MISS_ACK_KEY) || "[]") || []; }
+    catch(e){ return []; }
+  }
+  function ackPhotoMisses(days){
+    var have = photoMissAcked();
+    days.forEach(function(d){ if(have.indexOf(d) < 0) have.push(d); });
+    // Keep it from growing without bound; 120 days is far more than the notice ever reaches
+    // back for, and anything older can never be shown again anyway.
+    have.sort();
+    if(have.length > 120) have = have.slice(have.length - 120);
+    try{ localStorage.setItem(PHOTO_MISS_ACK_KEY, JSON.stringify(have)); }catch(e){}
+  }
+  /* What to put in front of this person right now.
+
+     Today is deliberately NOT suppressible. Every other day in here is a receipt for
+     something already settled, and "Got it" is the right answer to a receipt. Today is a
+     debt that is still open — letting it be dismissed would turn the one line that can
+     still change the outcome into the one line people learn to swipe away. It disappears
+     by posting a photo, which is the only dismissal that should work. */
+  function unseenPhotoMisses(pid){
+    var acked = photoMissAcked();
+    var today = todayISO();
+    // This month and last, so a miss on the 31st is still explained on the 1st.
+    var now = new Date();
+    var mks = [monthKey(now), monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1))];
+    var out = [];
+    mks.forEach(function(mk){
+      photoMissDays(pid, mk).forEach(function(d){
+        if(d === today || acked.indexOf(d) < 0) out.push(d);
+      });
+    });
+    return out.sort();
+  }
+  function prettyMissDate(iso){
+    var d = new Date(iso + "T12:00:00Z");
+    var today = todayISO();
+    var y = todayISO(new Date(Date.now() - 86400000));
+    if(iso === y) return "Yesterday";
+    // Inside the last week, the weekday is more use than the date.
+    if(iso > todayISO(new Date(Date.now() - 7 * 86400000)) && iso < today){
+      return d.toLocaleDateString(undefined, {weekday: "long", timeZone: "UTC"});
+    }
+    return d.toLocaleDateString(undefined, {weekday: "short", month: "short", day: "numeric", timeZone: "UTC"});
+  }
+  function renderPhotoMissNotice(){
+    var card = document.getElementById("photoMissCard");
+    if(!card) return;
+    var me = deviceOwner() || state.currentUser;
+    var days = me ? unseenPhotoMisses(me) : [];
+    if(!days.length){ card.style.display = "none"; card.innerHTML = ""; return; }
+
+    var today = todayISO();
+    var openToday = days.indexOf(today) >= 0;
+    var settled = days.filter(function(d){ return d !== today; });
+    var total = days.length * PHOTO_MISS_POINTS;
+    var togetherToday = openToday && tripsCovering(today).length > 0;
+    card.style.display = "";
+    card.classList.toggle("is-live", openToday);
+    card.innerHTML =
+      '<div class="miss-head">' + icon("camera", 20) +
+        (openToday
+          ? (togetherToday ? "No photo of you two yet" : "No photo from you today")
+          : (days.length === 1 ? "You missed a photo" : "You missed " + days.length + " photos")) +
+      '</div>' +
+      '<div class="miss-body">' +
+        (openToday
+          // The live one leads with what can still be done about it. Said as a loss that is
+          // already on the board rather than a threat, because it IS already on the board —
+          // the score at the top of this screen is showing it right now.
+          ? "That's \u2212" + PHOTO_MISS_POINTS + " off your month as it stands. " +
+            (togetherToday
+              // The useful fact on a trip day isn't the deadline, it's that it doesn't have
+              // to be you. One photo from either of them settles it for both.
+              ? "One photo before midnight and you both get it back \u2014 either of you can be " +
+                "the one to put it up."
+              : "Put one up before midnight and you get it straight back.")
+          : (settled.every(function(d){ return tripsCovering(d).length > 0; })
+              ? "While you're away it's one photo of the two of you, and it's worth \u2212" +
+                PHOTO_MISS_POINTS + " if it doesn't go up. "
+              : "The daily photo is worth \u2212" + PHOTO_MISS_POINTS + " if it doesn't go up. ") +
+            (days.length === 1 ? "This one came off" : "These came off") + " your month:") +
+      '</div>' +
+      (settled.length ? '<div class="miss-sub">' +
+        (openToday ? (settled.length === 1 ? "Already gone:" : "Already gone \u2014 " +
+          settled.length + " days:") : "") + '</div>' : "") +
+      '<ul class="miss-days">' +
+        days.map(function(d){
+          // A day you were together is a different failure from a day you were apart, and
+          // saying so matters: on a trip the app asked for one photo of the two of you, not
+          // for yours. "You didn't post" would be telling them off for the wrong thing.
+          var tog = tripsCovering(d).length > 0;
+          var isToday = d === today;
+          return '<li' + (isToday ? ' class="md-today"' : '') + '><span>' +
+                 (isToday ? "Today" : escapeHtml(prettyMissDate(d))) +
+                 (tog ? '<span class="md-why">together \u2014 neither of you posted</span>' : '') +
+                 (isToday ? '<span class="md-why">still fixable \u2014 until midnight</span>' : '') +
+                 '</span><span class="md-cost">\u2212' + PHOTO_MISS_POINTS + '</span></li>';
+        }).join("") +
+      '</ul>' +
+      '<div class="miss-total"><span class="mt-l">Off this month</span>' +
+        '<span class="mt-v">\u2212' + total + '</span></div>' +
+      (openToday
+        ? '<button type="button" class="miss-ack is-go" id="photoMissGo">Post today\'s photo</button>'
+        : '<button type="button" class="miss-ack" id="photoMissAck">Got it</button>');
+    var ack = document.getElementById("photoMissAck");
+    if(ack) ack.addEventListener("click", function(){
+      // Only the settled days. Today is not a receipt and cannot be filed away.
+      ackPhotoMisses(settled);
+      renderPhotoMissNotice();
+    });
+    var go = document.getElementById("photoMissGo");
+    if(go) go.addEventListener("click", function(){
+      // Straight to the camera roll. The point of this button is that the thing it is
+      // telling you off about is one tap from being fixed.
+      var trip = activeTrip();
+      if(trip) pickTripPhoto(trip, tripSlotKey(todayISO(), tripHalfNow()));
+      else pickDailyPhoto(deviceOwner() || state.currentUser);
+    });
+  }
+
   function renderRepairOffer(){
     var card = document.getElementById("repairCard");
     if(!card) return;
@@ -13417,11 +13818,21 @@
     var mk = monthKey();
     var a = monthPointsFor("p1", mk);
     var b = monthPointsFor("p2", mk);
-    if(a <= 0 && b <= 0){ bar.style.display = "none"; cap.style.display = "none"; return; }
+    // Hidden only when there is genuinely nothing to say. The old test was "both <= 0",
+    // which was fine when points could only go up — but a month can now run NEGATIVE on
+    // missed photos, and hiding the bar exactly when somebody is being penalised would
+    // take the scoreboard away at the one moment it has something to report.
+    if(a === 0 && b === 0){ bar.style.display = "none"; cap.style.display = "none"; return; }
 
-    var total = Math.max(a + b, 1);
+    // The split has to survive negatives too. Proportions off raw values go wrong the
+    // moment either side dips below zero (a share of a negative total is meaningless), so
+    // both are shifted up by the lower of the two before the ratio is taken. The bar then
+    // reads as relative standing, which is all it was ever claiming to show.
+    var floor = Math.min(a, b, 0);
+    var sa = a - floor, sb = b - floor;
+    var total = Math.max(sa + sb, 1);
     // Clamped so a runaway month still leaves the trailing name's end of the bar visible.
-    var pct = Math.max(6, Math.min(94, Math.round((Math.max(a,0) / total) * 100)));
+    var pct = Math.max(6, Math.min(94, Math.round((sa / total) * 100)));
 
     bar.innerHTML =
       '<div class="us-end l"><div class="us-who">' + escapeHtml(personName("p1")) + '</div>' +
@@ -13452,6 +13863,7 @@
 
   function renderAll(){
     renderUsBar();
+    renderPhotoMissNotice();
     renderNtfy();
     renderChallenge();
     renderSetupCard();
