@@ -2668,6 +2668,69 @@
     font-weight:700;
     box-shadow:0 6px 20px rgba(255,122,94,.26), inset 0 1px 0 rgba(255,255,255,.22);
   }
+
+  /* ---- the milestone banner ----
+     The only card that uses both your colours at once. Everything else in the app belongs
+     to one of you or the other; this is the number that adds up instead of competing. */
+  .ms-card{ position:relative; overflow:hidden; border-color:rgba(233,184,78,.5); }
+  :root[data-skin="pe"] .ms-card{
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(255,122,94,.14), transparent 60%),
+      radial-gradient(120% 80% at 100% 0%, rgba(165,148,255,.14), transparent 60%),
+      var(--s1);
+    border-color:rgba(233,184,78,.45);
+  }
+  .ms-card::before{
+    content:""; position:absolute; inset:0 0 auto 0; height:1px;
+    background:linear-gradient(90deg, transparent, var(--moody) 30%, var(--gold) 50%, var(--rae) 70%, transparent);
+  }
+  .ms-kicker{
+    font-size:9px; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:9px;
+  }
+  .ms-num{
+    font-family:var(--display); font-size:50px; line-height:.92; letter-spacing:-0.04em;
+    font-variant-numeric:tabular-nums;
+    background:linear-gradient(100deg, var(--moody), var(--gold) 55%, var(--rae));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  :root[data-type="c"] .ms-num{ font-weight:800; font-size:44px; }
+  .ms-sub{ font-size:14px; color:var(--text); margin-top:10px; line-height:1.5; }
+  .ms-sub b{ color:var(--gold); }
+  .ms-meta{ display:flex; margin-top:16px; border-top:1px solid var(--line,rgba(255,255,255,.12)); }
+  .ms-meta div{ flex:1; padding-top:12px; }
+  .ms-meta div + div{ border-left:1px solid var(--line,rgba(255,255,255,.12)); padding-left:14px; }
+  .ms-meta .l{
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--faint); margin-bottom:5px;
+  }
+  .ms-meta .v{
+    font-family:var(--display); font-size:23px; line-height:1; color:var(--text);
+    font-variant-numeric:tabular-nums;
+  }
+  .ms-meta .v.record{ color:var(--jade); }
+  .ms-shot{ width:100%; border-radius:12px; margin-top:14px; display:block; }
+  .ms-go{
+    width:100%; margin-top:14px; border:none; border-radius:12px; padding:13px;
+    font-family:var(--ui); font-weight:700; font-size:15px; cursor:pointer;
+    background:linear-gradient(145deg,#FF8E6F,#F2603F); color:#1A0E09;
+    box-shadow:0 6px 20px rgba(255,122,94,.26), inset 0 1px 0 rgba(255,255,255,.22);
+  }
+  .ms-dismiss{
+    width:100%; margin-top:8px; background:none; border:none; color:var(--faint);
+    font-size:13px; font-family:var(--ui); cursor:pointer; padding:6px;
+  }
+  /* ---- the activity banner ---- */
+  .act-card{ border-color:var(--line-2); }
+  :root[data-skin="pe"] .act-card{
+    background:linear-gradient(180deg, rgba(165,148,255,.07), rgba(165,148,255,0) 110px), var(--s1);
+    border-color:rgba(165,148,255,.34);
+  }
+  .act-head{
+    display:flex; align-items:center; gap:8px;
+    font-family:var(--display); font-size:19px; color:var(--text); margin-bottom:10px;
+  }
+  .act-head .wd-i{ flex:none; color:var(--rae); }
 </style>
 </head>
 <body>
@@ -2745,6 +2808,17 @@
   <!-- Why your score moved while you weren't looking. Shown to whoever's phone this is,
        about their OWN missed days only — being told off on someone else's behalf is not a
        thing this app should do. -->
+  <!-- Every milestone. Above the penalty notice on purpose: the first thing you see should
+       be something you did together, not something one of you missed. -->
+  <div class="card ms-card" id="milestoneCard" style="display:none;"></div>
+  <!-- What happened while you weren't looking. This used to sit a long way down the Tasks
+       tab under four other cards, which is a strange home for the one thing in the app
+       that is genuinely news. It lives at the top now, and on every tab rather than one —
+       a notification you have to go and find isn't a notification. -->
+  <div class="card act-card" id="activityCard" style="display:none;">
+    <div class="act-head" id="activityHead"></div>
+    <div id="activityBody"></div>
+  </div>
   <div class="card miss-card" id="photoMissCard" style="display:none;"></div>
   <div class="card repair-card" id="repairCard" style="display:none;"></div>
   <!-- Shown only to whoever is ahead. The other person never sees it and is never told. -->
@@ -2819,10 +2893,6 @@
         Open <em>Sync between two phones</em> below, save the Gist link + token, and this warning disappears for good.
       </div>
       <button class="ghost" id="noBackupLater" style="width:100%;margin-top:10px;">Remind me later</button>
-    </div>
-    <div class="card" id="activityCard" style="display:none;">
-      <h2>While you were away</h2>
-      <div id="activityBody"></div>
     </div>
     <div class="card quest-card">
       <h2>Couple Quest</h2>
@@ -3567,7 +3637,8 @@
   function buildIcsFile(st, nameOf, hideTitles){
     nameOf = nameOf || function(id){ return id; };
     var tasks = dueTasksFor(st);
-    if(!tasks.length) return "";
+    var marks = ((st || {}).milestones || []).filter(function(m){ return m && m.at; });
+    if(!tasks.length && !marks.length) return "";
 
     var L = [
       "BEGIN:VCALENDAR",
@@ -3583,6 +3654,23 @@
       "X-PUBLISHED-TTL:PT1H",
       "REFRESH-INTERVAL;VALUE=DURATION:PT1H"
     ];
+
+    // Milestones go in as all-day events on the day they happened. No alarm — it already
+    // happened, and a notification about the past is only noise.
+    ((st || {}).milestones || []).forEach(function(ms){
+      if(!ms || !ms.at || !/^\d{4}-\d{2}-\d{2}$/.test(ms.at)) return;
+      L.push("BEGIN:VEVENT");
+      L.push("UID:wedo-ms-" + String(ms.key).replace(/[^A-Za-z0-9._-]/g, "") + "@wedo.local");
+      L.push("DTSTAMP:" + icsStamp(0));
+      L.push("DTSTART;VALUE=DATE:" + icsDate(ms.at));
+      L.push("DTEND;VALUE=DATE:" + icsDate(icsNextDay(ms.at)));
+      L.push("SUMMARY:" + icsText(hideTitles ? "WeDO \u00b7 milestone" : "\u2605 " + ms.label));
+      L.push("DESCRIPTION:" + icsText(hideTitles ? "Open WeDO to see." : (ms.blurb || "WeDO milestone")));
+      L.push("SEQUENCE:0");
+      L.push("TRANSP:TRANSPARENT");
+      L.push("CATEGORIES:WeDO");
+      L.push("END:VEVENT");
+    });
 
     tasks.slice().sort(function(a, b){ return a.dueDate < b.dueDate ? -1 : 1; }).forEach(function(t){
       var who = t.assignedTo === "both" ? "Together" : nameOf(t.assignedTo);
@@ -3690,6 +3778,52 @@
       consider(day, any);
     }
     return out;
+  }
+
+  function monthEndISO(mk){
+    var y = +String(mk).slice(0, 4), m = +String(mk).slice(5, 7);
+    if(!y || !m) return "9999-12-31";
+    var last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    return mk + "-" + String(last).padStart(2, "0");
+  }
+  /* The tasks a month is actually judged on. Pure, so the test suite drives the real rule
+     rather than a copy — a scoring rule that quietly diverges from its own tests is the
+     thing that got us here. */
+  function monthCommitmentsIn(tasks, mk){
+    var end = monthEndISO(mk);
+    return (tasks || []).filter(function(t){
+      if(!t || t.createdMonth !== mk) return false;
+      if(t.repeat && t.repeat !== "none") return false;        // a habit, not a commitment
+      if(t.dueDate && t.dueDate > end) return false;           // not this month's problem
+      // same reasoning for a trip that hasn't started: isTrip inlined so this stays pure
+      var trip = !!(t.trip || (t.listId === "list-trips" && !t.tripFor));
+      if(trip && t.tripStart && t.tripStart > end) return false;
+      return true;
+    });
+  }
+  function monthProgressIn(tasks, mk){
+    var all = monthCommitmentsIn(tasks, mk);
+    var done = all.filter(function(t){ return t.status === "done"; }).length;
+    return {
+      assigned: all.length,
+      completed: done,
+      open: all.length - done,
+      earned: all.length > 0 && done >= all.length
+    };
+  }
+
+  /* When a checklist item is due: `lead` days before departure, clamped so it is never in
+     the past and never after the trip itself. Pure (today is passed in) so the test suite
+     drives the real thing — the clamping is the part that matters and it only shows up on
+     a trip booked at short notice. */
+  function tripItemDueOn(trip, lead, today){
+    if(!trip || !trip.tripStart) return null;
+    var d = new Date(trip.tripStart + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() - (lead || 0));
+    var due = d.toISOString().slice(0, 10);
+    if(today && due < today) due = today;
+    if(due > trip.tripStart) due = trip.tripStart;
+    return due;
   }
 
   /* Which days in a month somebody owes the daily-photo penalty for.
@@ -4087,6 +4221,10 @@
       // The album holds a reference to each day instead, so the bytes stay alive in the gist
       // and the Memories tab has something to show.
       album: {},            // "YYYY-MM-DD" -> {pid: {photo, at:ISO}}
+      // Every 2,500 points, every 50/100/250/500/1000 tasks, and 30/90/180/365 days on
+      // WeDO. One record per key, never removed — see the MILESTONES block for why this
+      // is stored rather than derived.
+      milestones: [],       // [{key, kind, value, label, blurb, at, actual, photo, photoType}]
       // live daily horoscope, cached per sign per day. Synced, so whichever phone opens
       // first does the fetch and the other just reads it.
       horoscopes: {},       // "aquarius" -> {date:"YYYY-MM-DD", text, at:ISO}
@@ -4831,6 +4969,139 @@
   function netPoints(pid){
     var p = (state.points || {})[pid] || {};
     return (p.personal || 0) + (p.thoughtful || 0) - penaltyFor(pid);
+  }
+
+  /* ============================================================================
+     MILESTONES
+
+     The one part of this app that isn't a competition. Everything else pits the
+     two of you against each other; these add up.
+
+     Three kinds, each keyed by a stable string so a record can never be written
+     twice and the history can never grow a hole:
+
+       pts-N    every 2,500 points earned between you
+       task-N   the 50th, 100th, 250th, 500th, 1000th thing finished, then every
+                500 after that
+       day-N    30 / 90 / 180 / 365 days since WeDO arrived, then each year
+
+     Points and tasks run off LIFETIME totals, not the month's, and deliberately
+     ignore the penalties. Both reasons are load-bearing:
+
+       · lifetime totals only ever climb (they merge with Math.max), so a
+         milestone once reached can never un-reach itself. That matters when
+         reaching one puts a photo and a date against it — an anniversary a
+         missed photo could revoke is not an anniversary.
+       · the monthly score moves backwards whenever a penalty lands, so a
+         crossing would flicker on and off across midnight.
+
+     What IS stored is the moment: the key, the date, and later the photo. None
+     of that is derivable, and it's the whole point — how long it took, and
+     whether you beat the last one.
+     ============================================================================ */
+  var MILESTONE_STEP = 2500;
+  var TASK_MILESTONES = [50, 100, 250, 500, 1000];
+
+  function lifetimeCombined(){
+    var pts = state.points || {}, total = 0;
+    (state.people || []).slice(0, 2).forEach(function(p){
+      var e = pts[p.id] || {};
+      total += (e.personal || 0) + (e.thoughtful || 0);
+    });
+    return total;
+  }
+  function lifetimeTasks(){
+    var pts = state.points || {}, n = 0;
+    (state.people || []).slice(0, 2).forEach(function(p){
+      n += ((pts[p.id] || {}).totalCompleted || 0);
+    });
+    return n;
+  }
+  function daysOnWedo(){
+    if(!state.installedAt) return 0;
+    var d = daysBetweenISO(String(state.installedAt).slice(0, 10), todayISO());
+    return d > 0 ? d : 0;
+  }
+  function reachedMilestones(){
+    var out = [], i;
+    var pts = lifetimeCombined();
+    for(i = 1; i <= Math.floor(pts / MILESTONE_STEP); i++){
+      out.push({key:"pts-" + i, kind:"pts", value:i * MILESTONE_STEP,
+                label:(i * MILESTONE_STEP).toLocaleString(),
+                blurb:"points between the two of you"});
+    }
+    var done = lifetimeTasks(), taskMarks = TASK_MILESTONES.slice();
+    // ...then every 500 past the last named one, so it keeps going with no list to edit
+    for(i = 1500; i <= done; i += 500) taskMarks.push(i);
+    taskMarks.forEach(function(n){
+      if(done < n) return;
+      out.push({key:"task-" + n, kind:"task", value:n, label:n.toLocaleString(),
+                blurb:"things crossed off between you"});
+    });
+    var days = daysOnWedo(), dayMarks = [30, 90, 180, 365];
+    for(i = 2; i <= Math.floor(days / 365); i++) dayMarks.push(i * 365);
+    dayMarks.forEach(function(n){
+      if(days < n) return;
+      var label = n === 30 ? "1 month" : n === 90 ? "3 months" : n === 180 ? "6 months"
+                : n === 365 ? "1 year" : (n / 365) + " years";
+      out.push({key:"day-" + n, kind:"day", value:n, label:label, blurb:"of WeDO, the two of you"});
+    });
+    return out;
+  }
+  function milestonesList(){
+    return (state.milestones || []).slice().sort(function(a, b){
+      return String(a.at || "") < String(b.at || "") ? -1 : 1;
+    });
+  }
+  function milestoneByKey(key){
+    return (state.milestones || []).filter(function(m){ return m.key === key; })[0] || null;
+  }
+  /* How long it took, measured against the previous milestone OF THE SAME KIND — comparing
+     a points milestone to a six-month anniversary would mean nothing. The first of each
+     kind measures from the day WeDO arrived. */
+  function milestoneGapDays(m){
+    if(!m || !m.at) return null;
+    var prev = null;
+    milestonesList().forEach(function(x){
+      if(x.kind !== m.kind || !x.at) return;
+      if(String(x.at) >= String(m.at)) return;
+      if(!prev || String(x.at) > String(prev.at)) prev = x;
+    });
+    var from = (prev && prev.at) ? prev.at : state.installedAt;
+    if(!from) return null;
+    var d = daysBetweenISO(String(from).slice(0, 10), String(m.at).slice(0, 10));
+    return d >= 0 ? d : null;
+  }
+  /* The record to beat: the fastest gap of this kind so far, this one excluded. Meaningless
+     for time milestones — six months always takes six months — so it returns null there. */
+  function milestoneBestGapBefore(m){
+    if(!m || m.kind === "day") return null;
+    var best = null;
+    milestonesList().forEach(function(x){
+      if(x.kind !== m.kind || !x.at || !m.at || String(x.at) >= String(m.at)) return;
+      var g = milestoneGapDays(x);
+      if(g != null && (best == null || g < best)) best = g;
+    });
+    return best;
+  }
+  /* Writes down anything reached but not yet recorded. A loop, not a single check: a big
+     day — or a phone offline for a fortnight — can cross several at once, and skipping one
+     would leave a hole nothing could ever fill. */
+  function recordMilestones(){
+    if(!state.milestones) state.milestones = [];
+    var fresh = null;
+    reachedMilestones().forEach(function(r){
+      if(milestoneByKey(r.key)) return;
+      state.milestones.push({
+        key:r.key, kind:r.kind, value:r.value, label:r.label, blurb:r.blurb,
+        at: todayISO(),
+        // the real total when crossed, which is >= the round number
+        actual: r.kind === "pts" ? lifetimeCombined() : (r.kind === "task" ? lifetimeTasks() : null),
+        photo: null, photoType: null
+      });
+      fresh = r;
+    });
+    return fresh;
   }
 
   // The month's score, derived from what happened rather than stored — so it needs no new
@@ -6011,6 +6282,27 @@
     for(var tk in tomb){ if(tomb[tk] < cutoff) delete tomb[tk]; }
     m.tombstones = tomb;
 
+    // Milestones: one record per key, forever. The EARLIER date wins — both phones can
+    // notice the same crossing, and the honest answer to "when did we hit 2,500" is
+    // whichever of you got there first, not whichever synced last. A photo always beats no
+    // photo, from whichever side it arrived.
+    (function(){
+      var by = {};
+      [].concat(L.milestones || [], R.milestones || []).forEach(function(x){
+        if(!x || !x.key) return;
+        var cur = by[x.key];
+        if(!cur){ by[x.key] = x; return; }
+        var keep = {};
+        for(var k in cur){ if(cur.hasOwnProperty(k)) keep[k] = cur[k]; }
+        if(x.at && (!keep.at || String(x.at) < String(keep.at))) keep.at = x.at;
+        if(!keep.photo && x.photo){ keep.photo = x.photo; keep.photoType = x.photoType; }
+        if(!keep.actual && x.actual) keep.actual = x.actual;
+        by[x.key] = keep;
+      });
+      m.milestones = Object.keys(by).map(function(k){ return by[k]; })
+        .sort(function(a, b){ return String(a.at||"") < String(b.at||"") ? -1 : 1; });
+    })();
+
     // When the daily-photo rule started. The EARLIER of the two wins: whichever phone ran
     // the new build first is when the rule really began, and letting a later phone move the
     // line forward would erase days the first one has already charged for — so somebody's
@@ -6949,7 +7241,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 95;
+  var BUILD_NUM = 97;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -7945,14 +8237,25 @@
   }
 
   // offer a starter checklist after a trip is added
+  /* "lead" is how many days before departure each one should be done by. Without it the
+     whole checklist is undated, which meant it never appeared on the Health—sorry, on the
+     calendar feed, and never went amber or red as the trip closed in. The order is the
+     order things actually have to happen in: flights and a bed first, packing last. */
   var TRIP_CHECKLIST = [
-    {title:"Book flights", diff:"medium"},
-    {title:"Book hotel / Airbnb", diff:"medium"},
-    {title:"Request time off work", diff:"easy"},
-    {title:"Plan itinerary", diff:"medium"},
-    {title:"Sort travel docs & visas", diff:"easy"},
-    {title:"Pack bags", diff:"easy"}
+    {title:"Book flights",             diff:"medium", lead:45},
+    {title:"Book hotel / Airbnb",      diff:"medium", lead:45},
+    {title:"Request time off work",    diff:"easy",   lead:30},
+    {title:"Sort travel docs & visas", diff:"easy",   lead:21},
+    {title:"Plan itinerary",           diff:"medium", lead:7},
+    {title:"Pack bags",                diff:"easy",   lead:1}
   ];
+  /* Due a sensible run-up before departure, never in the past and never after it. A
+     checklist born overdue is just a row of red, and the urgency colours stop meaning
+     anything at all. */
+  function tripItemDue(trip, lead){ return tripItemDueOn(trip, lead, todayISO()); }
+  function tripHasChecklist(tripId){
+    return (state.tasks || []).some(function(t){ return t && t.tripFor === tripId; });
+  }
   var pendingTripId = null;
   function offerTripChecklist(trip){
     pendingTripId = trip.id;
@@ -7963,6 +8266,13 @@
   }
   document.getElementById("tripSkipBtn").addEventListener("click", function(){
     document.getElementById("tripModalBg").classList.remove("show");
+    // Declining is an answer and it has to stick: without this, setting the dates later
+    // would ask again, and editing them a third time would ask a third time.
+    if(pendingTripId){
+      if(!state.tripChecklistAsked) state.tripChecklistAsked = {};
+      state.tripChecklistAsked[pendingTripId] = true;
+      save();
+    }
     pendingTripId = null;
   });
   document.getElementById("tripChecklistBtn").addEventListener("click", function(){
@@ -7979,10 +8289,12 @@
         createdMonth: mk, completedBy: null, completedAt: null,
         repeat: "none", lastCompletedAt: null, listId: "list-trips",
         link: null, unitPrice: 0, currency: "USD", quantity: 1, alternatives: [],
-        tripFor: trip.id
+        tripFor: trip.id, dueDate: tripItemDue(trip, item.lead)
       });
       state.monthly[mk].assigned++;
     });
+    if(!state.tripChecklistAsked) state.tripChecklistAsked = {};
+    state.tripChecklistAsked[trip.id] = true;
     save(); renderAll();
     toast(TRIP_CHECKLIST.length + " to-dos added for " + trip.title + " ✈️");
   });
@@ -10030,11 +10342,49 @@
     if(changed) save();
   }
 
+  /* ============================================================================
+     POWER COUPLE, DERIVED
+
+     This was two running counters — state.monthly[mk].assigned and .completed,
+     each incremented on an event — and it drifted the way every counter in this
+     app has drifted. All four failure modes were real:
+
+       · adding a task put you "at risk" instantly, because assigned went up and
+         completed didn't. With a hundred open tasks the badge was at risk
+         permanently, which made the warning mean nothing.
+       · deleting a task left its +1 behind. There is no assigned-- anywhere, so
+         that month could never be cleared again by any action.
+       · a task added in October and finished in November incremented October's
+         assigned and November's completed. October stayed short forever.
+       · finishing a daily repeat incremented NEXT month's assigned, so November
+         opened thirty in the hole before it had started.
+
+     And because it counted events rather than the list, it was wrong in the
+     generous direction too: clear ten of last month's tasks on the 1st and the
+     badge read "earned" while ten new ones sat untouched.
+
+     So it reads the list instead. Nothing to keep in step, nothing to repair,
+     and a delete or a late finish simply stops mattering.
+
+     Three things are deliberately NOT counted against you:
+
+       · repeating tasks. A daily habit is never "finished for the month" — it is
+         open again tomorrow by design. Counting it would mean the badge could
+         never be earned by anyone who uses repeats.
+       · anything not due until after this month. A task due in November is not
+         something you failed to do in October.
+       · trips that haven't started yet, same reasoning.
+     ============================================================================ */
+  function monthCommitments(mk){ return monthCommitmentsIn(state.tasks, mk); }
+  function monthProgress(mk){ return monthProgressIn(state.tasks, mk); }
+
   function checkPowerCouple(){
     var mk = monthKey();
-    var m = state.monthly[mk];
-    if(!m || m.assigned === 0) return;
-    if(m.completed >= m.assigned && !m.badgeAwarded){
+    if(!monthProgress(mk).earned) return;
+    // badgeAwarded survives only so the crown modal appears once a month. It is NOT the
+    // source of truth for whether the badge is held — that is recomputed from the list.
+    var m = state.monthly[mk] || (state.monthly[mk] = {assigned:0, completed:0, badgeAwarded:false});
+    if(!m.badgeAwarded){
       m.badgeAwarded = true;
       state.powerCoupleBadge = {held:true, sinceMonth: state.powerCoupleBadge.sinceMonth || mk};
       save();
@@ -10062,7 +10412,7 @@
     if(state.powerCoupleBadge.held){
       var pc = document.createElement("div");
       var mk = monthKey();
-      var atRisk = state.monthly[mk] && state.monthly[mk].assigned > 0 && state.monthly[mk].completed < state.monthly[mk].assigned;
+      var atRisk = monthProgress(mk).open > 0;
       pc.className = "badge-pill" + (atRisk ? " at-risk" : "");
       pc.textContent = "👑 Power Couple" + (atRisk ? " (at risk)" : "");
       row.appendChild(pc);
@@ -10131,7 +10481,7 @@
   // ---------- monthly / power couple view ----------
   function renderMonth(){
     var mk = monthKey();
-    var m = state.monthly[mk] || {assigned:0, completed:0};
+    var m = monthProgress(mk);
     var monthName = new Date().toLocaleString('default', { month: 'long' });
     document.getElementById("monthLabel").textContent = monthName + " · Power Couple progress";
     document.getElementById("monthCompleted").textContent = m.completed;
@@ -10141,10 +10491,12 @@
     var statusEl = document.getElementById("powerCoupleStatus");
     if(m.assigned === 0){
       statusEl.textContent = "Add tasks this month to work toward the badge.";
-    } else if(m.completed >= m.assigned){
+    } else if(m.earned){
       statusEl.textContent = "👑 Power Couple badge earned for " + monthName + "!";
     } else {
-      statusEl.textContent = (m.assigned - m.completed) + " task(s) left to earn the Power Couple badge this month.";
+      statusEl.textContent = m.open + (m.open === 1 ? " task" : " tasks") +
+        " still open from " + monthName + " — finish " +
+        (m.open === 1 ? "it" : "them") + " to earn the badge.";
     }
   }
 
@@ -10209,6 +10561,20 @@
       .slice(0, 8);
     if(!unseen.length){ card.style.display = "none"; return; }
     card.style.display = "block";
+    // The heading names the thing rather than saying "While you were away": far and away
+    // the commonest single item is the daily photo, and "Rae posted" is the whole message.
+    // You shouldn't have to read a list to find that out.
+    var head = document.getElementById("activityHead");
+    if(head){
+      var photoOne = unseen.filter(function(a){ return /photo/i.test(a.text || ""); })[0];
+      head.innerHTML = icon(photoOne ? "camera" : "mail", 19) +
+        (photoOne
+          ? escapeHtml(personName(photoOne.by)) + " posted" +
+            (unseen.length > 1 ? " \u2014 and " + (unseen.length - 1) + " more" : "")
+          : (unseen.length === 1
+              ? escapeHtml(personName(unseen[0].by)) + " did something"
+              : escapeHtml(personName(otherPerson(me))) + " has been busy"));
+    }
     wrap.innerHTML = "";
     unseen.forEach(function(a){
       var row = document.createElement("div");
@@ -11449,6 +11815,124 @@
     }
     return d.toLocaleDateString(undefined, {weekday: "short", month: "short", day: "numeric", timeZone: "UTC"});
   }
+  /* The milestone banner.
+
+     Shown for the oldest milestone still missing its photo. The photo IS the ask, so
+     "done" means the photo exists — not that somebody tapped acknowledge.
+
+     Several can land on the same day: pass 2,500 on the morning you also hit three months
+     and there are two to celebrate. Showing "the newest" picked one arbitrarily and
+     silently buried the other, so it works through them oldest-first and says how many are
+     queued behind. Nothing is lost, and you're never asked for three photos at once. */
+  var MS_SEEN_KEY = "us-milestone-seen-v1";
+  function milestoneSeen(){
+    try{ return JSON.parse(localStorage.getItem(MS_SEEN_KEY) || "[]") || []; }catch(e){ return []; }
+  }
+  function markMilestoneSeen(key){
+    var seen = milestoneSeen();
+    if(seen.indexOf(key) < 0) seen.push(key);
+    if(seen.length > 60) seen = seen.slice(seen.length - 60);
+    try{ localStorage.setItem(MS_SEEN_KEY, JSON.stringify(seen)); }catch(e){}
+  }
+  function renderMilestoneBanner(){
+    var card = document.getElementById("milestoneCard");
+    if(!card) return;
+    var all = milestonesList();
+    if(!all.length){ card.style.display = "none"; card.innerHTML = ""; return; }
+
+    var pending = all.filter(function(x){ return !x.photo; });
+    var m = pending.length ? pending[0] : all[all.length - 1];
+    var queued = Math.max(0, pending.length - 1);
+    var hasPhoto = !!m.photo;
+
+    // Without its photo it stays put however often you've seen it — the photo is the ask.
+    // With the photo it's a one-time "look what we did", then it gets out of the way.
+    if(hasPhoto && milestoneSeen().indexOf(m.key) >= 0){
+      card.style.display = "none"; card.innerHTML = ""; return;
+    }
+    try{
+      if(!hasPhoto && localStorage.getItem("us-milestone-later-v1") === todayISO() + "|" + m.key){
+        card.style.display = "none"; return;
+      }
+    }catch(e){}
+
+    var gap = milestoneGapDays(m);
+    var best = milestoneBestGapBefore(m);
+    var isRecord = (gap != null && best != null && gap < best);
+    var sub = m.kind === "pts"
+      ? "<b>" + (m.actual || m.value).toLocaleString() + " points</b> between the two of you."
+      : m.kind === "task"
+        ? "<b>" + (m.actual || m.value).toLocaleString() + " things</b> crossed off between you."
+        : "<b>" + escapeHtml(m.label) + "</b> of WeDO.";
+
+    card.style.display = "";
+    card.innerHTML =
+      '<div class="ms-kicker">' + (hasPhoto ? "Milestone" : "You just hit it") +
+        (queued ? " \u00b7 " + queued + " more waiting" : "") + '</div>' +
+      '<div class="ms-num">' + escapeHtml(m.label) + '</div>' +
+      '<div class="ms-sub">' + sub + " " +
+        (hasPhoto ? escapeHtml(fmtDueDate(m.at)) + "."
+                  : "Take a picture together \u2014 it goes in Memories and onto the calendar.") +
+      '</div>' +
+      '<div class="ms-meta">' +
+        '<div><div class="l">' + (m.kind === "day" ? "Together since" : "Since the last") + '</div>' +
+          '<div class="v">' +
+            (m.kind === "day"
+              ? escapeHtml(fmtDueDate(state.installedAt || m.at))
+              : (gap == null ? "\u2014" : gap + (gap === 1 ? " day" : " days"))) +
+          '</div></div>' +
+        (m.kind === "day" ? "" :
+        '<div><div class="l">' + (isRecord ? "Record" : (best == null ? "Your first" : "Best so far")) + '</div>' +
+          '<div class="v' + (isRecord ? " record" : "") + '">' +
+            (isRecord ? "Beaten" : (best == null ? "\u2014" : best + (best === 1 ? " day" : " days"))) +
+          '</div></div>') +
+      '</div>' +
+      (photoSrc(m.photo)
+        ? '<img class="ms-shot" src="' + photoSrc(m.photo) + '" alt="' + escapeAttr(m.label) + '">'
+        : "") +
+      (hasPhoto
+        ? '<button type="button" class="ms-dismiss" id="msDismiss">Nice. Close this.</button>'
+        : '<button type="button" class="ms-go" id="msGo">Take the photo</button>' +
+          '<button type="button" class="ms-dismiss" id="msLater">Not right now</button>');
+
+    var go = document.getElementById("msGo");
+    if(go) go.addEventListener("click", function(){ pickMilestonePhoto(m.key); });
+    var dis = document.getElementById("msDismiss");
+    if(dis) dis.addEventListener("click", function(){ markMilestoneSeen(m.key); renderMilestoneBanner(); });
+    // "Not right now" hides it for today, and only this one. It still has no photo, so it
+    // is back tomorrow — this is worth being asked twice about.
+    var later = document.getElementById("msLater");
+    if(later) later.addEventListener("click", function(){
+      try{ localStorage.setItem("us-milestone-later-v1", todayISO() + "|" + m.key); }catch(e){}
+      card.style.display = "none";
+    });
+  }
+
+  function pickMilestonePhoto(key){
+    openFilePicker("image/*", function(f){
+      toast("Adding your photo\u2026");
+      readAndCompress(f, function(dataUrl){
+        if(!dataUrl || dataUrl.length < 100){
+          showModal("", "Couldn't read that photo",
+            "That image didn't come through. Try a different one, or take a fresh photo.");
+          return;
+        }
+        var m = milestoneByKey(key);
+        if(!m) return;
+        m.photo = dataUrl; m.photoType = "image";
+        try{ saveOrThrow(); }
+        catch(err){
+          m.photo = null; m.photoType = null; save();
+          toast("Storage was full \u2014 free some space and try again");
+          renderAll(); return;
+        }
+        announce("we hit " + m.label + " together \uD83C\uDF1F");
+        renderAll();
+        toast("That's the one \uD83C\uDF1F");
+      });
+    });
+  }
+
   function renderPhotoMissNotice(){
     var card = document.getElementById("photoMissCard");
     if(!card) return;
@@ -13243,7 +13727,15 @@
     closeTripDates();
     renderAll();
     var on = todayISO() >= s && todayISO() <= e;
-    toast(on ? "You're on this trip now — codes paused 💞" : "Dates saved ✈️");
+    toast(on ? "You're on this trip now \u2014 codes paused \uD83D\uDC9E" : "Dates saved \u2708\uFE0F");
+    // Dates are the moment a trip stops being a daydream, so it is also the moment its
+    // checklist is worth having — and only now can the items be given real deadlines.
+    // Offered once: a trip that already has a list, or whose list you deleted, is left
+    // alone, because an app that re-offers something you declined is an app you stop
+    // reading.
+    if(!tripHasChecklist(t.id) && !(state.tripChecklistAsked || {})[t.id]){
+      offerTripChecklist(t);
+    }
   });
   document.getElementById("tripDatesClear").addEventListener("click", function(){
     var t = state.tasks.filter(function(x){ return x.id === tripDatesId; })[0];
@@ -13862,6 +14354,10 @@
   }
 
   function renderAll(){
+    // Cheap, and it catches a crossing that happened on the other phone and arrived by
+    // sync — a milestone belongs to the pair, so either phone noticing is enough.
+    if(recordMilestones()) save();
+    renderMilestoneBanner();
     renderUsBar();
     renderPhotoMissNotice();
     renderNtfy();
