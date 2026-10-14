@@ -32,6 +32,8 @@
 <script>window.OneSignalDeferred = window.OneSignalDeferred || [];</script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <style>
+  @property --hbp{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+
   :root{
     --bg:#1A1220;
     --card:#241A2E;
@@ -53,7 +55,18 @@
      right — and gets stuck there once the keyboard opens. Nothing here scrolls sideways
      at the document level (the tab strip has its own overflow-x container), so clamping
      this is safe and stops the symptom recurring from any future stray wide element. */
+  /* BUILD 100: this was overflow-x:hidden, and that quietly broke position:sticky for the
+     whole document. overflow-x:hidden makes the element a SCROLL CONTAINER in both axes
+     (computed overflow becomes "hidden auto"), so a sticky descendant sticks to a box that
+     never actually scrolls - it just rides along and nothing ever pins. overflow-x:clip
+     does the same visual clamping WITHOUT creating a scroll container, which is exactly
+     what this rule wanted in the first place. Keep the hidden fallback for anything that
+     doesn't know clip; there, sticky degrades to normal flow, which is what it was before. */
   html,body{max-width:100%;overflow-x:hidden;}
+  /* Build 101: without this the native over-scroll bounce runs underneath the pull-to-sync
+     gesture and the two fight each other for the same 70px of travel. */
+  body{overscroll-behavior-y:contain;}
+  @supports (overflow-x:clip){ html,body{overflow-x:clip;} }
   body{
     margin:0;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -1967,6 +1980,10 @@
     position:absolute;left:50%;top:50%;font-size:22px;will-change:transform,opacity;
     opacity:0;
   }
+  /* Build 101: confetti can now come out of the thing you actually pressed instead of
+     the middle of the screen. Without an origin it falls back to the centre, which is
+     what every call did before. */
+  .burst-layer.at-origin .burst-piece{ left:var(--burstX); top:var(--burstY); }
   @media (prefers-reduced-motion: no-preference){
     .burst-piece{animation:burstFly .85s cubic-bezier(.2,.7,.3,1) forwards;}
     @keyframes burstFly{
@@ -2731,9 +2748,461 @@
     font-family:var(--display); font-size:19px; color:var(--text); margin-bottom:10px;
   }
   .act-head .wd-i{ flex:none; color:var(--rae); }
+
+  /* ---------------------------------------------------------------------------
+     BUILD 100 — the tab bar that was below the fold.
+
+     Measured on a 393x852 iPhone, fully set up, nothing going wrong: the tab bar
+     rendered at y=841. One pixel of it was on screen. You could not see which tab
+     you were on without scrolling, and once you were deep in a task list the only
+     way to change tabs was to scroll all the way back up.
+
+     It sticks to the top now. The blur is not decoration — a solid bar would read
+     as a seam against the ambient gradient on body, and a transparent one would
+     have task rows sliding through the labels.
+
+     .tabs is itself a horizontal scroll container (overflow-x:auto). That is fine:
+     an element can be sticky AND scroll its own contents; only an ANCESTOR with
+     overflow would break it, and main has none.
+     --------------------------------------------------------------------------- */
+  /* Five tabs did not fit across a phone. At 393px the strip needed 558px, so Notes and
+     Memories were off the right edge with only a horizontal scroll - which nobody
+     discovers - to reach them. Two of the five tabs were effectively invisible.
+
+     Shrinking the text was not enough (11.5px still overflowed by 19px). So the labels go
+     UNDER the icons, each tab takes an equal share of the width, and all five fit at 393,
+     375 and even 320px with no truncation. This is also just what an iPhone tab bar
+     looks like. It costs 9px of height over the single-row version and buys two tabs. */
+  .tabs button,
+  :root[data-skin="pe"] .tabs button{
+    flex:1 1 0;
+    flex-direction:column;
+    gap:3px;
+    padding:7px 2px;
+    font-size:10.5px;
+    min-width:0;
+  }
+  .tabs .tab-t{ white-space:nowrap; }
+  /* An iPhone SE is 375 and all five fit there comfortably. 320 is the old SE and the
+     narrowest thing iOS still runs; "Leaderboard" is 1-2px over its 64px column at that
+     width, so the labels step down rather than get cut in half. */
+  @media (max-width:359px){
+    .tabs button,
+    :root[data-skin="pe"] .tabs button{ font-size:9.5px; padding-left:0; padding-right:0; }
+  }
+  /* The strip no longer needs to scroll sideways, and leaving overflow-x:auto on a sticky
+     element that exactly fits its container causes a stray 1px jitter on iOS. */
+  .tabs,
+  :root[data-skin="pe"] .tabs{ overflow-x:visible; justify-content:space-between; }
+
+  .tabs,
+  :root[data-skin="pe"] .tabs{
+    position:sticky;
+    top:0;
+    z-index:40;
+    margin-left:-16px;
+    margin-right:-16px;
+    padding-left:16px;
+    padding-right:16px;
+    padding-top:9px;
+    padding-bottom:9px;
+    background:rgba(26,18,32,.80);
+    -webkit-backdrop-filter:saturate(150%) blur(16px);
+    backdrop-filter:saturate(150%) blur(16px);
+    scrollbar-width:none;
+  }
+  :root[data-skin="pe"] .tabs{ background:rgba(14,11,19,.80); }
+  .tabs::-webkit-scrollbar{ display:none; }
+  /* The sticky bar needs its own edge once content is sliding under it. The PE skin
+     already draws a border-bottom on .tabs; the original skin had none. */
+  .tabs{ border-bottom:1px solid var(--border); }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .tabs{ background:#1A1220; }
+    :root[data-skin="pe"] .tabs{ background:#0E0B13; }
+  }
+
+
+  /* The folded-banner chip. Deliberately not a card: it is a control, and making it look
+     like another card would defeat the point of folding the cards away. */
+  .banner-more{
+    display:block;
+    width:100%;
+    margin:-4px 0 14px;
+    padding:9px 14px;
+    border:1px dashed var(--border);
+    border-radius:12px;
+    background:transparent;
+    color:var(--muted);
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:.01em;
+    cursor:pointer;
+    text-align:center;
+  }
+  .banner-more:active{ opacity:.6; }
+  :root[data-skin="pe"] .banner-more{ border-color:var(--line-2); color:var(--faint); }
+  /* Set by the coordinator only. Never written by the individual banner renderers, so a
+     renderer's own display value survives being folded and comes back untouched. */
+  .banner-folded{ display:none !important; }
+
+
+  /* The folded tail of the penalty ledger. */
+  .miss-folded{ display:none; }
+  .miss-folded.show{ display:block; }
+  .miss-fold{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    margin-top:2px;
+    padding:11px 2px;
+    border:0;
+    border-top:1px solid var(--border);
+    background:transparent;
+    color:var(--muted);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    text-align:left;
+  }
+  .miss-fold .mf-t{ flex:1; }
+  .miss-fold .mf-v{ font-variant-numeric:tabular-nums; color:var(--gold,#e8b54b); }
+  .miss-fold .mf-c{ font-size:11px; transition:transform .18s ease; }
+  .miss-fold.is-open .mf-c{ transform:rotate(180deg); }
+  @media (prefers-reduced-motion:reduce){ .miss-fold .mf-c{ transition:none; } }
+  :root[data-skin="pe"] .miss-fold{ border-top-color:var(--line); color:var(--faint); }
+
+
+  /* The modal's icon. It replaced a 44px emoji, so it keeps that optical weight - but as a
+     line drawing it needs a slightly lighter stroke than the 18px icons or it reads as a
+     logo rather than a label. */
+  .modal .emoji .wd-i{
+    vertical-align:middle;
+    stroke-width:1.4;
+    color:var(--rose,#ff7a5e);
+  }
+  .modal .emoji{ line-height:1; }
+
+
+  /* Small inline icons that sit INSIDE a line of text rather than beside it - badge pills,
+     the trip banner, the Power Couple crown. They ride the baseline of the text they are
+     embedded in, which the default .wd-i offset does not quite manage at 13px. */
+  .bp-i{ vertical-align:-0.15em; margin-right:1px; }
+  .health-ico .wd-i{ vertical-align:middle; opacity:.85; }
+
+
+  /* Warnings take the gold the app already uses for "pay attention" rather than the red it
+     uses for "this is broken" - a stale health reading is not an error, it is an old number. */
+  .inline-warn{ color:var(--gold,#e8b54b); vertical-align:-0.18em; }
+
+
+  /* =========================================================================
+     BUILD 101 — the completion sweep.
+
+     Modelled on Strava's save-activity transition: a shape scales up out of the
+     control you pressed, wipes the screen, holds for a beat and fades off. Here
+     it only runs for a hard task, a together task, or a perfect month - three
+     things that genuinely do not happen most days.
+
+     Everything is one CSS animation on a throwaway element. No JS loop, no
+     rAF, nothing to cancel: the node is removed after 1.5s whatever happens.
+     pointer-events stay off for the whole of it, so a tap during the wipe lands
+     on the app underneath rather than on a decoration.
+
+     z-index 58 sits above the app and the confetti (55) but below modals (60),
+     so anything that opens afterwards still comes out on top - and
+     afterCelebration() holds those back until the wipe is done anyway.
+     ========================================================================= */
+  .cel-sweep{
+    position:fixed; inset:0; z-index:58; pointer-events:none; overflow:hidden;
+    animation:celOut 1.45s linear forwards;
+  }
+  .cel-wash{
+    position:absolute; left:var(--ox); top:var(--oy);
+    width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%;
+    /* Two layers rather than one gradient, and the reason is worth writing down.
+
+       This started as a single radial-gradient running from the glow colour to the dark
+       one. The circle ends up about 3600px across while the phone is about 400px, so
+       wherever the colour stop goes you are really choosing which slice of an 1800px
+       radius the viewport happens to sit in - and the whole screen landed inside the
+       glow. The result was a pink tint you could read the app straight through, which
+       is the opposite of a wipe.
+
+       A flat background-colour does the covering, at an alpha that does not depend on
+       geometry at all, and the gradient only adds a halo around the point you touched
+       before fading to nothing. The stop position now controls the size of a highlight
+       instead of controlling whether the effect works at all. */
+    background-color:var(--celDark);
+    background-image:radial-gradient(circle at center, var(--celGlow) 0%, rgba(0,0,0,0) 17%);
+    transform:scale(0); will-change:transform, opacity;
+    animation:celWash 1.45s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  .cel-mark{
+    position:absolute; left:50%; top:40%;
+    color:var(--celMark);
+    transform:translate(-50%,-50%) scale(.2);
+    opacity:0; will-change:transform, opacity;
+    animation:celMark 1.45s cubic-bezier(.16,1,.3,1) forwards;
+    filter:drop-shadow(0 0 22px var(--celGlow));
+  }
+  .cel-tick{ stroke-dasharray:34; stroke-dashoffset:34; animation:celTick 1.45s ease forwards; }
+  .cel-say{
+    position:absolute; left:0; right:0; top:58%;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:0 28px; text-align:center;
+    opacity:0; animation:celSay 1.45s ease forwards;
+  }
+  .cel-say b{
+    font-size:38px; font-weight:800; letter-spacing:-.02em; color:var(--celMark);
+    font-variant-numeric:tabular-nums;
+  }
+  .cel-say i{ font-style:normal; font-size:14.5px; line-height:1.5; color:rgba(255,255,255,.82); }
+
+  @keyframes celWash{
+    0%{   transform:scale(0);   opacity:0; }
+    6%{                         opacity:1; }
+    48%{  transform:scale(300); opacity:1; }
+    74%{  transform:scale(300); opacity:1; }
+    100%{ transform:scale(300); opacity:0; }
+  }
+  @keyframes celMark{
+    0%{   opacity:0; transform:translate(-50%,-50%) scale(.2); }
+    14%{  opacity:0; transform:translate(-50%,-50%) scale(.5); }
+    22%{  opacity:1; }
+    44%{  transform:translate(-50%,-50%) scale(1.07); }
+    58%{  transform:translate(-50%,-50%) scale(1); }
+    78%{  opacity:1; }
+    100%{ opacity:0; transform:translate(-50%,-50%) scale(1.03); }
+  }
+  @keyframes celTick{
+    0%{ stroke-dashoffset:34; }
+    24%{ stroke-dashoffset:34; }
+    52%{ stroke-dashoffset:0; }
+    100%{ stroke-dashoffset:0; }
+  }
+  @keyframes celSay{
+    0%{   opacity:0; transform:translateY(10px); }
+    40%{  opacity:0; transform:translateY(10px); }
+    58%{  opacity:1; transform:translateY(0); }
+    82%{  opacity:1; transform:translateY(0); }
+    100%{ opacity:0; transform:translateY(-6px); }
+  }
+  @keyframes celOut{ 0%,100%{ opacity:1; } }
+
+  /* Belt and braces. celebrate() already returns before building any of this when
+     motion is reduced, but a stylesheet that says so cannot be bypassed by a bug. */
+  @media (prefers-reduced-motion: reduce){
+    .cel-sweep{ display:none; }
+  }
+  body.celebrating .fab{ opacity:0; transform:translateY(12px) scale(.9); pointer-events:none; }
+
+  /* Modals used to appear with no transition at all - display:none to display:flex.
+     The add-task sheet already had a rise; everything else just blinked into being. */
+  .modal-bg.show{ animation:modalFade .18s ease forwards; }
+  .modal-bg.show > .modal{ animation:modalRise .26s cubic-bezier(.16,1,.3,1) forwards; }
+  @keyframes modalFade{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes modalRise{
+    from{ opacity:0; transform:translateY(14px) scale(.97); }
+    to{   opacity:1; transform:none; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .modal-bg.show, .modal-bg.show > .modal{ animation:none; }
+  }
+
+
+  /* =========================================================================
+     BUILD 101 — the collapsed row actions.
+     ========================================================================= */
+  .task-actions{ flex-direction:row; align-items:center; gap:2px; }
+  /* The tray is laid out but zero-width until the row is open, so opening it costs no
+     reflow of the text beside it and the animation has something real to animate. */
+  .act-tray{
+    display:flex; align-items:center; gap:2px;
+    max-width:0; overflow:hidden; opacity:0;
+    transition:max-width .22s cubic-bezier(.16,1,.3,1), opacity .16s ease;
+  }
+  .task-wrap.acts-open .act-tray{ max-width:132px; opacity:1; }
+  .act-more{ opacity:.45; transition:opacity .16s ease, transform .22s cubic-bezier(.16,1,.3,1); }
+  .task-wrap.acts-open .act-more{ opacity:1; transform:rotate(90deg); }
+  .task-wrap.acts-open .task{ background:rgba(255,255,255,.028); }
+  @media (prefers-reduced-motion: reduce){
+    .act-tray, .act-more{ transition:none; }
+  }
+  /* The row no longer has to be as tall as three stacked buttons. */
+  .task-actions .icon-btn{ flex:none; }
+
+  /* Press and hold. The ring is a conic gradient swept by one keyframe - no JS loop, so
+     letting go really is free: the class comes off and the animation is simply gone. */
+  .hold-btn{ position:relative; }
+  .hold-btn .hb-ico{ position:relative; z-index:1; display:block; }
+  .hold-btn .hb-ring{
+    position:absolute; inset:-2px; border-radius:50%;
+    opacity:0; pointer-events:none;
+    background:conic-gradient(var(--pink,#ff6b8a) var(--hbp,0deg), rgba(0,0,0,0) 0deg);
+    -webkit-mask:radial-gradient(circle, rgba(0,0,0,0) 57%, #000 59%);
+            mask:radial-gradient(circle, rgba(0,0,0,0) 57%, #000 59%);
+  }
+  .hold-btn.holding .hb-ring{ opacity:1; animation:hbFill .62s linear forwards; }
+  .hold-btn.holding .hb-ico{ color:var(--pink,#ff6b8a); }
+  @keyframes hbFill{ from{ --hbp:0deg; } to{ --hbp:360deg; } }
+  /* @property makes the angle an animatable number rather than an opaque string. Without
+     it the conic sweep simply does not run, so there is a width fallback underneath. */
+  @supports not (background:conic-gradient(red 1deg, blue 0deg)){
+    .hold-btn .hb-ring{
+      inset:auto 0 -3px 0; height:2px; border-radius:2px; background:var(--pink,#ff6b8a);
+      -webkit-mask:none; mask:none; width:0;
+    }
+    .hold-btn.holding .hb-ring{ opacity:1; animation:hbBar .62s linear forwards; }
+    @keyframes hbBar{ from{ width:0; } to{ width:100%; } }
+  }
+
+
+  /* =========================================================================
+     BUILD 101 — pull to sync.
+     ========================================================================= */
+  .ptr{
+    position:fixed; top:0; left:0; right:0; z-index:45;
+    display:flex; justify-content:center;
+    pointer-events:none;
+    transform:translateY(-64px);
+    opacity:0;
+  }
+  /* No transition while a finger is on it - the indicator should track the thumb exactly.
+     The class goes on only for the spring back, so the snap is animated and the drag is not. */
+  .ptr.settling{ transition:transform .3s cubic-bezier(.16,1,.3,1), opacity .22s ease; }
+  .ptr-box{
+    display:flex; align-items:center; gap:8px;
+    margin-top:10px; padding:8px 15px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:rgba(26,18,32,.92);
+    -webkit-backdrop-filter:saturate(150%) blur(14px);
+            backdrop-filter:saturate(150%) blur(14px);
+    color:var(--muted);
+    font-size:12.5px; font-weight:650; white-space:nowrap;
+  }
+  :root[data-skin="pe"] .ptr-box{ background:rgba(14,11,19,.92); border-color:var(--line-2); }
+  .ptr-i{ display:block; width:15px; height:15px; color:var(--rose,#ff7a5e); }
+  .ptr-i svg{ display:block; width:15px; height:15px; }
+  /* Ready to let go: the arrow has turned all the way over. */
+  .ptr.ready .ptr-i{ transform:rotate(180deg); }
+  .ptr-i{ transition:transform .18s cubic-bezier(.16,1,.3,1); }
+  .ptr.busy .ptr-i{ animation:ptrSpin .85s linear infinite; transition:none; }
+  .ptr.done .ptr-i{ color:var(--jade,#4fd1b5); animation:none; transform:none; }
+  .ptr.failed .ptr-i{ color:var(--pink,#ff6b8a); animation:none; transform:none; }
+  @keyframes ptrSpin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){
+    .ptr.busy .ptr-i{ animation:none; }
+    .ptr, .ptr-i{ transition:none; }
+  }
+
+
+  /* =========================================================================
+     BUILD 101 — the story-style photo open.
+
+     perspective has to live on the BACKDROP, not the image: perspective applies to an
+     element's children, so putting it on the thing being rotated does nothing at all and
+     the rotation flattens into a horizontal squash. The hinge is transform-origin, set to
+     whichever edge the photo's person is on.
+     ========================================================================= */
+  .photo-view-bg{ perspective:1200px; perspective-origin:50% 45%; }
+  .photo-view-bg.show.from-left img,
+  .photo-view-bg.show.from-right img{
+    animation:pvSwing .46s cubic-bezier(.16,1,.3,1) both;
+    backface-visibility:hidden;
+  }
+  .photo-view-bg.show.from-left img{  transform-origin:left center;  }
+  .photo-view-bg.show.from-right img{ transform-origin:right center; }
+  .photo-view-bg.show.from-left img{  --pvDeg:-74deg; }
+  .photo-view-bg.show.from-right img{ --pvDeg:74deg; }
+  @keyframes pvSwing{
+    from{ opacity:.25; transform:rotateY(var(--pvDeg,-70deg)) scale(.94); }
+    to{   opacity:1;   transform:none; }
+  }
+  .photo-view-bg.show .photo-view-cap,
+  .photo-view-bg.show .photo-view-close{
+    animation:pvRise .4s .08s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes pvRise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+  /* The rule that turns this ON is .photo-view-bg.show.from-left img - three classes. A
+     reduced-motion rule written with two loses the cascade and the animation runs anyway,
+     which a test caught. Match the specificity rather than reaching for !important. */
+  @media (prefers-reduced-motion: reduce){
+    .photo-view-bg.show.from-left img,
+    .photo-view-bg.show.from-right img,
+    .photo-view-bg.show .photo-view-cap,
+    .photo-view-bg.show .photo-view-close{ animation:none; }
+  }
+
+  /* =========================================================================
+     BUILD 101 — the daily code as a tear-off page.
+     ========================================================================= */
+  .code-display.tearoff{
+    position:relative;
+    padding:0 16px 14px;
+    border-radius:4px 4px 12px 12px;
+    overflow:hidden;
+    background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+  }
+  /* The perforation. Repeating radial half-circles bitten out of the top edge - the same
+     trick a ticket stub uses, which is the right reference: both are things valid for one
+     occasion that you tear away afterwards. */
+  .code-display.tearoff .to-perf{
+    position:absolute; top:0; left:0; right:0; height:7px;
+    background:radial-gradient(circle at 5px 0, transparent 0 4px, currentColor 4px 5px, transparent 5px) repeat-x;
+    background-size:10px 7px;
+    color:var(--border);
+    opacity:.85;
+  }
+  .code-display.tearoff .to-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:10px; padding:14px 0 8px; margin-bottom:8px;
+    border-bottom:1px solid var(--border);
+  }
+  .code-display.tearoff .to-dow{
+    font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--rose,#ff7a5e);
+  }
+  .code-display.tearoff .to-date{ font-size:12px; color:var(--faint,#8b8296); font-variant-numeric:tabular-nums; }
+  .code-display.tearoff .to-foot{
+    margin-top:8px; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--faint,#8b8296);
+  }
+  .code-display.tearoff .to-stamp{
+    display:inline-flex; align-items:center; gap:5px;
+    margin-top:10px; padding:4px 11px; border-radius:999px;
+    border:1px solid var(--jade,#4fd1b5); color:var(--jade,#4fd1b5);
+    font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase;
+    transform:rotate(-3deg);
+  }
+  /* Spent: the page lifts at one corner and loses its colour. The only thing in the app
+     that looks USED rather than disabled. */
+  .code-display.tearoff.spent{
+    opacity:.78;
+    transform:rotate(-.5deg);
+    box-shadow:0 10px 22px rgba(0,0,0,.28);
+  }
+  .code-display.tearoff.spent .code-value{ color:var(--faint,#8b8296); }
+  .code-display.tearoff.spent .to-dow{ color:var(--faint,#8b8296); }
+  :root[data-skin="pe"] .code-display.tearoff{ background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.008)); }
+
 </style>
 </head>
 <body>
+<!-- BUILD 101 — pull down to sync.
+
+     The most anxious thing in this app is "has what I just did reached the other phone?",
+     and until now the only way to force it was to scroll to the very bottom, open a
+     collapsed panel and find a button. Pulling down at the top of a screen is what
+     everyone already does to that question. It is fixed to the viewport rather than
+     living in the flow, so it does not move the page while it is being dragged. -->
+<div class="ptr" id="ptr" aria-hidden="true">
+  <div class="ptr-box">
+    <span class="ptr-i" id="ptrIcon"></span>
+    <span class="ptr-t" id="ptrText"></span>
+  </div>
+</div>
 
 <div id="lockScreen" style="display:none;position:fixed;inset:0;z-index:200;background:var(--bg);align-items:center;justify-content:center;padding:24px;">
   <div style="max-width:320px;width:100%;text-align:center;">
@@ -2808,6 +3277,12 @@
   <!-- Why your score moved while you weren't looking. Shown to whoever's phone this is,
        about their OWN missed days only — being told off on someone else's behalf is not a
        thing this app should do. -->
+  <!-- BUILD 100 - first in the strip, and first in the fold order, because it is the only
+       banner here with a deadline you can MISS. Their streak broke, you can cover it, and
+       only today. The milestone will still be waiting tomorrow; the activity feed is news;
+       the penalty notice is a receipt. This one expires, so it does not get folded behind
+       any of them. (Folding is by DOM order, so the two orders stay the same thing.) -->
+  <div class="card repair-card" id="repairCard" style="display:none;"></div>
   <!-- Every milestone. Above the penalty notice on purpose: the first thing you see should
        be something you did together, not something one of you missed. -->
   <div class="card ms-card" id="milestoneCard" style="display:none;"></div>
@@ -2820,9 +3295,13 @@
     <div id="activityBody"></div>
   </div>
   <div class="card miss-card" id="photoMissCard" style="display:none;"></div>
-  <div class="card repair-card" id="repairCard" style="display:none;"></div>
   <!-- Shown only to whoever is ahead. The other person never sees it and is never told. -->
   <div class="card fair-card" id="fairNudge" style="display:none;"></div>
+  <!-- BUILD 100: six full-width banners could render at once here - reminder, milestone,
+       activity, photo penalty, streak repair, fairness - with nothing governing how many.
+       Measured worst case was ~1,500px of banner before the greeting card even began.
+       They are coalesced now: the most important one shows, the rest fold into this. -->
+  <button type="button" class="banner-more" id="bannerMore" style="display:none;"></button>
   <!-- The note prompt only exists in the moment after you've posted. Notes lived in a
        separate panel nobody opened; attaching them to the photo gives them an occasion. -->
 
@@ -2877,7 +3356,7 @@
          text inside a collapsed panel. -->
     <div class="card" id="syncFailCard" style="display:none;border-color:var(--pink);">
       <div style="font-size:13.5px;line-height:1.6;color:var(--muted);">
-        🔴 <strong style="color:var(--pink);">Nothing has reached <span id="syncFailWho">your person</span>'s phone</strong>
+        <span data-ico="warn" class="inline-warn"></span> <strong style="color:var(--pink);">Nothing has reached <span id="syncFailWho">your person</span>'s phone</strong>
         <div id="syncFailDetail" style="margin-top:6px;"></div>
       </div>
       <div class="row2" style="margin-top:10px;">
@@ -2888,35 +3367,12 @@
 
     <div class="card" id="noBackupCard" style="display:none;border-color:var(--gold);">
       <div style="font-size:13px;line-height:1.55;color:var(--muted);">
-        ⚠️ <strong style="color:var(--text);">This phone isn't backed up yet.</strong>
+        <span data-ico="warn" class="inline-warn"></span> <strong style="color:var(--text);">This phone isn't backed up yet.</strong>
         Everything you add lives only in this browser until Auto-sync is on — and phones do clear browser data.
         Open <em>Sync between two phones</em> below, save the Gist link + token, and this warning disappears for good.
       </div>
       <button class="ghost" id="noBackupLater" style="width:100%;margin-top:10px;">Remind me later</button>
     </div>
-    <div class="card quest-card">
-      <h2>Couple Quest</h2>
-      <div id="questBody"></div>
-    </div>
-
-    <div class="card" id="statsCard">
-      <h2>Your stats</h2>
-      <div class="stats-empty-hint" id="statsEmptyHint"></div>
-      <div class="stat-row">
-        <div class="stat"><div class="num" id="statPersonal">0</div><div class="label">Points</div></div>
-        <div class="stat jade"><div class="num" id="statThoughtful">0</div><div class="label">Thoughtful</div></div>
-        <div class="stat gold"><div class="num" id="statStreak">0</div><div class="label">Day Streak</div></div>
-      </div>
-      <div class="badge-row" id="badgeRow"></div>
-    </div>
-
-    <div class="card" id="healthCard">
-      <h2 style="display:flex;align-items:center;justify-content:space-between;">Health today
-        <button type="button" id="healthRefresh" class="icon-btn" aria-label="Refresh health data" style="font-size:16px;">↻</button>
-      </h2>
-      <div id="healthBody"></div>
-    </div>
-
     <div class="list-pills" id="listSwitcher"></div>
     <div class="card" id="newListCard" style="display:none;">
       <h2>New list</h2>
@@ -2959,6 +3415,33 @@
         <span class="cc-chev">▾</span>
       </button>
       <div class="cc-body" id="doneBody"><div id="doneTasks"></div></div>
+    </div>
+
+    <!-- Build 100: these three used to sit ABOVE the task list. Measured on a 393x852
+         phone that put the first task at y=1705 - two screens down - on a day with
+         nothing wrong. Quest, stats and health are things you GLANCE at; the task list
+         is the thing you came to use, so the list goes first and these follow it. -->
+    <div class="card quest-card">
+      <h2>Couple Quest</h2>
+      <div id="questBody"></div>
+    </div>
+
+    <div class="card" id="statsCard">
+      <h2>Your stats</h2>
+      <div class="stats-empty-hint" id="statsEmptyHint"></div>
+      <div class="stat-row">
+        <div class="stat"><div class="num" id="statPersonal">0</div><div class="label">Points</div></div>
+        <div class="stat jade"><div class="num" id="statThoughtful">0</div><div class="label">Thoughtful</div></div>
+        <div class="stat gold"><div class="num" id="statStreak">0</div><div class="label">Day Streak</div></div>
+      </div>
+      <div class="badge-row" id="badgeRow"></div>
+    </div>
+
+    <div class="card" id="healthCard">
+      <h2 style="display:flex;align-items:center;justify-content:space-between;">Health today
+        <button type="button" id="healthRefresh" class="icon-btn" aria-label="Refresh health data" style="font-size:16px;">↻</button>
+      </h2>
+      <div id="healthBody"></div>
     </div>
 
     <div class="card checkin-card" id="checkinCard">
@@ -3566,7 +4049,38 @@
     heart:    '<path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
     spark:    '<path d="M12 3v5M12 16v5M3 12h5M16 12h5M6.2 6.2l3 3M14.8 14.8l3 3M17.8 6.2l-3 3M9.2 14.8l-3 3"/>',
     clock:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>',
-    bolt:     '<path d="M13.5 2.5 4 13.8h6.4l-.9 7.7L19 10.2h-6.4z"/>'
+    bolt:     '<path d="M13.5 2.5 4 13.8h6.4l-.9 7.7L19 10.2h-6.4z"/>',
+    /* BUILD 100 — the second half of the Build 87 icon pass.
+
+       Build 87 drew the app's FRAME: list pills, difficulty tags, the tab bar. It never
+       touched anything the app SAYS. So every toast, every modal, every celebration and
+       every health row was still a system emoji, and the two sets ran side by side -
+       "Got it, thanks (envelope emoji)" sitting two inches above a drawn camera outline
+       in the same scroll. About two hundred of them. These are the ones that appear on
+       surfaces a person actually looks at. */
+    warn:     '<path d="M10.3 3.9 2.6 17.4A2 2 0 0 0 4.3 20.4h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9.2v4.3M12 17h.01"/>',
+    x:        '<path d="M18 6 6 18M6 6l12 12"/>',
+    lock:     '<rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
+    key:      '<circle cx="8" cy="15" r="4"/><path d="m10.9 12.1 8.3-8.3M16.6 6.4l2 2M14.1 8.9l2 2"/>',
+    link:     '<path d="M10 13.6a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7"/><path d="M14 10.4a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7"/>',
+    phone:    '<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.8 18.6h2.4"/>',
+    save:     '<path d="M4.5 3.5h11l4 4v13a1 1 0 0 1-1 1h-14a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z"/><path d="M8 3.5v5.5h6.5V3.5M8 21.5V15h8v6.5"/>',
+    box:      '<path d="M3.5 7.8 12 3.5l8.5 4.3v8.4L12 20.5l-8.5-4.3z"/><path d="M3.5 7.8 12 12.1l8.5-4.3M12 12.1v8.4"/>',
+    pulse:    '<path d="M2.5 12h4l2.2-6.2L13.3 18l2.4-6h5.8"/>',
+    steps:    '<path d="M6.6 3.3c1.7 0 2.8 1.3 2.8 3 0 2.4-1 3.4-1 5.2 0 1-.8 1.6-1.8 1.6s-1.8-.6-1.8-1.6c0-1.8-1-2.8-1-5.2 0-1.7 1.1-3 2.8-3z"/><path d="M17.4 9.4c1.7 0 2.8 1.3 2.8 3 0 2.4-1 3.4-1 5.2 0 1-.8 1.6-1.8 1.6s-1.8-.6-1.8-1.6c0-1.8-1-2.8-1-5.2 0-1.7 1.1-3 2.8-3z"/>',
+    moon:     '<path d="M20.2 14.6A8.6 8.6 0 0 1 9.4 3.8 8.6 8.6 0 1 0 20.2 14.6z"/>',
+    sun:      '<circle cx="12" cy="12" r="3.9"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M18.7 5.3l-1.5 1.5M6.8 17.2l-1.5 1.5"/>',
+    crown:    '<path d="M4 18.5h16"/><path d="M3.4 6.6 7.8 10.6 12 4.2l4.2 6.4 4.4-4-1.6 9.1H5z"/>',
+    chat:     '<path d="M20.5 12.3a7.6 7.6 0 0 1-11 6.8L4 20.6l1.5-5.4A7.6 7.6 0 1 1 20.5 12.3z"/>',
+    users:    '<circle cx="9" cy="7.9" r="3.2"/><path d="M3 20.2v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M15.9 5.2a3.2 3.2 0 0 1 0 5.4M17.4 14.3A5 5 0 0 1 21 19.2v1"/>',
+    ring:     '<circle cx="12" cy="12" r="8.8"/><circle cx="12" cy="12" r="3.5"/><path d="m5.8 5.8 3.7 3.7M14.5 14.5l3.7 3.7M18.2 5.8l-3.7 3.7M9.5 14.5l-3.7 3.7"/>',
+    target:   '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.4"/><circle cx="12" cy="12" r=".9"/>',
+    bag:      '<rect x="3.5" y="7.6" width="17" height="12.9" rx="2"/><path d="M8.6 7.6V5.2a2 2 0 0 1 2-2h2.8a2 2 0 0 1 2 2v2.4M3.5 12h17"/>',
+    up:       '<path d="M12 20.4V4.1M5.6 10.5 12 4.1l6.4 6.4"/>',
+    refresh:  '<path d="M20.4 12a8.4 8.4 0 1 1-2.5-6"/><path d="M20.4 3.6v5.5h-5.5"/>',
+    plant:    '<path d="M12 21v-6.6"/><path d="M12 14.4c0-3.8 2.6-6.4 6.4-6.4 0 3.8-2.6 6.4-6.4 6.4z"/><path d="M12 16.2c0-3.2-2.2-5.4-5.4-5.4 0 3.2 2.2 5.4 5.4 5.4z"/>',
+    eye:      '<path d="M2.6 12S6.1 5.6 12 5.6 21.4 12 21.4 12 17.9 18.4 12 18.4 2.6 12 2.6 12z"/><circle cx="12" cy="12" r="2.9"/>',
+    down:     '<path d="M3.5 7.3 9.8 13.6l3.3-3.3 7.4 7.4"/><path d="M20.5 12.6v5.1h-5.1"/>'
   };
   var ICS_FILE = "wedo-due.ics";
   var ICS_DIFF_POINTS = {easy: 5, medium: 10, hard: 20};
@@ -3885,8 +4399,24 @@
     "📋":"list", "📝":"list",
     "🔥":"flame",
     "💡":"bulb",
-    "⚡":"bolt", "⚡️":"bolt",
-    "❤":"heart", "❤️":"heart", "💜":"heart", "💞":"heart", "💕":"heart"
+    "⚡":"bolt", "⚡️":"bolt", "💪":"bolt",
+    "❤":"heart", "❤️":"heart", "💜":"heart", "💞":"heart", "💕":"heart",
+    "💛":"heart", "💖":"heart", "🤍":"heart",
+    /* Build 100 additions. Note what is NOT here: the reward emoji, the list emoji, the
+       experience emoji and the confetti. Those are choices somebody made, and a choice
+       is not chrome. The ones below are all app chrome - things the app says about
+       itself - which is exactly what Build 87 set out to stop drawing in Apple's hand. */
+    "⚠️":"warn", "⚠":"warn", "🔴":"warn",
+    "❌":"x", "✕":"x",
+    "🔒":"lock", "🔐":"lock", "🔑":"key", "🔗":"link", "📱":"phone",
+    "💾":"save", "📦":"box",
+    "🍎":"pulse", "👣":"steps", "👟":"steps", "😴":"moon",
+    "☀️":"sun", "🌤️":"sun", "🌞":"sun",
+    "👑":"crown", "🏅":"trophy", "🥇":"trophy",
+    "💬":"chat", "🤝":"users", "🛟":"ring", "🎯":"target", "🧳":"bag",
+    "⬆️":"up", "🔁":"refresh", "🌱":"plant", "👀":"eye", "📉":"down",
+    "✨":"spark", "🌟":"spark", "⭐️":"spark", "⭐":"spark", "💫":"spark",
+    "🎉":"spark", "🎈":"spark", "🥂":"spark"
   };
   /* Inline SVG rather than a font or sprite sheet: this app is one file that has to work
      from a cold cache on a phone with no signal, so anything that needs a second request
@@ -4710,9 +5240,36 @@
   // ---------- toast / modal ----------
   var toastEl = document.getElementById("toast");
   var toastTimer = null;
+  /* A toast is one short line that appears for 2.6 seconds and cannot be interacted with.
+     It does not need an icon; the emoji on the end of these was decoration on a thing too
+     brief to decorate. Stripping it HERE rather than at forty call sites means no call site
+     can quietly put one back, and nothing has to be rewritten to get the benefit.
+
+     Trailing only, and deliberately: every one of them sits at the end of the sentence, and
+     a message can carry a task title or a list name in the middle that a person did choose
+     an emoji for. Loops, because a few end in two. */
+  /* Deliberately NOT a broad "any symbol" range. \u2190-\u21FF would swallow a trailing
+     arrow, and \u2200-\u22FF holds \u2212 \u2014 the proper minus sign this app prints in
+     front of every deduction. Only the pictograph blocks, plus the surrogate pairs. */
+  var TOAST_TAIL = /[\s\u00a0]*(?:[\u2600-\u27BF\u2B00-\u2BFF\uFE0E\uFE0F\u200D]|[\uD83C-\uD83E][\uDC00-\uDFFF])[\s\u00a0]*$/;
+  function stripToastTail(msg){
+    var out = String(msg == null ? "" : msg);
+    for(var i = 0; i < 8 && TOAST_TAIL.test(out); i++){ out = out.replace(TOAST_TAIL, ""); }
+    return out.replace(/[\s\u00a0]+$/, "");
+  }
   function toast(msg){
+    // Build 101: the sweep covers the whole screen for about a second, and anything
+    // toasted underneath it burns most of its 2.6s being invisible. The overachiever
+    // bonus and the streak cheer both land in that window on a hard completion, so
+    // they queue behind it rather than being lost. Same rule as afterCelebration(),
+    // applied once here instead of at every call site.
+    if(Date.now() < celBusyUntil){
+      var m = msg, wait = celBusyUntil - Date.now() + 140;
+      setTimeout(function(){ toast(m); }, wait);
+      return;
+    }
     toastEl.innerHTML = "";
-    toastEl.textContent = msg;
+    toastEl.textContent = stripToastTail(msg);
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2600);
@@ -4722,7 +5279,7 @@
     toastEl.innerHTML = "";
     clearTimeout(toastTimer);
     var span = document.createElement("span");
-    span.textContent = msg;
+    span.textContent = stripToastTail(msg);
     var btn = document.createElement("button");
     btn.className = "undo-btn";
     btn.type = "button";
@@ -4741,34 +5298,181 @@
     toastEl.classList.add("show");
     toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 6000);
   }
-  // a little confetti burst of emoji flying out from the middle of the screen —
-  // paired with the praise toast so completing something actually feels good
+  /* ===========================================================================
+     BUILD 101 — the celebration, graded.
+
+     Until now every completion got the same nine pieces of confetti. Crossing off
+     "take the bins out" and crossing off the hard thing you had been avoiding for
+     three weeks looked identical, which quietly says the app cannot tell the
+     difference - and the whole point of the difficulty tier is that it can.
+
+     Four levels. Easy keeps what was there. Medium adds weight. Hard and Together
+     get the sweep, which is modelled on Strava's save-activity transition: a shape
+     scales up out of the thing you just pressed, wipes the screen, holds a line for
+     a beat, and fades off to leave you where you were. It is the rarest event in
+     the app, so it is allowed to take a second and a half.
+
+     Everything here no-ops under prefers-reduced-motion, and nothing in it is ever
+     load-bearing: the points, the toast and the save all happen whether or not a
+     single pixel moves.
+     =========================================================================== */
   var BURST_EMOJI = ["✨","🎉","💫","⭐️","🔥","💖"];
   var TOGETHER_BURST_EMOJI = ["💞","✨","💫","🎉","💖","🥂"];
-  function celebrateCompletion(isTogether){
+  var EPIC_BURST_EMOJI = ["👑","✨","🎉","🌟","💖","🥂"];
+
+  /* The colours are the ones the difficulty tags already use, so the celebration and
+     the tag you pressed are visibly the same thing. glow is the centre of the wash,
+     dark is its edge, mark is the tick itself. */
+  var CELEBRATION = {
+    easy:     {pieces: 7,  bank:"solo",     buzz:[12],
+               glow:"rgba(79,209,181,.50)",  dark:"rgba(10,16,14,.975)", mark:"#4fd1b5"},
+    medium:   {pieces:13,  bank:"solo",     buzz:[10,40,16], flash:true,
+               glow:"rgba(240,193,75,.52)",  dark:"rgba(20,16,8,.975)",  mark:"#f0c14b"},
+    hard:     {pieces:20,  bank:"solo",     buzz:[14,50,24], sweep:true,
+               glow:"rgba(255,107,138,.54)", dark:"rgba(22,10,14,.975)", mark:"#ff6b8a"},
+    together: {pieces:17,  bank:"together", buzz:[12,40,12,40,18], sweep:true,
+               glow:"rgba(165,148,255,.54)", dark:"rgba(14,11,25,.975)", mark:"#a594ff"},
+    epic:     {pieces:26,  bank:"epic",     buzz:[16,60,16,60,28], sweep:true, fireworks:true,
+               glow:"rgba(233,184,78,.56)",  dark:"rgba(18,14,8,.975)",  mark:"#e9b84e"}
+  };
+
+  var CEL_BANK = {solo: BURST_EMOJI, together: TOGETHER_BURST_EMOJI, epic: EPIC_BURST_EMOJI};
+
+  function motionOff(){
     try{
-      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if(reduce) return;
-      var bank = isTogether ? TOGETHER_BURST_EMOJI : BURST_EMOJI;
-      var layer = document.createElement("div");
-      layer.className = "burst-layer";
-      var count = isTogether ? 14 : 9;
-      for(var i=0;i<count;i++){
-        var piece = document.createElement("span");
-        piece.className = "burst-piece";
-        piece.textContent = bank[i % bank.length];
-        var angle = (Math.PI * 2 * i / count) + (Math.random()*0.6 - 0.3);
-        var dist = 90 + Math.random()*90;
-        piece.style.setProperty("--bx", (Math.cos(angle)*dist).toFixed(0) + "px");
-        piece.style.setProperty("--by", (Math.sin(angle)*dist - 40).toFixed(0) + "px");
-        piece.style.setProperty("--br", (Math.random()*70 - 35).toFixed(0) + "deg");
-        piece.style.animationDelay = (Math.random()*0.08).toFixed(2) + "s";
-        layer.appendChild(piece);
+      return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    }catch(e){ return false; }
+  }
+  /* How long the screen is busy celebrating. Anything that wants to put a modal up
+     after a completion waits this out rather than landing on top of the sweep. */
+  var celBusyUntil = 0;
+  function afterCelebration(fn, baseDelay){
+    var wait = Math.max(baseDelay || 0, celBusyUntil - Date.now() + 120);
+    setTimeout(fn, wait);
+  }
+  function buzz(pattern){
+    try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){}
+  }
+
+  /* The Strava-style wipe. A circle grows out of the point you touched, the tick draws
+     itself at full size, a line of text holds for a beat, and the whole thing fades.
+     Pointer-events are off throughout, so a mistimed tap goes to the app underneath
+     rather than into a decoration. */
+  function celebrationSweep(cfg, origin, headline, sub){
+    var el = document.createElement("div");
+    el.className = "cel-sweep";
+    el.setAttribute("aria-hidden", "true");
+    var ox = (origin && origin.x != null) ? origin.x : (window.innerWidth / 2);
+    var oy = (origin && origin.y != null) ? origin.y : (window.innerHeight / 2);
+    el.style.setProperty("--ox", Math.round(ox) + "px");
+    el.style.setProperty("--oy", Math.round(oy) + "px");
+    el.style.setProperty("--celGlow", cfg.glow);
+    el.style.setProperty("--celDark", cfg.dark);
+    el.style.setProperty("--celMark", cfg.mark);
+    el.innerHTML =
+      '<span class="cel-wash"></span>' +
+      '<span class="cel-mark">' +
+        '<svg viewBox="0 0 24 24" width="118" height="118" fill="none" stroke="currentColor" ' +
+          'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path class="cel-tick" d="M20 6 9 17l-5-5"/>' +
+        '</svg>' +
+      '</span>' +
+      (headline || sub
+        ? '<span class="cel-say">' +
+            (headline ? '<b>' + escapeHtml(headline) + '</b>' : "") +
+            (sub ? '<i>' + escapeHtml(sub) + '</i>' : "") +
+          '</span>'
+        : "");
+    document.body.appendChild(el);
+    // The add-task button is fixed at z-index 60 - above the sweep, which deliberately
+    // sits at 58 so that anything opening afterwards still comes out on top of it. So a
+    // bright orange circle sat over the middle of the celebration and stayed tappable
+    // through it. It uses the fade it already has for scrolling.
+    document.body.classList.add("celebrating");
+    setTimeout(function(){
+      if(el.parentNode) el.parentNode.removeChild(el);
+      document.body.classList.remove("celebrating");
+    }, 1500);
+  }
+
+  function confettiBurst(bankName, count, origin, delay){
+    var bank = CEL_BANK[bankName] || BURST_EMOJI;
+    var layer = document.createElement("div");
+    layer.className = "burst-layer";
+    if(origin && origin.x != null){
+      layer.style.setProperty("--burstX", Math.round(origin.x) + "px");
+      layer.style.setProperty("--burstY", Math.round(origin.y) + "px");
+      layer.classList.add("at-origin");
+    }
+    for(var i = 0; i < count; i++){
+      var piece = document.createElement("span");
+      piece.className = "burst-piece";
+      piece.textContent = bank[i % bank.length];
+      var angle = (Math.PI * 2 * i / count) + (Math.random() * 0.6 - 0.3);
+      var dist = 90 + Math.random() * 90;
+      piece.style.setProperty("--bx", (Math.cos(angle) * dist).toFixed(0) + "px");
+      piece.style.setProperty("--by", (Math.sin(angle) * dist - 40).toFixed(0) + "px");
+      piece.style.setProperty("--br", (Math.random() * 70 - 35).toFixed(0) + "deg");
+      piece.style.animationDelay = ((delay || 0) + Math.random() * 0.08).toFixed(2) + "s";
+      layer.appendChild(piece);
+    }
+    document.body.appendChild(layer);
+    setTimeout(function(){ if(layer.parentNode) layer.parentNode.removeChild(layer); },
+               1100 + (delay || 0) * 1000);
+  }
+
+  /* The one entry point. level is a key of CELEBRATION; everything else is optional. */
+  function celebrate(level, opts){
+    opts = opts || {};
+    var cfg = CELEBRATION[level] || CELEBRATION.easy;
+    // The buzz is the one part that still happens with motion turned off: it is feedback,
+    // not animation, and someone who dislikes movement has not asked to stop being told
+    // that the thing they pressed worked.
+    buzz(cfg.buzz);
+    if(motionOff()) return;
+    // Two sweeps at once is just one sweep you cannot read. Crossing off the task that
+    // also tips you over 2,500 points genuinely does fire both, so the second waits its
+    // turn rather than being thrown away - you earned it, you get to see it.
+    if(cfg.sweep && Date.now() < celBusyUntil && !opts.__queued){
+      var wait = celBusyUntil - Date.now() + 160;
+      opts.__queued = true;
+      setTimeout(function(){ celebrate(level, opts); }, wait);
+      return;
+    }
+    try{
+      if(cfg.sweep){
+        celBusyUntil = Date.now() + 1450;
+        celebrationSweep(cfg, opts.origin, opts.headline, opts.sub);
       }
-      document.body.appendChild(layer);
-      setTimeout(function(){ layer.remove(); }, 1100);
+      confettiBurst(cfg.bank, cfg.pieces, cfg.sweep ? null : opts.origin, 0);
+      if(cfg.fireworks){
+        // Three waves from different corners rather than one bigger burst in the middle,
+        // because a perfect month should not look like a slightly larger Tuesday.
+        confettiBurst(cfg.bank, 14, {x: window.innerWidth * 0.22, y: window.innerHeight * 0.34}, 0.30);
+        confettiBurst(cfg.bank, 14, {x: window.innerWidth * 0.78, y: window.innerHeight * 0.30}, 0.52);
+        confettiBurst(cfg.bank, 16, {x: window.innerWidth * 0.50, y: window.innerHeight * 0.52}, 0.74);
+      }
     }catch(e){}
   }
+
+  /* Centre of an element, in viewport coordinates - where a celebration should start
+     from. Returns null for anything missing or off-layout, and celebrate() falls back
+     to the middle of the screen. */
+  function originOf(el){
+    if(!el || !el.getBoundingClientRect) return null;
+    var r = el.getBoundingClientRect();
+    if(!r.width && !r.height) return null;
+    return {x: r.left + r.width / 2, y: r.top + r.height / 2};
+  }
+  function slotOrigin(pid){
+    return originOf(document.querySelector(".duo-slot." + pid));
+  }
+
+  /* Kept so every existing caller keeps working unchanged. */
+  function celebrateCompletion(isTogether){
+    celebrate(isTogether ? "together" : "easy");
+  }
+
   var modalBg = document.getElementById("modalBg");
   var confirmBg = document.getElementById("confirmBg");
   var confirmCb = null;
@@ -4789,8 +5493,14 @@
     if(cb) cb();
   });
 
+  /* BUILD 100: every showModal call site passes a hard-coded emoji as its first argument -
+     a label the app chose for itself, never one a person picked - so the one place worth
+     changing is here rather than at thirty call sites. Anything without a drawn equivalent
+     still renders as the emoji, so an unmapped one degrades to exactly what it did before. */
   function showModal(emoji, title, text){
-    document.getElementById("modalEmoji").textContent = emoji;
+    var el = document.getElementById("modalEmoji");
+    var svg = iconForEmoji(emoji, 42, "modal-ico");
+    if(svg){ el.innerHTML = svg; } else { el.textContent = emoji; }
     document.getElementById("modalTitle").textContent = title;
     document.getElementById("modalText").textContent = text;
     modalBg.classList.add("show");
@@ -5451,7 +6161,8 @@
     trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
     link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3h7v7"/><path d="M21 3l-9 9"/><path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/></svg>',
     check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>',
-    cross:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+    cross:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
+    more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h.01"/><path d="M12 12h.01"/><path d="M19 12h.01"/></svg>'
   };
 
   // Hand-drawn product illustrations. These show instantly and are what you see
@@ -5584,6 +6295,125 @@
         if(u) renderTasks();
       })
       .catch(function(){ save(); });
+  }
+
+  /* ===========================================================================
+     BUILD 101 — row actions: one control, a long press, and a hold to confirm.
+     =========================================================================== */
+
+  /* Only one row's tray is open at a time. Two open trays is two rows that have both
+     grown, which is the height problem this was built to solve, happening twice. */
+  function closeRowActions(except){
+    var open = document.querySelectorAll(".task-wrap.acts-open");
+    for(var i = 0; i < open.length; i++){
+      if(open[i] !== except) open[i].classList.remove("acts-open");
+    }
+  }
+  function toggleRowActions(wrap){
+    if(!wrap) return;
+    var willOpen = !wrap.classList.contains("acts-open");
+    closeRowActions(willOpen ? wrap : null);
+    wrap.classList.toggle("acts-open", willOpen);
+  }
+  // Anywhere else closes it. Capture phase, so a tap that lands on another row's dots
+  // still closes this one before that row's own handler opens its tray.
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    if(t && t.closest && t.closest(".task-wrap.acts-open")) return;
+    closeRowActions(null);
+  }, true);
+
+  /* A long press that does not fight the things already on the row. It gives up the
+     moment a finger moves more than a few pixels, because a press that turns into a
+     scroll is a scroll, and it marks the event so the click it produces on release is
+     swallowed rather than also toggling something. */
+  function attachLongPress(el, onLong, ms){
+    if(!el) return;
+    var timer = null, sx = 0, sy = 0, fired = false;
+    function clear(){ if(timer){ clearTimeout(timer); timer = null; } }
+    function start(x, y){
+      fired = false; sx = x; sy = y;
+      clear();
+      timer = setTimeout(function(){
+        fired = true;
+        timer = null;
+        try{ if(navigator.vibrate) navigator.vibrate(9); }catch(e){}
+        onLong();
+      }, ms || 480);
+    }
+    function moved(x, y){
+      if(!timer) return;
+      if(Math.abs(x - sx) > 9 || Math.abs(y - sy) > 9) clear();
+    }
+    el.addEventListener("touchstart", function(e){
+      var t = e.touches && e.touches[0]; if(!t) return;
+      start(t.clientX, t.clientY);
+    }, {passive: true});
+    el.addEventListener("touchmove", function(e){
+      var t = e.touches && e.touches[0]; if(!t) return;
+      moved(t.clientX, t.clientY);
+    }, {passive: true});
+    el.addEventListener("touchend", clear);
+    el.addEventListener("touchcancel", clear);
+    // Mouse too, so this is reachable on a desktop browser and in tests.
+    el.addEventListener("mousedown", function(e){ start(e.clientX, e.clientY); });
+    el.addEventListener("mousemove", function(e){ moved(e.clientX, e.clientY); });
+    el.addEventListener("mouseup", clear);
+    el.addEventListener("mouseleave", clear);
+    // Swallow the click the long press generates on release.
+    el.addEventListener("click", function(e){
+      if(fired){ fired = false; e.stopPropagation(); e.preventDefault(); }
+    }, true);
+    // iOS would otherwise offer its own text-selection menu on the same gesture.
+    el.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+  }
+
+  /* Press and hold to confirm, instead of a dialog asking whether you meant it.
+
+     Marking something failed costs points, so it should take a moment of intent - but a
+     modal for it is a whole screen interrupting you to ask a question you already
+     answered by pressing the button. The ring fills while you hold; let go early and
+     nothing happened at all, which is a cheaper way out than finding a Cancel button. */
+  var HOLD_MS = 620;
+  function holdBtn(svg, label, onDone){
+    var b = document.createElement("button");
+    b.className = "icon-btn hold-btn";
+    b.type = "button";
+    b.setAttribute("aria-label", label);
+    b.innerHTML = '<span class="hb-ring"></span><span class="hb-ico">' + svg + '</span>';
+    var timer = null, done = false;
+    function stop(){
+      if(timer){ clearTimeout(timer); timer = null; }
+      b.classList.remove("holding");
+    }
+    function begin(e){
+      if(e && e.preventDefault) e.preventDefault();
+      done = false;
+      stop();
+      b.classList.add("holding");
+      timer = setTimeout(function(){
+        timer = null;
+        done = true;
+        b.classList.remove("holding");
+        try{ if(navigator.vibrate) navigator.vibrate([14, 30, 14]); }catch(e2){}
+        onDone();
+      }, HOLD_MS);
+    }
+    b.addEventListener("touchstart", begin, {passive: false});
+    b.addEventListener("touchend", stop);
+    b.addEventListener("touchcancel", stop);
+    b.addEventListener("touchmove", stop, {passive: true});
+    b.addEventListener("mousedown", begin);
+    b.addEventListener("mouseup", stop);
+    b.addEventListener("mouseleave", stop);
+    // A plain tap must not do it, and must not silently do nothing either.
+    b.addEventListener("click", function(e){
+      e.stopPropagation();
+      e.preventDefault();
+      if(!done) toast("Hold it down to mark this one failed");
+      done = false;
+    });
+    return b;
   }
 
   function iconBtn(svg, label, onClick){
@@ -7241,7 +8071,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 97;
+  var BUILD_NUM = 101;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -7334,7 +8164,11 @@
     if(pc.lost) add(false, "Missing photos",
       pc.lost + " picture" + (pc.lost === 1 ? " has" : "s have") + " no file in the gist \u2014 " +
       "they were never uploaded, or were swept. Nothing here can bring those back.");
-    add(null, "Trophy photos", pc.trophyReal + " of " + pc.trophyTotal + " trophies have one");
+    if(pc.trophyTotal) add(pc.trophyReal === pc.trophyTotal, "Trophy photos",
+      pc.trophyReal + " of " + pc.trophyTotal + " memories have one" +
+      (pc.trophyReal < pc.trophyTotal
+        ? " \u2014 Experiences \u2192 tap \u201C+ Add photo\u201D on any without"
+        : ""));
     if(pendingPhotoUploads > 0) add(false, "Photos still uploading", pendingPhotoUploads + " waiting — leave the app open a moment");
     if(!photosFullyResolved) add(false, "Photo download", "some photos didn't come down last sync — tap Sync now again");
     var tpN = Object.keys(state.tripPhotos || {}).length;
@@ -7345,6 +8179,32 @@
     add(ts.on, "Together mode", ts.text);
     if(ts.trip) add(!!(ts.trip.tripStart && ts.trip.tripEnd), "Trip dates",
       (ts.trip.tripStart || "not set") + " → " + (ts.trip.tripEnd || "not set") + "  ·  today is " + todayISO());
+    /* ---- the features that can quietly never be switched on ----
+       The calendar feed and the photo rule were both built, shipped, and sat doing nothing
+       for a week without saying so anywhere. Anything that needs a one-time action now
+       reports whether that action was ever taken, so a dead feature announces itself
+       instead of waiting to be noticed. */
+    var calOn = !!calendarGistId();
+    var dueN = dueTasksFor(state).length;
+    add(calOn, "Calendar feed",
+      calOn
+        ? (dueN + (dueN === 1 ? " due date" : " due dates") +
+           ", " + ((state.milestones || []).length) + " milestones · subscribe on BOTH phones")
+        : "never set up — Finish setting up → Due dates in your Calendar");
+    if(calOn && !dueN && !((state.milestones || []).length)){
+      add(false, "Calendar is empty", "nothing has a due date, so the feed has nothing to show");
+    }
+    add(bridgeMarkedDone(), "Notification shortcut",
+      bridgeMarkedDone() ? "you marked this built" : "not built (or not ticked off) on this phone");
+    var ruleFrom = photoRuleFrom();
+    add(!!ruleFrom, "Daily photo rule",
+      ruleFrom ? ("−" + PHOTO_MISS_POINTS + "/day, counting from " + ruleFrom) : "not started");
+    var me0 = deviceOwner() || state.currentUser;
+    if(ruleFrom && me0){
+      var owed = photoMissDays(me0, monthKey()).length;
+      add(owed === 0, "Your missed photos this month",
+        owed ? (owed + " × −" + PHOTO_MISS_POINTS + " = −" + (owed * PHOTO_MISS_POINTS)) : "none");
+    }
     add(pushConfigured(), "Push credentials", pushConfigured() ? "saved on this phone" : "not set up — see the setup guide");
     add(isStandaloneApp(), "Opened from Home Screen icon",
       isStandaloneApp() ? "yes — push can work here" : "NO, this is a Safari tab — iOS won't deliver push to this copy");
@@ -7864,9 +8724,9 @@
       '<div class="health-grid">' +
         '<div class="health-name who-moody">' + escapeHtml(personName("p1")) + ca.stale + '</div><div></div>' +
         '<div class="health-name who-rae">' + escapeHtml(personName("p2")) + cb.stale + '</div>' +
-        '<div class="' + cls("l", winStep) + '">' + ca.steps + '</div><div class="health-ico" title="Steps">👣</div><div class="' + cls("r", winStep) + '">' + cb.steps + '</div>' +
-        '<div class="' + cls("l", winCal) + '">' + ca.cal + '</div><div class="health-ico" title="Active calories">🔥</div><div class="' + cls("r", winCal) + '">' + cb.cal + '</div>' +
-        '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">😴</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
+        '<div class="' + cls("l", winStep) + '">' + ca.steps + '</div><div class="health-ico" title="Steps">' + icon("steps", 16) + '</div><div class="' + cls("r", winStep) + '">' + cb.steps + '</div>' +
+        '<div class="' + cls("l", winCal) + '">' + ca.cal + '</div><div class="health-ico" title="Active calories">' + icon("flame", 16) + '</div><div class="' + cls("r", winCal) + '">' + cb.cal + '</div>' +
+        '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">' + icon("moon", 16) + '</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
       '</div>' +
       healthStaleWarning(a, b) +
       // "Moody leads by 900 steps — game on" is a taunt about a race that finished nine days
@@ -7889,7 +8749,11 @@
     var d = healthDiag[pid];
     var cur = (state.healthCache || {})[pid];
     var out = '<div class="hd-row"><div class="hd-who">' + nm + "</div>";
-    function line(icon, text){ return '<div class="hd-line">' + icon + " " + text + "</div>"; }
+    // NB: the parameter shadows the global icon() helper on purpose-free grounds - it was
+    // named this before there were icons. iconForEmoji is a different name, so it still resolves.
+    function line(icon, text){
+      return '<div class="hd-line">' + (iconForEmoji(icon, 15) || icon) + " " + text + "</div>";
+    }
     function code(t){ return '<div class="hd-code">' + escapeHtml(t) + "</div>"; }
 
     if(!d){
@@ -7986,7 +8850,7 @@
     var days = healthAgeDays(worst.d);
     var who = stale.length === 2 ? "These numbers are" : (personName(worst.pid) + "'s numbers are");
     return '<div class="health-stale-warn">' +
-      '<b>⚠️ ' + escapeHtml(who) + ' ' + days + ' days old.</b> ' +
+      '<b>' + icon("warn", 14, "inline-warn") + ' ' + escapeHtml(who) + ' ' + days + ' days old.</b> ' +
       'Last written ' + escapeHtml(new Date(worst.d.date + "T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})) + '. ' +
       'The Shortcut writes into the shared Gist on its own, so a gap this long means it has ' +
       'stopped running — usually the daily Automation being switched off, or Low Power Mode ' +
@@ -8115,7 +8979,7 @@
       chk.className = "trip-check";
       chk.setAttribute("aria-label","Mark booked");
       chk.textContent = "✓";
-      chk.addEventListener("click", function(){ completeTask(t.id); });
+      chk.addEventListener("click", function(){ completeTask(t.id, originOf(chk)); });
       acts.appendChild(chk);
       var del = document.createElement("button");
       del.className = "trip-del";
@@ -8137,7 +9001,7 @@
       var chip = document.createElement("button");
       chip.type = "button";
       chip.className = "trip-album-chip";
-      chip.innerHTML = "📸 " + days.length + " " + (days.length === 1 ? "day" : "days");
+      chip.innerHTML = icon("camera", 13, "bp-i") + " " + days.length + " " + (days.length === 1 ? "day" : "days");
       chip.addEventListener("click", function(e){ e.stopPropagation(); openTripAlbum(t); });
       wrap.appendChild(chip);
     }
@@ -8400,7 +9264,10 @@
       check.style.background = "var(--jade)";
       check.style.borderColor = "var(--jade)";
       wrap.classList.add("completing");
-      setTimeout(function(){ completeTask(t.id); }, 260);
+      // Read the position BEFORE the row starts collapsing, or the celebration comes
+      // out of wherever the row happened to have slid to.
+      var from = originOf(check);
+      setTimeout(function(){ completeTask(t.id, from); }, 260);
     });
     rail.appendChild(check);
     if(t.status === "open"){
@@ -8437,7 +9304,8 @@
       if(t.status !== "open") return;
       check.textContent = "✓";
       wrap.classList.add("completing");
-      setTimeout(function(){ completeTask(t.id); }, 260);
+      var from = originOf(check);
+      setTimeout(function(){ completeTask(t.id, from); }, 260);
     });
     var info = document.createElement("div");
     info.className = "info";
@@ -8490,21 +9358,40 @@
     meta.innerHTML = diffTag + repeatTag + failTag + priceTag + dueDateTag(t) + " &nbsp; " + assignText;
     info.appendChild(title); info.appendChild(meta);
 
+    /* BUILD 101 - three buttons stacked down the right of every row used to be what set
+       the height of a task: about 100px, when the row's own content needs 56. Four open
+       to-dos filled a phone screen.
+
+       They live behind one control now. The dots are always visible, so nothing becomes
+       undiscoverable the way a pure long-press menu would - but a long press anywhere on
+       the row opens the same tray, which is the gesture people reach for first. */
     var actions = document.createElement("div");
     actions.className = "task-actions";
     if(t.status==="open"){
-      actions.appendChild(iconBtn(ICON.edit, "Edit", function(){
+      var tray = document.createElement("div");
+      tray.className = "act-tray";
+      tray.appendChild(iconBtn(ICON.edit, "Edit", function(){
         if(openEditIds[t.id]) delete openEditIds[t.id]; else openEditIds[t.id] = true;
         renderAll();
       }));
       // "didn't happen" sits between edit and remove on purpose: removing a task pretends
-      // it was never set, which is the thing this exists to stop.
-      var failBtn = iconBtn(ICON.cross, "Didn\u2019t happen", function(){ confirmFailTask(t); });
+      // it was never set, which is the thing this exists to stop. It is the one action
+      // here that costs points, so it is the one you have to hold rather than tap.
+      var failBtn = holdBtn(ICON.cross, "Didn\u2019t happen", function(){ markTaskFailed(t.id); });
       failBtn.classList.add("act-fail");
-      actions.appendChild(failBtn);
-      actions.appendChild(iconBtn(ICON.trash, "Remove", function(){
+      tray.appendChild(failBtn);
+      tray.appendChild(iconBtn(ICON.trash, "Remove", function(){
         deleteTaskWithUndo(t);
       }));
+      actions.appendChild(tray);
+
+      var more = iconBtn(ICON.more, "More actions", function(ev){
+        ev.stopPropagation();
+        toggleRowActions(wrap);
+      });
+      more.classList.add("act-more");
+      actions.appendChild(more);
+      attachLongPress(row, function(){ toggleRowActions(wrap); });
     }
 
     row.appendChild(check); row.appendChild(info); row.appendChild(actions);
@@ -8825,13 +9712,17 @@
     return id === PET_NAME_FOR ? dailyPetName() : personName(id);
   }
 
+  /* Build 100: these used to be "Morning, {me} (sun)" / "Let's go, {me} (bolt)" and so on,
+     but only four of the six carried one - so the greeting, which is the largest piece of
+     type on the screen, changed weight and width depending on which one the day's seed
+     happened to pick. A name is enough. */
   var GREETINGS = [
-    "Morning, {me} ☀️",
+    "Morning, {me}",
     "Hey {me}",
     "New day, {me}",
-    "Let's go, {me} ⚡",
+    "Let's go, {me}",
     "Good to see you, {me}",
-    "Fresh start, {me} 🌤️"
+    "Fresh start, {me}"
   ];
 
   // Real, actionable ways to be considerate toward your partner today.
@@ -9600,7 +10491,7 @@
     if(!state.paired){
       var warn = document.createElement("div");
       warn.className = "required-note";
-      warn.innerHTML = "⚠️ <strong>Not paired yet.</strong> Your two phones need to swap data once so your codes match. " +
+      warn.innerHTML = icon("warn", 15, "inline-warn") + " <strong>Not paired yet.</strong> Your two phones need to swap data once so your codes match. " +
         "Open <em>Sync between two phones</em> at the bottom, tap <em>Copy my data</em>, send it to " +
         escapeHtml(personName(partner)) + ", and have them paste it into Import. Until then the codes below won't line up.";
       body.appendChild(warn);
@@ -9635,7 +10526,7 @@
     if(me !== owner){
       var lockNote = document.createElement("div");
       lockNote.className = "code-hint";
-      lockNote.innerHTML = "🔒 This is <strong>" + escapeHtml(personName(owner)) + "'s</strong> phone, so " +
+      lockNote.innerHTML = icon("lock", 14, "bp-i") + " This is <strong>" + escapeHtml(personName(owner)) + "'s</strong> phone, so " +
         escapeHtml(personName(me)) + "'s daily code stays hidden here — it only shows on " +
         escapeHtml(personName(me)) + "'s own phone. No peeking, that's the whole point.";
       body.appendChild(lockNote);
@@ -9651,7 +10542,7 @@
       var away = document.createElement("div");
       away.className = "code-hint";
       away.style.textAlign = "center";
-      away.innerHTML = "✈️ <strong>" + escapeHtml(trip.title) + "</strong><br>" +
+      away.innerHTML = icon("plane", 15, "bp-i") + " <strong>" + escapeHtml(trip.title) + "</strong><br>" +
         "Day " + tripDayNumber(trip, today) + " · you're together, so there's no code to trade.<br>" +
         "<span style=\"opacity:.85;\">Every day of this trip counts as connected — your " +
         streak + "-day streak keeps running, and the app won't lock.</span><br>" +
@@ -9661,7 +10552,7 @@
       var upTop = document.createElement("div");
       upTop.className = "code-hint";
       upTop.style.textAlign = "center";
-      upTop.innerHTML = "📸 Post today's photo of you two at the top of this screen.";
+      upTop.innerHTML = icon("camera", 15, "bp-i") + " Post today's photo of you two at the top of this screen.";
       body.appendChild(upTop);
       return;
     }
@@ -9670,21 +10561,42 @@
       var sk = document.createElement("div");
       sk.className = "code-hint";
       sk.style.textAlign = "center";
-      sk.innerHTML = "🔗 <strong>" + streak + "-day connection streak</strong>";
+      sk.innerHTML = icon("link", 14, "bp-i") + " <strong>" + streak + "-day connection streak</strong>";
       body.appendChild(sk);
     }
 
     // your code, to read out to your love — only on your own phone
+    /* BUILD 101 - the code as a page off a tear-off calendar.
+
+       This number is the most genuinely daily object in the app: it is generated for one
+       date, it is worth points only on that date, and at midnight it is worthless. It was
+       being drawn as a rounded box, which is how the app draws everything, so nothing
+       about it said "today" except the word "today".
+
+       A dated page with a perforated edge says it without a sentence. The date is the
+       header, the code is the body, and once you two have traded it the page is stamped
+       and lifts at the corner - the only state in the app where something is visibly
+       spent rather than merely greyed out. */
     var codeBox = document.createElement("div");
-    codeBox.className = "code-display";
-    codeBox.innerHTML = '<div class="code-label">Your code for ' + personName(partner) + ' today</div>' +
-      '<div class="code-value">' + myCode + '</div>';
+    codeBox.className = "code-display tearoff" + (locked ? " spent" : "");
+    var dObj = new Date(todayISO() + "T12:00:00Z");
+    codeBox.innerHTML =
+      '<div class="to-perf" aria-hidden="true"></div>' +
+      '<div class="to-head">' +
+        '<span class="to-dow">' + escapeHtml(dObj.toLocaleDateString(undefined, {weekday:"long", timeZone:"UTC"})) + '</span>' +
+        '<span class="to-date">' + escapeHtml(dObj.toLocaleDateString(undefined, {month:"short", day:"numeric", timeZone:"UTC"})) + '</span>' +
+      '</div>' +
+      '<div class="code-label">Your code for ' + escapeHtml(personName(partner)) + '</div>' +
+      '<div class="code-value">' + myCode + '</div>' +
+      (locked
+        ? '<div class="to-stamp">' + icon("check", 13, "bp-i") + ' Traded</div>'
+        : '<div class="to-foot">Good until midnight</div>');
     body.appendChild(codeBox);
 
     if(locked){
       var done = document.createElement("div");
       done.className = "code-hint";
-      done.innerHTML = "✅ <strong>You two connected today.</strong> +" + CONNECT_BONUS + " pts each, streak alive. See you tomorrow.";
+      done.innerHTML = icon("check", 15, "bp-i") + " <strong>You two connected today.</strong> +" + CONNECT_BONUS + " pts each, streak alive. See you tomorrow.";
       body.appendChild(done);
       return;
     }
@@ -9760,7 +10672,7 @@
       .slice().sort(function(a,b){ return new Date(a.completedAt) - new Date(b.completedAt); });
 
     document.getElementById("openTasksHeader").textContent = "The list — " + openExp.length + " to go";
-    document.getElementById("doneTasksHeader").textContent = "🏆 Trophy case";
+    document.getElementById("doneTasksHeader").innerHTML = icon("trophy", 17, "bp-i") + " Trophy case";
     // the album is the biggest thing on the page by a mile once it fills up — fold it
     syncCollapse("done", doneExp.length, "memories");
 
@@ -10205,7 +11117,9 @@
     );
   }
 
-  function completeTask(taskId){
+  /* origin is the on-screen point the completion came FROM - the checkbox you pressed.
+     It is optional and purely cosmetic; everything below works identically without it. */
+  function completeTask(taskId, origin){
     var t = state.tasks.find(function(x){return x.id===taskId;});
     if(!t || t.status!=="open") return;
     var actor = state.currentUser;
@@ -10213,7 +11127,6 @@
     t.completedBy = actor;
     t.completedAt = new Date().toISOString();
     touch(t);
-    try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
 
     ensurePerson(state, actor);
     var pts = DIFF_POINTS[t.difficulty] || 10;
@@ -10232,16 +11145,25 @@
     // Together tasks pay out to both of you; solo tasks to whoever they credit
     var beneficiaries = isTogether ? state.people.map(function(p){return p.id;}) : [actor];
 
-    celebrateCompletion(isTogether);
-    if(isTogether){
-      toast("Done together — you both get +" + pts + " pts 💞");
-    } else if(helped){
-      state.points[actor].thoughtful += pts;
-      toast(praiseFor(t, actor, pts, helped));
-    } else {
-      state.points[actor].personal += pts;
-      toast(praiseFor(t, actor, pts, helped));
+    /* Build 101: the size of the celebration now matches the size of the thing.
+       Together outranks difficulty - two of you doing something is the rarer event. */
+    var level = isTogether ? "together"
+              : (t.difficulty === "hard" ? "hard" : t.difficulty === "medium" ? "medium" : "easy");
+    var line  = isTogether
+              ? "Done together — you both get +" + pts + " pts"
+              : praiseFor(t, actor, pts, helped);
+    // Whether a sweep will ACTUALLY run, not merely whether this level has one. With
+    // motion reduced nothing is drawn, so the line has to go back in the toast or the
+    // completion says nothing at all - which is exactly what it did before this.
+    var sweeps = !!(CELEBRATION[level] && CELEBRATION[level].sweep) && !motionOff();
+    celebrate(level, {origin: origin, headline: "+" + pts, sub: line});
+    if(!isTogether){
+      if(helped) state.points[actor].thoughtful += pts;
+      else state.points[actor].personal += pts;
     }
+    // When the sweep runs it is already holding this line in 38px type across the middle
+    // of the screen. Toasting it as well says the same thing twice, once behind the other.
+    if(!sweeps) toast(line);
     announce('crossed off "' + t.title + '" ✅');
 
     var today = todayISO();
@@ -10257,7 +11179,7 @@
       if(state.points[pid].progressToSpin >= 5){
         state.points[pid].progressToSpin -= 5;
         state.points[pid].spinsAvailable = (state.points[pid].spinsAvailable||0) + 1;
-        setTimeout(function(){ showModal("🎡","Spin unlocked!", personName(pid)+" earned a spin of the rewards wheel for hitting 5 completed tasks."); }, 300);
+        afterCelebration(function(){ showModal("🎡","Spin unlocked!", personName(pid)+" earned a spin of the rewards wheel for hitting 5 completed tasks."); }, 300);
       }
 
       // streaks
@@ -10276,7 +11198,7 @@
       streakMilestones.forEach(function(m){
         if(st.current === m){
           if(awardBadge(pid, "streak-"+m, m+"-day streak")){
-            setTimeout(function(){ showModal("🔥", m+"-Day Streak!", personName(pid)+" has completed tasks "+m+" days in a row."); }, 350);
+            afterCelebration(function(){ showModal("🔥", m+"-Day Streak!", personName(pid)+" has completed tasks "+m+" days in a row."); }, 350);
           }
         }
       });
@@ -10388,7 +11310,11 @@
       m.badgeAwarded = true;
       state.powerCoupleBadge = {held:true, sinceMonth: state.powerCoupleBadge.sinceMonth || mk};
       save();
-      setTimeout(function(){ showModal("👑","Power Couple!", "You two completed every task assigned this month. Keep it up next month to keep the crown."); }, 300);
+      // Chrome throws fireworks for a perfect Lighthouse score. Every task assigned to
+      // either of you, finished, inside a month - that is the same kind of thing.
+      celebrate("epic", {headline: "Power Couple",
+                         sub: "Every task either of you was given this month. Done."});
+      afterCelebration(function(){ showModal("👑","Power Couple!", "You two completed every task assigned this month. Keep it up next month to keep the crown."); }, 300);
     }
   }
 
@@ -10406,7 +11332,9 @@
     badges.forEach(function(b){
       var pill = document.createElement("div");
       pill.className = "badge-pill";
-      pill.textContent = "🏅 " + b.label;
+      // b.label can carry the trophy emoji a PERSON chose for an experience, so it is
+      // escaped and left alone; only the medal in front of it was the app's own voice.
+      pill.innerHTML = icon("trophy", 13, "bp-i") + " " + escapeHtml(b.label);
       row.appendChild(pill);
     });
     if(state.powerCoupleBadge.held){
@@ -10414,7 +11342,7 @@
       var mk = monthKey();
       var atRisk = monthProgress(mk).open > 0;
       pc.className = "badge-pill" + (atRisk ? " at-risk" : "");
-      pc.textContent = "👑 Power Couple" + (atRisk ? " (at risk)" : "");
+      pc.innerHTML = icon("crown", 13, "bp-i") + " Power Couple" + (atRisk ? " (at risk)" : "");
       row.appendChild(pc);
     }
   }
@@ -10492,7 +11420,8 @@
     if(m.assigned === 0){
       statusEl.textContent = "Add tasks this month to work toward the badge.";
     } else if(m.earned){
-      statusEl.textContent = "👑 Power Couple badge earned for " + monthName + "!";
+      statusEl.innerHTML = icon("crown", 15, "bp-i") + " Power Couple badge earned for " +
+        escapeHtml(monthName) + "!";
     } else {
       statusEl.textContent = m.open + (m.open === 1 ? " task" : " tasks") +
         " still open from " + monthName + " — finish " +
@@ -11947,6 +12876,28 @@
     var togetherToday = openToday && tripsCovering(today).length > 0;
     card.style.display = "";
     card.classList.toggle("is-live", openToday);
+
+    // A day you were together is a different failure from a day you were apart, and saying
+    // so matters: on a trip the app asked for one photo of the two of you, not for yours.
+    // "You didn't post" would be telling them off for the wrong thing.
+    function missRow(d){
+      var tog = tripsCovering(d).length > 0;
+      var isToday = d === today;
+      return '<li' + (isToday ? ' class="md-today"' : '') + '><span>' +
+             (isToday ? "Today" : escapeHtml(prettyMissDate(d))) +
+             (tog ? '<span class="md-why">together \u2014 neither of you posted</span>' : '') +
+             (isToday ? '<span class="md-why">still fixable \u2014 until midnight</span>' : '') +
+             '</span><span class="md-cost">\u2212' + PHOTO_MISS_POINTS + '</span></li>';
+    }
+    // Newest first, and today at the very top when it is still open: it is the only row on
+    // this card you can do anything about, so it should not be the last thing you reach.
+    // days arrives sorted oldest-first.
+    var MISS_SHOW_SETTLED = 3;
+    var recentFirst = settled.slice().reverse();
+    var shownSettled = recentFirst.slice(0, MISS_SHOW_SETTLED);
+    var folded = recentFirst.slice(MISS_SHOW_SETTLED);
+    var shown = (openToday ? [today] : []).concat(shownSettled);
+
     card.innerHTML =
       '<div class="miss-head">' + icon("camera", 20) +
         (openToday
@@ -11971,23 +12922,27 @@
               : "The daily photo is worth \u2212" + PHOTO_MISS_POINTS + " if it doesn't go up. ") +
             (days.length === 1 ? "This one came off" : "These came off") + " your month:") +
       '</div>' +
-      (settled.length ? '<div class="miss-sub">' +
-        (openToday ? (settled.length === 1 ? "Already gone:" : "Already gone \u2014 " +
-          settled.length + " days:") : "") + '</div>' : "") +
-      '<ul class="miss-days">' +
-        days.map(function(d){
-          // A day you were together is a different failure from a day you were apart, and
-          // saying so matters: on a trip the app asked for one photo of the two of you, not
-          // for yours. "You didn't post" would be telling them off for the wrong thing.
-          var tog = tripsCovering(d).length > 0;
-          var isToday = d === today;
-          return '<li' + (isToday ? ' class="md-today"' : '') + '><span>' +
-                 (isToday ? "Today" : escapeHtml(prettyMissDate(d))) +
-                 (tog ? '<span class="md-why">together \u2014 neither of you posted</span>' : '') +
-                 (isToday ? '<span class="md-why">still fixable \u2014 until midnight</span>' : '') +
-                 '</span><span class="md-cost">\u2212' + PHOTO_MISS_POINTS + '</span></li>';
-        }).join("") +
-      '</ul>' +
+      // Build 100: this label used to read "Already gone" and, now that today leads the
+      // list, it sat directly above the one row that is not gone. Today says "still
+      // fixable" on its own line; the rest need no heading.
+      "" +
+      '<ul class="miss-days">' + shown.map(missRow).join("") + '</ul>' +
+      // BUILD 100: the rest, behind one line. Measured at 717px before this - a thirteen-row
+      // ledger of identical "-25"s, the tallest thing on the screen, opening with a tally of
+      // everything you got wrong this month. Every row was true and the fourth one taught you
+      // nothing the third one hadn't. The newest three stay out because those are the ones
+      // you might actually remember; the rest become a number you can tap if you want it.
+      (folded.length
+        ? '<button type="button" class="miss-fold" id="missFoldBtn" aria-expanded="false">' +
+            '<span class="mf-t">' + folded.length + ' earlier ' +
+            (folded.length === 1 ? "day" : "days") + '</span>' +
+            '<span class="mf-v">\u2212' + (folded.length * PHOTO_MISS_POINTS) + '</span>' +
+            '<span class="mf-c">\u25be</span>' +
+          '</button>' +
+          '<ul class="miss-days miss-folded" id="missFoldList">' +
+            folded.map(missRow).join("") +
+          '</ul>'
+        : "") +
       '<div class="miss-total"><span class="mt-l">Off this month</span>' +
         '<span class="mt-v">\u2212' + total + '</span></div>' +
       (openToday
@@ -11998,6 +12953,14 @@
       // Only the settled days. Today is not a receipt and cannot be filed away.
       ackPhotoMisses(settled);
       renderPhotoMissNotice();
+    });
+    var foldBtn = document.getElementById("missFoldBtn");
+    if(foldBtn) foldBtn.addEventListener("click", function(){
+      var list = document.getElementById("missFoldList");
+      if(!list) return;
+      var open = list.classList.toggle("show");
+      foldBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      foldBtn.classList.toggle("is-open", open);
     });
     var go = document.getElementById("photoMissGo");
     if(go) go.addEventListener("click", function(){
@@ -12018,7 +12981,8 @@
     if(!r){ card.style.display = "none"; card.innerHTML = ""; return; }
     card.style.display = "";
     card.innerHTML =
-      '<div class="repair-head">🛟 ' + escapeHtml(personName(them)) + "'s streak broke</div>" +
+      '<div class="repair-head">' + icon("ring", 16, "bp-i") + " " +
+      escapeHtml(personName(them)) + "'s streak broke</div>" +
       '<div class="repair-body">' +
         escapeHtml(personName(them)) + ' had ' + r.lost + ' days going' +
         (r.kind === "gap" ? ' and missed ' + r.gap + (r.gap === 1 ? ' day' : ' days') : ' and it reset') +
@@ -12154,8 +13118,13 @@
           else out.refs++;
         }
       });
+      // A trophy is a finished EXPERIENCE, not any finished task. This counted every done
+      // to-do that wasn't a trip — so "0 of 67 trophies have a photo" was really "0 of 67
+      // groceries and phone calls have a photo", which was never the idea and made a
+      // healthy app look broken. Only list-exp has a photo slot at all.
       (state.tasks || []).forEach(function(t){
-        if(!t || t.status !== "done" || t.trip) return;
+        if(!t || t.status !== "done") return;
+        if(t.listId !== "list-exp") return;
         out.trophyTotal++;
         if(photoSrc(t.photo)) out.trophyReal++;
       });
@@ -12174,8 +13143,9 @@
     var nowHalf = tripHalfNow();
     var banner = document.createElement("div");
     banner.className = "trip-banner";
-    banner.textContent = "✈️ " + trip.title + " · Day " + tripDayNumber(trip, today) +
-      " · " + tripHalfLabel(nowHalf).toLowerCase();
+    banner.innerHTML = icon("plane", 14, "bp-i") + " " + escapeHtml(trip.title) +
+      " · Day " + tripDayNumber(trip, today) +
+      " · " + escapeHtml(tripHalfLabel(nowHalf).toLowerCase());
     row.appendChild(banner);
 
     // Two frames, morning and evening. The window you're in sits first and is the live one;
@@ -12388,8 +13358,12 @@
         var hrow = document.createElement("div");
         hrow.className = "duo-health" + (hc.date === today ? "" : " stale-health");
         var bits = [];
-        if(hc.steps != null) bits.push("👣 " + Number(hc.steps).toLocaleString());
-        if(hc.sleepHours != null) bits.push("😴 " + fmtSleep(hc.sleepHours));
+        // These sit directly under the photos, two inches from the drawn icons in the
+        // tab bar, and the Build 100 pass did not reach them. hrow is built with
+        // textContent below, so they stay as text rather than becoming SVG - but as the
+        // app's own words, not Apple's pictures.
+        if(hc.steps != null) bits.push(Number(hc.steps).toLocaleString() + " steps");
+        if(hc.sleepHours != null) bits.push(fmtSleep(hc.sleepHours) + " sleep");
         // Say the date when it isn't today's. Dimming alone wasn't enough — week-old numbers
         // sat under a photo labelled "today" and read as today's. When it IS today, show the
         // time instead: numbers frozen since this morning look identical to live ones.
@@ -12435,10 +13409,13 @@
     }
     var d = dailyPhotoFor(pid);
     if(d){
+      // Which circle this is - the viewer hinges on that edge.
+      var slotEl = document.querySelector(".duo-slot." + pid);
       openPhotoView(d.photo, personName(pid) + " \u00b7 " +
-        (d.date === todayISO() ? "today" : friendlyPhotoDate(d.date)));
+        (d.date === todayISO() ? "today" : friendlyPhotoDate(d.date)),
+        null, slotEl ? slotEl.dataset.side : null);
     } else {
-      toast(personName(pid) + " hasn't posted one yet \uD83D\uDCF8");
+      toast(personName(pid) + " hasn't posted one yet");
     }
   }
   // ---- the question that follows a daily photo ----
@@ -12966,7 +13943,9 @@
   var recapMk = null;
 
   function recapLine(ico, html){
-    return '<div class="recap-line"><span class="ico">' + ico + '</span><span>' + html + '</span></div>';
+    // Build 100: every call site hard-codes this, so it is app chrome, not a choice.
+    return '<div class="recap-line"><span class="ico">' + (iconForEmoji(ico, 16) || ico) +
+           '</span><span>' + html + '</span></div>';
   }
 
   // Encouragement that actually refers to the month it's in. A generic "keep it up" is
@@ -13270,7 +14249,8 @@
     if(sup.length){
       html += '<div class="recap-sec"><h4>Awards</h4>' +
         sup.map(function(a){
-          return '<div class="sup-row"><span class="sup-ico">' + a.ico + '</span>' +
+          return '<div class="sup-row"><span class="sup-ico">' +
+                 (iconForEmoji(a.ico, 17) || a.ico) + '</span>' +
             '<span><b>' + escapeHtml(a.title) + '</b><span class="sup-who"> \u2014 ' +
             escapeHtml(a.who) + '</span><div class="sup-why">' + escapeHtml(a.why) + '</div></span></div>';
         }).join("") + '</div>';
@@ -13673,8 +14653,11 @@
           // a fresh post clears an earlier skip: skipping means "not for this photo",
           // not "never ask me again today"
           try{ localStorage.removeItem(PHOTO_Q_SKIP_KEY); }catch(e){}
+          // Build 101: this is the one daily obligation in the app, it costs 25 points to
+          // miss, and until now doing it produced a toast and nothing else.
+          celebrate("medium", {origin: slotOrigin(pid)});
           openPhotoQ(pid);
-          toast("Photo posted \u2014 " + personName(otherPerson(pid)) + " will see it \uD83D\uDC9E");
+          toast("Photo posted \u2014 " + personName(otherPerson(pid)) + " will see it");
         } else {
           // put the old one back rather than leaving the slot in a half-saved state
           if(prev) state.dailyPhotos[pid] = prev; else delete state.dailyPhotos[pid];
@@ -13762,11 +14745,19 @@
     photoViewOnRemove = null;
     fn();
   });
-  function openPhotoView(src, caption, onRemove){
+  /* BUILD 101: `from` is the element the photo was opened from - one of the two circles at
+     the top. Instagram swings a story in around the edge nearest the avatar you tapped,
+     and that is the whole trick: the photo arrives from WHERE ITS PERSON IS rather than
+     from nowhere, so after the animation you still know whose it was. Left slot hinges on
+     the left, right slot hinges on the right. Anything opened from somewhere else (the
+     album, a trip day) just fades, because it has no side to come from. */
+  function openPhotoView(src, caption, onRemove, from){
     document.getElementById("photoViewImg").src = src;
     document.getElementById("photoViewCap").textContent = caption || "";
     photoViewOnRemove = (typeof onRemove === "function") ? onRemove : null;
     document.getElementById("photoViewRemove").style.display = photoViewOnRemove ? "" : "none";
+    photoViewBg.classList.remove("from-left", "from-right");
+    if(from === "left" || from === "right") photoViewBg.classList.add("from-" + from);
     photoViewBg.classList.add("show");
   }
   document.getElementById("photoViewClose").addEventListener("click", function(){
@@ -14353,10 +15344,215 @@
     cap.style.display = "block";
   }
 
+  /* ---------------------------------------------------------------------------
+     BUILD 100 — one banner at a time.
+
+     Each of these renderers decides on its own whether it has something to say, and
+     every one of them was right to say it. The problem was only ever that nothing
+     looked at the six of them TOGETHER. On a bad morning - a milestone pending, news
+     from the other phone, and a missed photo - you opened the app to three full-screen
+     cards and had to scroll past all of them to reach anything you could do.
+
+     So this runs AFTER every renderer, takes whatever they decided, and shows the first
+     one in DOM order. DOM order is the priority order and it was chosen deliberately:
+     a milestone is something you did together and it comes before a penalty one of you
+     earned. The rest fold behind a chip that says how many and what they are.
+
+     It folds with a CLASS, never by writing style.display, so the renderer's own idea of
+     how to show itself survives the fold and comes back intact.
+     --------------------------------------------------------------------------- */
+  var BANNER_IDS = ["repairCard", "milestoneCard", "activityCard", "photoMissCard", "fairNudge"];
+  var BANNER_LABEL = {
+    repairCard:    "a streak to cover",
+    milestoneCard: "a milestone",
+    activityCard:  "news",
+    photoMissCard: "a photo penalty",
+    fairNudge:     "a balance note"
+  };
+  var bannersExpanded = false;
+  function bannerIsLive(el){
+    // The renderers hide with style.display="none" and show by clearing it or setting a
+    // display value. Reading the inline style rather than the computed one keeps the fold
+    // class itself out of the answer, so folding is idempotent across re-renders.
+    return !!el && el.style.display !== "none";
+  }
+  function coalesceBanners(){
+    var chip = document.getElementById("bannerMore");
+    var live = [];
+    BANNER_IDS.forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el.classList.remove("banner-folded");
+      if(bannerIsLive(el)) live.push(el);
+    });
+    if(!chip) return;
+    if(live.length < 2){ chip.style.display = "none"; return; }
+    chip.style.display = "";
+    if(bannersExpanded){
+      chip.textContent = "Show less";
+      return;
+    }
+    var hidden = live.slice(1);
+    hidden.forEach(function(el){ el.classList.add("banner-folded"); });
+    var names = hidden.map(function(el){ return BANNER_LABEL[el.id] || "something"; });
+    var tail = names.length === 1 ? names[0]
+             : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+    chip.textContent = hidden.length + " more \u00b7 " + tail;
+  }
+  (function(){
+    var more = document.getElementById("bannerMore");
+    if(!more) return;   // the markup is static, but a null here would take the whole app down
+    more.addEventListener("click", function(){
+      bannersExpanded = !bannersExpanded;
+      coalesceBanners();
+      if(!bannersExpanded){
+        // Collapsing from the bottom of a tall stack would otherwise leave you looking at
+        // whatever happened to be under it.
+        var first = document.getElementById(BANNER_IDS[0]);
+        var t = (first && bannerIsLive(first)) ? first : more;
+        if(t && t.scrollIntoView) t.scrollIntoView({block:"center", behavior:"smooth"});
+      }
+    });
+  })();
+
+  /* ===========================================================================
+     BUILD 101 — pull down at the top of the app to force a sync.
+
+     Rules this follows, each because of a way the naive version goes wrong:
+
+       - It only arms when the page is already at the top AND the first move is
+         downward AND the movement is more vertical than horizontal. The list
+         pills and the tab bar are horizontal scrollers sitting near the top of
+         the page; without that last check, flicking between lists triggers it.
+       - It bails the moment the page is no longer at scroll 0, so a fast flick
+         upward mid-gesture hands control back to the page.
+       - It refuses to arm while a modal, sheet or album is open. Those have
+         their own scrolling and their own meaning for a downward drag.
+       - preventDefault only after the pull has actually begun, so an ordinary
+         scroll is never intercepted. That is also why touchmove is the one
+         listener here that is not passive.
+       - If sync is not set up it says so rather than spinning forever at
+         something that was never going to happen.
+     =========================================================================== */
+  (function(){
+    var PTR_TRIGGER = 70;        // how far before letting go does anything
+    var PTR_MAX     = 116;       // the pull cannot be dragged past this
+    var RESIST      = 0.52;      // thumb travel to indicator travel
+
+    var el   = document.getElementById("ptr");
+    var ico  = document.getElementById("ptrIcon");
+    var txt  = document.getElementById("ptrText");
+    if(!el || !ico || !txt) return;
+
+    var startY = 0, startX = 0, dist = 0;
+    var armed = false, pulling = false, busy = false;
+
+    function overlayOpen(){
+      return !!document.querySelector(".modal-bg.show, .album-bg.show, .sheet-bg.show, .confirm-bg.show");
+    }
+    function paint(d, label, cls){
+      el.className = "ptr" + (cls ? " " + cls : "");
+      el.style.transform = "translateY(" + (d - 64) + "px)";
+      el.style.opacity = d > 6 ? "1" : "0";
+      if(label != null) txt.textContent = label;
+    }
+    function settle(){
+      el.classList.add("settling");
+      paint(0, null, "settling");
+      setTimeout(function(){ el.classList.remove("settling"); }, 340);
+    }
+    function finish(ok, why){
+      busy = false;
+      ico.innerHTML = icon(ok ? "check" : "warn", 15);
+      paint(64, ok ? "Up to date" : (why || "Sync failed"), ok ? "done" : "failed");
+      setTimeout(function(){ settle(); }, ok ? 850 : 1500);
+    }
+
+    document.addEventListener("touchstart", function(e){
+      if(busy || !e.touches || e.touches.length !== 1) return;
+      if(window.scrollY > 0 || overlayOpen()) return;
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+      dist = 0; armed = true; pulling = false;
+    }, {passive: true});
+
+    document.addEventListener("touchmove", function(e){
+      if(!armed || busy || !e.touches || !e.touches.length) return;
+      var t = e.touches[0];
+      var dy = t.clientY - startY, dx = Math.abs(t.clientX - startX);
+      if(!pulling){
+        // Decide once, on the first meaningful movement, and then stop second-guessing.
+        if(Math.abs(dy) < 6 && dx < 6) return;
+        if(dy <= 0 || dx > Math.abs(dy) || window.scrollY > 0){ armed = false; return; }
+        pulling = true;
+        el.classList.remove("settling");
+        ico.innerHTML = icon("up", 15);
+      }
+      if(window.scrollY > 0){ armed = false; pulling = false; settle(); return; }
+      e.preventDefault();
+      dist = Math.min(PTR_MAX, dy * RESIST);
+      paint(dist, dist >= PTR_TRIGGER ? "Release to sync" : "Pull to sync",
+            dist >= PTR_TRIGGER ? "ready" : "");
+    }, {passive: false});
+
+    function release(){
+      if(!armed && !pulling) return;
+      var go = pulling && dist >= PTR_TRIGGER;
+      armed = false; pulling = false;
+      if(!go){ settle(); return; }
+      if(!autoSyncOn()){
+        ico.innerHTML = icon("warn", 15);
+        paint(64, "Not connected yet", "failed");
+        setTimeout(settle, 1800);
+        return;
+      }
+      busy = true;
+      ico.innerHTML = icon("refresh", 15);
+      el.classList.add("settling");
+      paint(64, "Syncing\u2026", "settling busy");
+      try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+      var answered = false;
+      syncNow(true, function(ok, err){
+        if(answered) return; answered = true;
+        finish(!!ok, err ? String(err).slice(0, 40) : null);
+      });
+      // A sync that never calls back must not leave a spinner on screen for ever.
+      setTimeout(function(){
+        if(answered || !busy) return;
+        answered = true;
+        finish(false, "Took too long");
+      }, 12000);
+    }
+    document.addEventListener("touchend", release, {passive: true});
+    document.addEventListener("touchcancel", function(){
+      if(busy) return;
+      armed = false; pulling = false; settle();
+    }, {passive: true});
+
+    // Exposed for tests and for anything that wants the same affordance from a button.
+    window.__wedoPullToSync = release;
+    window.__wedoPullTo = function(d){
+      armed = true; pulling = true; dist = Math.min(PTR_MAX, d);
+      ico.innerHTML = icon("up", 15);
+      paint(dist, dist >= PTR_TRIGGER ? "Release to sync" : "Pull to sync",
+            dist >= PTR_TRIGGER ? "ready" : "");
+    };
+  })();
+
   function renderAll(){
     // Cheap, and it catches a crossing that happened on the other phone and arrived by
     // sync — a milestone belongs to the pair, so either phone noticing is enough.
-    if(recordMilestones()) save();
+    var freshMs = recordMilestones();
+    if(freshMs){
+      save();
+      // Build 101: reaching one of these used to put a banner on the screen and nothing
+      // more. It is the rarest thing in the app and it belongs to both of you, so it
+      // gets the together sweep. The banner is still there afterwards asking for the photo.
+      celebrate("together", {
+        headline: freshMs.label || "Milestone",
+        sub: freshMs.blurb || "The two of you just hit something."
+      });
+    }
     renderMilestoneBanner();
     renderUsBar();
     renderPhotoMissNotice();
@@ -14393,6 +15589,8 @@
     renderDeviceOwnerLabel();
     renderHealth();
     applyConnLock();
+    // Last: it can only decide what to fold once everyone has decided what to show.
+    coalesceBanners();
   }
 
   randomQuote();
@@ -15410,6 +16608,72 @@
         }
       },
       {
+        /* The calendar feed was built in Build 88 and sat unused for a week, because the
+           only way to turn it on was the 15th of 31 buttons inside a collapsed panel at
+           the bottom of the screen. A feature nobody can find is a feature nobody has.
+           This is the same list that already gets people through the Gist and the token,
+           so it is where this belongs too. */
+        key: "calendar",
+        label: "Due dates in your Calendar",
+        done: !!calendarGistId(),
+        optional: true,
+        skippable: true,
+        why: "Optional. Puts anything with a due date straight into the iPhone Calendar, " +
+             "with a 9am reminder on the day \u2014 which is the one notification that has " +
+             "never failed on these phones, because iOS raises it itself.",
+        build: function(body){
+          var n = dueTasksFor(state).length;
+          var note = document.createElement("div");
+          note.className = "setup-status";
+          // The commonest way for this to look broken is a feed with nothing in it, so
+          // say so before they set it up rather than after they've subscribed to silence.
+          note.textContent = n
+            ? n + (n === 1 ? " task has" : " tasks have") + " a due date, so there's something to show."
+            : "Nothing has a due date yet \u2014 the calendar will be empty until something does.";
+          var go = document.createElement("button");
+          go.className = "ghost";
+          go.style.cssText = "width:100%;margin-top:8px;";
+          go.textContent = calendarGistId() ? "Show the address again" : "Set it up";
+          go.addEventListener("click", function(){
+            var b = document.getElementById("calFeedBtn");
+            if(b) b.click();
+          });
+          body.appendChild(note); body.appendChild(go);
+        }
+      },
+      {
+        /* Same problem, same fix. This one cannot be detected — the Shortcut lives on the
+           phone and the app has no way to see it — so it is honest about that and lets
+           you tick it off yourself rather than pretending to know. */
+        key: "bridge",
+        label: "Notification shortcut",
+        done: !!bridgeMarkedDone(),
+        optional: true,
+        skippable: true,
+        why: "Optional. A shortcut on your phone checks WeDO every so often and raises a " +
+             "local notification when the other one has done something. No push service " +
+             "involved, which is why it works when nothing else has.",
+        build: function(body){
+          var go = document.createElement("button");
+          go.className = "ghost";
+          go.style.cssText = "width:100%;";
+          go.textContent = "Show me how";
+          go.addEventListener("click", function(){
+            var b = document.getElementById("bridgeBtn");
+            if(b) b.click();
+          });
+          var did = document.createElement("button");
+          did.className = "ghost";
+          did.style.cssText = "width:100%;margin-top:7px;";
+          did.textContent = "I've built it \u2014 tick this off";
+          did.addEventListener("click", function(){
+            try{ localStorage.setItem("us-bridge-done-v1", "1"); }catch(e){}
+            renderSetupCard();
+          });
+          body.appendChild(go); body.appendChild(did);
+        }
+      },
+      {
         key: "health",
         label: "Apple Health (steps & sleep)",
         done: !!(hc && (hc.steps != null || hc.sleepHours != null || hc.calories != null)),
@@ -15427,6 +16691,12 @@
       }
     ];
   }
+  /* The Shortcut bridge lives on the phone, not in the app, so there is nothing to detect.
+     Rather than guess, this records that you said you'd built it. */
+  function bridgeMarkedDone(){
+    try{ return localStorage.getItem("us-bridge-done-v1") === "1"; }catch(e){ return false; }
+  }
+
   function renderSetupCard(){
     var card = document.getElementById("setupCard");
     if(!card) return false;
