@@ -3187,6 +3187,36 @@
   .code-display.tearoff.spent .to-dow{ color:var(--faint,#8b8296); }
   :root[data-skin="pe"] .code-display.tearoff{ background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.008)); }
 
+
+  /* =========================================================================
+     BUILD 102 — a trip's to-dos, attached to its trip.
+     ========================================================================= */
+  .trip-todos{
+    margin:-6px 0 18px;
+    padding-left:14px;
+    border-left:2px solid var(--line-2, rgba(255,255,255,.10));
+  }
+  .trip-todos .task-wrap:last-child .task{ border-bottom:0; }
+  :root[data-skin="pe"] .trip-todos{ border-left-color:var(--line-2); }
+
+
+  /* Build 103: the way out of a wrong health reading. */
+  .health-doubt{ margin-top:10px; }
+  .health-doubt .hd-why{
+    font-size:12.5px; line-height:1.55; color:var(--muted);
+    padding:9px 11px; margin-bottom:8px;
+    border:1px solid var(--border); border-radius:10px;
+    background:rgba(232,181,75,.06);
+  }
+  .health-clear{
+    width:100%; padding:8px 12px;
+    border:1px dashed var(--border); border-radius:10px;
+    background:transparent; color:var(--faint,#8b8296);
+    font-size:12px; font-weight:650; cursor:pointer;
+  }
+  .health-doubt.is-odd .health-clear{ color:var(--muted); border-style:solid; }
+  .health-clear:active{ opacity:.6; }
+
 </style>
 </head>
 <body>
@@ -5841,7 +5871,9 @@
       sel.appendChild(o);
     });
     var both = document.createElement("option");
-    both.value = "both"; both.textContent = "Together 💞";
+    // A <select> option is plain text - no markup of any kind - so this one keeps the word
+    // and drops the picture rather than pretending it can draw one.
+    both.value = "both"; both.textContent = "Together";
     sel.appendChild(both);
   }
 
@@ -6094,11 +6126,57 @@
       open.innerHTML = '<div class="empty">Nothing here yet. Tap + to add one 🎯</div>';
     }
     if(listId === "list-trips"){
-      // photo cards for trips, then their checklist items as normal rows
+      /* BUILD 102 — each trip's to-dos sit under THAT trip.
+
+         This used to draw every photo card first and then every checklist item in one flat
+         run. With two trips open that put Thailand's "Book flights" directly beneath the
+         Bali card, and the only thing saying otherwise was the word "Thailand" at the
+         front of each title - which is why the titles were prefixed in the first place.
+         The old comment here said "photo cards for trips, then THEIR checklist items",
+         so the grouping was always the intent; it just was not what the code did.
+
+         Every generated item already carries tripFor, so the grouping needs no new field. */
       var openTrips = openTasks.filter(function(t){ return isTrip(t); });
       var openRest  = openTasks.filter(function(t){ return !isTrip(t); });
-      openTrips.forEach(function(t){ open.appendChild(tripCard(t)); fetchCityImage(t); });
-      openRest.forEach(function(t){ open.appendChild(taskRow(t)); });
+      var byTrip = {};
+      openRest.forEach(function(t){
+        var k = t.tripFor || "";
+        if(!byTrip[k]) byTrip[k] = [];
+        byTrip[k].push(t);
+      });
+      openTrips.forEach(function(t){
+        open.appendChild(tripCard(t));
+        fetchCityImage(t);
+        var kids = byTrip[t.id] || [];
+        if(!kids.length) return;
+        var group = document.createElement("div");
+        group.className = "trip-todos";
+        // The title already starts with the trip name, so repeating it on every row is
+        // noise once the rows are visibly attached to the card. Strip the prefix here
+        // rather than at creation, so the name is still right in the calendar feed, the
+        // activity log and anywhere else the task travels on its own.
+        var pre = t.title + " \u00b7 ";
+        kids.forEach(function(k){
+          var row = taskRow(k);
+          var titleEl = row.querySelector(".title");
+          // Slice the TEXT NODE, not the element's textContent: a title with a link holds
+          // an <a> plus a trailing node, and assigning textContent would flatten the link
+          // out of existence. Generated checklist items have no link today, but one can be
+          // added by editing the task.
+          if(titleEl && titleEl.firstChild && titleEl.firstChild.nodeType === 3 &&
+             titleEl.firstChild.nodeValue.indexOf(pre) === 0){
+            titleEl.firstChild.nodeValue = titleEl.firstChild.nodeValue.slice(pre.length);
+          }
+          group.appendChild(row);
+        });
+        open.appendChild(group);
+        delete byTrip[t.id];
+      });
+      // Anything left is an orphan: its trip was deleted, or somebody added a plain row to
+      // the Trips list by hand. It still has to appear somewhere it can be dealt with.
+      Object.keys(byTrip).forEach(function(k){
+        byTrip[k].forEach(function(t){ open.appendChild(taskRow(t)); });
+      });
       if(doneTasks.length===0){
         done.innerHTML = '<div class="empty">Nothing '+verb.toLowerCase()+' yet.</div>';
       }
@@ -6267,6 +6345,16 @@
   // shared retry policy for image lookups: a failed attempt is retried later
   // (up to 5 tries, at least 10 minutes apart) instead of giving up forever
   function imgRetryOk(t){
+    // Build 102: a trip that fetched its image BEFORE the flag/map filter existed is
+    // holding one right now - Thailand's flag, Bali's locator map. Drop it so the new
+    // chain gets a turn. Done here rather than in a migration because this is the one
+    // place that decides whether an image is worth fetching, and a stored bad image and
+    // no image at all are the same situation.
+    if(t.image && !wikiImageOk(t.image)){
+      t.image = null;
+      t.imgTries = 0;
+      t.imgTryAt = 0;
+    }
     if(t.image) return false;
     if((t.imgTries || 0) >= 5) return false;
     if(t.imgTryAt && (Date.now() - t.imgTryAt) < 10 * 60000) return false;
@@ -8033,7 +8121,7 @@
     return [
       {e:"💞", t:"Welcome to WeDO", x:n1 + " built this for the two of you. One app, one scoreboard, one rule: do stuff together, to get there."},
       {e:"☀️", t:"Your morning minute", x:"Open the app with your coffee. You'll get a greeting (" + n2 + ", expect a different dessert name every day), a quote, and one considerate cue — a small thing to do for each other today."},
-      {e:"✅", t:"Do stuff", x:"Everything lives in four lists — Stuff, Trips, Experiences, Shopping. Tap the pink + to add anything. Checking things off earns points, and Together 💞 tasks pay you BOTH."},
+      {e:"✅", t:"Do stuff", x:"Everything lives in four lists — Stuff, Trips, Experiences, Shopping. Tap the pink + to add anything. Checking things off earns points, and Together tasks pay you BOTH."},
       {e:"🔗", t:"The evening code trade", x:"Each day you both get a 4-digit code that only shows on your own phone. Talk to each other, swap codes, type theirs in — you both get +10 points and your connection streak grows. This is the heart of the app."},
       {e:"🎡", t:"Spins & rewards", x:"Every 5 completed tasks earns a spin of the wheel — massages, date nights, weekend getaways. Want a new reward on there? Propose it, and the other person approves it."},
       {e:"💌", t:"Make it a ritual", x:"Morning: read your cue. During the day: check things off. Evening: trade codes together. Weekly: spin your spins and pick a Couple Quest. Tip: set a 9pm phone reminder called “trade codes 🔗” — that one habit carries everything else. And leave a note in the Notes tab now and then. ❤️"}
@@ -8071,7 +8159,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 101;
+  var BUILD_NUM = 103;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -8436,6 +8524,21 @@
   function healthShape(o){
     return o ? [o.date, o.steps, o.calories, o.sleepHours].join("|") : "";
   }
+  /* BUILD 103 — a wrong number could not be taken back.
+
+     "Steps only ever climb during a day" is true of the real world and it is why a smaller
+     reading is treated as a stale sample rather than a correction. But it also means that
+     once a WRONG figure lands - a Shortcut summing an iPhone's step samples and an Apple
+     Watch's, which double counts the hours you carried both - nothing smaller can ever
+     replace it. The number was stuck until midnight, and the only honest reading of the
+     day was discarded as stale every time it arrived.
+
+     So clearing a day now records what was cleared. Anything at or above that figure for
+     the same day is refused; anything below it is the corrected reading and goes in. */
+  function healthIgnored(prev, day, steps){
+    return !!(prev && prev.ignoreDate === day && prev.ignoreAbove != null &&
+              steps != null && steps >= prev.ignoreAbove);
+  }
   function acceptHealthReading(pid, r, src){
     if(!r || r.error) return false;
     if(!state.healthCache) state.healthCache = {};
@@ -8444,6 +8547,7 @@
     var sameDay = prev.date === r.date;
     var steps = r.steps != null ? Math.round(r.steps) : null;
     var cal = r.calories != null ? Math.round(r.calories) : null;
+    if(healthIgnored(prev, r.date, steps)) return false;
     // steps and calories only ever climb during a day, so a smaller figure for a day we
     // already hold is a stale reading, not a correction
     if(sameDay && steps != null && prev.steps != null && steps < prev.steps) steps = prev.steps;
@@ -8454,7 +8558,10 @@
       calories: cal != null ? cal : (sameDay ? prev.calories : null),
       sleepHours: r.sleepHours != null ? r.sleepHours : (sameDay ? prev.sleepHours : null),
       updatedAt: r.updatedAt || new Date().toISOString(),
-      src: src || "gist"
+      src: src || "gist",
+      // carried forward so the refusal survives the next read of an unchanged gist file
+      ignoreDate: prev.ignoreDate || null,
+      ignoreAbove: prev.ignoreAbove != null ? prev.ignoreAbove : null
     };
     if(healthShape(next) === healthShape(prev)) return false;   // nothing actually moved
     state.healthCache[pid] = next;
@@ -8701,6 +8808,23 @@
     };
   }
 
+  function wireHealthClear(){
+    var b = document.getElementById("healthClearBtn");
+    if(!b) return;
+    b.addEventListener("click", function(){
+      var me = deviceOwner() || state.currentUser;
+      var h = (state.healthCache || {})[me] || {};
+      showConfirm("\uD83D\uDCC9", "Clear today\u2019s numbers?",
+        "This drops today's steps, calories and sleep for " + personName(me) + " on both " +
+        "phones, and refuses anything at or above " +
+        (h.steps != null ? Number(h.steps).toLocaleString() + " steps" : "that figure") +
+        " for the rest of today. Fix the Shortcut, run it again, and the new number lands.",
+        "Clear them",
+        function(){
+          if(clearHealthDay(me)) toast("Cleared \u2014 run the Shortcut again when it's fixed");
+        });
+    });
+  }
   function renderHealth(){
     var body = document.getElementById("healthBody");
     if(!body) return;
@@ -8729,6 +8853,7 @@
         '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">' + icon("moon", 16) + '</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
       '</div>' +
       healthStaleWarning(a, b) +
+      healthDoubtLine() +
       // "Moody leads by 900 steps — game on" is a taunt about a race that finished nine days
       // ago. Nudges are only true of today's numbers, so they stay behind fresh data.
       (healthFresh(a) && healthFresh(b)
@@ -8736,6 +8861,60 @@
         : "");
     body.innerHTML += renderHealthDiag();
     wireHealthDiag();
+    wireHealthClear();
+  }
+
+  /* BUILD 103 — "that is not my step count".
+
+     Shown only for your own reading, only for today, and only once there is something to
+     doubt. Above about 30,000 it also names the likeliest cause, because the number itself
+     does not look broken - it looks like a very long walk - and the giveaway is that Apple
+     Health shows roughly half of it. HealthKit keeps a separate set of step samples per
+     device; the Health app de-duplicates the overlap and a Shortcut that sums raw samples
+     does not. Carry an iPhone and wear a Watch and the total roughly doubles. */
+  /* 30,000 was the first number here and it was wrong for the case that prompted this:
+     a doubled 13,000 lands at 26,171, which sails under it. Doubling turns an ordinary
+     day into a number that still looks like a plausible big day, which is exactly why it
+     goes unnoticed. 20,000 catches it, and someone who really did walk 20,000 gets an
+     offer phrased as a question rather than a correction. */
+  var HEALTH_DOUBT_STEPS = 20000;
+  function healthDoubtLine(){
+    var me = deviceOwner() || state.currentUser;
+    if(!me) return "";
+    var h = (state.healthCache || {})[me];
+    if(!h || h.date !== todayISO() || h.steps == null) return "";
+    var odd = h.steps >= HEALTH_DOUBT_STEPS;
+    return '<div class="health-doubt' + (odd ? " is-odd" : "") + '">' +
+      (odd
+        ? '<div class="hd-why">' + icon("warn", 14, "inline-warn") + " " +
+            "<b>" + Number(h.steps).toLocaleString() + " steps</b> is a big day. Worth a " +
+            "check: open Apple Health \u2192 Steps \u2192 today. If it shows about half " +
+            "this, the Shortcut is adding your iPhone's step samples to your Watch's \u2014 " +
+            "Health de-duplicates the overlap and a plain sum does not. Filtering the " +
+            "samples by a single source fixes it." +
+          '</div>'
+        : "") +
+      '<button type="button" class="health-clear" id="healthClearBtn">' +
+        (odd ? "Clear today\u2019s numbers" : "Not your numbers? Clear today") +
+      '</button></div>';
+  }
+  function clearHealthDay(pid){
+    var cur = (state.healthCache || {})[pid];
+    if(!cur || !cur.date) return false;
+    state.healthCache[pid] = {
+      date: cur.date,
+      steps: null, calories: null, sleepHours: null,
+      updatedAt: new Date().toISOString(),
+      src: "cleared",
+      // Remember the figure, not just the fact. The gist file still holds the bad number
+      // and the next read would put it straight back; anything at or above this is refused
+      // for the rest of the day, and the corrected smaller reading gets through.
+      ignoreDate: cur.date,
+      ignoreAbove: cur.steps != null ? cur.steps : 0
+    };
+    save(); scheduleSync();
+    renderHealth(); renderDailyPhotos();
+    return true;
   }
 
   // ---- the diagnostics panel ----
@@ -8886,30 +9065,85 @@
   function wikiThumb(j){
     return (j && j.thumbnail && j.thumbnail.source) || (j && j.originalimage && j.originalimage.source) || null;
   }
+
+  /* BUILD 102 — not every Wikipedia lead image is a picture of the place.
+
+     The lead image of "Thailand" is its flag. The lead image of "Bali" is a locator map
+     with a red dot on it. Both are exactly what the API returns and both are useless on a
+     card that is meant to make you want to go there - the map in particular reads as a
+     loading error rather than a choice.
+
+     The tell is reliable: flags, coats of arms, seals, emblems and locator maps are drawn
+     as SVG on Wikipedia and photographs are not. Wikipedia serves SVG thumbnails as
+     ".../Flag_of_Thailand.svg/320px-Flag_of_Thailand.svg.png", so the extension at the end
+     lies and the one in the middle does not - hence looking for ".svg" anywhere in the
+     path rather than at the end. The filename words are a second net for the handful of
+     maps that are raster scans. */
+  // Word boundaries matter here. An unanchored "emblem" also rejects a cafe called
+  // Emblematic, and a bare "projection" rejects a photo of a projection booth; a test
+  // caught the first. Everything below is either a file extension or a whole word.
+  var WIKI_REJECT = /(\.svg|flag[_ -]of|flag[_ -]map|coat[_ -]of[_ -]arms|\bseal[_ -]of|\bemblem\b|\binsignia\b|\blocator\b|location[_ -]map|map[_ -]of|[_ -]map\.|\borthographic\b|\bblank[_ -]map)/i;
+  function wikiImageOk(u){
+    if(!u) return false;
+    var str = String(u);
+    if(str.indexOf("data:") === 0) return true;   // test fixtures and anything inlined
+    return !WIKI_REJECT.test(decodeURIComponent(str));
+  }
+  /* Every image in an article, not just the one at the top. When the lead image is a flag
+     or a map, the next raster image down the page is almost always the photograph the card
+     wanted - a skyline, a temple, a beach. srcset entries are protocol-relative. */
+  function wikiMediaImage(title){
+    return fetch("https://en.wikipedia.org/api/rest_v1/page/media-list/" + encodeURIComponent(title))
+      .then(function(r){ return r.json(); })
+      .then(function(m){
+        var items = (m && m.items) || [];
+        for(var i = 0; i < items.length; i++){
+          var it = items[i];
+          if(!it || it.type !== "image" || !it.srcset || !it.srcset.length) continue;
+          if(!wikiImageOk(it.title || "")) continue;
+          var src = it.srcset[0].src || "";
+          if(src.indexOf("//") === 0) src = "https:" + src;
+          if(!wikiImageOk(src)) continue;
+          return src;
+        }
+        return null;
+      })
+      .catch(function(){ return null; });
+  }
   function fetchCityImage(t){
     if(!isTrip(t) || !imgRetryOk(t)) return;
     if(typeof fetch !== "function") return;
     imgMarkTry(t);
     var name = tripQuery(t.title);
-    var direct = "https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(name.replace(/\s+/g, "_"));
+    var page = name.replace(/\s+/g, "_");
+    var direct = "https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(page);
     fetch(direct)
       .then(function(r){ return r.json(); })
       .then(function(j){
         var u = wikiThumb(j);
-        if(u) return u;
-        // fallback: title search, then summary of the best match
-        return fetch("https://en.wikipedia.org/w/rest.php/v1/search/title?q=" + encodeURIComponent(name) + "&limit=1")
-          .then(function(r){ return r.json(); })
-          .then(function(s){
-            var hit = s && s.pages && s.pages[0];
-            if(!hit) return null;
-            return fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(hit.key))
+        if(wikiImageOk(u)) return u;
+        // The lead image was a flag, a map or missing. Try the rest of the same article
+        // before going anywhere else - it is still the right article.
+        return wikiMediaImage(j && j.titles && j.titles.canonical ? j.titles.canonical : page)
+          .then(function(m){
+            if(m) return m;
+            // Last resort: whatever the title search thinks this is.
+            return fetch("https://en.wikipedia.org/w/rest.php/v1/search/title?q=" + encodeURIComponent(name) + "&limit=1")
               .then(function(r){ return r.json(); })
-              .then(wikiThumb);
+              .then(function(s){
+                var hit = s && s.pages && s.pages[0];
+                if(!hit) return null;
+                return fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(hit.key))
+                  .then(function(r){ return r.json(); })
+                  .then(function(j2){
+                    var u2 = wikiThumb(j2);
+                    return wikiImageOk(u2) ? u2 : wikiMediaImage(hit.key);
+                  });
+              });
           });
       })
       .then(function(u){
-        if(u){ t.image = u; }
+        if(wikiImageOk(u)){ t.image = u; }
         save();
         if(u) renderTasks();
       })
@@ -9248,7 +9482,9 @@
       tags.innerHTML += '<span class="buy-sub" style="margin:0;">'+escapeHtml(vb) +
         (t.completedBy && t.completedBy !== t.assignedTo ? " by "+escapeHtml(personName(t.completedBy)) : "") + '</span>';
     } else {
-      tags.innerHTML += '<span class="buy-sub" style="margin:0;">'+(t.assignedTo==="both" ? "together 💞" : "for "+escapeHtml(personName(t.assignedTo)))+'</span>';
+      tags.innerHTML += '<span class="buy-sub" style="margin:0;">'+
+        (t.assignedTo==="both" ? ("together " + icon("heart", 11, "bp-i"))
+                               : "for "+escapeHtml(personName(t.assignedTo)))+'</span>';
     }
     body.appendChild(tags);
     card.appendChild(body);
@@ -9339,12 +9575,17 @@
     }
     var verb = listVerb(t.listId).toLowerCase();
     var isTogether = t.assignedTo === "both";
-    var assignText = isTogether ? "Together 💞" : "For " + personName(t.assignedTo);
+    // Build 102: this one escaped the Build 100 pass and it is the most-repeated string in
+    // the app - every together task carries it. The emoji was also wrapping onto its own
+    // line on a narrow row, which is what made it obvious.
+    var assignText = isTogether ? ("Together " + icon("heart", 12, "bp-i")) : ("For " + personName(t.assignedTo));
     if(t.status==="done"){
       if(isTogether){
         assignText += " · " + verb + " together";
       } else {
-        assignText += t.completedBy !== t.assignedTo ? (" · " + verb + " by " + personName(t.completedBy) + " 💛") : (" · " + verb);
+        assignText += t.completedBy !== t.assignedTo
+          ? (" · " + verb + " by " + personName(t.completedBy) + " " + icon("heart", 12, "bp-i"))
+          : (" · " + verb);
       }
     } else if(t.lastCompletedAt){
       var daysSince = Math.floor((Date.now() - new Date(t.lastCompletedAt).getTime()) / 86400000);
@@ -9444,7 +9685,7 @@
     box.className = "edit-form";
     var assigneeOptions = state.people.map(function(p){
       return '<option value="'+p.id+'"'+(p.id===t.assignedTo?' selected':'')+'>'+escapeHtml(p.name)+'</option>';
-    }).join('') + '<option value="both"'+(t.assignedTo==="both"?' selected':'')+'>Together 💞</option>';
+    }).join('') + '<option value="both"'+(t.assignedTo==="both"?' selected':'')+'>Together</option>';
 
     var fieldsHtml;
     if(list.priceBased){
@@ -16361,6 +16602,11 @@
     var sameDay = (prev.date === day);
     var newSteps = steps != null ? Math.round(steps) : null;
     var newCal   = cal != null ? Math.round(cal) : null;
+    if(healthIgnored(prev, day, newSteps)){
+      try{ history.replaceState(null, "", location.pathname); }catch(e){}
+      toast("Still the figure you cleared \u2014 fix the Shortcut, then run it again");
+      return;
+    }
     if(sameDay && newSteps != null && prev.steps != null && newSteps < prev.steps) newSteps = prev.steps;
     if(sameDay && newCal != null && prev.calories != null && newCal < prev.calories) newCal = prev.calories;
 
@@ -16370,7 +16616,9 @@
       calories: newCal != null ? newCal : (sameDay ? prev.calories : null),
       sleepHours: sleep != null ? Math.round(sleep * 100) / 100 : (sameDay ? prev.sleepHours : null),
       updatedAt: new Date().toISOString(),
-      fingerprint: fp
+      fingerprint: fp,
+      ignoreDate: prev.ignoreDate || null,
+      ignoreAbove: prev.ignoreAbove != null ? prev.ignoreAbove : null
     };
     save();
     renderHealth();
