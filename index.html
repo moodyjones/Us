@@ -2876,6 +2876,7 @@
   /* The modal's icon. It replaced a 44px emoji, so it keeps that optical weight - but as a
      line drawing it needs a slightly lighter stroke than the 18px icons or it reads as a
      logo rather than a label. */
+  /* The confirm dialog is a .modal inside #confirmBg, so this already covers both. */
   .modal .emoji .wd-i{
     vertical-align:middle;
     stroke-width:1.4;
@@ -3216,6 +3217,54 @@
   }
   .health-doubt.is-odd .health-clear{ color:var(--muted); border-style:solid; }
   .health-clear:active{ opacity:.6; }
+
+
+  /* Build 104: the question a photo note was answering, above the answer. */
+  .duo-note .dn-q{
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    font-size:10.5px; line-height:1.4; font-style:normal;
+    letter-spacing:.01em; color:var(--faint,#8b8296);
+    margin-bottom:3px;
+  }
+  .duo-note .dn-a{
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  /* The clamp lives on the two halves now, so the one on the parent would fight them. */
+  .duo-note.has-q{ -webkit-line-clamp:unset; display:block; cursor:pointer; }
+  .duo-note.has-q.open .dn-q,
+  .duo-note.has-q.open .dn-a{ -webkit-line-clamp:unset; display:block; }
+  .duo-note.has-q.open .dn-q{ color:var(--muted); }
+
+
+  /* =========================================================================
+     BUILD 105 — a won reward you can actually use.
+     ========================================================================= */
+  .won-head{
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+    margin:14px 0 7px;
+    font-size:10.5px; font-weight:800; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--faint,#8b8296);
+  }
+  .won-head:first-child{ margin-top:2px; }
+  .won-count{ font-variant-numeric:tabular-nums; }
+  .won-row{ gap:10px; }
+  .won-row .left{ min-width:0; align-items:flex-start; }
+  .wr-ico{ flex:none; line-height:1; margin-top:1px; color:var(--rose,#ff7a5e); }
+  .wr-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .wr-name{ font-size:14px; line-height:1.3; }
+  .wr-sub{ font-size:11px; line-height:1.35; color:var(--faint,#8b8296); }
+  .wr-act{ flex:none; display:flex; align-items:center; }
+  .wr-btn{ padding:7px 14px; font-size:12.5px; font-weight:700; border-radius:999px; }
+  .wr-done{
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--jade,#4fd1b5);
+  }
+  /* Something cashed in and waiting on YOU is the only row here anyone is on the hook
+     for, so it is the only one that looks like it wants something. */
+  .won-row.st-cashed{ border:1px solid rgba(255,122,94,.42); }
+  .won-row.st-done{ opacity:.62; }
+  .won-row.st-done .wr-name{ text-decoration:line-through; text-decoration-thickness:1px; }
 
 </style>
 </head>
@@ -5507,7 +5556,11 @@
   var confirmBg = document.getElementById("confirmBg");
   var confirmCb = null;
   function showConfirm(emoji, title, text, yesLabel, onYes){
-    document.getElementById("confirmEmoji").textContent = emoji;
+    // Build 105: showModal got the drawn icons in Build 100 and this never did, so the two
+    // dialogs in the same app disagreed about what an icon was.
+    var ce = document.getElementById("confirmEmoji");
+    var csvg = iconForEmoji(emoji, 42, "modal-ico");
+    if(csvg){ ce.innerHTML = csvg; } else { ce.textContent = emoji; }
     document.getElementById("confirmTitle").textContent = title;
     document.getElementById("confirmText").textContent = text;
     document.getElementById("confirmYes").textContent = yesLabel || "Yes";
@@ -7140,6 +7193,36 @@
     return out;
   }
 
+  function rewardWinKey(w){
+    return w.id || (w.personId + "|" + w.rewardId + "|" + w.date);
+  }
+  // An earlier non-empty timestamp beats a later one; anything beats nothing.
+  function earlierStamp(a, b){
+    if(!a) return b || null;
+    if(!b) return a;
+    return String(a) <= String(b) ? a : b;
+  }
+  function mergeRewardsWon(a, b){
+    var byKey = {}, order = [];
+    (a || []).concat(b || []).forEach(function(w){
+      if(!w) return;
+      var k = rewardWinKey(w);
+      var cur = byKey[k];
+      if(!cur){ byKey[k] = w; order.push(k); return; }
+      // Keep the richer of the two, then fold both sides' stamps onto it.
+      var merged = {};
+      var src = cur, extra = w;
+      for(var f in src) merged[f] = src[f];
+      for(var g in extra){ if(merged[g] == null) merged[g] = extra[g]; }
+      merged.redeemedAt = earlierStamp(cur.redeemedAt, w.redeemedAt);
+      merged.redeemedBy = cur.redeemedBy || w.redeemedBy || null;
+      merged.doneAt     = earlierStamp(cur.doneAt, w.doneAt);
+      merged.doneBy     = cur.doneBy || w.doneBy || null;
+      byKey[k] = merged;
+    });
+    return order.map(function(k){ return byKey[k]; });
+  }
+
   function mergeTasks(a, b, tomb){
     var all = unionById(a, b, tomb);
     // unionById keeps whichever whole task was touched last, which is right for a title or
@@ -7249,9 +7332,19 @@
     m.tasks = mergeTasks(base.tasks, other.tasks, tomb);
     m.rewards = unionById(base.rewards, other.rewards, tomb);
     m.rewardRequests = unionById(base.rewardRequests, other.rewardRequests, tomb);
-    m.rewardsWon = unionByKey(base.rewardsWon, other.rewardsWon, function(w){
-      return w.id || (w.personId + "|" + w.rewardId + "|" + w.date);
-    });
+    /* BUILD 105 — a win is no longer just a log line, so its merge cannot be
+       first-one-wins any more.
+
+       unionByKey keeps the FIRST copy of a key it sees and throws the other away. That was
+       harmless while a win was an immutable record of a spin. Now it carries redeemedAt and
+       doneAt, and the two phones set those at different moments: Moody's phone marks a
+       reward cashed in, Rae's phone has not heard yet, and whichever copy happened to come
+       first in the concat would win. A redemption would vanish on the next sync.
+
+       So these merge field by field, and both timestamps STICK once set - earliest wins,
+       the same rule milestones use. Cashing something in cannot un-happen, and neither can
+       delivering it. */
+    m.rewardsWon = mergeRewardsWon(base.rewardsWon, other.rewardsWon);
     m.notes = unionByKey(base.notes, other.notes, function(n){
       return n.fromId + "|" + n.date + "|" + n.text;
     });
@@ -8159,7 +8252,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 103;
+  var BUILD_NUM = 105;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -12083,18 +12176,171 @@
 
     renderRewardRequests();
 
-    var won = document.getElementById("wonList");
-    won.innerHTML = "";
-    if(state.rewardsWon.length===0){
-      won.innerHTML = '<div class="empty">No spins yet.</div>';
+    renderWonList();
+  }
+
+  /* ===========================================================================
+     BUILD 105 — winning a reward used to be the end of it.
+
+     Do five tasks, earn a spin, spin the wheel, and the prize went into a list that
+     could only ever be read. "Your love does one chore for you" sat there as a line of
+     text next to a date and nothing ever happened. The whole loop the rewards exist for
+     - the part where somebody actually gets a massage - had no button.
+
+     A win has three lives now:
+
+       yours      - won by you, not yet called in. It sits in your pocket indefinitely;
+                    nothing expires, because a prize with a deadline is a chore.
+       cashed in  - you said "I'm using this". The other phone is told, because this is a
+                    claim on THEM and a claim nobody heard is not a claim.
+       done       - it actually happened. Either of you can close it: the partner
+                    confirming they did it, or you confirming you got it - otherwise one
+                    person forgetting to tap leaves it open forever, which turns a nice
+                    thing into an accusation.
+     =========================================================================== */
+  function rewardState(w){
+    if(w.doneAt) return "done";
+    if(w.redeemedAt) return "cashed";
+    return "yours";
+  }
+  function findWin(id){
+    return (state.rewardsWon || []).filter(function(w){ return rewardWinKey(w) === id; })[0] || null;
+  }
+  function redeemReward(id){
+    var w = findWin(id);
+    if(!w || w.redeemedAt) return false;
+    var me = deviceOwner() || state.currentUser;
+    if(w.personId !== me) return false;          // only the winner calls it in
+    w.redeemedAt = new Date().toISOString();
+    w.redeemedBy = me;
+    if(!save()){ w.redeemedAt = null; w.redeemedBy = null; return false; }
+    scheduleSync();
+    announce("is cashing in: " + w.name);
+    renderAll();
+    celebrate("medium");
+    toast("Told " + personName(otherPerson(me)) + " \u2014 enjoy it");
+    return true;
+  }
+  function completeReward(id){
+    var w = findWin(id);
+    if(!w || !w.redeemedAt || w.doneAt) return false;
+    var me = deviceOwner() || state.currentUser;
+    w.doneAt = new Date().toISOString();
+    w.doneBy = me;
+    if(!save()){ w.doneAt = null; w.doneBy = null; return false; }
+    scheduleSync();
+    announce((w.personId === me ? "got their reward: " : "delivered: ") + w.name);
+    renderAll();
+    toast("Done \u2014 " + w.name);
+    return true;
+  }
+
+  function wonRow(w, me){
+    var st = rewardState(w);
+    var row = document.createElement("div");
+    row.className = "reward-item won-row st-" + st;
+    var mine = w.personId === me;
+
+    var left = document.createElement("div");
+    left.className = "left";
+    // The reward emoji stays an emoji. Only some of them have a drawn equivalent - a
+    // balloon does, a milkshake does not - so running them through the icon set would
+    // leave a list half drawn and half Apple, which is the exact thing Build 100 was
+    // for. These are the prizes' own faces, not the app's chrome.
+    left.innerHTML = '<span class="wr-ico">' + escapeHtml(w.emoji || "") + '</span>' +
+      '<span class="wr-text"><span class="wr-name">' + escapeHtml(w.name) + '</span>' +
+      '<span class="wr-sub">' + escapeHtml(wonSubtitle(w, me, st)) + '</span></span>';
+    row.appendChild(left);
+
+    var act = document.createElement("div");
+    act.className = "wr-act";
+    if(st === "yours" && mine){
+      var use = document.createElement("button");
+      use.className = "primary wr-btn";
+      use.type = "button";
+      use.textContent = "Use it";
+      use.addEventListener("click", function(){
+        showConfirm("\uD83C\uDF81", "Cash this in?",
+          "\u201C" + w.name + "\u201D goes to " + personName(otherPerson(me)) +
+          " as something you're claiming now. They'll see it straight away.",
+          "Cash it in", function(){ redeemReward(rewardWinKey(w)); });
+      });
+      act.appendChild(use);
+    } else if(st === "cashed"){
+      var done = document.createElement("button");
+      done.className = "ghost wr-btn";
+      done.type = "button";
+      // The wording has to come from where you stand: you owe it, or you are owed it.
+      done.textContent = mine ? "Got it" : "Mark it done";
+      done.addEventListener("click", function(){ completeReward(rewardWinKey(w)); });
+      act.appendChild(done);
+    } else if(st === "done"){
+      var tick = document.createElement("span");
+      tick.className = "wr-done";
+      tick.innerHTML = icon("check", 13, "bp-i") + " done";
+      act.appendChild(tick);
+    } else {
+      var tag = document.createElement("span");
+      tag.className = "tier-tag tier-" + (w.tier || "common");
+      tag.textContent = w.tier || "common";
+      act.appendChild(tag);
     }
-    state.rewardsWon.slice().reverse().slice(0,20).forEach(function(w){
-      var row = document.createElement("div");
-      row.className = "reward-item";
-      var d = new Date(w.date);
-      row.innerHTML = '<div class="left"><span>'+w.emoji+'</span><span>'+w.name+' <span style="color:var(--muted);font-size:11px;">— '+personName(w.personId)+'</span></span></div>'+
-        '<span style="color:var(--muted);font-size:11px;">'+d.toLocaleDateString()+'</span>';
-      won.appendChild(row);
+    row.appendChild(act);
+    return row;
+  }
+  function wonSubtitle(w, me, st){
+    var mine = w.personId === me;
+    var them = personName(otherPerson(me));
+    var d = function(iso){ return new Date(iso).toLocaleDateString(undefined, {month:"short", day:"numeric"}); };
+    if(st === "done"){
+      return (mine ? "yours" : personName(w.personId) + "'s") + " \u00b7 done " + d(w.doneAt);
+    }
+    if(st === "cashed"){
+      return mine ? "cashed in " + d(w.redeemedAt) + " \u00b7 waiting on " + them
+                  : personName(w.personId) + " cashed this in " + d(w.redeemedAt) + " \u00b7 over to you";
+    }
+    return (mine ? "won " : personName(w.personId) + " won it ") + d(w.date);
+  }
+
+  function renderWonList(){
+    var won = document.getElementById("wonList");
+    if(!won) return;
+    won.innerHTML = "";
+    var me = deviceOwner() || state.currentUser;
+    // Newest first WITHIN each group, by the date that group is actually about: when it
+    // was won, when it was cashed in, when it was finished. Relying on array order worked
+    // only because wins happen to be appended, and a merge from the other phone does not
+    // promise that.
+    function stampOf(w){ return w.doneAt || w.redeemedAt || w.date || ""; }
+    var all = (state.rewardsWon || []).slice().sort(function(x, y){
+      return String(stampOf(y)).localeCompare(String(stampOf(x)));
+    });
+    if(!all.length){
+      won.innerHTML = '<div class="empty">No spins yet.</div>';
+      return;
+    }
+    // Ordered by what somebody has to DO about it, not by when it was won. Anything
+    // cashed in and waiting is the only thing here with a person on the hook.
+    var groups = [
+      {key:"cashed", mineOnly:false, title:"Waiting on you",
+       filter:function(w){ return rewardState(w) === "cashed" && w.personId !== me; }},
+      {key:"cashedMine", mineOnly:false, title:"Cashed in \u2014 waiting on them",
+       filter:function(w){ return rewardState(w) === "cashed" && w.personId === me; }},
+      {key:"yours", mineOnly:false, title:"Yours to use",
+       filter:function(w){ return rewardState(w) === "yours" && w.personId === me; }},
+      {key:"theirs", mineOnly:false, title:"In their pocket",
+       filter:function(w){ return rewardState(w) === "yours" && w.personId !== me; }},
+      {key:"done", mineOnly:false, title:"Used",
+       filter:function(w){ return rewardState(w) === "done"; }, limit:8}
+    ];
+    groups.forEach(function(g){
+      var items = all.filter(g.filter);
+      if(!items.length) return;
+      var h = document.createElement("div");
+      h.className = "won-head";
+      h.innerHTML = '<span>' + g.title + '</span><span class="won-count">' + items.length + '</span>';
+      won.appendChild(h);
+      items.slice(0, g.limit || 50).forEach(function(w){ won.appendChild(wonRow(w, me)); });
     });
   }
 
@@ -13585,10 +13831,37 @@
         var noteEl = document.createElement("div");
         if(photoNoteLocked(p.id, d.date)){
           noteEl.className = "duo-note locked";
-          noteEl.textContent = "\uD83D\uDD12 " + personName(p.id) + " left a note \u2014 post yours to read it";
+          noteEl.innerHTML = icon("lock", 12, "bp-i") + " " + escapeHtml(personName(p.id)) +
+            " answered today's question \u2014 post yours to read it";
         } else {
-          noteEl.className = "duo-note";
-          noteEl.textContent = "\u201C" + pn.text + "\u201D";
+          /* BUILD 104 — the answer without the question.
+
+             Every note carries the question it was answering; the comment where notes are
+             created says exactly why ("the bins, mostly" means nothing on its own), and the
+             Notes tab has always rendered it. This slot never did. So the home screen
+             showed one word - "Sobriety" - attributed to someone, answering nothing.
+
+             It is worse than it looks, because the two of you are not asked the same
+             thing: the question is picked per person. It names the other one, reads
+             whether you are together or apart today, and skips what that person was asked
+             recently. There was no way to work out what hers was from yours.
+
+             The question sits above the answer, both clamped, and tapping opens the whole
+             exchange rather than sending you to another tab for it. */
+          noteEl.className = "duo-note has-q";
+          noteEl.innerHTML =
+            '<span class="dn-q">' + escapeHtml(pn.q) + '</span>' +
+            '<span class="dn-a">\u201C' + escapeHtml(pn.text) + '\u201D</span>';
+          noteEl.setAttribute("role", "button");
+          noteEl.setAttribute("tabindex", "0");
+          noteEl.setAttribute("aria-label", "Show the whole answer");
+          noteEl.addEventListener("click", function(ev){
+            // The slot itself is a button that opens the photo. A tap on the note is a tap
+            // on the note.
+            ev.stopPropagation();
+            ev.preventDefault();
+            noteEl.classList.toggle("open");
+          });
         }
         slot.appendChild(noteEl);
       }
