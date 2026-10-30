@@ -696,6 +696,16 @@
   }
   .recap-verdict .big{font-size:1.3125rem;font-weight:800;line-height:1.25;}
   .recap-verdict .sub{font-size:0.8125rem;color:var(--muted);margin-top:6px;line-height:1.5;}
+  /* Build 115: the staggered reveal. The sections carry .reveal only while motion is
+     allowed, so with reduced motion they never get a starting state to animate FROM -
+     they are just there, which is the point. */
+  .recap-verdict.reveal, .recap-sec.reveal{ opacity:0; transform:translateY(10px); }
+  @media (prefers-reduced-motion: no-preference){
+    .recap-verdict.reveal, .recap-sec.reveal{
+      transition:opacity .34s cubic-bezier(.16,1,.3,1), transform .34s cubic-bezier(.16,1,.3,1);
+    }
+  }
+  .recap-verdict.reveal.shown, .recap-sec.reveal.shown{ opacity:1; transform:none; }
   .recap-sec{margin-top:18px;}
   .recap-sec h4{
     font-size:0.6875rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);
@@ -1181,6 +1191,52 @@
   }
 
   /* ---- recap awards ---- */
+  /* ---- Build 115: records & trends ---- */
+  .trend-wrap{ margin-top:10px; }
+  .trend-row{ display:flex; align-items:center; gap:10px; padding:5px 0; }
+  .trend-who{
+    flex:0 0 72px; min-width:0; font-size:0.75rem; font-weight:700;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .trend-who.is-p1{ color:var(--moody); }
+  .trend-who.is-p2{ color:var(--rae); }
+  /* the mark gets the band-corrected colour; the NAME keeps the person's own, because
+     one is a mark on a dark card and the other is text */
+  .spark{ flex:1 1 auto; min-width:0; height:34px; display:block; }
+  .trend-val{
+    flex:0 0 auto; font-size:0.8125rem; font-weight:700; font-variant-numeric:tabular-nums;
+    color:var(--text); display:flex; align-items:center; gap:6px;
+  }
+  .trend-pb{
+    font-size:var(--eyebrow); font-weight:800; letter-spacing:var(--eyebrow-track);
+    text-transform:uppercase; color:var(--gold);
+  }
+  .trend-foot{
+    font-size:0.6875rem; color:var(--faint); margin-top:6px; text-align:center;
+  }
+
+  /* ---- Build 115: the trophy cabinet ---- */
+  .troph-month{
+    font-size:var(--eyebrow); font-weight:700; letter-spacing:var(--eyebrow-track);
+    text-transform:uppercase; color:var(--faint); margin:14px 0 7px;
+  }
+  .troph-month:first-child{ margin-top:2px; }
+  .troph{
+    display:flex; align-items:flex-start; gap:11px; padding:10px 12px;
+    background:var(--s2); border:1px solid var(--line); border-radius:12px; margin-bottom:8px;
+  }
+  .troph.is-first{ border-color:rgba(232,181,75,.45); }
+  .troph-ico{ flex:none; line-height:1; color:var(--gold); margin-top:1px; }
+  .troph-body{ min-width:0; flex:1; }
+  .troph-title{ font-size:0.875rem; font-weight:700; line-height:1.3; }
+  .troph-who{ font-size:0.75rem; color:var(--muted); margin-top:1px; }
+  .troph-why{ font-size:0.6875rem; color:var(--faint); line-height:1.4; margin-top:3px; }
+  .troph-rank{
+    flex:none; font-size:var(--eyebrow); font-weight:800; letter-spacing:var(--eyebrow-track);
+    text-transform:uppercase; padding:2px 7px; border-radius:999px;
+    background:var(--s3); color:var(--muted); white-space:nowrap;
+  }
+  .troph.is-first .troph-rank{ background:rgba(232,181,75,.16); color:var(--gold); }
   .sup-row{display:flex;gap:11px;align-items:flex-start;padding:8px 0;}
   .sup-ico{flex:0 0 22px;font-size:1.0625rem;line-height:1.3;}
   .sup-row b{font-size:0.875rem;color:var(--text);font-weight:700;}
@@ -1360,6 +1416,7 @@
   }
   /* stale numbers used to announce themselves with a 10px date and nothing else, which is
      how week-old figures passed for today's. This one is meant to be impossible to skim past. */
+  .health-stale-warn.is-stuck{ border-color:rgba(255,122,94,.5); }
   .health-stale-warn{
     font-size:0.7812rem;margin-top:10px;padding:10px 12px;line-height:1.5;
     background:rgba(214,158,46,.12);border:1px solid rgba(214,158,46,.45);
@@ -1783,6 +1840,11 @@
     transition:max-height .38s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;
   }
   .cc-body.open{max-height:9000px;opacity:1;padding-bottom:16px;}
+  /* Build 113: .card.collapsible zeroes the card's own vertical padding and lets .cc-body
+     put it back when open. Anything that lives OUTSIDE the body - the Propose form - has
+     to carry its own, or it sits flush against the bottom edge of the card. */
+  .pool-foot{ padding-bottom:16px; }
+  .card.collapsible .cc-body.open + .pool-foot{ padding-top:2px; }
 
   /* ---- shared challenge ---- */
   .chal-wrap{max-width:460px;margin:var(--card-gap) auto 0;padding:0 var(--gutter);}
@@ -3381,6 +3443,16 @@
   .wr-ico{ flex:none; line-height:1; margin-top:1px; color:var(--rose); }
   .wr-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
   .wr-name{ font-size:0.875rem; line-height:1.3; }
+  /* Build 113: how many of this exact prize are stacked in this row. Sits on the name
+     rather than out by the button, because it is a fact about the prize and the button
+     still does one thing. */
+  .wr-mult{
+    display:inline-block; margin-left:7px; padding:1px 6px; border-radius:999px;
+    font-size:var(--eyebrow); font-weight:800; letter-spacing:.02em;
+    background:var(--s3); color:var(--muted); vertical-align:0.08em;
+    font-variant-numeric:tabular-nums;
+  }
+  .won-row.st-done .wr-mult{ text-decoration:none; }
   .wr-sub{ font-size:0.6875rem; line-height:1.35; color:var(--faint); }
   .wr-act{ flex:none; display:flex; align-items:center; }
   .wr-btn{ padding:7px 14px; font-size:0.7812rem; font-weight:700; border-radius:999px; }
@@ -3565,6 +3637,28 @@
     --overlay-ink:#fdf1f0;      /* caption text over a photo or a dark wash */
     --quest-bg-a:#2a2a52;       /* quest card gradient, top */
     --quest-ok-bg:#1e3d38;      /* a quest step that is ticked */
+
+    /* ---------------------------------------------------------------------------
+       BUILD 115 - the two people's colours, pulled into the dark-mode lightness band
+       for use as CHART MARKS specifically.
+
+       --moody and --rae sit at OKLCH L 0.73. That is right for text and pills, and
+       slightly too light for a mark on a dark card, where it blooms. These keep the
+       hue and the chroma exactly and move L to 0.66, which is inside the 0.48-0.67
+       band for a dark surface. They still read unmistakably as the same two colours,
+       so identity still follows the person rather than the chart.
+
+       Validated, not eyeballed. Against the real card colour #151119:
+         lightness band  PASS   both inside 0.48-0.67
+         chroma floor    PASS
+         CVD separation  PASS   dE 23.9 protan / 24.6 tritan  (target >= 8)
+         normal vision   PASS   dE 25.3                       (floor 15)
+         contrast        PASS   both >= 3:1 against the card
+       Each person also gets their OWN sparkline, labelled with their name, so colour
+       is never the only thing carrying identity.
+       --------------------------------------------------------------------------- */
+    --chart-p1:#E66449;
+    --chart-p2:#9482EC;
 
     /* the deep ends of the decorative card gradients */
     --grad-deep-a:#221f3d;
@@ -4045,9 +4139,25 @@
       <div class="quota-note" id="quotaNote"></div>
     </div>
 
-    <div class="card">
-      <h2>Reward pool</h2>
-      <div id="rewardList"></div>
+    <!-- BUILD 113: the pool is a reference list, not something you read top to bottom.
+         At fourteen prizes it filled the whole screen above everything you came to the
+         Rewards tab to do. It uses the same collapsible card as Completed, with the same
+         rule: open while it is short, closed once it is an archive, and your own tap on
+         the chevron overrides both forever after.
+
+         The Propose form deliberately sits OUTSIDE the collapsed body. Folding the list
+         away should not also hide the one control on the card you might want while it is
+         folded. -->
+    <div class="card collapsible" id="rewardPoolCard">
+      <button class="card-collapse" id="rewardPoolToggle" aria-expanded="false">
+        <h2>Reward pool</h2>
+        <span class="cc-count" id="rewardPoolCount"></span>
+        <span class="cc-chev" data-ico="chevron" data-ico-size="15"></span>
+      </button>
+      <div class="cc-body" id="rewardPoolBody">
+        <div id="rewardList"></div>
+      </div>
+      <div class="pool-foot">
       <form id="rewardForm">
         <input type="text" id="rewardName" placeholder="Propose a reward…">
         <!-- The rarity used to be chosen here, by the person asking for the reward. Asking
@@ -4058,6 +4168,7 @@
         <button type="submit" class="ghost">Propose</button>
       </form>
       <p style="color:var(--muted);font-size:0.75rem;margin-top:6px;margin-bottom:0;">Just name it — <span id="whoRates">the other one</span> decides how rare it is when they approve it.</p>
+      </div>
     </div>
 
     <div class="card">
@@ -4077,6 +4188,16 @@
       </div>
       <div id="monthRaceBody"></div>
       <button type="button" class="ghost" id="monthRecapBtn" style="width:100%;margin-top:12px;">Read last month’s recap</button>
+    </div>
+
+    <!-- BUILD 115: the cabinet. Awards used to exist only while a recap sheet was open. -->
+    <div class="card collapsible" id="trophyCard">
+      <button class="card-collapse" id="trophyToggle" aria-expanded="false">
+        <h2>Trophy cabinet</h2>
+        <span class="cc-count" id="trophyCount"></span>
+        <span class="cc-chev" data-ico="chevron" data-ico-size="15"></span>
+      </button>
+      <div class="cc-body" id="trophyBody"><div id="trophyList"></div></div>
     </div>
 
     <div class="card">
@@ -5301,6 +5422,8 @@
       photoReminderDate: null, // last day an evening photo reminder was scheduled
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
+      healthLog: {},        // pid -> [{d:"YYYY-MM-DD", s:steps}] — finished days, newest last
+      trophies: [],         // [{key, mk, ico, title, who, why, at}] — awards, kept forever
       ntfyHealth: null,     // {p1,p2} — one ntfy topic per person for the Health shortcut
       activityLog: [],      // [{id, by, text, at}] — feeds "while you were away" + push notifications
       onesignalAppId: null, // OneSignal App ID (not secret, shared via sync — see WeDO-Notifications-Setup.md)
@@ -5412,6 +5535,7 @@
   });
   seedInitialData();
   seedUnboundSetup();
+  seedDryNovember();
 
   /* ===========================================================================
      BUILD 110 - the UNBOUND setup list.
@@ -5442,6 +5566,39 @@
      is ahead, so the worst case is one week of a slightly silly nudge - not worth
      teaching the fairness maths about task categories to avoid.
      =========================================================================== */
+  /* ===========================================================================
+     BUILD 114 - Dry November, as a Couple Challenge rather than a second mechanism.
+
+     The challenge already does every part of this: a start date, a length, a day
+     counter, a progress bar, two independent daily ticks, a timeline of who held
+     it and when, and a message that changes as the days stack up. Building a
+     separate "sober tracker" would have been the same thing again with a different
+     name, and two things that both claim to know what day you are on will disagree
+     the first time somebody ticks one and not the other.
+
+     It will NOT overwrite a challenge that is already running. state.challenge is a
+     single slot, and quietly replacing something they are mid-way through with
+     something the app decided for them would be the worst possible version of this.
+     If one is live, this does nothing and stays out of the way.
+     =========================================================================== */
+  function seedDryNovember(){
+    if(state.seededDryNovV1) return;
+    if(activeChallenge()) return;            // never clobber one in progress
+    state.challenge = {
+      id: "chal-dry-nov",
+      title: "Dry November",
+      emoji: "\uD83D\uDCA7",
+      startDate: "2026-11-01",
+      days: 30,
+      taskId: null,
+      checkins: {}, markedAt: {}, unticks: {},
+      mtime: Date.now(),
+      endedAt: null
+    };
+    state.seededDryNovV1 = true;
+    save();
+  }
+
   function seedUnboundSetup(){
     if(state.seededUnboundV1) return;
     /* These live INSIDE the function on purpose. The first cut had them as two
@@ -6701,7 +6858,7 @@
     var inList = state.tasks.filter(function(t){ return t.listId === listId; });
     var openTasks = sortTasksBy(inList.filter(function(t){return t.status==="open" && matchesAssigneeFilter(t, vf.assignee);}), vf.sort);
     var doneTasks = inList.filter(function(t){return t.status==="done" && matchesAssigneeFilter(t, vf.assignee);}).slice().reverse().slice(0,15);
-    syncCollapse("done", doneTasks.length, verb);
+    syncCollapse("done", doneTasks.length, "item|items");
 
     if(openTasks.length===0){
       open.innerHTML = '<div class="empty">Nothing here yet. Tap + to add one ' + icon("target", 13, "em-i") + '</div>';
@@ -8080,6 +8237,31 @@
       });
       m.ntfy = win;
     })();
+    /* Build 115: trophies. Union by key; the earliest record of an award is the true
+       one, because both phones can notice the same month and only one of them is first.
+       Same rule as milestones, deliberately. */
+    (function(){
+      var by = {};
+      [].concat(L.trophies || [], R.trophies || []).forEach(function(t){
+        if(!t || !t.key) return;
+        var cur = by[t.key];
+        if(!cur || String(t.at || "") < String(cur.at || "")) by[t.key] = t;
+      });
+      m.trophies = Object.keys(by).map(function(k){ return by[k]; })
+        .sort(function(a, b){ return String(a.mk).localeCompare(String(b.mk)); });
+    })();
+    /* Build 114: the step log, merged max-per-date. Within a day steps only climb, so
+       the bigger figure for a date is simply the later snapshot of it. Max is
+       commutative, which is what makes this safe whichever side arrives first. */
+    m.healthLog = {};
+    ["p1","p2"].forEach(function(pid){
+      var by = {};
+      [].concat((L.healthLog||{})[pid] || [], (R.healthLog||{})[pid] || []).forEach(function(e){
+        if(!e || !e.d || e.s == null) return;
+        by[e.d] = Math.max(by[e.d] || 0, e.s);
+      });
+      m.healthLog[pid] = Object.keys(by).sort().map(function(d){ return {d: d, s: by[d]}; }).slice(-21);
+    });
     m.healthCache = {};
     ["p1","p2"].forEach(function(pid){
       var lh = (L.healthCache||{})[pid], rh = (R.healthCache||{})[pid];
@@ -8803,7 +8985,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 112;
+  var BUILD_NUM = 115;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -9208,8 +9390,58 @@
       ignoreAbove: prev.ignoreAbove != null ? prev.ignoreAbove : null
     };
     if(healthShape(next) === healthShape(prev)) return false;   // nothing actually moved
+    /* BUILD 114: a day's step count is final the moment a LATER day shows up, so that is
+       when it goes into the log. Keeping the running figure out of the log matters - a
+       reading taken at 9am would otherwise teach the baseline that 900 steps is normal. */
+    if(!sameDay && prev.date && prev.steps != null) noteHealthDay(pid, prev.date, prev.steps);
     state.healthCache[pid] = next;
     return true;
+  }
+
+  /* ===========================================================================
+     BUILD 114 - "is that really my step count?", answered from your own history.
+
+     The old test was a fixed line at 20,000. It was set there to catch a doubled
+     13,000, and it does - but a doubled 7,000 lands at 14,000, which looks like an
+     ordinary good day and sails straight under it. Meanwhile someone who genuinely
+     walks 20,000 got asked the question every single day.
+
+     An absolute threshold cannot tell those two apart. A person's own recent days
+     can. The log keeps the last three weeks of finished days; the baseline is the
+     MEDIAN of them, not the mean, because the whole point is to survive a few bad
+     readings without being dragged up by them.
+
+     Merge rule is max-per-date: both phones may hold a different snapshot of the
+     same day, and within a day steps only ever climb, so the larger is the later.
+     That makes the merge commutative, which is the only kind that is safe here.
+     =========================================================================== */
+  var HEALTH_LOG_DAYS = 21;      // three weeks: long enough for a median, short enough to follow a change
+  var HEALTH_LOG_MIN = 5;        // under this, say nothing rather than guess from noise
+  var HEALTH_DOUBT_RATIO = 1.8;  // a doubling is 2.0; 1.8 leaves room for a genuinely big day
+
+  function noteHealthDay(pid, day, steps){
+    if(!day || steps == null) return;
+    if(!state.healthLog) state.healthLog = {};
+    var log = state.healthLog[pid] || [];
+    var hit = false;
+    log = log.map(function(e){
+      if(e.d !== day) return e;
+      hit = true;
+      return {d: day, s: Math.max(e.s || 0, Math.round(steps))};
+    });
+    if(!hit) log.push({d: day, s: Math.round(steps)});
+    log.sort(function(a, b){ return String(a.d).localeCompare(String(b.d)); });
+    state.healthLog[pid] = log.slice(-HEALTH_LOG_DAYS);
+  }
+  function healthBaseline(pid){
+    var log = (state.healthLog || {})[pid] || [];
+    var vals = log.map(function(e){ return e.s; })
+                  .filter(function(n){ return typeof n === "number" && n > 0; })
+                  .sort(function(a, b){ return a - b; });
+    if(vals.length < HEALTH_LOG_MIN) return null;
+    var mid = Math.floor(vals.length / 2);
+    var med = vals.length % 2 ? vals[mid] : Math.round((vals[mid - 1] + vals[mid]) / 2);
+    return {median: med, days: vals.length};
   }
 
   // Reads one person's file. Tries the plain-text file the Shortcut writes, then the older
@@ -9496,6 +9728,7 @@
         '<div class="' + cls("l", winCal) + '">' + ca.cal + '</div><div class="health-ico" title="Active calories">' + icon("flame", 16) + '</div><div class="' + cls("r", winCal) + '">' + cb.cal + '</div>' +
         '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">' + icon("moon", 16) + '</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
       '</div>' +
+      healthStuckWarning(a, b) +
       healthStaleWarning(a, b) +
       healthDoubtLine() +
       // "Moody leads by 900 steps — game on" is a taunt about a race that finished nine days
@@ -9527,14 +9760,26 @@
     if(!me) return "";
     var h = (state.healthCache || {})[me];
     if(!h || h.date !== todayISO() || h.steps == null) return "";
-    var odd = h.steps >= HEALTH_DOUBT_STEPS;
+    /* Build 114: your own median first, the fixed line only as a fallback for someone
+       with no history yet. The wording changes with the evidence - "2.1x your usual" is
+       a fact about you; "that's a big day" is a guess about people in general. */
+    var base = healthBaseline(me);
+    var ratio = (base && base.median > 0) ? (h.steps / base.median) : null;
+    var oddByBaseline = ratio != null && ratio >= HEALTH_DOUBT_RATIO;
+    var oddByFloor = base == null && h.steps >= HEALTH_DOUBT_STEPS;
+    var odd = oddByBaseline || oddByFloor;
+    var why = oddByBaseline
+      ? "<b>" + Number(h.steps).toLocaleString() + " steps</b> is " +
+        (Math.round(ratio * 10) / 10) + "\u00d7 your usual " +
+        Number(base.median).toLocaleString() + " over the last " + base.days +
+        (base.days === 1 ? " day" : " days") + ". "
+      : "<b>" + Number(h.steps).toLocaleString() + " steps</b> is a big day. ";
     return '<div class="health-doubt' + (odd ? " is-odd" : "") + '">' +
       (odd
-        ? '<div class="hd-why">' + icon("warn", 14, "inline-warn") + " " +
-            "<b>" + Number(h.steps).toLocaleString() + " steps</b> is a big day. Worth a " +
-            "check: open Apple Health \u2192 Steps \u2192 today. If it shows about half " +
-            "this, the Shortcut is adding your iPhone's step samples to your Watch's \u2014 " +
-            "Health de-duplicates the overlap and a plain sum does not. Filtering the " +
+        ? '<div class="hd-why">' + icon("warn", 14, "inline-warn") + " " + why +
+            "Worth a check: open Apple Health \u2192 Steps \u2192 today. If it shows about " +
+            "half this, the Shortcut is adding your iPhone's step samples to your Watch's " +
+            "\u2014 Health de-duplicates the overlap and a plain sum does not. Filtering the " +
             "samples by a single source fixes it." +
           '</div>'
         : "") +
@@ -9663,11 +9908,71 @@
   }
   // Anything two days old or worse is almost never "we forgot to run the shortcut" — it's the
   // shortcut landing in the Safari copy, which has its own storage and keeps losing its token.
+  /* ===========================================================================
+     BUILD 114 - the Shortcut is running, it is just writing the wrong date.
+
+     Two very different faults look identical on screen: the Shortcut stopped, and
+     the Shortcut is writing a date that is not today. Both leave an old date under
+     your name. The existing warning assumed the first and told you to go and check
+     your Automation - advice that is actively wrong in the second case, where the
+     Automation is firing perfectly.
+
+     They are easy to tell apart and the file already carries the evidence:
+     updatedAt is when the reading was WRITTEN, date is the day it CLAIMS to be
+     about. Written today, dated last Tuesday, and the Shortcut is running fine -
+     its date field is wrong.
+
+     This also explains the symptom that brought it up: every reading then counts as
+     the same day, steps are only ever allowed to climb within a day, so the number
+     is pinned at the high-water mark and never moves again.
+     =========================================================================== */
+  function healthWrittenDay(d){
+    if(!d || !d.updatedAt) return null;
+    var t = new Date(d.updatedAt);
+    if(isNaN(t)) return null;
+    return todayISO(t);
+  }
+  function healthStuckDate(d){
+    if(!d || !d.date) return null;
+    var wrote = healthWrittenDay(d);
+    if(!wrote) return null;
+    // written today (or yesterday, for a Shortcut that runs just after midnight)
+    // but claiming an older day
+    if(String(d.date) >= String(wrote)) return null;
+    var age = healthAgeDays(d);
+    if(age == null || age < 1) return null;
+    var writtenAge = healthAgeDays({date: wrote});
+    if(writtenAge == null || writtenAge > 1) return null;
+    return {claims: d.date, wrote: wrote, age: age};
+  }
+  function healthStuckWarning(a, b){
+    var hits = [{d:a, pid:"p1"}, {d:b, pid:"p2"}]
+      .map(function(x){ return {pid:x.pid, s:healthStuckDate(x.d)}; })
+      .filter(function(x){ return !!x.s; });
+    if(!hits.length) return "";
+    var one = hits[0];
+    var who = hits.length === 2 ? "Both Shortcuts are" : (personName(one.pid) + "'s Shortcut is");
+    var fmt = function(iso){
+      return new Date(iso + "T12:00:00").toLocaleDateString(undefined, {weekday:"long", month:"short", day:"numeric"});
+    };
+    return '<div class="health-stale-warn is-stuck">' +
+      '<b>' + icon("warn", 14, "inline-warn") + ' ' + escapeHtml(who) + ' running \u2014 ' +
+      'it is the date that is wrong.</b> ' +
+      'It wrote today, and dated the reading ' + escapeHtml(fmt(one.s.claims)) + '. ' +
+      'Every run then counts as the same day, and steps are only allowed to climb within a ' +
+      'day \u2014 so the figure is stuck at its highest reading and will not move again. ' +
+      'Fix the date in the Shortcut\u2019s text action, not the Automation.' +
+      '</div>';
+  }
+
   function healthStaleWarning(a, b){
     var ages = [{d:a,pid:"p1"}, {d:b,pid:"p2"}]
       .filter(function(x){ return x.d && healthAgeDays(x.d) != null; });
     if(!ages.length) return "";
-    var stale = ages.filter(function(x){ return healthAgeDays(x.d) >= 2; });
+    // Build 114: a Shortcut that is running but misdating its output is NOT a Shortcut
+    // that has stopped, and telling someone to go and switch their Automation back on
+    // when it is already on is worse than saying nothing.
+    var stale = ages.filter(function(x){ return healthAgeDays(x.d) >= 2 && !healthStuckDate(x.d); });
     if(!stale.length) return "";
     var worst = stale.reduce(function(m,x){ return healthAgeDays(x.d) > healthAgeDays(m.d) ? x : m; });
     var days = healthAgeDays(worst.d);
@@ -11564,7 +11869,7 @@
     document.getElementById("openTasksHeader").textContent = "The list — " + openExp.length + " to go";
     document.getElementById("doneTasksHeader").innerHTML = icon("trophy", 17, "bp-i") + " Trophy case";
     // the album is the biggest thing on the page by a mile once it fills up — fold it
-    syncCollapse("done", doneExp.length, "memories");
+    syncCollapse("done", doneExp.length, "memory|memories");
 
     var turn = document.createElement("div");
     turn.className = "speech-turn";
@@ -12726,6 +13031,7 @@
   function renderRewards(){
     var wrap = document.getElementById("rewardList");
     wrap.innerHTML = "";
+    syncCollapse("rewardPool", (state.rewards || []).length, "prize|prizes", true);
     /* Build 109: an empty prize list rendered as nothing at all - a heading over blank
        space, with no hint that prizes are a thing you add. */
     if(!(state.rewards || []).length){
@@ -12805,11 +13111,38 @@
     return true;
   }
 
-  function wonRow(w, me){
+  /* ===========================================================================
+     BUILD 113 - identical prizes stack instead of repeating.
+
+     Win "Choose the movie tonight" three times and the list printed it three times,
+     one under another, with three identical buttons. Nothing is lost by stacking
+     them: they are interchangeable by definition - same prize, same person, same
+     state - so the only fact the three rows carried between them was "three".
+
+     Which copy a button acts on: the OLDEST. They are the same prize, so it only
+     shows up in the dates, and letting the oldest go first means the stack's "won"
+     range moves forward as you spend it rather than leaving one ancient straggler.
+
+     Grouping happens INSIDE a section, never across one. A prize you have cashed in
+     and one still in your pocket are different situations with different buttons,
+     and the sections are already split by exactly that.
+     =========================================================================== */
+  function wonStackKey(w){
+    return [rewardState(w), w.personId || "", w.name || "", w.tier || ""].join("\u0000");
+  }
+  function oldestOf(items){
+    return items.slice().sort(function(a, b){
+      return String(a.date || "").localeCompare(String(b.date || ""));
+    })[0] || items[0];
+  }
+  function wonRow(w, me, stack){
+    var n = (stack && stack.length) || 1;
     var st = rewardState(w);
     var row = document.createElement("div");
-    row.className = "reward-item won-row st-" + st;
+    row.className = "reward-item won-row st-" + st + (n > 1 ? " stacked" : "");
     var mine = w.personId === me;
+    // every button on a stacked row spends the oldest copy, not the one being shown
+    var target = n > 1 ? oldestOf(stack) : w;
 
     var left = document.createElement("div");
     left.className = "left";
@@ -12818,8 +13151,10 @@
     // leave a list half drawn and half Apple, which is the exact thing Build 100 was
     // for. These are the prizes' own faces, not the app's chrome.
     left.innerHTML = '<span class="wr-ico">' + escapeHtml(w.emoji || "") + '</span>' +
-      '<span class="wr-text"><span class="wr-name">' + escapeHtml(w.name) + '</span>' +
-      '<span class="wr-sub">' + escapeHtml(wonSubtitle(w, me, st)) + '</span></span>';
+      '<span class="wr-text"><span class="wr-name">' + escapeHtml(w.name) +
+        (n > 1 ? '<span class="wr-mult">\u00d7' + n + '</span>' : '') + '</span>' +
+      '<span class="wr-sub">' + escapeHtml(wonSubtitle(w, me, st)) +
+        (n > 1 ? ' \u00b7 +' + (n - 1) + ' more' : '') + '</span></span>';
     row.appendChild(left);
 
     var act = document.createElement("div");
@@ -12832,8 +13167,9 @@
       use.addEventListener("click", function(){
         showConfirm("\uD83C\uDF81", "Cash this in?",
           "\u201C" + w.name + "\u201D goes to " + personName(otherPerson(me)) +
-          " as something you're claiming now. They'll see it straight away.",
-          "Cash it in", function(){ redeemReward(rewardWinKey(w)); }, "Keep it for later");
+          " as something you're claiming now. They'll see it straight away." +
+          (n > 1 ? "\n\nYou'll still have " + (n - 1) + " of these left." : ""),
+          "Cash it in", function(){ redeemReward(rewardWinKey(target)); }, "Keep it for later");
       });
       act.appendChild(use);
     } else if(st === "cashed"){
@@ -12842,7 +13178,7 @@
       done.type = "button";
       // The wording has to come from where you stand: you owe it, or you are owed it.
       done.textContent = mine ? "Got it" : "Mark it done";
-      done.addEventListener("click", function(){ completeReward(rewardWinKey(w)); });
+      done.addEventListener("click", function(){ completeReward(rewardWinKey(target)); });
       act.appendChild(done);
     } else if(st === "done"){
       var tick = document.createElement("span");
@@ -12908,9 +13244,22 @@
       if(!items.length) return;
       var h = document.createElement("div");
       h.className = "won-head";
+      // the count stays the number of PRIZES, not the number of rows - a stack of three
+      // is still three things you have
       h.innerHTML = '<span>' + g.title + '</span><span class="won-count">' + items.length + '</span>';
       won.appendChild(h);
-      items.slice(0, g.limit || 50).forEach(function(w){ won.appendChild(wonRow(w, me)); });
+      /* Build 113: bucket identical prizes. `items` is already newest-first, so the first
+         one into a bucket is the newest and is the one the row shows. */
+      var order = [], buckets = {};
+      items.forEach(function(w){
+        var k = wonStackKey(w);
+        if(!buckets[k]){ buckets[k] = []; order.push(k); }
+        buckets[k].push(w);
+      });
+      order.slice(0, g.limit || 50).forEach(function(k){
+        var stack = buckets[k];
+        won.appendChild(wonRow(stack[0], me, stack));
+      });
     });
   }
 
@@ -13032,6 +13381,7 @@
   // answer instead of double-charging.
   function monthKeyNow(){ return todayISO().slice(0, 7); }
 
+  function daysLeftPhrase(n){ return n + (n === 1 ? " day left" : " days left"); }
   function daysLeftInMonth(){
     var d = new Date();
     var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
@@ -14986,6 +15336,63 @@
     };
   }
 
+  /* ===========================================================================
+     BUILD 115 - records and trends.
+
+     The recap could tell you what happened last month and what happened in the
+     same month a year ago, and nothing in between. "47 things" means nothing on
+     its own; "47 things, your best month yet, against a usual 31" is the same
+     number doing actual work.
+
+     Months come from the data rather than a stored list, so a month nobody used
+     simply is not there and does not drag an average down to look like a decline.
+     Capped at 18 so this stays cheap on a phone that has been running for years.
+     =========================================================================== */
+  var TREND_MONTHS = 18;
+  function recapMonthKeys(){
+    var seen = {};
+    (state.tasks || []).forEach(function(t){
+      if(t && t.status === "done" && t.completedAt) seen[String(t.completedAt).slice(0, 7)] = true;
+    });
+    (state.notes || []).forEach(function(n){
+      if(n && n.at) seen[new Date(n.at).toISOString().slice(0, 7)] = true;
+    });
+    Object.keys(state.album || {}).forEach(function(d){ seen[String(d).slice(0, 7)] = true; });
+    Object.keys(state.monthly || {}).forEach(function(mk){ seen[mk] = true; });
+    return Object.keys(seen).filter(function(k){ return /^\d{4}-\d{2}$/.test(k); })
+      .sort().slice(-TREND_MONTHS);
+  }
+
+  /* One sparkline per person, each labelled with that person's own name, so the
+     colour is never the only thing saying whose line it is. 2px stroke, one 8px
+     marker on the latest point, no grid and no axis - at this size a gridline is
+     noise. The <title> carries the whole series as text for anyone not looking at
+     the picture. */
+  function sparkline(vals, colorVar, label){
+    if(!vals || vals.length < 2) return "";
+    /* 240, not 120. preserveAspectRatio="none" stretches the viewBox to fill the row,
+       and at 120 wide in a ~250px slot that is a 2x horizontal stretch - which turned the
+       8px end marker into a flat 16x8 lozenge. Matching the viewBox to the real aspect
+       ratio of the box leaves the stretch near 1 and the marker a circle. */
+    var W = 240, H = 34, pad = 3;
+    var max = Math.max.apply(null, vals), min = Math.min.apply(null, vals);
+    var span = (max - min) || 1;
+    var step = (W - pad * 2) / (vals.length - 1);
+    var pts = vals.map(function(v, i){
+      var x = pad + i * step;
+      var y = H - pad - ((v - min) / span) * (H - pad * 2);
+      return (Math.round(x * 10) / 10) + "," + (Math.round(y * 10) / 10);
+    });
+    var last = pts[pts.length - 1].split(",");
+    return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" ' +
+      'role="img" preserveAspectRatio="none" focusable="false">' +
+      '<title>' + escapeHtml(label) + '</title>' +
+      '<polyline fill="none" stroke="var(' + colorVar + ')" stroke-width="2" ' +
+        'stroke-linecap="round" stroke-linejoin="round" points="' + pts.join(" ") + '"/>' +
+      '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="4" fill="var(' + colorVar + ')"/>' +
+      '</svg>';
+  }
+
   function monthName(mk){
     var d = new Date(mk + "-01T12:00:00");
     return isFinite(d.getTime()) ? d.toLocaleDateString(undefined, {month:"long", year:"numeric"}) : mk;
@@ -14994,6 +15401,34 @@
     var y = parseInt(mk.slice(0,4),10), m = parseInt(mk.slice(5,7),10) - 1;
     if(m < 1){ m = 12; y--; }
     return y + "-" + (m < 10 ? "0" + m : String(m));
+  }
+
+  function renderTrophyCabinet(){
+    var wrap = document.getElementById("trophyList");
+    if(!wrap) return;
+    var all = (state.trophies || []).slice()
+      .sort(function(a, b){ return String(b.mk).localeCompare(String(a.mk)); });
+    syncCollapse("trophy", all.length, "trophy|trophies", false);
+    if(!all.length){ wrap.innerHTML = ""; return; }
+    var html = "", lastMk = null;
+    all.forEach(function(t){
+      if(t.mk !== lastMk){
+        lastMk = t.mk;
+        html += '<div class="troph-month">' + escapeHtml(monthName(t.mk)) + '</div>';
+      }
+      var r = trophyRank(t);
+      var first = r.n === 1;
+      html += '<div class="troph' + (first ? " is-first" : "") + '">' +
+        '<span class="troph-ico">' + (iconForEmoji(t.ico, 20) || escapeHtml(t.ico || "")) + '</span>' +
+        '<span class="troph-body">' +
+          '<span class="troph-title">' + escapeHtml(t.title) + '</span>' +
+          '<div class="troph-who">' + escapeHtml(t.who || "") + '</div>' +
+          '<div class="troph-why">' + escapeHtml(t.why || "") + '</div>' +
+        '</span>' +
+        '<span class="troph-rank">' + (first ? "First ever" : "#" + r.n) + '</span>' +
+      '</div>';
+    });
+    wrap.innerHTML = html;
   }
 
   // ---- the race, on the leaderboard ----
@@ -15005,7 +15440,8 @@
     var top = Math.max(1, Math.max.apply(null, st.people.map(function(p){
       return Math.max(0, st.per[p.id].pts);
     })));
-    document.getElementById("monthRaceDays").textContent = daysLeftInMonth() + " days left";
+    /* Build 113: "1 days left" on the 30th of every month, in three places. */
+    document.getElementById("monthRaceDays").textContent = daysLeftPhrase(daysLeftInMonth());
 
     wrap.innerHTML = "";
     st.people.forEach(function(p){
@@ -15074,6 +15510,56 @@
   // A stat line says what happened. A superlative says something about the two of you, which
   // is the part anyone actually reads twice. Each one only appears if it's true and the
   // number behind it is big enough to mean anything.
+  /* ===========================================================================
+     BUILD 115 - the trophy cabinet.
+
+     The awards already existed and were computed fresh every time a recap was
+     opened, which meant they lived exactly as long as the sheet was on screen.
+     "Never missed a photo, Rae, 22 days posted" is a thing that HAPPENED, and the
+     app threw it away the moment you closed the modal.
+
+     They are records now. The key is month + award, so re-opening October's recap
+     a hundred times earns October's awards once. The date stored is when it was
+     first written down, and the merge keeps the EARLIEST - the same rule as
+     milestones, for the same reason: whichever phone noticed first is the honest
+     answer, not whichever synced last.
+
+     Rarity is counted, not assigned. The cabinet knows how many times a given
+     award has ever been earned, so the first one of anything is marked as a first
+     and the rest carry their number. Nothing here invents a tier out of nowhere.
+     =========================================================================== */
+  function trophySlug(s){
+    return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+  function awardTrophies(mk, sup){
+    if(!Array.isArray(state.trophies)) state.trophies = [];
+    var have = {};
+    state.trophies.forEach(function(t){ have[t.key] = true; });
+    var added = 0;
+    sup.forEach(function(a){
+      var key = mk + "|" + trophySlug(a.title);
+      if(have[key]) return;
+      state.trophies.push({key: key, mk: mk, ico: a.ico, title: a.title,
+                           who: a.who, why: a.why, at: new Date().toISOString()});
+      added++;
+    });
+    if(added){
+      save();
+      // the cabinet is on another tab and was rendered before these existed; without this
+      // a trophy earned by opening the recap does not appear until the next full render
+      try{ renderTrophyCabinet(); }catch(e){}
+    }
+    return added;
+  }
+  // How many times this award has ever been earned, oldest first. Used for "first ever".
+  function trophyRank(t){
+    var slug = trophySlug(t.title);
+    var same = (state.trophies || []).filter(function(x){ return trophySlug(x.title) === slug; })
+      .sort(function(a, b){ return String(a.mk).localeCompare(String(b.mk)); });
+    var i = same.findIndex(function(x){ return x.key === t.key; });
+    return {n: i < 0 ? same.length : i + 1, of: same.length};
+  }
+
   function recapSuperlatives(st){
     var A = st.people[0], B = st.people[1];
     var pa = st.per[A.id], pb = st.per[B.id];
@@ -15156,7 +15642,38 @@
   // A recap people keep is a recap they can send. Everything in it is derived, so a month
   // from any year can be redrawn exactly as it was — the picture is just a view of the data,
   // not a snapshot that has to be stored.
-  function recapPoster(mk){
+  /* Build 115: the month's pictures, newest-last, at most six - one per day, and the
+     day both of you posted contributes the one from whoever posted first. A poster of
+     the same evening six times is not a month. */
+  function recapPhotos(mk, limit){
+    var days = Object.keys(state.album || {}).filter(function(d){ return String(d).slice(0, 7) === mk; }).sort();
+    var out = [];
+    days.forEach(function(d){
+      var day = state.album[d] || {};
+      ["p1", "p2"].forEach(function(pid){
+        if(out.length >= (limit || 6) * 3) return;
+        var src = day[pid] && photoSrc(day[pid].photo);
+        if(src) out.push(src);
+      });
+    });
+    // spread across the month rather than taking the first six days of it
+    if(out.length <= (limit || 6)) return out;
+    var step = out.length / (limit || 6), picked = [];
+    for(var i = 0; i < (limit || 6); i++) picked.push(out[Math.floor(i * step)]);
+    return picked;
+  }
+  function loadImages(srcs, done){
+    var imgs = [], left = srcs.length;
+    if(!left) return done([]);
+    srcs.forEach(function(src, i){
+      var im = new Image();
+      im.onload = function(){ imgs[i] = im; if(!--left) done(imgs.filter(Boolean)); };
+      im.onerror = function(){ if(!--left) done(imgs.filter(Boolean)); };
+      im.src = src;
+    });
+  }
+
+  function recapPoster(mk, photos){
     var st = monthStatsFor(mk);
     var A = st.people[0], B = st.people[1];
     var pa = st.per[A.id], pb = st.per[B.id];
@@ -15205,12 +15722,20 @@
     if(st.bothDays) lines.push([String(st.bothDays), "with both of you"]);
     if(st.tripDays) lines.push([String(st.tripDays), st.tripDays === 1 ? "day away" : "days away"]);
     if(st.notes.length) lines.push([String(st.notes.length), st.notes.length === 1 ? "note written" : "notes written"]);
+    /* Build 115: the longest run going. It is the number either of you would actually
+       say out loud, and it was the one thing on screen that never made it to the poster. */
+    var topStreak = 0, topWho = "";
+    st.people.forEach(function(p){
+      var cur = ((state.streaks || {})[p.id] || {}).current || 0;
+      if(cur > topStreak){ topStreak = cur; topWho = p.name; }
+    });
+    if(topStreak >= 3) lines.push([String(topStreak), "day streak \u00b7 " + topWho]);
     // five, not six: the closing line needs the bottom of the poster, and a sentence cut
     // off mid-word is worse than one fewer number
     lines = lines.slice(0, 5);
 
     x.textAlign = "left";
-    var y = 680;
+    var y = 660;
     lines.forEach(function(L){
       x.fillStyle = "#f2effa";
       x.font = "800 56px -apple-system, system-ui, sans-serif";
@@ -15219,7 +15744,7 @@
       x.fillStyle = "#9b93b3";
       x.font = "500 34px -apple-system, system-ui, sans-serif";
       x.fillText(L[1], 150 + w + 22, y);
-      y += 86;
+      y += 78;
     });
 
     // the closing line, wrapped by hand because canvas won't do it
@@ -15227,7 +15752,7 @@
     x.font = "italic 500 32px -apple-system, system-ui, sans-serif";
     // Four lines of room, and the sentence is trimmed at a word boundary to fit rather than
     // running off the edge of the image.
-    var words = recapWords(st).split(" "), line = "", ly = 1150, drawn = 0, MAXL = 4;
+    var words = recapWords(st).split(" "), line = "", ly = 1060, drawn = 0, MAXL = 3;
     for(var i = 0; i < words.length && drawn < MAXL; i++){
       var test = line ? line + " " + words[i] : words[i];
       if(x.measureText(test).width > W - 300 && line){
@@ -15237,12 +15762,41 @@
       } else line = test;
     }
     if(line && drawn < MAXL) x.fillText(line, 150, ly);
+
+    /* Build 115: the month's photographs, as a band across the foot of the poster.
+       Six squares of 180 across 1080 is exact, so there is no stray edge pixel, and
+       cover-cropping each one keeps faces where you put them instead of squashing a
+       portrait into a square. Drawn last so nothing above has to move for it. */
+    if(photos && photos.length){
+      var n = Math.min(6, photos.length), SZ = W / 6, top = H - SZ;
+      x.save();
+      for(var pi = 0; pi < n; pi++){
+        var im = photos[pi], dx = pi * SZ;
+        var sc = Math.max(SZ / im.width, SZ / im.height);
+        var sw = SZ / sc, sh = SZ / sc;
+        x.save();
+        x.beginPath(); x.rect(dx, top, SZ, SZ); x.clip();
+        x.drawImage(im, (im.width - sw) / 2, (im.height - sh) / 2, sw, sh, dx, top, SZ, SZ);
+        x.restore();
+      }
+      // a hairline between the band and the page so a dark photo does not merge into it
+      x.strokeStyle = "rgba(255,255,255,.10)"; x.lineWidth = 2;
+      x.beginPath(); x.moveTo(0, top); x.lineTo(W, top); x.stroke();
+      x.restore();
+    }
     return c;
   }
 
   function shareRecap(mk){
+    // Build 115: the poster carries photographs now, and an <img> is not drawable until
+    // it has decoded. So the images load first and the canvas is built in the callback;
+    // a poster that quietly came out with six blank squares would be worse than a slow one.
+    toast("Making the poster\u2026");
+    loadImages(recapPhotos(mk, 6), function(imgs){ drawAndShare(mk, imgs); });
+  }
+  function drawAndShare(mk, imgs){
     var c;
-    try{ c = recapPoster(mk); }
+    try{ c = recapPoster(mk, imgs); }
     catch(e){ toast("Couldn't draw that one"); return; }
     c.toBlob(function(blob){
       if(!blob){ toast("Couldn't save the image"); return; }
@@ -15339,6 +15893,9 @@
 
     // awards before the failures: the month should read as a month, not a charge sheet
     var sup = recapSuperlatives(st);
+    // Build 115: and they go into the cabinet on the way past. Idempotent by key, so
+    // re-reading a recap does not mint duplicates.
+    awardTrophies(mk, sup);
     if(sup.length){
       html += '<div class="recap-sec"><h4>Awards</h4>' +
         sup.map(function(a){
@@ -15348,6 +15905,63 @@
             escapeHtml(a.who) + '</span><div class="sup-why">' + escapeHtml(a.why) + '</div></span></div>';
         }).join("") + '</div>';
     }
+
+    /* Build 115: records and trends, before the year-ago callback - a number is easier
+       to read against the months either side of it than against one month last year. */
+    (function(){
+      /* The series has to END at the month you are reading about. Without this, opening
+         September's recap drew a line whose last point was October and labelled it with
+         October's number - a recap quietly showing you a month that had not happened when
+         the one on screen did. Caught by looking at the picture. */
+      var keys = recapMonthKeys().filter(function(k){ return k <= mk; });
+      if(keys.length < 2) return;
+      var series = keys.map(function(k){
+        var m = (k === mk) ? st : monthStatsFor(k);
+        return {mk: k, done: m.done.length, per: m.per};
+      });
+      var here = series.filter(function(x){ return x.mk === mk; })[0];
+      if(!here) return;
+      var prior = series.filter(function(x){ return x.mk < mk; });
+      var out = "";
+
+      if(prior.length){
+        var best = prior.reduce(function(a, b){ return b.done > a.done ? b : a; });
+        var typical = Math.round(prior.reduce(function(n, x){ return n + x.done; }, 0) / prior.length);
+        if(here.done > best.done){
+          out += recapLine("\uD83C\uDFC6", "<b>Your best month yet</b> \u2014 " + here.done +
+            " things, past the " + best.done + " of " + escapeHtml(monthName(best.mk)) + ".");
+        } else if(here.done === best.done){
+          out += recapLine("\uD83C\uDFC6", "<b>Matched your best</b> \u2014 " + here.done +
+            ", level with " + escapeHtml(monthName(best.mk)) + ".");
+        } else {
+          out += recapLine("\uD83D\uDCCA", here.done + " things, against a usual <b>" + typical +
+            "</b>. Your best is still " + best.done + " in " + escapeHtml(monthName(best.mk)) + ".");
+        }
+      }
+
+      // one sparkline per person, each named - colour is never carrying identity alone
+      var rows = st.people.map(function(p, i){
+        var vals = series.map(function(x){ return (x.per[p.id] || {}).done || 0; });
+        var line = sparkline(vals, i === 0 ? "--chart-p1" : "--chart-p2",
+          escapeHtml(p.name) + ", things done per month: " + vals.join(", "));
+        if(!line) return "";
+        var mine = vals[vals.length - 1];
+        var bestMine = Math.max.apply(null, vals);
+        return '<div class="trend-row">' +
+          '<span class="trend-who' + (i === 0 ? " is-p1" : " is-p2") + '">' + escapeHtml(p.name) + '</span>' +
+          line +
+          '<span class="trend-val">' + mine +
+            (mine === bestMine && vals.length > 1 ? '<span class="trend-pb">best</span>' : '') +
+          '</span>' +
+        '</div>';
+      }).join("");
+      if(rows) out += '<div class="trend-wrap">' + rows +
+        '<div class="trend-foot">' + series.length + " months on record \u00b7 " +
+        escapeHtml(monthName(series[0].mk).split(" ")[0]) + " to " +
+        escapeHtml(monthName(series[series.length - 1].mk).split(" ")[0]) + '</div></div>';
+
+      if(out) html += '<div class="recap-sec"><h4>Records</h4>' + out + '</div>';
+    })();
 
     // the callback. Only once there is a year to call back to.
     var last = sameMonthLastYear(mk);
@@ -15388,8 +16002,48 @@
     html += '<div class="recap-sec"><h4>Where that leaves you</h4>' +
       '<div class="recap-words">' + escapeHtml(recapWords(st)) + '</div></div>';
 
-    document.getElementById("recapBody").innerHTML = html;
+    var bodyEl = document.getElementById("recapBody");
+    bodyEl.innerHTML = html;
     recapBg.classList.add("show");
+    revealRecap(bodyEl, st);
+  }
+
+  /* ===========================================================================
+     BUILD 115 - the recap arrives instead of appearing.
+
+     It used to drop in as a finished wall of text, which is a strange way to show
+     someone a month: every part of it lands at once and nothing is worth reading
+     first. The sections come in one after another now, top to bottom, which is the
+     order you were going to read them in anyway.
+
+     The intensity is graded by what the month actually was, using the celebration
+     engine that already exists rather than a second set of rules: a month with a
+     record in it gets the full thing, an ordinary month gets a quiet stagger, and
+     an empty one gets nothing - a flourish over "3 things done" is a joke at your
+     own expense.
+
+     With prefers-reduced-motion on, everything is simply visible. Not "animated
+     faster" - visible. That is what the setting asks for.
+     =========================================================================== */
+  function revealRecap(bodyEl, st){
+    var secs = [].slice.call(bodyEl.querySelectorAll(".recap-verdict, .recap-sec"));
+    if(motionOff()){
+      secs.forEach(function(el){ el.classList.add("shown"); });
+      return;
+    }
+    secs.forEach(function(el){ el.classList.add("reveal"); });
+    // 90ms apart: fast enough that the last one is not a wait, slow enough to read as
+    // an order rather than a flicker.
+    secs.forEach(function(el, i){
+      setTimeout(function(){ el.classList.add("shown"); }, 120 + i * 90);
+    });
+    var record = bodyEl.querySelector(".recap-sec h4") &&
+                 /Your best month yet|Matched your best/.test(bodyEl.textContent || "");
+    var big = st.done.length;
+    var level = record ? "epic" : (big >= 30 ? "hard" : (big >= 12 ? "medium" : null));
+    if(level){
+      setTimeout(function(){ try{ celebrate(level); }catch(e){} }, 220);
+    }
   }
 
   // Shown once per phone per month. The key is local, not synced, because each of you
@@ -16126,15 +16780,23 @@
     }catch(e){}
     return !autoClosed;
   }
-  function syncCollapse(name, count, label){
+  function syncCollapse(name, count, label, keepWhenEmpty){
     var btn = document.getElementById(name + "Toggle");
     var body = document.getElementById(name + "Body");
     var counter = document.getElementById(name + "Count");
     if(!btn || !body) return;
     var card = btn.parentNode;
-    if(count === 0){ card.style.display = "none"; return; }
+    /* Build 113: the Completed card is nothing but its list, so hiding it when empty is
+       right. The Reward pool card also holds the Propose form, and hiding that the moment
+       the pool runs dry would leave no way to refill it. */
+    if(count === 0 && !keepWhenEmpty){ card.style.display = "none"; return; }
     card.style.display = "";
-    if(counter) counter.textContent = count + (count === 1 ? " item" : " items");
+    /* Build 113: `label` was accepted and then ignored - every card said "items". It is
+       "singular|plural" rather than a stem plus "s", because the first thing this wanted
+       to say was "memories", and "memorys" is how you can tell nobody checked. */
+    var words = String(label || "item|items").split("|");
+    var word = (count === 1 ? words[0] : (words[1] || words[0] + "s"));
+    if(counter) counter.textContent = count + " " + word;
     if(!btn.dataset.wired){
       btn.dataset.wired = "1";
       btn.addEventListener("click", function(){
@@ -16271,7 +16933,11 @@
     if(!title){ toast("Give it a name"); return; }
     if(!start){ toast("Pick the day it started"); return; }
     if(!(days > 0)){ toast("How many days?"); return; }
-    if(daysBetweenISO(start, todayISO()) < 0){ toast("Day one can't be in the future"); return; }
+    /* BUILD 114: this refused any future start date outright, which made it impossible to
+       set up a challenge that begins on the 1st until the 1st had already arrived. The
+       card has always known how to render "Starts <date>" - only the save blocked it.
+       Two months out is the limit; past that it is a plan, not a challenge. */
+    if(daysBetweenISO(todayISO(), start) > 60){ toast("That's too far out to start"); return; }
     var existing = activeChallenge();
     state.challenge = {
       id: existing ? existing.id : ("chal-" + uid()),
@@ -16425,13 +17091,13 @@
     var who = escapeHtml(a > b ? personName("p1") : personName("p2"));
     var line;
     if(lead === 0){
-      line = "<b>Dead level.</b> " + (daysLeft === 0 ? "Last day." : daysLeft + " days left.");
+      line = "<b>Dead level.</b> " + (daysLeft === 0 ? "Last day." : daysLeftPhrase(daysLeft) + ".");
     }else if(lead <= 20){
       line = "<b>" + who + " by " + lead + "</b> \u2014 " +
              (daysLeft === 0 ? "last day of the month." : "anyone's with " + daysLeft + " days to go.");
     }else{
       line = "<b>" + who + " by " + lead + "</b> \u2014 " +
-             (daysLeft === 0 ? "that's the month." : daysLeft + " days left.");
+             (daysLeft === 0 ? "that's the month." : daysLeftPhrase(daysLeft) + ".");
     }
     cap.innerHTML = line;
     cap.style.display = "block";
@@ -16678,6 +17344,7 @@
     renderFairnessNudge();
     try{ renderReminderStrip(dueReminders()); }catch(e){}
     renderMonthRace();
+    renderTrophyCabinet();
     renderMemories();
     renderDeviceOwnerLabel();
     renderHealth();
