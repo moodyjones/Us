@@ -511,6 +511,7 @@
   .task .info{flex:1;min-width:0;}
   .task .title{font-size:0.875rem;font-weight:600;}
   .task .meta{font-size:0.6875rem;color:var(--muted);margin-top:2px;}
+  .task .meta .meta-for{ white-space:nowrap; margin-left:10px; display:inline-block; }
   .diff-tag{
     font-size:0.625rem;padding:2px 7px;border-radius:999px;font-weight:700;
     text-transform:uppercase;
@@ -5389,6 +5390,76 @@
     if(t.bricked) t.bricked = false;
   });
   seedInitialData();
+  seedUnboundSetup();
+
+  /* ===========================================================================
+     BUILD 110 - the UNBOUND setup list.
+
+     Six things Moody has to do before Sunday to get UNBOUND off the ground. They
+     are real tasks with a real deadline, so they belong on the to-do list rather
+     than in a note that scrolls away.
+
+     Why this is not written like the other seeds:
+
+     - The ids are FIXED ("unb-1".."unb-6"), not uid(). Both phones run this on
+       their next load, and if they both run it before they next sync, unionById
+       sees the same six ids twice and keeps one of each. Random ids would have
+       produced twelve tasks and no way to tell which half to delete.
+
+     - The guard flag lives in SYNCED state, not localStorage, and the per-task
+       check is "does this id already exist". So ticking one off and syncing does
+       not bring it back on the other phone, and neither does deleting one.
+
+     - The titles are numbered because the order is the instruction: you cannot
+       create the WHOOP app before you have a developer account. Numbering in the
+       title survives whatever sort the list happens to be on.
+
+     Known side effect, left deliberately: these are six solo tasks on Moody's
+     side, and fairnessSplit() counts every completed solo task. Finishing all six
+     in a week can push his share of the last 21 days over the 68% line and set
+     off the "You've been carrying it" card. That card is aimed at the person who
+     is ahead, so the worst case is one week of a slightly silly nudge - not worth
+     teaching the fairness maths about task categories to avoid.
+     =========================================================================== */
+  function seedUnboundSetup(){
+    if(state.seededUnboundV1) return;
+    /* These live INSIDE the function on purpose. The first cut had them as two
+       module-level `var`s above this call site, which hoists the NAMES but not the
+       VALUES - so the call (which runs earlier in the file) hit
+       `undefined.forEach` and threw. The flag had already been set by then, so the
+       seed was permanently skipped and six tasks silently never appeared. The flag
+       is now set at the END, after the work, for the same reason. */
+    var UNBOUND_DUE = "2026-11-01";          // the Sunday
+    var UNBOUND_SETUP = [
+      {id:"unb-1", d:"easy",   title:"1. Install Xcode and sign in with your Apple ID"},
+      {id:"unb-2", d:"easy",   title:"2. Join the Apple Developer Program ($99/yr)"},
+      {id:"unb-3", d:"medium", title:"3. Create a WHOOP developer app \u2014 save the client ID and secret"},
+      {id:"unb-4", d:"medium", title:"4. Create a Meta developer app \u2014 get the Facebook App ID"},
+      {id:"unb-5", d:"easy",   title:"5. Put the Apple Health export and WorkoutExport.csv in the UNBOUND folder"},
+      {id:"unb-6", d:"easy",   title:"6. Save BRIEF.md and paste its first prompt into Claude Code"}
+    ];
+    var mk = monthKey();
+    if(!state.monthly[mk]) state.monthly[mk] = {assigned:0, completed:0, badgeAwarded:false};
+    var now = Date.now(), added = 0;
+    UNBOUND_SETUP.forEach(function(u, i){
+      if(state.tasks.some(function(t){ return t && t.id === u.id; })) return;
+      state.tasks.push({
+        id: u.id, title: u.title, assignedTo: "p1", difficulty: u.d, status: "open",
+        createdMonth: mk, completedBy: null, completedAt: null,
+        repeat: "none", lastCompletedAt: null,
+        listId: "list-todo", link: null, unitPrice: 0, currency: "EGP",
+        quantity: 1, alternatives: [], dueDate: UNBOUND_DUE,
+        /* step 1 gets the newest stamp so the default "newest first" sort reads
+           1, 2, 3 down the screen rather than 6, 5, 4. */
+        createdAt: now + (UNBOUND_SETUP.length - i),
+        mtime: now + (UNBOUND_SETUP.length - i)
+      });
+      state.monthly[mk].assigned++;
+      added++;
+    });
+    state.seededUnboundV1 = true;
+    save();
+  }
 
   function seedInitialData(){
     // Build 10: re-seed the shopping list so product photos are attached
@@ -8696,7 +8767,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 109;
+  var BUILD_NUM = 110;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -10133,7 +10204,12 @@
     var nFails = taskFails(t).length;
     var failTag = nFails ? '<span class="fail-tag">\u00D7' + nFails +
       (nFails === 1 ? " failed" : " failed") + '</span>' : "";
-    meta.innerHTML = diffTag + repeatTag + failTag + priceTag + dueDateTag(t) + " &nbsp; " + assignText;
+    /* Build 110: this was a bare "&nbsp;" and then the text. On a row long enough to
+       wrap - which the UNBOUND steps are - "For Moody" split across two lines as
+       "For" / "Moody", with the second word falling outside the pill row. It is one
+       phrase; it wraps as one phrase now. */
+    meta.innerHTML = diffTag + repeatTag + failTag + priceTag + dueDateTag(t) +
+      '<span class="meta-for">' + assignText + '</span>';
     info.appendChild(title); info.appendChild(meta);
 
     /* BUILD 101 - three buttons stacked down the right of every row used to be what set
