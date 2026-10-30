@@ -531,7 +531,7 @@
     color:var(--text);
     border-radius:10px;
     padding:10px 12px;
-    font-size:0.875rem;
+    font-size:max(16px, 0.875rem);
     font-family:inherit;
   }
   .row2{display:flex;gap:8px;}
@@ -633,7 +633,7 @@
     text-decoration:underline;cursor:pointer;
   }
   details.sync summary{cursor:pointer;color:var(--muted);font-size:0.8125rem;}
-  details.sync textarea{width:100%;margin-top:10px;height:80px;font-size:0.6875rem;}
+  details.sync textarea{width:100%;margin-top:10px;height:80px;font-size:max(16px, 0.6875rem);}
 
   .quest-card{
     background:linear-gradient(135deg,#3a2e46,var(--grad-deep-a));
@@ -672,7 +672,7 @@
     flex-wrap:wrap;
   }
   .task-filter-bar select{
-    flex:1 1 140px;min-width:0;font-size:0.7812rem;padding:8px 10px;
+    flex:1 1 140px;min-width:0;font-size:max(16px, 0.7812rem);padding:8px 10px;
   }
   .daily-q-card{
     background:linear-gradient(135deg,var(--chip-common-bg),var(--grad-deep-b));
@@ -737,10 +737,10 @@
   .alt-info a{color:var(--text);text-decoration:underline;font-size:0.75rem;}
   .alt-price{font-size:0.6875rem;color:var(--muted);margin-top:2px;}
   .alt-add-form{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
-  .alt-add-form input,.alt-add-form select{flex:1;min-width:70px;font-size:0.6875rem;padding:6px 8px;}
+  .alt-add-form input,.alt-add-form select{flex:1;min-width:70px;font-size:max(16px, 0.6875rem);padding:6px 8px;}
   .alt-add-form button{white-space:nowrap;}
   .edit-form{background:var(--card2);border:1px dashed var(--purple);border-radius:12px;padding:10px 12px;margin-top:4px;}
-  .edit-form select,.edit-form input{width:100%;margin-bottom:6px;font-size:0.8125rem;}
+  .edit-form select,.edit-form input{width:100%;margin-bottom:6px;font-size:max(16px, 0.8125rem);}
 
   .exp-card{
     background:linear-gradient(135deg,var(--grad-deep-a),#272e4f);
@@ -781,7 +781,7 @@
   .modal.wide label{
     display:block;font-size:0.75rem;color:var(--muted);margin:10px 0 4px;font-weight:600;
   }
-  .modal.wide input,.modal.wide select{width:100%;font-size:0.875rem;}
+  .modal.wide input,.modal.wide select{width:100%;font-size:max(16px, 0.875rem);}
   .modal.wide .row2 input{width:100%;}
   .photo-preview{
     width:100%;border-radius:12px;margin-top:8px;display:none;
@@ -814,7 +814,7 @@
   .sign-picker{
     margin-top:10px;font-size:0.6875rem;color:var(--muted);
   }
-  .sign-picker select{font-size:0.6875rem;padding:5px 8px;margin-left:6px;}
+  .sign-picker select{font-size:max(16px, 0.6875rem);padding:5px 8px;margin-left:6px;}
 
   /* ----- check-in ----- */
   .checkin-card{
@@ -1623,7 +1623,7 @@
   .alt-panel summary svg{width:12px;height:12px;flex-shrink:0;}
   .alt-panel[open] summary{color:var(--muted);}
   .alt-add-form{gap:5px;margin-top:7px;padding-top:7px;}
-  .alt-add-form input,.alt-add-form select{font-size:0.6562rem;padding:6px 8px;border-radius:9px;}
+  .alt-add-form input,.alt-add-form select{font-size:max(16px, 0.6562rem);padding:6px 8px;border-radius:9px;}
   .buy-tags{display:flex;align-items:center;gap:7px;margin-top:9px;flex-wrap:wrap;}
   .buy-check{
     width:26px;height:26px;border-radius:50%;border:2px solid var(--line-2);
@@ -1664,9 +1664,30 @@
     border:1px solid var(--line-2);color:var(--muted);border-radius:13px;
     font-weight:600;font-size:0.8125rem;background:rgba(255,255,255,.03);
   }
+  /* ---------------------------------------------------------------------------
+     BUILD 111 - the 16px floor, and why the photo question looked broken.
+
+     Tap a text field whose font-size is under 16px and iOS Safari zooms the whole
+     page in to make it readable. The layout viewport does not change; the VISUAL
+     one shrinks. Anything position:fixed is still sized to the layout viewport, so
+     a full-screen sheet keeps its old width and the right-hand side of it slides
+     off the edge of what you can see - the left margin looks correct, the title,
+     the subtitle and the Send button are all sliced down the right. That is
+     exactly what the photo-question sheet was doing, and nothing was wrong with
+     the sheet: it measures 420px inside a 430px viewport and overflows by nothing.
+     Its textarea was 14px.
+
+     Every text field in this app was 14px or smaller - 44 of them - so this was
+     never about one sheet. max(16px, ...) sets the floor without throwing away
+     Dynamic Type: at the default text size each field lands on 16px, and above it
+     the rem side wins and they grow with everything else.
+
+     The usual alternative, maximum-scale=1 on the viewport meta, is not an option:
+     it also blocks pinch-zoom, and Safari ignores it anyway for that reason.
+     --------------------------------------------------------------------------- */
   input,select,textarea{
     background:rgba(38,43,70,.045);border:1px solid var(--line-2);
-    border-radius:12px;padding:12px 13px;font-size:0.875rem;font-family:var(--ui);
+    border-radius:12px;padding:12px 13px;font-size:max(16px, 0.875rem);font-family:var(--ui);
     color:var(--text);
   }
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plum);}
@@ -2444,7 +2465,7 @@
     border-radius:10px;
     padding:12px 38px 12px 14px;
     color:var(--text);
-    font-family:var(--ui); font-size:0.875rem; font-weight:500;
+    font-family:var(--ui); font-size:max(16px, 0.875rem); font-weight:500;
   }
   :root[data-skin="pe"] select:focus{ outline:none; border-color:var(--rose); }
   :root[data-skin="pe"] input[type="text"],
@@ -5270,7 +5291,7 @@
       // the month whose spins are currently live. When this no longer matches the calendar
       // month, every unspent spin has expired — see expireSpinsIfNewMonth.
       spinPeriod: null,     // "YYYY-MM"
-      spinWarnMonth: null,  // the month we've already sent the "use them" nudge for
+      spinWarnMonth: {},    // pid -> the month that person's "use them" nudge was sent for
       // "together mode": while a trip's dates cover today, the daily codes step aside and
       // the two photo slots become one shared frame. Keyed by DATE, not by person, because
       // there's only one of these a day and either phone may post it.
@@ -8021,7 +8042,22 @@
     // Whichever phone has already rolled the month wins: expiry must not un-happen because
     // the other phone hasn't opened yet and still thinks it's last month.
     m.spinPeriod = (String(L.spinPeriod||"") > String(R.spinPeriod||"")) ? L.spinPeriod : (R.spinPeriod || L.spinPeriod || null);
-    m.spinWarnMonth = (String(L.spinWarnMonth||"") > String(R.spinWarnMonth||"")) ? L.spinWarnMonth : (R.spinWarnMonth || L.spinWarnMonth || null);
+    /* BUILD 112: per person. The old line took the greater of two strings, which is right
+       for one shared value and wrong for two independent ones - Moody having been warned
+       would merge over Rae not having been. An older build's bare string is dropped rather
+       than copied onto both: one duplicate nudge is a far smaller failure than a silent
+       miss, which is the bug this whole change exists to fix. */
+    (function(){
+      var w = {};
+      [L.spinWarnMonth, R.spinWarnMonth].forEach(function(o){
+        if(!o || typeof o !== "object") return;
+        for(var pid in o){
+          if(!o.hasOwnProperty(pid)) continue;
+          if(String(o[pid]||"") > String(w[pid]||"")) w[pid] = o[pid];
+        }
+      });
+      m.spinWarnMonth = w;
+    })();
     m.healthGistUrl = base.healthGistUrl || other.healthGistUrl;
     // the health topics are the only way a reading reaches the other phone, so a side that
     // has one always wins over a side that doesn't — same rule as the notification topics
@@ -8767,7 +8803,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 110;
+  var BUILD_NUM = 112;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -13021,7 +13057,7 @@
       }
     });
     state.spinPeriod = now;
-    state.spinWarnMonth = null;
+    state.spinWarnMonth = {};
     save(); scheduleSync();
     if(report.length){
       var mine = report.filter(function(r){ return r.pid === deviceOwner(); })[0];
@@ -13045,8 +13081,14 @@
     var left = daysLeftInMonth();
     if(unspent <= 0 || left > 3) return;
     var mk = monthKeyNow();
-    if(state.spinWarnMonth === mk) return;
-    state.spinWarnMonth = mk;
+    /* BUILD 112: this was ONE value for the pair - `if(state.spinWarnMonth === mk) return`
+       against a single synced string. Whichever phone opened first set it, and after the
+       next sync the other phone read "already warned this month" and said nothing. So the
+       nudge could only ever reach one of the two of you, and which one came down to who
+       happened to open the app first. It is keyed by person now. */
+    if(!state.spinWarnMonth || typeof state.spinWarnMonth !== "object") state.spinWarnMonth = {};
+    if(state.spinWarnMonth[me] === mk) return;
+    state.spinWarnMonth[me] = mk;
     save(); scheduleSync();
     if(typeof ntfySend === "function" && typeof ntfyOn === "function" && ntfyOn()){
       ntfySend(me, {
