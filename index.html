@@ -706,6 +706,13 @@
     }
   }
   .recap-verdict.reveal.shown, .recap-sec.reveal.shown{ opacity:1; transform:none; }
+  .recap-open{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .recap-open select{ flex:1 1 150px; min-width:0; }
+  .recap-open button{ flex:0 0 auto; }
+  .recap-foot-note{
+    font-size:0.6875rem; color:var(--faint); text-align:center;
+    margin-top:14px; line-height:1.5;
+  }
   .recap-sec{margin-top:18px;}
   .recap-sec h4{
     font-size:0.6875rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);
@@ -1157,6 +1164,15 @@
   .row-entry.live{color:var(--coral);border-color:var(--coral);font-weight:600;}
 
   /* ---- the fairness nudge ---- */
+  .card.dry-card,
+  :root[data-skin="pe"] .card.dry-card{
+    background:linear-gradient(168deg,rgba(116,214,172,.12),var(--card) 62%);
+    border:1px solid var(--line-2);margin-top:12px;
+  }
+  .dry-head{font-size:0.9375rem;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .dry-body{font-size:0.8438rem;line-height:1.6;color:var(--muted);}
+  .dry-acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .dry-acts > *{flex:1 1 130px;min-width:0;}
   .card.fair-card,
   :root[data-skin="pe"] .card.fair-card{
     background:linear-gradient(168deg,rgba(232,181,75,.11),var(--card) 62%);
@@ -3905,6 +3921,10 @@
   <div class="card miss-card" id="photoMissCard" style="display:none;"></div>
   <!-- Shown only to whoever is ahead. The other person never sees it and is never told. -->
   <div class="card fair-card" id="fairNudge" style="display:none;"></div>
+  <!-- BUILD 116: Dry November refused to overwrite a challenge already running, which was
+       right, and then said nothing at all, which was not. If it is standing down, it says
+       so and offers the choice rather than making it. -->
+  <div class="card dry-card" id="dryNovCard" style="display:none;"></div>
   <!-- BUILD 100: six full-width banners could render at once here - reminder, milestone,
        activity, photo penalty, streak repair, fairness - with nothing governing how many.
        Measured worst case was ~1,500px of banner before the greeting card even began.
@@ -4187,7 +4207,16 @@
         <span class="note-arch-count" id="monthRaceDays"></span>
       </div>
       <div id="monthRaceBody"></div>
-      <button type="button" class="ghost" id="monthRecapBtn" style="width:100%;margin-top:12px;">Read last month’s recap</button>
+      <!-- BUILD 116: this used to be one button that only ever opened LAST month, sitting
+           at the foot of a card on a tab you might not open. The recap auto-opens once and
+           then never again, so that button was the only way back to it and it did not look
+           like one. It names the month now, and any month with anything in it can be
+           chosen - the trophies and the records already span months, so the recap should
+           too. -->
+      <div class="recap-open">
+        <select id="recapMonthPick" aria-label="Which month to read"></select>
+        <button type="button" class="ghost" id="monthRecapBtn">Read it</button>
+      </div>
     </div>
 
     <!-- BUILD 115: the cabinet. Awards used to exist only while a recap sheet was open. -->
@@ -5581,15 +5610,48 @@
      something the app decided for them would be the worst possible version of this.
      If one is live, this does nothing and stays out of the way.
      =========================================================================== */
+  /* A FUNCTION, not a `var`. seedDryNovember() is called near the top of the file and
+     this sits further down: a `var` hoists its name but not its value, so the call would
+     reach DRY().id as undefined and throw - which is exactly how the UNBOUND seed
+     failed silently two builds ago. A function declaration hoists whole. */
+  function DRY(){
+    return {id:"chal-dry-nov", title:"Dry November", emoji:"\uD83D\uDCA7",
+            start:"2026-11-01", days:30, endsOn:"2026-11-30"};
+  }
+  function dryNovWindow(){
+    var t = todayISO();
+    return t >= DRY().start && t <= DRY().endsOn;
+  }
+  /* A challenge whose last day has been and gone is OVER, whatever the slot says.
+     activeChallenge() only looks at endedAt, so one nobody tapped "End" on holds the
+     slot forever - which is the actual reason Dry November did not appear on the 1st:
+     a 31-day October challenge was still sitting in it on the 1st of November. */
+  function challengeRanOut(c){
+    if(!c || !c.startDate || !c.days) return false;
+    return daysBetweenISO(c.startDate, todayISO()) >= c.days;
+  }
   function seedDryNovember(){
     if(state.seededDryNovV1) return;
-    if(activeChallenge()) return;            // never clobber one in progress
+    // one that has run its full length is retired automatically - nothing is interrupted,
+    // and its timeline is kept exactly as it was
+    var done = activeChallenge();
+    if(done && challengeRanOut(done)){
+      done.endedAt = new Date().toISOString();
+      done.mtime = Date.now();
+    }
+    /* BUILD 116: it still refuses to overwrite a challenge in progress - replacing
+       something you are nine days into would be the worst version of this - but it no
+       longer does so silently. renderDryNovOffer() puts the choice on screen instead of
+       the app quietly making it on your behalf and leaving you to wonder where November
+       went. The flag stays FALSE here, so if the other challenge ends mid-month this
+       simply seeds itself on the next load. */
+    if(activeChallenge()) return;
     state.challenge = {
-      id: "chal-dry-nov",
-      title: "Dry November",
-      emoji: "\uD83D\uDCA7",
-      startDate: "2026-11-01",
-      days: 30,
+      id: DRY().id,
+      title: DRY().title,
+      emoji: DRY().emoji,
+      startDate: DRY().start,
+      days: DRY().days,
       taskId: null,
       checkins: {}, markedAt: {}, unticks: {},
       mtime: Date.now(),
@@ -8985,7 +9047,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 115;
+  var BUILD_NUM = 116;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -15403,6 +15465,52 @@
     return y + "-" + (m < 10 ? "0" + m : String(m));
   }
 
+  /* The offer, shown only while there is actually a decision to make: inside November,
+     not yet started, not already turned down, and something else is holding the slot. */
+  function renderDryNovOffer(){
+    var el = document.getElementById("dryNovCard");
+    if(!el) return;
+    var live = activeChallenge();
+    // a finished-but-unretired challenge is not a reason to ask; the seed retires it
+    if(live && challengeRanOut(live)) live = null;
+    var show = !state.seededDryNovV1 && !state.dryNovDeclined && dryNovWindow() && !!live;
+    if(!show){ el.style.display = "none"; el.innerHTML = ""; return; }
+    var left = daysBetweenISO(todayISO(), DRY().endsOn) + 1;
+    el.style.display = "";
+    el.innerHTML =
+      '<div class="dry-head">' + icon("plant", 16, "inline-warn") + ' Dry November is waiting</div>' +
+      '<div class="dry-body">' +
+        'It would have started on the 1st, but <b>' + escapeHtml(live.title || "your challenge") +
+        '</b> is still running and WeDO only holds one challenge at a time \u2014 so it stood ' +
+        'down rather than overwrite something you are part-way through. ' +
+        (left > 0 ? '<b>' + left + (left === 1 ? " day" : " days") + '</b> of November left. ' : "") +
+        'Starting it ends the other one and keeps its record.' +
+      '</div>' +
+      '<div class="dry-acts">' +
+        '<button type="button" class="ghost" id="dryNovLater">Not this month</button>' +
+        '<button type="button" class="primary" id="dryNovGo">Start Dry November</button>' +
+      '</div>';
+    document.getElementById("dryNovLater").addEventListener("click", function(){
+      state.dryNovDeclined = true; save(); scheduleSync(); renderDryNovOffer();
+      toast("Left as it is");
+    });
+    document.getElementById("dryNovGo").addEventListener("click", function(){
+      showConfirm("\uD83C\uDF31", "Switch to Dry November?",
+        "\u201C" + (live.title || "Your challenge") + "\u201D ends now and Dry November starts " +
+        "from the 1st. The days you have already ticked off stay in the timeline \u2014 ending " +
+        "a challenge does not erase it.",
+        "Switch", function(){
+          var c = activeChallenge();
+          if(c){ c.endedAt = new Date().toISOString(); c.mtime = Date.now(); }
+          state.seededDryNovV1 = false;
+          seedDryNovember();
+          scheduleSync(); renderAll();
+          announce("started \"Dry November\" \uD83D\uDCA7 \u2014 30 days, together");
+          toast("Dry November started");
+        }, "Keep the current one");
+    });
+  }
+
   function renderTrophyCabinet(){
     var wrap = document.getElementById("trophyList");
     if(!wrap) return;
@@ -16001,6 +16109,10 @@
 
     html += '<div class="recap-sec"><h4>Where that leaves you</h4>' +
       '<div class="recap-words">' + escapeHtml(recapWords(st)) + '</div></div>';
+    // Build 116: closing this is not throwing it away, and there is no reason anyone
+    // should have to find that out by experiment.
+    html += '<div class="recap-foot-note">Closing this keeps it. Any month you like is ' +
+      'under <b>Leaderboard \u2192 This month</b>.</div>';
 
     var bodyEl = document.getElementById("recapBody");
     bodyEl.innerHTML = html;
@@ -16071,8 +16183,32 @@
   document.getElementById("recapShare").addEventListener("click", function(){ if(recapMk) shareRecap(recapMk); });
   recapBg.addEventListener("click", function(e){ if(e.target === recapBg) recapBg.classList.remove("show"); });
   document.getElementById("monthRecapBtn").addEventListener("click", function(){
-    renderRecap(prevMonthKey(monthKeyNow()));
+    var pick = document.getElementById("recapMonthPick");
+    var mk = (pick && pick.value) || prevMonthKey(monthKeyNow());
+    renderRecap(mk);
   });
+  /* Build 116: fill the picker with every month that has something in it, newest first,
+     never the month you are standing in - a recap of a month still running is half a
+     recap, and the "best month yet" line would be comparing an unfinished month. */
+  function renderRecapPicker(){
+    var pick = document.getElementById("recapMonthPick");
+    if(!pick) return;
+    var now = monthKeyNow();
+    var keys = recapMonthKeys().filter(function(k){ return k < now; }).reverse();
+    if(!keys.length){
+      pick.innerHTML = '<option value="">Nothing to read yet</option>';
+      pick.disabled = true;
+      document.getElementById("monthRecapBtn").disabled = true;
+      return;
+    }
+    pick.disabled = false;
+    document.getElementById("monthRecapBtn").disabled = false;
+    var keep = pick.value;
+    pick.innerHTML = keys.map(function(k){
+      return '<option value="' + k + '">' + escapeHtml(monthName(k)) + '</option>';
+    }).join("");
+    pick.value = (keys.indexOf(keep) >= 0) ? keep : keys[0];
+  }
 
   // ================= MEMORIES =================
   // A month at a time. Each cell is one day, split down the middle: your photo on the left,
@@ -17120,7 +17256,9 @@
      It folds with a CLASS, never by writing style.display, so the renderer's own idea of
      how to show itself survives the fold and comes back intact.
      --------------------------------------------------------------------------- */
-  var BANNER_IDS = ["repairCard", "milestoneCard", "activityCard", "photoMissCard", "fairNudge"];
+  /* Build 116: dryNovCard goes FIRST, for the same reason repairCard does - it is the one
+     banner here with a deadline you can miss. November does not come round again. */
+  var BANNER_IDS = ["dryNovCard", "repairCard", "milestoneCard", "activityCard", "photoMissCard", "fairNudge"];
   var BANNER_LABEL = {
     repairCard:    "a streak to cover",
     milestoneCard: "a milestone",
@@ -17342,8 +17480,10 @@
     renderRowEntry();
     renderRepairOffer();
     renderFairnessNudge();
+    renderDryNovOffer();
     try{ renderReminderStrip(dueReminders()); }catch(e){}
     renderMonthRace();
+    renderRecapPicker();
     renderTrophyCabinet();
     renderMemories();
     renderDeviceOwnerLabel();
