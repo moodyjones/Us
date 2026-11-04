@@ -2002,6 +2002,10 @@
     display:flex;align-items:center;gap:10px;text-align:left;color:inherit;
   }
   .card-collapse h2{margin:0;flex:0 0 auto;}
+  /* a collapsible card that also has a control of its own in the header */
+  .cc-head-row{ display:flex; align-items:center; gap:var(--sp-4); }
+  .cc-head-row .card-collapse{ flex:1; min-width:0; }
+  .cc-head-row .cc-chev{ margin-left:auto; }
   .cc-count{
     flex:1;min-width:0;font-size:0.7812rem;color:var(--faint);font-weight:600;
   }
@@ -4375,6 +4379,15 @@
     <button type="button" id="connLockSkip" style="width:100%;margin-top:18px;background:none;border:none;color:var(--muted);font-size:0.7188rem;text-decoration:underline;cursor:pointer;">
       One of us is unreachable (travel, dead phone) — skip yesterday
     </button>
+    <!-- BUILD 124: the way out, from inside.
+
+         This screen covers the whole app, Settings included. So a couple who have
+         moved in together could not reach the switch that says so without first
+         skipping a code every morning to get at it. A lock with no door is a bug,
+         however well the lock works. -->
+    <button type="button" id="connLockTogether" style="width:100%;margin-top:10px;background:none;border:none;color:var(--muted);font-size:0.7188rem;text-decoration:underline;cursor:pointer;">
+      We live together now — stop asking for codes
+    </button>
   </div>
 </div>
 
@@ -4525,19 +4538,28 @@
       <div id="checkinBody"></div>
     </div>
 
-    <div class="card" id="healthCard">
-      <h2 style="display:flex;align-items:center;justify-content:space-between;">Health today
+    <!-- Collapsible, on the same .card-collapse / .cc-body machinery as Completed,
+         the Reward pool and the Trophy cabinet. The refresh button cannot live inside
+         the collapse button - a button inside a button is invalid and the inner one
+         stops being reachable - so it sits beside it and the header is a flex row. -->
+    <div class="card collapsible" id="healthCard">
+      <div class="cc-head-row">
+        <button class="card-collapse" id="healthToggle" aria-expanded="true">
+          <h2>Health today</h2>
+          <span class="cc-chev" data-ico="chevron" data-ico-size="15"></span>
+        </button>
         <button type="button" id="healthRefresh" class="icon-btn" aria-label="Refresh health data" data-ico="refresh"></button>
-      </h2>
-      <div id="healthBody"></div>
+      </div>
+      <div class="cc-body" id="healthBody"></div>
     </div>
 
     <!-- Build 100: these three used to sit ABOVE the task list. Measured on a 393x852
          phone that put the first task at y=1705 - two screens down - on a day with
          nothing wrong. Quest, stats and health are things you GLANCE at; the task list
          is the thing you came to use, so the list goes first and these follow it. -->
-    <div class="card quest-card">
-      <h2>Couple Quest</h2>
+    <!-- One card, two weekly asks. See renderQuest() for why it is not two. -->
+    <div class="card quest-card" id="weekCard">
+      <h2 id="weekCardTitle">This week</h2>
       <div id="questBody"></div>
     </div>
 
@@ -4994,6 +5016,17 @@
     <button class="ghost" id="retryImagesBtn" style="width:100%;margin-top:6px;">Retry missing trip images</button>
     <button class="ghost" id="forceUpdateBtn" style="width:100%;margin-top:6px;">Force reload latest version</button>
     <div id="diagOut" style="display:none;font-size:0.6875rem;line-height:1.8;margin-top:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--card2);border-radius:10px;padding:10px 12px;word-break:break-word;"></div>
+    <hr>
+    <hr>
+    <p style="font-size:0.75rem;color:var(--muted);"><strong>Living together?</strong>
+      The daily code trade exists to make you actually talk when you're apart. Under one
+      roof it's busywork — and missing it locks the app the next morning. Turn this on and
+      the codes, the lock and the check-in card all go away. This one is shared: it changes
+      for both of you.</p>
+    <div class="ob-pick" id="liveTogetherPick" style="margin-top:0;">
+      <button type="button" data-lt="1">We live together</button>
+      <button type="button" data-lt="0">We're apart</button>
+    </div>
     <hr>
     <p style="font-size:0.75rem;color:var(--muted);"><strong>Phone owner.</strong> <span id="deviceOwnerLabel">Not set yet.</span> Daily codes only show on their owner's phone. Only change this if it's genuinely wrong.</p>
     <button class="ghost" id="deviceOwnerBtn" style="width:100%;">Change phone owner</button>
@@ -6116,7 +6149,19 @@
       // single object rather than a list: two people can hold one of these in their heads at
       // a time, and a screen full of half-finished challenges is worse than none.
       // checkins are per person per day so either phone can mark its own without a conflict.
-      challenge: null       // {id,title,emoji,startDate,days,taskId,checkins:{pid:{date:true}},mtime,endedAt}
+      challenge: null,      // {id,title,emoji,startDate,days,taskId,checkins:{pid:{date:true}},mtime,endedAt}
+      /* BUILD 124: are the two of you under one roof at the moment.
+
+         The daily code trade exists to make you actually talk when you are APART -
+         a 4-digit number each, traded in person or over the phone. Living together
+         it is busywork, and worse than busywork: missing it locks the app the next
+         morning, so a feature meant to bring you together starts shutting you out
+         for being in the same room.
+
+         SYNCED, not per-phone. Which house you live in is a fact about the couple,
+         so turning it on sets it for both of you rather than leaving one phone
+         still asking for a code the other one is no longer showing. */
+      liveTogether: false
     };
   }
 
@@ -9045,6 +9090,14 @@
       // evening one and steps would appear to go backwards.
       m.healthCache[pid] = String(lh.updatedAt||"") >= String(rh.updatedAt||"") ? lh : rh;
     });
+    /* Whether you live together is one fact about the two of you, not one each, so
+       it merges like a setting and not like a slot: the phone that changed it most
+       recently wins. Without the timestamp this would be `||` or `&&`, and either
+       one makes the switch impossible to turn back off from one phone. */
+    var ltL = L.liveTogetherMtime || 0, ltR = R.liveTogetherMtime || 0;
+    m.liveTogether = (ltR > ltL) ? !!R.liveTogether : !!L.liveTogether;
+    m.liveTogetherMtime = Math.max(ltL, ltR);
+
     // daily photos: per person, the newer post wins. Merged per-person (not as a whole
     // object) because each phone only ever writes ITS OWN slot — taking the object from
     // one side wholesale would silently drop the partner's photo of the day.
@@ -10179,9 +10232,13 @@
       {e:"💞", t:"Welcome to WeDO", x:"One app, one scoreboard, one rule: do stuff together, to get there."},
       {e:"☀️", t:"Your morning minute", x:"That's the Today tab, and it's where the app opens. A greeting (" + n2 + ", expect a different dessert name every day), a quote, one considerate cue, and whatever the two of you are tracking today."},
       {e:"✅", t:"Do stuff", x:"The Tasks tab is the list, and nothing else. Four of them — Stuff, Trips, Experiences, Shopping. Tap the + to add anything. Checking things off earns points, and Together tasks pay you BOTH."},
-      {e:"🔗", t:"The evening code trade", x:"Each day you both get a 4-digit code that only shows on your own phone. Talk to each other, swap codes, type theirs in — you both get +10 points and your connection streak grows. This is the heart of the app."},
+      codesOn()
+        ? {e:"🔗", t:"The evening code trade", x:"Each day you both get a 4-digit code that only shows on your own phone. Talk to each other, swap codes, type theirs in — you both get +10 points and your connection streak grows. This is the heart of the app."}
+        : {e:"💞", t:"The two hearts", x:"The pair between your photos moves. Close enough to touch when you're in step, drifting apart when you're not — it counts the days you both posted and whether the doing is shared. Tap them to see the numbers."},
       {e:"🎡", t:"Spins & rewards", x:"Every 5 completed tasks earns a spin of the wheel — massages, date nights, weekend getaways. Want a new reward on there? Propose it, and the other person approves it."},
-      {e:"💌", t:"Make it a ritual", x:"Morning: read your cue. During the day: check things off. Evening: trade codes together. Weekly: spin your spins and pick a Couple Quest. Tip: set a 9pm phone reminder called “trade codes 🔗” — that one habit carries everything else. And leave a note in the Notes tab now and then. ❤️"}
+      codesOn()
+        ? {e:"💌", t:"Make it a ritual", x:"Morning: read your cue. During the day: check things off. Evening: trade codes together. Sunday: pick your one big thing for the week. Tip: set a 9pm phone reminder called “trade codes 🔗” — that one habit carries everything else. And leave a note in the Notes tab now and then. ❤️"}
+        : {e:"💌", t:"Make it a ritual", x:"Morning: read your cue and post your photo. During the day: check things off. Sunday: pick your one big thing for the week, and ask for one thing you'd actually want. And leave a note in the Notes tab now and then. ❤️"}
     ];
   }
   function renderTourStep(){
@@ -10230,6 +10287,35 @@
     obOpen(state.paired ? "join" : "new");
   });
 
+  function renderLiveTogether(){
+    var box = document.getElementById("liveTogetherPick");
+    if(!box) return;
+    var on = !!state.liveTogether;
+    box.querySelectorAll("button[data-lt]").forEach(function(b){
+      b.classList.toggle("on", (b.getAttribute("data-lt") === "1") === on);
+    });
+  }
+  document.getElementById("liveTogetherPick").addEventListener("click", function(ev){
+    var b = ev.target.closest ? ev.target.closest("button[data-lt]") : null;
+    if(!b) return;
+    var on = b.getAttribute("data-lt") === "1";
+    if(on === !!state.liveTogether) return;
+    state.liveTogether = on;
+    state.liveTogetherMtime = Date.now();
+    /* Turning it ON clears any lock that is already armed. Without this the switch
+       would be unreachable the morning after a missed code - the lock screen covers
+       the whole app, Settings included, so you could not get to the thing that turns
+       the lock off. */
+    if(on) applyConnLock();
+    save(); scheduleSync();
+    renderLiveTogether();
+    renderAll();
+    toast(on ? "Codes off \u2014 enjoy being in the same room \uD83D\uDC9E"
+             : "Codes back on \u2014 you'll each get one tonight");
+    track("live_together", {ok: on});
+  });
+  renderLiveTogether();
+
   function renderAnonPick(){
     var box = document.getElementById("anonPick");
     if(!box) return;
@@ -10269,7 +10355,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 123;
+  var BUILD_NUM = 124;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -10289,7 +10375,7 @@
       }).catch(function(){});
     }
     var owner = deviceOwner();
-    add(!!owner, "Phone owner", owner ? personName(owner) : "NOT SET — pick in Daily check-in");
+    add(!!owner, "Phone owner", owner ? personName(owner) : "NOT SET — Settings \u2192 Change phone owner");
     add(null, "Viewing as", personName(state.currentUser));
     var gist = parseGistBase(state.healthGistUrl);
     add(!!gist, "Gist link", gist ? "saved" : "MISSING — paste it above and Save");
@@ -11054,6 +11140,7 @@
     });
   }
   function renderHealth(){
+    wireSimpleCollapse("health", true);
     var body = document.getElementById("healthBody");
     if(!body) return;
     var a = (state.healthCache || {}).p1, b = (state.healthCache || {}).p2;
@@ -12803,6 +12890,11 @@
     return String(hashStr(state.pairSecret + "|" + personId + "|" + dateISO) % 10000).padStart(4, "0");
   }
 
+  /* The one question everything below asks. A function rather than a field read,
+     because "do we trade codes" is the question the rest of the app actually has,
+     and a future reason to say no (a challenge, a holiday) belongs in here. */
+  function codesOn(){ return !state.liveTogether; }
+
   function isLockedIn(personId, dateISO){
     return !!(state.lockins[personId] && state.lockins[personId][dateISO]);
   }
@@ -12992,6 +13084,10 @@
 
   // ---------- missed-code lock: gate the whole app if yesterday's code never got traded ----------
   function missedLockDate(){
+    /* First line, before anything else. This is the function that can gate the
+       entire app behind a 4-digit number, and the moment codes are off there is no
+       number to give it - so it has to answer "never" rather than "not today". */
+    if(!codesOn()) return null;
     var owner = deviceOwner();
     if(!owner || !state.paired || !state.pairSecret) return null;
     var yesterday = addDaysISO(-1);
@@ -13024,6 +13120,17 @@
       lockInDay(owner, missed);
       applyConnLock();
     };
+    document.getElementById("connLockTogether").onclick = function(){
+      if(!confirm("Stop the daily code trade? It's for when you're apart. You can turn it " +
+                  "back on in Settings whenever you like.")) return;
+      state.liveTogether = true;
+      state.liveTogetherMtime = Date.now();
+      save(); scheduleSync();
+      applyConnLock();
+      renderAll();
+      toast("Codes off \u2014 enjoy being in the same room \uD83D\uDC9E");
+      track("live_together", {ok: true, source: "lock"});
+    };
     document.getElementById("connLockSkip").onclick = function(){
       if(!confirm("Skip " + fmtDueDate(missed) + "'s code? Only do this if one of you genuinely couldn't be reached — no points, and it breaks the streak.")) return;
       if(!state.skippedDays) state.skippedDays = {};
@@ -13040,6 +13147,12 @@
     var card = document.getElementById("checkinCard");
     var body = document.getElementById("checkinBody");
     if(!body) return;
+    if(!codesOn()){
+      if(card) card.style.display = "none";
+      body.innerHTML = "";
+      return;
+    }
+    if(card) card.style.display = "";
     var me = state.currentUser;
     var partner = otherPerson(me);
     var today = todayISO();
@@ -14092,13 +14205,119 @@
     wrap.appendChild(btn);
   }
 
+  /* BUILD 124 - the weekly reward ask, lifted out of the nudge card.
+
+     It and the Couple Quest were two cards, in the same place, with the same shape -
+     a prompt, a picker, a button - both asking "what do you want out of next week".
+     Moody called them redundant and he is right: they are the same ritual asked
+     twice. They are one card now, and this is the half that moved.
+
+     The code is the same code. Only the two guards changed hands: whether it is due
+     this week, and whether it is the first block in its card, are the caller's to
+     know now. */
+  function buildRewardAsk(host, me, divided){
+    var blk2 = document.createElement("div");
+    blk2.className = "nudge-blk";
+    if(divided) blk2.className += " divided";
+    var t2 = document.createElement("div");
+    t2.className = "nudge-title";
+    t2.innerHTML = icon("bulb", 19, "hd-i") + " What would you actually want this week?";
+    var sub2 = document.createElement("div");
+    sub2.className = "nudge-sub";
+    sub2.textContent = "Add one thing to the wheel. " + personName(otherPerson(me)) +
+      " approves it before it goes on, so ask for something real.";
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.placeholder = "e.g. breakfast in bed, a night off cooking…";
+    inp.maxLength = 80;
+    var tierSel = document.createElement("select");
+    // 3.3.2: the surrounding prose explains this, but a screen reader reads the control
+    // on its own and heard only "Small treat, popup button".
+    tierSel.setAttribute("aria-label", "How big a reward this is");
+    [["common","Small treat"],["uncommon","Proper treat"],["rare","Big one"]].forEach(function(o){
+      var op = document.createElement("option");
+      op.value = o[0]; op.textContent = o[1];
+      tierSel.appendChild(op);
+    });
+    tierSel.style.marginTop = "7px";
+    var row = document.createElement("div");
+    row.className = "row2";
+    row.style.marginTop = "7px";
+    var send = document.createElement("button");
+    send.className = "ghost";
+    send.textContent = "Propose it";
+    var skip = document.createElement("button");
+    skip.className = "ghost";
+    skip.textContent = "Not this week";
+    send.addEventListener("click", function(){
+      var name = inp.value.trim();
+      if(!name){ toast("Type an idea first"); return; }
+      if(!state.rewardRequests) state.rewardRequests = [];
+      if(proposalsLeft(me) <= 0){
+        toast("That's your three for this month — next month resets"); return;
+      }
+      state.rewardRequests.push({
+        id: uid(), mtime: Date.now(), name: name, tier: tierSel.value,
+        emoji: emojiByTier[tierSel.value], proposedBy: me, month: monthKeyNow(),
+        date: new Date().toISOString()
+      });
+      announce('suggested a new reward: "' + name + '" \uD83D\uDCA1');
+      markRewardIdeaAsked(me);
+      renderRewards(); renderActivityFeed();
+      toast("Sent to " + personName(otherPerson(me)) + " to approve \uD83D\uDC9E");
+    });
+    skip.addEventListener("click", function(){
+      markRewardIdeaAsked(me);
+      toast("Okay — I'll ask again next week");
+    });
+    row.appendChild(send); row.appendChild(skip);
+    blk2.appendChild(t2); blk2.appendChild(sub2);
+    blk2.appendChild(inp); blk2.appendChild(tierSel); blk2.appendChild(row);
+    host.appendChild(blk2);
+  }
+
+  /* ===========================================================================
+     BUILD 124 - "This week", which used to be two cards.
+
+     Couple Quest asked you to pick one thing to do together. The nudge card asked
+     you to name one thing you would actually want. Same place, same shape, same
+     cadence, and a week apart from each other in meaning - which is to say, the
+     same ritual asked twice. They are one card now.
+
+     WHEN IT SHOWS, and this is the part that needed deciding:
+
+       a quest is running   ALWAYS. You both have a part to tick and the card is
+                            the only place to tick it. Hiding it on a Tuesday would
+                            make the quest unfinishable for six days out of seven.
+       no quest, Sunday     The asks. One evening a week to decide what next week
+                            is for, which is what Moody wanted and is a better
+                            prompt than "any time you happen to look".
+       no quest, otherwise  Nothing. The card is gone.
+
+     The reward half carries its own "already answered this week" guard on top, so
+     a Sunday where you have already proposed something shows the quest alone. */
+  function isSunday(){ return new Date().getDay() === 0; }
+
   function renderQuest(){
     var wrap = document.getElementById("questBody");
-    if(!wrap) return;
+    var card = document.getElementById("weekCard");
+    var title = document.getElementById("weekCardTitle");
+    if(!wrap || !card) return;
     wrap.innerHTML = "";
     var q = state.quest.active;
+    var me = deviceOwner() || state.currentUser;
+    var rewardDue = me && (state.rewardIdeaWeek || {})[me] !== isoWeekKey();
+
+    if(!q && !isSunday()){
+      // nothing to tick and nothing to decide until Sunday
+      card.style.display = "none";
+      return;
+    }
+    card.style.display = "";
+    if(title) title.textContent = q ? "Your quest this week" : "This week";
+
     if(!q){
-      wrap.innerHTML = '<div class="quest-none">No active quest right now. Pick one to tackle together:</div>' +
+      wrap.innerHTML = '<div class="quest-none">One big thing to tackle together this week:</div>' +
         '<select id="questPicker" aria-label="Pick a quest to do together" style="width:100%;margin-bottom:8px;">' +
         QUEST_SUGGESTIONS.map(function(s,i){ return '<option value="'+i+'">'+s.title+'</option>'; }).join('') +
         '</select><button class="primary" id="startQuestBtn" style="width:100%;">Start quest</button>';
@@ -14111,6 +14330,7 @@
         state.quest.mtime = Date.now();
         save(); renderQuest();
       });
+      if(rewardDue && isSunday()) buildRewardAsk(wrap, me, true);
       return;
     }
     var html = '<div class="quest-title">'+escapeHtml(q.title)+'</div>' +
@@ -14125,6 +14345,8 @@
     wrap.querySelectorAll(".quest-part").forEach(function(el){
       el.addEventListener("click", function(){ toggleQuestPart(el.getAttribute("data-person")); });
     });
+    // Sunday with a quest already running: the other ask still gets its turn.
+    if(rewardDue && isSunday()) buildRewardAsk(wrap, me, true);
   }
 
   function toggleQuestPart(personId){
@@ -14332,69 +14554,6 @@
       shown++;
     }
 
-    // --- weekly "suggest a reward" prompt ---
-    var askedWeek = (state.rewardIdeaWeek || {})[me];
-    if(askedWeek !== isoWeekKey()){
-      var blk2 = document.createElement("div");
-      blk2.className = "nudge-blk";
-      if(shown) blk2.className += " divided";
-      var t2 = document.createElement("div");
-      t2.className = "nudge-title";
-      t2.innerHTML = icon("bulb", 19, "hd-i") + " What would you actually want this week?";
-      var sub2 = document.createElement("div");
-      sub2.className = "nudge-sub";
-      sub2.textContent = "Add one thing to the wheel. " + personName(otherPerson(me)) +
-        " approves it before it goes on, so ask for something real.";
-      var inp = document.createElement("input");
-      inp.type = "text";
-      inp.placeholder = "e.g. breakfast in bed, a night off cooking…";
-      inp.maxLength = 80;
-      var tierSel = document.createElement("select");
-      // 3.3.2: the surrounding prose explains this, but a screen reader reads the control
-      // on its own and heard only "Small treat, popup button".
-      tierSel.setAttribute("aria-label", "How big a reward this is");
-      [["common","Small treat"],["uncommon","Proper treat"],["rare","Big one"]].forEach(function(o){
-        var op = document.createElement("option");
-        op.value = o[0]; op.textContent = o[1];
-        tierSel.appendChild(op);
-      });
-      tierSel.style.marginTop = "7px";
-      var row = document.createElement("div");
-      row.className = "row2";
-      row.style.marginTop = "7px";
-      var send = document.createElement("button");
-      send.className = "ghost";
-      send.textContent = "Propose it";
-      var skip = document.createElement("button");
-      skip.className = "ghost";
-      skip.textContent = "Not this week";
-      send.addEventListener("click", function(){
-        var name = inp.value.trim();
-        if(!name){ toast("Type an idea first"); return; }
-        if(!state.rewardRequests) state.rewardRequests = [];
-        if(proposalsLeft(me) <= 0){
-          toast("That's your three for this month — next month resets"); return;
-        }
-        state.rewardRequests.push({
-          id: uid(), mtime: Date.now(), name: name, tier: tierSel.value,
-          emoji: emojiByTier[tierSel.value], proposedBy: me, month: monthKeyNow(),
-          date: new Date().toISOString()
-        });
-        announce('suggested a new reward: "' + name + '" \uD83D\uDCA1');
-        markRewardIdeaAsked(me);
-        renderRewards(); renderActivityFeed();
-        toast("Sent to " + personName(otherPerson(me)) + " to approve \uD83D\uDC9E");
-      });
-      skip.addEventListener("click", function(){
-        markRewardIdeaAsked(me);
-        toast("Okay — I'll ask again next week");
-      });
-      row.appendChild(send); row.appendChild(skip);
-      blk2.appendChild(t2); blk2.appendChild(sub2);
-      blk2.appendChild(inp); blk2.appendChild(tierSel); blk2.appendChild(row);
-      body.appendChild(blk2);
-      shown++;
-    }
 
     card.style.display = shown ? "" : "none";
   }
@@ -16291,11 +16450,15 @@
             "How close these two hearts sit is the last " + sy.days +
             (sy.days === 1 ? " day" : " days") + ", counted three ways:\n\n" +
             "\u2022 Photos \u2014 " + pct(sy.photos) + " of days you both posted\n" +
-            "\u2022 Codes \u2014 " + pct(sy.codes) + " of days you traded (days away together count)\n" +
+            (sy.codesOn
+              ? "\u2022 Codes \u2014 " + pct(sy.codes) + " of days you traded (days away together count)\n"
+              : "") +
             "\u2022 Balance \u2014 " + pct(sy.balance) + " even, " + n1 + " " + sy.doneA +
             " to " + n2 + " " + sy.doneB + "\n\n" +
             "That is what the app can see, which is not the same thing as how the two " +
-            "of you are doing. Post a photo or trade today's code and they move.");
+            "of you are doing. " + (sy.codesOn
+              ? "Post a photo or trade today's code and they move."
+              : "Post a photo or tick something off and they move."));
           track("sync_explain", {});
         });
         row.appendChild(heart);
@@ -16365,9 +16528,14 @@
 
     var photos = bothPhoto / windowDays;
     var codes  = traded / windowDays;
-    var score  = 0.4 * photos + 0.4 * codes + 0.2 * balance;
+    /* Living together there is no code to trade, so counting it would peg 40% of
+       this at zero forever and the hearts would sit apart no matter what the two
+       of you did. The weight moves to the two signals that still mean something. */
+    var score  = codesOn()
+      ? (0.4 * photos + 0.4 * codes + 0.2 * balance)
+      : (0.6 * photos + 0.4 * balance);
     return {score: Math.max(0, Math.min(1, score)),
-            photos: photos, codes: codes, balance: balance,
+            photos: photos, codes: codes, balance: balance, codesOn: codesOn(),
             days: windowDays, doneA: doneA, doneB: doneB};
   }
 
@@ -18383,13 +18551,13 @@
     var el = document.getElementById("deviceOwnerLabel");
     if(!el) return;
     var o = deviceOwner();
-    el.textContent = o ? "This is " + personName(o) + "'s phone." : "Not set yet — pick in the Daily check-in card.";
+    el.textContent = o ? "This is " + personName(o) + "'s phone." : "Not set yet \u2014 tap the button below.";
   }
   document.getElementById("deviceOwnerBtn").addEventListener("click", function(){
     if(!confirm("Really change whose phone this is? Codes will show for the new owner instead.")) return;
     clearDeviceOwner();
     renderAll();
-    toast("Pick the owner again in the Daily check-in card");
+    toast("Pick the owner again below");
   });
 
   document.getElementById("resetBtn").addEventListener("click", function(){
@@ -18446,6 +18614,29 @@
     if(!btn.dataset.initDone){
       btn.dataset.initDone = "1";
       var open = collapseState(name, count > 3);
+      body.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+  }
+
+  /* Health has no count to put in the header - it is one reading, not a list - so it
+     cannot use syncCollapse, which hides a card whose count is zero. Same storage key
+     convention and same two classes, so a person's choice sticks the way it does on
+     every other collapsible card. Open by default: a card you have to open to see is
+     a card you forget is there. */
+  function wireSimpleCollapse(name, defaultOpen){
+    var btn = document.getElementById(name + "Toggle");
+    var body = document.getElementById(name + "Body");
+    if(!btn || !body) return;
+    if(!btn.dataset.wired){
+      btn.dataset.wired = "1";
+      btn.addEventListener("click", function(){
+        var nowOpen = !body.classList.contains("open");
+        body.classList.toggle("open", nowOpen);
+        btn.setAttribute("aria-expanded", nowOpen ? "true" : "false");
+        try{ localStorage.setItem(collapseKey(name), nowOpen ? "1" : "0"); }catch(e){}
+      });
+      var open = collapseState(name, !defaultOpen);
       body.classList.toggle("open", open);
       btn.setAttribute("aria-expanded", open ? "true" : "false");
     }
