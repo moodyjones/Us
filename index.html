@@ -1433,6 +1433,7 @@
   /* stale numbers used to announce themselves with a 10px date and nothing else, which is
      how week-old figures passed for today's. This one is meant to be impossible to skim past. */
   .health-stale-warn.is-stuck{ border-color:rgba(255,122,94,.5); }
+  .health-stale-warn.is-frozen{ border-color:rgba(255,122,94,.55); }
   .health-stale-warn{
     font-size:0.7812rem;margin-top:10px;padding:10px 12px;line-height:1.5;
     background:rgba(214,158,46,.12);border:1px solid rgba(214,158,46,.45);
@@ -1912,6 +1913,17 @@
     max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1);}
   .chal-tl.open{max-height:2400px;}
   .tl-row{display:flex;align-items:center;gap:10px;padding:5px 2px;position:relative;}
+  /* Build 118: a row you can tap is a button, so it has to stop looking like a form
+     control and start being big enough to hit. 9px of padding puts it at about 37px,
+     which clears the 24px minimum comfortably without turning thirty rows into a
+     1,200px wall. */
+  button.tl-row{
+    width:100%; background:none; border:none; font:inherit; color:inherit;
+    text-align:left; padding:9px 2px; cursor:pointer; border-radius:8px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button.tl-row:active{ background:rgba(255,255,255,.05); }
+  .tl-catch{ width:100%; margin-top:10px; }
   .tl-rail{position:absolute;left:14px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.08);}
   .tl-row .dot{
     width:11px;height:11px;border-radius:50%;flex:0 0 auto;margin-left:9px;z-index:1;
@@ -5291,13 +5303,32 @@
     var diff = d - start;
     return Math.floor(diff / 86400000);
   }
+  /* ===========================================================================
+     BUILD 118 - 1 November appeared twice, and it was arithmetic.
+
+     Adding a day meant adding 86,400,000 milliseconds to local midnight. On the
+     day the clocks go back that day is twenty-five hours long, so midnight plus
+     24h is 23:00 on the SAME date - and reading the local calendar fields off it
+     gives you yesterday again.
+
+     Sunday 1 November 2026 is exactly that day in the US. So the sober-month
+     timeline ran: day 1 = Nov 1, day 2 = Nov 1, day 3 = Nov 2, and every row after
+     it was a day behind - which would also have ended the thirty days a day early.
+
+     Dates are calendar arithmetic, not duration arithmetic. new Date(y, m, d + n)
+     asks for "n days later" and the engine handles the long day, the short one,
+     month ends and leap years. Nothing here is allowed to add milliseconds to get
+     to another date again.
+     =========================================================================== */
+  function shiftISO(iso, days){
+    var p = String(iso).split("-").map(Number);
+    return todayISO(new Date(p[0], p[1]-1, p[2] + days));
+  }
   function addDaysISO(days){
-    return todayISO(new Date(Date.now() + days*86400000));
+    return shiftISO(todayISO(), days);
   }
   function addDaysToISO(dateStr, days){
-    var parts = dateStr.split("-").map(Number);
-    var d = new Date(parts[0], parts[1]-1, parts[2]);
-    return todayISO(new Date(d.getTime() + days*86400000));
+    return shiftISO(dateStr, days);
   }
   // ---- due dates ----
   function isOverdue(t){
@@ -5452,6 +5483,7 @@
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
       healthLog: {},        // pid -> [{d:"YYYY-MM-DD", s:steps}] — finished days, newest last
+      healthSeen: {},       // pid -> {sig, since} — the gist file's content, and when it last changed
       trophies: [],         // [{key, mk, ico, title, who, why, at}] — awards, kept forever
       ntfyHealth: null,     // {p1,p2} — one ntfy topic per person for the Health shortcut
       activityLog: [],      // [{id, by, text, at}] — feeds "while you were away" + push notifications
@@ -5501,7 +5533,7 @@
   // prune Q&A entries older than 60 days to keep storage lean
   (function(){
     if(!state.qa) return;
-    var cutoffQA = todayISO(new Date(Date.now() - 60 * 86400000));
+    var cutoffQA = shiftISO(todayISO(), -60);
     Object.keys(state.qa).forEach(function(d){ if(d < cutoffQA) delete state.qa[d]; });
   })();
 
@@ -8299,6 +8331,20 @@
       });
       m.ntfy = win;
     })();
+    /* Build 117: the gist fingerprint. If both phones saw the SAME bytes, the earlier
+       sighting is when that content actually appeared, so it wins - that is what makes
+       "unchanged for N days" honest. If they saw different bytes, the later observation
+       is the current state of the file. */
+    m.healthSeen = {};
+    ["p1","p2"].forEach(function(pid){
+      var ls = (L.healthSeen||{})[pid], rs = (R.healthSeen||{})[pid];
+      if(!ls || !rs){ m.healthSeen[pid] = ls || rs; return; }
+      if(ls.sig === rs.sig){
+        m.healthSeen[pid] = String(ls.since||"") <= String(rs.since||"") ? ls : rs;
+      } else {
+        m.healthSeen[pid] = String(ls.since||"") >= String(rs.since||"") ? ls : rs;
+      }
+    });
     /* Build 115: trophies. Union by key; the earliest record of an award is the true
        one, because both phones can notice the same month and only one of them is first.
        Same rule as milestones, deliberately. */
@@ -9047,7 +9093,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 116;
+  var BUILD_NUM = 118;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -9336,7 +9382,24 @@
   // Returns a reading, or an object carrying .error that says what was wrong with the text.
   // Never null-and-silent: a file that exists but doesn't parse is the likeliest failure
   // once this is set up, so it has to be able to explain itself.
-  function parseHealthText(txt){
+  /* ===========================================================================
+     BUILD 117 - the app was dating the Shortcut's work for it.
+
+     out.date fell back to todayISO() when the file carried no date= field. For a
+     reading PUSHED over ntfy that is honest: it arrived just now, so now is when
+     it is about. For a FILE sitting in a gist it is not - that file could have
+     been written this morning or six weeks ago, and stamping it "today" makes a
+     frozen file look like a fresh reading every single day.
+
+     Which is the whole bug: a Shortcut that stops running leaves the same bytes in
+     the gist forever, the app re-dates them to today on every read, and the screen
+     shows the same step count every day with nothing stale about it and no warning
+     anywhere, because as far as the app knows today's reading just came in.
+
+     So the file path now REQUIRES a date and the push path does not, and the
+     difference is in the caller rather than guessed at here.
+     =========================================================================== */
+  function parseHealthText(txt, dateRequired){
     var raw = String(txt == null ? "" : txt).trim();
     if(!raw) return {error:"the file is there but empty"};
     // ; or newline or & all separate pairs, so a stray line break can't break the file
@@ -9353,6 +9416,7 @@
 
     var out = {};
     var dm = String(kv.date || kv.day || kv.d || "").match(/\d{4}-\d{2}-\d{2}/);
+    if(!dm && dateRequired) return {error:"there is no date= in it, so there is no way to tell which day it is about"};
     out.date = dm ? dm[0] : todayISO();
     out.steps = healthNum(kv.steps != null ? kv.steps : kv.step);
     out.calories = healthNum(kv.cal != null ? kv.cal : (kv.calories != null ? kv.calories : kv.kcal));
@@ -9396,8 +9460,13 @@
     if(j.steps == null && j.sleepHours == null && j.calories == null){
       return {error:"JSON with no steps, calories or sleep in it"};
     }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(j.date || ""))){
+      return {error:"there is no date in it, so there is no way to tell which day it is about"};
+    }
     return {
-      date: /^\d{4}-\d{2}-\d{2}$/.test(String(j.date || "")) ? j.date : todayISO(),
+      // Build 117: a file, so it must say which day it is about. Same reasoning as the
+      // text reader - see the comment there.
+      date: /^\d{4}-\d{2}-\d{2}$/.test(String(j.date || "")) ? j.date : null,
       steps: healthNum(j.steps),
       calories: healthNum(j.calories),
       sleepHours: j.sleepHours != null ? Math.round(healthNum(j.sleepHours) * 100) / 100 : null,
@@ -9510,9 +9579,51 @@
   // JSON one, and records what happened at every step — including the first 200 bytes it
   // actually received. When this breaks, the answer belongs on screen, not in a chat.
   var HEALTH_SOURCES = [
-    {name: function(pid){ return "health-" + pid + ".txt"; },  parse: parseHealthText, src:"shortcut"},
+    {name: function(pid){ return "health-" + pid + ".txt"; },  parse: function(t){ return parseHealthText(t, true); }, src:"shortcut"},
     {name: function(pid){ return "health-" + pid + ".json"; }, parse: parseHealthJson, src:"legacy"}
   ];
+
+  /* ===========================================================================
+     BUILD 117 - "has the Shortcut actually written anything lately?"
+
+     Everything that tried to answer this before leaned on a field inside the file -
+     the date it claims, or an updatedAt it usually does not have - and a file whose
+     contents are a lie about the date defeats all of it. The one thing that cannot
+     lie is whether the BYTES changed.
+
+     So: a fingerprint of the raw payload, and the moment that fingerprint first
+     appeared. If it has not moved in two days, the Shortcut is not writing, and
+     that is true whatever the file claims about itself.
+
+     The hash is a 32-bit FNV-ish rolling thing. It does not need to be a real
+     digest - it is comparing a file to its own previous self, not defending
+     against anyone, and a collision costs one missed warning rather than anything
+     worse.
+     =========================================================================== */
+  function healthSig(txt){
+    var h = 2166136261, str = String(txt || "");
+    for(var i = 0; i < str.length; i++){
+      h ^= str.charCodeAt(i);
+      h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+    }
+    return String(h) + ":" + str.length;
+  }
+  function noteHealthPayload(pid, txt){
+    if(!state.healthSeen) state.healthSeen = {};
+    var sig = healthSig(txt), cur = state.healthSeen[pid];
+    if(cur && cur.sig === sig) return false;          // same bytes as last time
+    state.healthSeen[pid] = {sig: sig, since: new Date().toISOString()};
+    save();
+    return true;
+  }
+  // How many whole days the file has sat unchanged, or null if we have never read it.
+  function healthFrozenDays(pid){
+    var seen = (state.healthSeen || {})[pid];
+    if(!seen || !seen.since) return null;
+    var then = new Date(seen.since);
+    if(isNaN(then)) return null;
+    return Math.max(0, Math.round((Date.now() - then.getTime()) / 86400000));
+  }
 
   function readOneHealthFile(base, pid, done){
     var tried = [], i = 0, changed = false;
@@ -9535,7 +9646,11 @@
           if(!r.ok){ tried.push({name:name, status:r.status}); next(); return; }
           return r.text().then(function(t){
             var parsed = s.parse(t);
-            var rec = {name:name, status:200, bytes:t.length, raw:t.slice(0, 200)};
+            // record the bytes BEFORE parsing: a file we cannot read is still a file that
+            // either is or is not changing, and that is the question this answers
+            noteHealthPayload(pid, t);
+            var rec = {name:name, status:200, bytes:t.length, raw:t.slice(0, 200),
+                       frozenDays: healthFrozenDays(pid)};
             if(parsed && parsed.error){ rec.error = parsed.error; tried.push(rec); next(); return; }
             tried.push(rec);
             changed = acceptHealthReading(pid, parsed, s.src);
@@ -9670,7 +9785,11 @@
       // Otherwise the health link is the story. The Gist is only a fallback for readings
       // written by the old shortcut, so ITS failure says nothing the user needs to act on —
       // and left unchecked it would overwrite the message that actually explains what to do.
-      if(!rec.ok && cur.src === "ntfy" && rec.src === "gist") return;
+      /* BUILD 117: ...but only when a health link actually exists. With no link set up the
+         Gist IS the path, and suppressing its error in favour of "make a health link"
+         meant a malformed file could never be seen - which is exactly how a Shortcut
+         writing no date= went unnoticed for weeks. */
+      if(!rec.ok && cur.src === "ntfy" && rec.src === "gist" && healthLinkSet(pid)) return;
     }
     healthDiag[pid] = rec;
   }
@@ -9790,6 +9909,7 @@
         '<div class="' + cls("l", winCal) + '">' + ca.cal + '</div><div class="health-ico" title="Active calories">' + icon("flame", 16) + '</div><div class="' + cls("r", winCal) + '">' + cb.cal + '</div>' +
         '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">' + icon("moon", 16) + '</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
       '</div>' +
+      healthFrozenWarning() +
       healthStuckWarning(a, b) +
       healthStaleWarning(a, b) +
       healthDoubtLine() +
@@ -9822,6 +9942,10 @@
     if(!me) return "";
     var h = (state.healthCache || {})[me];
     if(!h || h.date !== todayISO() || h.steps == null) return "";
+    // Build 117: if the file has not changed in days, this number is not today's and a
+    // line about how big a day it was would be nonsense.
+    var frozen = healthFrozenDays(me);
+    if(frozen != null && frozen >= 2) return "";
     /* Build 114: your own median first, the fixed line only as a fallback for someone
        with no history yet. The wording changes with the evidence - "2.1x your usual" is
        a fact about you; "that's a big day" is a guess about people in general. */
@@ -9874,6 +9998,10 @@
   // malformed file all produced exactly the same thing on screen — a dash. Every one of
   // those has a different fix, so each one now says which it is, names the file it looked
   // for, and shows the first bytes it actually got back.
+  function healthLinkSet(pid){
+    var h = state.ntfyHealth;
+    return !!(h && h[pid]);
+  }
   function healthDiagRow(pid){
     var nm = escapeHtml(personName(pid));
     var d = healthDiag[pid];
@@ -9904,9 +10032,21 @@
     } else if(d.reason === "no-message"){
       out += line("⚠️", "The link is set up, but " + nm + "'s shortcut hasn't sent anything in the last " +
                         "24 hours. Run it by hand once to check it reaches here.");
-    } else if(d.reason === "unreadable" && d.src === "gist"){
+    } else if(d.reason === "unreadable" && d.src === "gist" && healthLinkSet(pid)){
       out += line("·", "Something is in the Gist for " + nm + " that WeDO can't read, but that's the " +
                        "old path — what matters is the health link above.");
+    } else if(d.reason === "unreadable" && d.src === "gist"){
+      /* BUILD 117: this used to be the only Gist branch, and it waved the error away as
+         "the old path". That is true when a health LINK exists - and when one does not,
+         the Gist is the only path there is, and the reason it cannot be read is the whole
+         story rather than a footnote. */
+      var badFile = (d.tried || []).filter(function(x){ return x.error; })[0];
+      out += line("❌", "The file in the Gist for " + nm + " can't be read" +
+                        (badFile && badFile.error ? " — " + escapeHtml(badFile.error) : "") + ".");
+      if(badFile && badFile.raw) out += code(badFile.raw);
+      out += line("🔧", "The Shortcut should write a line like " +
+                        "<b>date=2026-11-01;steps=7200;cal=430;sleep=412</b> — the date is what tells " +
+                        "WeDO which day the numbers belong to.");
     } else if(d.reason === "unreadable"){
       out += line("❌", "A reading arrived but WeDO couldn't read it" +
                         (d.error ? " — " + escapeHtml(d.error) : "") + ".");
@@ -10007,6 +10147,25 @@
     if(writtenAge == null || writtenAge > 1) return null;
     return {claims: d.date, wrote: wrote, age: age};
   }
+  /* Build 117: the one that does not depend on anything the file says about itself. */
+  function healthFrozenWarning(){
+    var hits = ["p1", "p2"].map(function(pid){
+      return {pid: pid, days: healthFrozenDays(pid)};
+    }).filter(function(x){ return x.days != null && x.days >= 2; });
+    if(!hits.length) return "";
+    var worst = hits.reduce(function(m, x){ return x.days > m.days ? x : m; });
+    var who = hits.length === 2 ? "Neither Shortcut has" : (personName(worst.pid) + "'s Shortcut has not");
+    var since = (state.healthSeen[worst.pid] || {}).since;
+    return '<div class="health-stale-warn is-frozen">' +
+      '<b>' + icon("warn", 14, "inline-warn") + ' ' + escapeHtml(who) + ' written anything for ' +
+      worst.days + ' days.</b> ' +
+      'The file in the Gist has been byte-for-byte identical since ' +
+      escapeHtml(new Date(since).toLocaleDateString(undefined, {weekday:"long", month:"short", day:"numeric"})) + ', ' +
+      'so whatever is on screen is that same reading being shown again \u2014 it is not today\u2019s. ' +
+      'Usually the daily Automation being off, or Low Power Mode holding it back.' +
+      '</div>';
+  }
+
   function healthStuckWarning(a, b){
     var hits = [{d:a, pid:"p1"}, {d:b, pid:"p2"}]
       .map(function(x){ return {pid:x.pid, s:healthStuckDate(x.d)}; })
@@ -12425,7 +12584,7 @@
     announce('crossed off "' + t.title + '" ✅');
 
     var today = todayISO();
-    var yesterday = todayISO(new Date(Date.now()-86400000));
+    var yesterday = shiftISO(todayISO(), -1);
 
     beneficiaries.forEach(function(pid){
       ensurePerson(state, pid);
@@ -13720,7 +13879,7 @@
     var seen = "";
     try{ seen = localStorage.getItem(FAIR_SEEN_KEY) || ""; }catch(e){}
     // once a week at most — it's an observation, not a campaign
-    var weekAgo = todayISO(new Date(Date.now() - 7 * 86400000));
+    var weekAgo = shiftISO(todayISO(), -7);
     if(!n || seen >= weekAgo){ el.style.display = "none"; el.innerHTML = ""; return; }
     el.style.display = "";
     el.innerHTML =
@@ -14116,7 +14275,7 @@
     var st = (state.streaks || {})[pid];
     if(!st || repairUsedFor(pid)) return null;
     var today = todayISO();
-    var yest = todayISO(new Date(Date.now() - 86400000));
+    var yest = shiftISO(todayISO(), -1);
 
     if(st.brokeFrom && st.brokeFrom >= 3 && st.brokeDate && daysBetweenISO(st.brokeDate, today) <= 2){
       return {kind: "reset", lost: st.brokeFrom, restoreTo: st.brokeFrom + 1};
@@ -14152,7 +14311,7 @@
       // bridge the gap rather than inventing a completion: the next thing they tick off
       // carries on from where they were
       st.current = r.restoreTo;
-      st.lastDate = todayISO(new Date(Date.now() - 86400000));
+      st.lastDate = shiftISO(todayISO(), -1);
     }
     delete st.brokeFrom; delete st.brokeDate;
 
@@ -14214,10 +14373,10 @@
   function prettyMissDate(iso){
     var d = new Date(iso + "T12:00:00Z");
     var today = todayISO();
-    var y = todayISO(new Date(Date.now() - 86400000));
+    var y = shiftISO(todayISO(), -1);
     if(iso === y) return "Yesterday";
     // Inside the last week, the weekday is more use than the date.
-    if(iso > todayISO(new Date(Date.now() - 7 * 86400000)) && iso < today){
+    if(iso > shiftISO(todayISO(), -7) && iso < today){
       return d.toLocaleDateString(undefined, {weekday: "long", timeZone: "UTC"});
     }
     return d.toLocaleDateString(undefined, {weekday: "short", month: "short", day: "numeric", timeZone: "UTC"});
@@ -14900,7 +15059,7 @@
   }
   function friendlyPhotoDate(dateStr){
     if(!dateStr) return "";
-    var y = todayISO(new Date(Date.now() - 86400000));
+    var y = shiftISO(todayISO(), -1);
     if(dateStr === y) return "yesterday";
     var parts = String(dateStr).split("-").map(Number);
     if(parts.length !== 3) return dateStr;
@@ -17127,10 +17286,16 @@
       var theirsOn = challengeChecked(c, partner, day);
       var isToday = (day === today);
       var isFuture = daysBetweenISO(today, day) > 0;
-      var row = document.createElement("div");
+      /* BUILD 118: a day you forgot to tick was gone for good - the only control was
+         today's button, so a missed Tuesday stayed missed forever. Any day that has
+         actually happened can be marked now. Still only YOUR mark: ticking your
+         partner's day for them is the one thing this card has always refused to do,
+         and being three days behind is not a reason to start. */
+      var row = document.createElement(isFuture ? "div" : "button");
+      if(!isFuture){ row.type = "button"; row.setAttribute("data-day", day); }
       row.className = "tl-row" +
         (mineOn && theirsOn ? " both" : (mineOn || theirsOn ? " one" : "")) +
-        (isToday ? " today" : "") + (isFuture ? " future" : "");
+        (isToday ? " today" : "") + (isFuture ? " future" : " tappable");
       row.innerHTML =
         '<span class="dot"></span>' +
         '<span class="dnum">Day ' + (i + 1) + '</span>' +
@@ -17141,7 +17306,49 @@
         '</span>';
       holder.appendChild(row);
     }
+    // one listener for the whole run rather than thirty
+    holder.addEventListener("click", function(ev){
+      var r = ev.target.closest ? ev.target.closest(".tl-row.tappable") : null;
+      if(!r) return;
+      var d = r.getAttribute("data-day");
+      if(!d) return;
+      var cc = activeChallenge();
+      if(!cc) return;
+      setChallengeCheck(me, d, !challengeChecked(cc, me, d));
+      renderChallenge(); renderTasks(); renderHero();
+    });
     frag.appendChild(holder);
+
+    /* The one-tap version, because the reason anyone is in here is usually that they
+       forgot for a few days running and tapping six rows is a chore that reads as a
+       telling-off. Only ever fills in days that have happened, and only your own. */
+    var missed = [];
+    for(var mi = 0; mi < c.days; mi++){
+      var md = addDaysToISO(c.startDate, mi);
+      if(daysBetweenISO(today, md) > 0) break;
+      if(!challengeChecked(c, me, md)) missed.push(md);
+    }
+    if(missed.length){
+      var catchUp = document.createElement("button");
+      catchUp.type = "button";
+      catchUp.className = "ghost tl-catch";
+      catchUp.textContent = "Mark my " + missed.length +
+        (missed.length === 1 ? " missed day" : " missed days");
+      catchUp.addEventListener("click", function(){
+        showConfirm("\uD83C\uDF31", "Catch up on " + missed.length +
+          (missed.length === 1 ? " day?" : " days?"),
+          "This marks " + (missed.length === 1 ? "that day" : "those days") +
+          " for you only \u2014 " + personName(otherPerson(me)) + " marks their own. " +
+          "Nothing in the future is touched.",
+          "Mark them", function(){
+            missed.forEach(function(d){ setChallengeCheck(me, d, true); });
+            renderChallenge(); renderTasks(); renderHero();
+            toast("Caught up \u2014 " + missed.length +
+              (missed.length === 1 ? " day marked" : " days marked"));
+          }, "Leave them");
+      });
+      frag.appendChild(catchUp);
+    }
     var sum = document.createElement("div");
     sum.className = "tl-sum";
     var mineN = challengeMarkedCount(c, me), theirsN = challengeMarkedCount(c, partner);
