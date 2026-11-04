@@ -340,6 +340,22 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
   }
   .duo-when{font-size:0.6562rem;color:var(--muted);margin-top:1px;}
+  /* BUILD 122 - today's photo penalty, on the photo.
+
+     It used to be a 276px card sitting above the task list, with a heading, two
+     paragraphs, a two-row ledger and a button - to say one thing: this costs 25
+     points and you can still fix it. The fix is the frame directly above this
+     line, which is already a button and already says "tap to post". So the card
+     was repeating the call to action and burying the only new fact in the middle
+     of it.
+
+     What is left is the fact. The chip tokens, so it carries its own contrast in
+     both themes rather than being coral-on-cream by luck. */
+  .duo-cost{
+    display:inline-block; margin-top:5px; padding:2px 8px;
+    border-radius:999px; background:var(--chip-hard-bg); color:var(--chip-hard-fg);
+    font-size:0.6562rem; font-weight:700; white-space:nowrap;
+  }
   .duo-health{
     margin-top:5px;font-size:0.6562rem;font-weight:600;color:var(--text);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
@@ -382,6 +398,7 @@
      column (the name + date labels below make the columns taller than the circles) */
   .duo-heart{
     align-self:flex-start;margin-top:46px;font-size:1.25rem;flex:0 0 auto;opacity:.9;
+    background:none;border:0;padding:0;cursor:pointer;
   }
   /* full-size photo viewer */
   .photo-view-bg{
@@ -2838,6 +2855,22 @@
   }
   .us-caption b{ color:var(--muted); font-weight:600; }
 
+  /* BUILD 123 - what is already gone, as a line.
+
+     Days you cannot do anything about do not need a card, a heading, a ledger and
+     a button; they need to be on the record and out of the way. One line, the
+     whole breakdown one tap behind it. */
+  .miss-line{
+    display:flex; align-items:center; justify-content:center; gap:var(--sp-4);
+    width:100%; min-height:44px; margin:0 0 var(--sp-6);
+    background:none; border:0; padding:var(--sp-3) var(--sp-4);
+    font-family:inherit; font-size:0.6875rem; color:var(--faint);
+    letter-spacing:.01em; cursor:pointer; text-align:center;
+  }
+  .miss-line:active{ opacity:.6; }
+  .miss-line .ml-v{ color:var(--muted); font-weight:700; }
+  .miss-line .ml-c{ color:var(--faint); }
+
   /* ---- header: stop it eating the first screen ---- */
   :root[data-skin="pe"] header{ padding:26px 20px 4px; }
   /* :not(.brand-row) - the h1 IS the lockup now, and this rule ties with the
@@ -2904,10 +2937,40 @@
 
   /* The pair between the two rings: yours in coral, hers in iris, offset so they overlap
      the way the rings do. */
-  .duo-heart{ position:relative; width:30px; height:24px; }
+  /* BUILD 123: the gap is a reading, not a constant. --duo-split runs 0 (in step)
+     to 1 (far apart) and is written by the renderer; everything here is geometry.
+
+     The range was chosen to be SEEN. A few pixels is a secret; 26px is a heart and
+     a half, which is the difference between "touching" and "not", and the half
+     second of travel is what makes it register as having changed rather than
+     having always been like that. */
+  .duo-heart{
+    position:relative; height:24px;
+    width:calc(26px + var(--duo-split, 0) * 26px);
+    transition:width .55s cubic-bezier(.22,.9,.3,1);
+  }
   .duo-heart .wd-i{ position:absolute; top:0; stroke-width:2; }
   .duo-heart .dh-a{ left:0;  color:var(--moody); transform:rotate(-9deg); }
-  .duo-heart .dh-b{ left:11px; color:var(--rae); transform:rotate(9deg); opacity:.95; }
+  .duo-heart .dh-b{
+    left:calc(7px + var(--duo-split, 0) * 26px);
+    color:var(--rae); transform:rotate(9deg); opacity:.95;
+    transition:left .55s cubic-bezier(.22,.9,.3,1);
+  }
+  /* In step, they beat. Slowly, once every four seconds - a heartbeat, not a
+     notification. Nothing else on this screen moves on its own. */
+  .duo-heart.in-step .wd-i{ animation:duo-beat 4s ease-in-out infinite; }
+  .duo-heart.in-step .dh-b{ animation-delay:.14s; }
+  @keyframes duo-beat{
+    0%, 86%, 100%{ transform:rotate(var(--r, 0deg)) scale(1); }
+    91%{ transform:rotate(var(--r, 0deg)) scale(1.13); }
+    95%{ transform:rotate(var(--r, 0deg)) scale(1.03); }
+  }
+  .duo-heart .dh-a{ --r:-9deg; }
+  .duo-heart .dh-b{ --r:9deg; }
+  @media (prefers-reduced-motion: reduce){
+    .duo-heart, .duo-heart .dh-b{ transition:none; }
+    .duo-heart.in-step .wd-i{ animation:none; }
+  }
 
   /* Modal body text.
 
@@ -3163,13 +3226,14 @@
     min-width:0;
   }
   /* Build 109: nowrap was right when the label could only ever be one size. Under iOS's
-     largest text settings on a 320px screen, "Leaderboard" is wider than the whole
-     column, and nowrap turns that into a label hanging off the edge of the screen
-     rather than a label on two lines. It still never wraps at any normal size. */
+     largest text settings on a 320px screen a long label is wider than the whole column,
+     and nowrap turns that into a label hanging off the edge of the screen rather than a
+     label on two lines. It still never wraps at any normal size.
+     Build 121: there are six tabs now, and the longest label is "Memories". */
   .tabs .tab-t{ white-space:normal; overflow-wrap:anywhere; min-width:0; max-width:100%; }
-  /* An iPhone SE is 375 and all five fit there comfortably. 320 is the old SE and the
-     narrowest thing iOS still runs; "Leaderboard" is 1-2px over its 64px column at that
-     width, so the labels step down rather than get cut in half. */
+  /* An iPhone SE is 375 and all six fit there. 320 is the old SE and the narrowest thing
+     iOS still runs, where six labels are over their columns, so they step down rather
+     than get cut in half. */
   @media (max-width:359px){
     .tabs button,
     :root[data-skin="pe"] .tabs button{ font-size:0.5938rem; padding-left:0; padding-right:0; }
@@ -4144,7 +4208,7 @@
       radial-gradient(118% 62% at 8% -8%,  var(--wash-a) 0%, transparent 58%),
       radial-gradient(118% 62% at 94% -4%, var(--wash-b) 0%, transparent 58%);
     padding:var(--gutter);
-    animation:splash-out .42s cubic-bezier(.4,0,.6,1) 1.62s both;
+    animation:splash-out .52s cubic-bezier(.4,0,.6,1) 2.18s both;
   }
   .splash.gone{ display:none; }
   /* a tap anywhere ends it early - the class short-circuits every delay below */
@@ -4153,18 +4217,18 @@
   .splash-mark{
     width:min(43vw, 168px); height:auto; overflow:visible;
     transform-origin:50% 62%;
-    animation:splash-beat .42s cubic-bezier(.34,1.56,.64,1) .82s both;
+    animation:splash-beat .52s cubic-bezier(.34,1.56,.64,1) 1.12s both;
   }
   .splash-mark path{
     fill:none; stroke-width:18; stroke-linecap:round; stroke-linejoin:round;
     /* the dash length is written by script from getTotalLength(), so the draw is
        exact for each path rather than a number guessed off the viewBox */
     stroke-dasharray:var(--len); stroke-dashoffset:var(--len);
-    animation:splash-draw .52s cubic-bezier(.32,.72,.35,1) both;
+    animation:splash-draw .72s cubic-bezier(.32,.72,.35,1) both;
   }
-  .splash-mark .sp-a{ stroke:var(--moody); animation-delay:.04s; }
-  .splash-mark .sp-b{ stroke:var(--rae);   animation-delay:.16s; }
-  .splash-mark .sp-c{ stroke:var(--moody); animation-delay:.62s; animation-duration:.24s; }
+  .splash-mark .sp-a{ stroke:var(--moody); animation-delay:.06s; }
+  .splash-mark .sp-b{ stroke:var(--rae);   animation-delay:.24s; }
+  .splash-mark .sp-c{ stroke:var(--moody); animation-delay:.88s; animation-duration:.32s; }
 
   .splash-word{
     font-family:var(--ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
@@ -4174,18 +4238,18 @@
   }
   .splash-word span{
     display:inline-block;
-    animation:splash-rise .34s cubic-bezier(.22,.9,.3,1) both;
+    animation:splash-rise .42s cubic-bezier(.22,.9,.3,1) both;
   }
-  .splash-word span:nth-child(1){ animation-delay:.86s; }
-  .splash-word span:nth-child(2){ animation-delay:.915s; }
-  .splash-word span:nth-child(3){ animation-delay:.97s;  color:var(--moody); }
-  .splash-word span:nth-child(4){ animation-delay:1.025s; color:var(--rae); }
+  .splash-word span:nth-child(1){ animation-delay:1.18s; }
+  .splash-word span:nth-child(2){ animation-delay:1.25s; }
+  .splash-word span:nth-child(3){ animation-delay:1.32s; color:var(--moody); }
+  .splash-word span:nth-child(4){ animation-delay:1.39s; color:var(--rae); }
 
   .splash-line{
     font-family:var(--display, Georgia, serif);
     font-size:0.9375rem; letter-spacing:.14em; text-transform:uppercase;
     color:var(--faint); text-align:center;
-    animation:splash-rise .38s cubic-bezier(.22,.9,.3,1) 1.14s both;
+    animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) 1.56s both;
   }
 
   @keyframes splash-draw{ to{ stroke-dashoffset:0; } }
@@ -4263,7 +4327,7 @@
   el.addEventListener("animationend", function(ev){
     if(ev.target === el) end();
   });
-  setTimeout(end, 2600);
+  setTimeout(end, 3300);
 })();</script>
 <!-- BUILD 101 — pull down to sync.
 
@@ -4409,36 +4473,79 @@
   <!-- The note prompt only exists in the moment after you've posted. Notes lived in a
        separate panel nobody opened; attaching them to the photo gives them an occasion. -->
 
-  <!-- shared challenge: sits above everything because it's a today thing, not an archive -->
-  <div class="chal-wrap" id="chalWrap" style="display:none;"></div>
-
   <div class="switcher" id="userSwitcher"></div>
-
-  <div class="hero" style="padding:0;margin-top:16px;">
-    <div class="hero-card">
-      <div class="hero-greet" id="heroGreet"></div>
-      <div class="hero-quote" id="heroQuote"></div>
-      <div class="hero-author" id="heroAuthor"></div>
-      <div class="hero-cue">
-        <div class="cue-label" id="cueLabel">Today's considerate cue</div>
-        <div id="heroCue"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- The emoji that used to label these are in data-ico now; the script swaps each for the
        drawn icon on boot. Keeping the name here rather than hard-coding SVG in markup means
        one icon set, one place, and a tab label that is still readable in the source. -->
   <div class="tabs">
-    <button data-tab="tasks" class="active" data-ico="check"><span class="tab-t">Tasks</span></button>
+    <button data-tab="today" class="active" data-ico="sun"><span class="tab-t">Today</span></button>
+    <button data-tab="tasks" data-ico="check"><span class="tab-t">Tasks</span></button>
     <button data-tab="rewards" data-ico="gift"><span class="tab-t">Rewards</span></button>
-    <button data-tab="board" data-ico="trophy"><span class="tab-t">Leaderboard</span></button>
+    <!-- "Scores", not "Leaderboard". The strip was tuned for five tabs and the word was
+         already 1-2px over its column on a 320px screen; at six it wrapped to two lines
+         on a 390. The shorter word is also the more honest one - this is two people, not
+         a league table. -->
+    <button data-tab="board" data-ico="trophy"><span class="tab-t">Scores</span></button>
     <button data-tab="notes" data-ico="mail"><span class="tab-t">Notes</span></button>
     <button data-tab="memories" data-ico="images"><span class="tab-t">Memories</span></button>
   </div>
 
-  <!-- TASKS VIEW -->
-  <div class="view active" id="view-tasks">
+  <!-- TODAY VIEW
+       BUILD 121. Measured on a 390x844 screen: the first task row sat at y=2729 - three
+       and a bit screens down, in a to-do app. Everything between the header and the list
+       had a good individual reason to be there and nobody ever added them up. Build 100
+       already fixed this once by moving quest/stats/health BELOW the list; the fold crept
+       back because the next five cards each had their own good reason too.
+
+       So the daily things get their own room instead of queuing in front of the list.
+       What is left above the tab strip is only what Moody said earns the place: the two
+       photos, the score, and whatever expires at midnight.
+
+       Ordered by what you DO: the morning minute, then the two things you tap today,
+       then the two you glance at, then the two that nag. -->
+  <div class="view active" id="view-today">
+    <div class="hero" style="padding:0;margin-top:16px;">
+      <div class="hero-card">
+        <div class="hero-greet" id="heroGreet"></div>
+        <div class="hero-quote" id="heroQuote"></div>
+        <div class="hero-author" id="heroAuthor"></div>
+        <div class="hero-cue">
+          <div class="cue-label" id="cueLabel">Today's considerate cue</div>
+          <div id="heroCue"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- shared challenge: sits above everything because it's a today thing, not an archive -->
+    <div class="chal-wrap" id="chalWrap" style="display:none;"></div>
+
+    <div class="card checkin-card" id="checkinCard">
+      <h2>Daily check-in</h2>
+      <div id="checkinBody"></div>
+    </div>
+
+    <div class="card" id="healthCard">
+      <h2 style="display:flex;align-items:center;justify-content:space-between;">Health today
+        <button type="button" id="healthRefresh" class="icon-btn" aria-label="Refresh health data" data-ico="refresh"></button>
+      </h2>
+      <div id="healthBody"></div>
+    </div>
+
+    <!-- Build 100: these three used to sit ABOVE the task list. Measured on a 393x852
+         phone that put the first task at y=1705 - two screens down - on a day with
+         nothing wrong. Quest, stats and health are things you GLANCE at; the task list
+         is the thing you came to use, so the list goes first and these follow it. -->
+    <div class="card quest-card">
+      <h2>Couple Quest</h2>
+      <div id="questBody"></div>
+    </div>
+
+    <!-- gentle nudges: unspent spins, and a weekly prompt for a new reward idea -->
+    <div class="card nudge-card" id="nudgeCard" style="display:none;">
+      <div id="nudgeBody"></div>
+    </div>
+
     <!-- Finish setting up: only rendered when something is actually missing, and it lists
          ONLY the missing pieces. Fully self-service so a partner can finish setup alone. -->
     <div class="card setup-card" id="setupCard" style="display:none;">
@@ -4449,12 +4556,10 @@
       <div class="setup-lead" id="setupLead"></div>
       <div id="setupItems"></div>
     </div>
+  </div>
 
-    <!-- gentle nudges: unspent spins, and a weekly prompt for a new reward idea -->
-    <div class="card nudge-card" id="nudgeCard" style="display:none;">
-      <div id="nudgeBody"></div>
-    </div>
-
+  <!-- TASKS VIEW - the list, and the things that belong to the list. Nothing else. -->
+  <div class="view" id="view-tasks">
     <!-- Sync failing is far more dangerous than sync being unconfigured: everything looks
          normal while nothing reaches the other phone. It used to say so only in 11px grey
          text inside a collapsed panel. -->
@@ -4519,38 +4624,6 @@
         <span class="cc-chev" data-ico="chevron" data-ico-size="15"></span>
       </button>
       <div class="cc-body" id="doneBody"><div id="doneTasks"></div></div>
-    </div>
-
-    <!-- Build 100: these three used to sit ABOVE the task list. Measured on a 393x852
-         phone that put the first task at y=1705 - two screens down - on a day with
-         nothing wrong. Quest, stats and health are things you GLANCE at; the task list
-         is the thing you came to use, so the list goes first and these follow it. -->
-    <div class="card quest-card">
-      <h2>Couple Quest</h2>
-      <div id="questBody"></div>
-    </div>
-
-    <div class="card" id="statsCard">
-      <h2>Your stats</h2>
-      <div class="stats-empty-hint" id="statsEmptyHint"></div>
-      <div class="stat-row">
-        <div class="stat"><div class="num" id="statPersonal">0</div><div class="label">Points</div></div>
-        <div class="stat jade"><div class="num" id="statThoughtful">0</div><div class="label">Thoughtful</div></div>
-        <div class="stat gold"><div class="num" id="statStreak">0</div><div class="label">Day Streak</div></div>
-      </div>
-      <div class="badge-row" id="badgeRow"></div>
-    </div>
-
-    <div class="card" id="healthCard">
-      <h2 style="display:flex;align-items:center;justify-content:space-between;">Health today
-        <button type="button" id="healthRefresh" class="icon-btn" aria-label="Refresh health data" data-ico="refresh"></button>
-      </h2>
-      <div id="healthBody"></div>
-    </div>
-
-    <div class="card checkin-card" id="checkinCard">
-      <h2>Daily check-in</h2>
-      <div id="checkinBody"></div>
     </div>
 
     <button id="fabAdd" class="fab" title="Add a task" aria-label="Add a task">+</button>
@@ -4675,6 +4748,17 @@
 
   <!-- LEADERBOARD VIEW -->
   <div class="view" id="view-board">
+    <div class="card" id="statsCard">
+      <h2>Your stats</h2>
+      <div class="stats-empty-hint" id="statsEmptyHint"></div>
+      <div class="stat-row">
+        <div class="stat"><div class="num" id="statPersonal">0</div><div class="label">Points</div></div>
+        <div class="stat jade"><div class="num" id="statThoughtful">0</div><div class="label">Thoughtful</div></div>
+        <div class="stat gold"><div class="num" id="statStreak">0</div><div class="label">Day Streak</div></div>
+      </div>
+      <div class="badge-row" id="badgeRow"></div>
+    </div>
+
     <!-- The month, as a race. Lifetime points only ever climb, so they stopped being a
          contest years of tasks ago; this resets on the 1st and is what the recap reads. -->
     <div class="card" id="monthRaceCard">
@@ -6951,6 +7035,10 @@
       // Notes too: posting a photo unseals today's note, and the inbox was still showing
       // the locked version it rendered on load.
       if(btn.dataset.tab === "notes"){ renderNotes(); renderRowEntry(); }
+      /* Today holds everything that is true only today - the greeting, the cue, the
+         check-in code, the challenge. A tab you come back to at 11pm should not still
+         be showing the morning's. */
+      if(btn.dataset.tab === "today"){ renderHero(); renderCheckin(); renderChallenge(); }
       // which screens get opened, and nothing about what is on them
       track("screen", {screen: String(btn.dataset.tab || "")});
     });
@@ -7094,6 +7182,13 @@
   }
   function photoMissPenalty(pid, mk){
     return photoMissDays(pid, mk).length * PHOTO_MISS_POINTS;
+  }
+  /* Is TODAY currently costing this person the photo penalty - the one day of the
+     month they can still do something about. Asked by the chip on their own photo
+     frame, and by the notice, so both read the same rule rather than each deciding
+     for itself what "missed today" means. */
+  function photoMissIsLiveToday(pid){
+    return photoMissDays(pid, monthKey()).indexOf(todayISO()) >= 0;
   }
 
   function penaltyFor(pid, mk){
@@ -10082,8 +10177,8 @@
     var n2 = personName("p2");
     return [
       {e:"💞", t:"Welcome to WeDO", x:"One app, one scoreboard, one rule: do stuff together, to get there."},
-      {e:"☀️", t:"Your morning minute", x:"Open the app with your coffee. You'll get a greeting (" + n2 + ", expect a different dessert name every day), a quote, and one considerate cue — a small thing to do for each other today."},
-      {e:"✅", t:"Do stuff", x:"Everything lives in four lists — Stuff, Trips, Experiences, Shopping. Tap the pink + to add anything. Checking things off earns points, and Together tasks pay you BOTH."},
+      {e:"☀️", t:"Your morning minute", x:"That's the Today tab, and it's where the app opens. A greeting (" + n2 + ", expect a different dessert name every day), a quote, one considerate cue, and whatever the two of you are tracking today."},
+      {e:"✅", t:"Do stuff", x:"The Tasks tab is the list, and nothing else. Four of them — Stuff, Trips, Experiences, Shopping. Tap the + to add anything. Checking things off earns points, and Together tasks pay you BOTH."},
       {e:"🔗", t:"The evening code trade", x:"Each day you both get a 4-digit code that only shows on your own phone. Talk to each other, swap codes, type theirs in — you both get +10 points and your connection streak grows. This is the heart of the app."},
       {e:"🎡", t:"Spins & rewards", x:"Every 5 completed tasks earns a spin of the wheel — massages, date nights, weekend getaways. Want a new reward on there? Propose it, and the other person approves it."},
       {e:"💌", t:"Make it a ritual", x:"Morning: read your cue. During the day: check things off. Evening: trade codes together. Weekly: spin your spins and pick a Couple Quest. Tip: set a 9pm phone reminder called “trade codes 🔗” — that one habit carries everything else. And leave a note in the Notes tab now and then. ❤️"}
@@ -10174,7 +10269,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 120;
+  var BUILD_NUM = 123;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -15566,6 +15661,66 @@
     var settled = days.filter(function(d){ return d !== today; });
     var total = days.length * PHOTO_MISS_POINTS;
     var togetherToday = openToday && tripsCovering(today).length > 0;
+
+    /* BUILD 122 - today is handled by the chip on the photo frame, not by this card.
+
+       Measured at 276px, the single biggest thing left above the task list, to say
+       "this costs 25 and you can still fix it" - next to a frame that already says
+       "tap to post" and already does it. The chip says the number; the frame was
+       always the button.
+
+       So this card goes back to being what it is good at: a RECEIPT for the days
+       that are already gone, which the chip cannot carry because there is nothing
+       to do about them. If today is the only miss there is no receipt to show, and
+       nothing renders at all.
+
+       A trip day is the exception and keeps the full card. The useful fact there is
+       not the deadline, it is that EITHER of you can settle it with one photo of
+       the two of you - which is a sentence, not a chip, and the trip frames are a
+       different shape that the chip was never designed to sit under. */
+    var chipHandlesToday = openToday && !togetherToday;
+    if(chipHandlesToday && !settled.length){
+      card.style.display = "none"; card.innerHTML = "";
+      return;
+    }
+    var chipCarriesToday = false;
+    if(chipHandlesToday){
+      // the receipt lists what is gone; today is still on the board, on the frame
+      openToday = false;
+      chipCarriesToday = true;
+      days = settled;
+      // ...and so is today's 25. Recounted, or the line claims three days and four
+      // days' worth of points in the same sentence.
+      total = days.length * PHOTO_MISS_POINTS;
+    }
+    /* The receipt, as a line. Everything below this point still builds the full
+       card markup - it is what the modal shows - but when nothing on it is live
+       there is nothing to DO, and a card is the wrong shape for a fact. */
+    if(!openToday){
+      card.style.display = "";
+      card.className = "miss-line";
+      card.innerHTML =
+        '<span>' + (days.length === 1 ? "1 earlier day missed" : days.length + " earlier days missed") +
+        '</span><span class="ml-v">\u2212' + total + '</span>' +
+        '<span class="ml-c">\u203a</span>';
+      card.onclick = function(){
+        showModal("\uD83D\uDCF8",
+          days.length === 1 ? "One earlier day" : days.length + " earlier days",
+          "The daily photo is worth \u2212" + PHOTO_MISS_POINTS + " if it doesn't go up.\n\n" +
+          days.slice().reverse().map(function(d){
+            return "\u2022 " + prettyMissDate(d) + "   \u2212" + PHOTO_MISS_POINTS;
+          }).join("\n") +
+          "\n\nThat's \u2212" + total + " off your month, and there is nothing to do about " +
+          "these." + (chipCarriesToday
+            ? " Today's \u221225 is separate and still fixable - it's on your photo above."
+            : ""));
+        ackPhotoMisses(settled);
+        renderPhotoMissNotice();
+      };
+      return;
+    }
+    card.className = "card miss-card";
+    card.onclick = null;
     card.style.display = "";
     card.classList.toggle("is-live", openToday);
 
@@ -16030,6 +16185,16 @@
         : (d.date === today ? "today" : friendlyPhotoDate(d.date));
       slot.appendChild(when);
 
+      /* What today's miss costs, said next to the thing that fixes it. Only on your
+         own slot: the other person's penalty is theirs to see on their own phone,
+         and this app does not tell one of you off on the other's behalf. */
+      if(isMe && (!d || d.date !== today) && photoMissIsLiveToday(p.id)){
+        var cost = document.createElement("div");
+        cost.className = "duo-cost";
+        cost.textContent = "\u2212" + PHOTO_MISS_POINTS + " until midnight";
+        slot.appendChild(cost);
+      }
+
       // whatever they wrote when they posted, sealed until you've posted yours
       var pn = d ? photoNoteFrom(p.id, d.date) : null;
       if(pn){
@@ -16103,15 +16268,120 @@
       row.appendChild(slot);
 
       if(i === 0 && people.length > 1){
-        var heart = document.createElement("div");
+        /* A button, not a div. The gap means something now, and a reading nobody can
+           ask about is just a thing that moves - so it is tappable, and the answer
+           names the three counts rather than announcing a score. */
+        var heart = document.createElement("button");
+        heart.type = "button";
         heart.className = "duo-heart";
-        // Two hearts, one in each of your colours, overlapping — the same idea the emoji
-        // was carrying, except it's in the app's own palette and at the app's own weight.
+        var sy = syncScore();
+        // 0 when you are in step, 1 when you are not. Driven as a custom property so
+        // the CSS owns the geometry and this owns the arithmetic.
+        heart.style.setProperty("--duo-split", (1 - sy.score).toFixed(3));
+        heart.classList.toggle("in-step", sy.score >= 0.82);
+        var label = syncWord(sy.score);
+        heart.setAttribute("aria-label", label + " \u2014 tap to see what that counts");
+        heart.title = label;
         heart.innerHTML = icon("heart", 17, "dh-a") + icon("heart", 17, "dh-b");
+        heart.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          var pct = function(v){ return Math.round(v * 100) + "%"; };
+          var n1 = personName(people[0].id), n2 = personName(people[1].id);
+          showModal("\uD83D\uDC9E", label,
+            "How close these two hearts sit is the last " + sy.days +
+            (sy.days === 1 ? " day" : " days") + ", counted three ways:\n\n" +
+            "\u2022 Photos \u2014 " + pct(sy.photos) + " of days you both posted\n" +
+            "\u2022 Codes \u2014 " + pct(sy.codes) + " of days you traded (days away together count)\n" +
+            "\u2022 Balance \u2014 " + pct(sy.balance) + " even, " + n1 + " " + sy.doneA +
+            " to " + n2 + " " + sy.doneB + "\n\n" +
+            "That is what the app can see, which is not the same thing as how the two " +
+            "of you are doing. Post a photo or trade today's code and they move.");
+          track("sync_explain", {});
+        });
         row.appendChild(heart);
       }
     });
   }
+  /* ===========================================================================
+     BUILD 123 - how far apart the two hearts sit.
+
+     Moody's idea, and a good one: the pair between the photos stops being
+     decoration and starts being a reading. Close enough to touch when the two of
+     you are in step; drifting apart when you are not.
+
+     Three things are counted, over the last seven days, because seven is long
+     enough that one bad Tuesday does not move it and short enough that it is
+     about now rather than about March:
+
+       PHOTOS      the days you BOTH posted (a joint photo on a trip day counts
+                   for both, because on a trip the app only asks for one)
+       CONNECTION  the days you traded codes - the evening ritual the whole app
+                   is built around. A trip day counts: you were in the same room,
+                   there was no code to trade, and the app says so itself.
+       BALANCE     whether the tasks that got done got done by both of you, or by
+                   one of you carrying it. |a-b| over the total.
+
+     Weighted 40/40/20. The two daily rituals are what "in sync" actually means
+     here; the task split is a tie-breaker, not the point.
+
+     A week where neither of you did ANYTHING scores 0.35 on balance rather than
+     0 or 1. Equally idle is not in sync, but it is not a fight either, and the
+     hearts should drift rather than accuse.
+
+     What this is NOT: a measure of the relationship. It is a measure of what the
+     app can see, which is a different and much smaller thing, and the explainer
+     behind the tap says so in those words.
+     =========================================================================== */
+  function syncScore(){
+    var people = (state.people || []).slice(0, 2);
+    if(people.length < 2) return {score: 1, photos: 0, codes: 0, balance: 1, days: 0};
+    var a = people[0].id, b = people[1].id;
+    var today = todayISO();
+    var DAYS = 7;
+    var bothPhoto = 0, traded = 0, windowDays = 0;
+    var startISO = shiftISO(today, -(DAYS - 1));
+    for(var i = 0; i < DAYS; i++){
+      var d = shiftISO(today, -i);
+      // the day the app was installed is the earliest day it can have an opinion about
+      if(state.installedAt && d < state.installedAt) continue;
+      windowDays++;
+      var alb = (state.album || {})[d] || {};
+      var together = dateInTrip(d);
+      if((alb[a] && alb[b]) || (together && ((state.tripPhotos && Object.keys(state.tripPhotos).some(function(k){ return k.indexOf(d) === 0; })) || (alb[a] || alb[b])))) bothPhoto++;
+      if(together || (isLockedIn(a, d) && isLockedIn(b, d))) traded++;
+    }
+    if(!windowDays) return {score: 1, photos: 0, codes: 0, balance: 1, days: 0};
+
+    var doneA = 0, doneB = 0;
+    (state.tasks || []).forEach(function(t){
+      if(t.status !== "done" || !t.completedAt) return;
+      var d = String(t.completedAt).slice(0, 10);
+      if(d < startISO || d > today) return;
+      if(t.completedBy === a || t.completedBy === "both") doneA++;
+      if(t.completedBy === b || t.completedBy === "both") doneB++;
+    });
+    var total = doneA + doneB;
+    var balance = total ? (1 - Math.abs(doneA - doneB) / total) : 0.35;
+
+    var photos = bothPhoto / windowDays;
+    var codes  = traded / windowDays;
+    var score  = 0.4 * photos + 0.4 * codes + 0.2 * balance;
+    return {score: Math.max(0, Math.min(1, score)),
+            photos: photos, codes: codes, balance: balance,
+            days: windowDays, doneA: doneA, doneB: doneB};
+  }
+
+  function syncWord(score){
+    if(score >= 0.80) return "In step";
+    if(score >= 0.55) return "Close";
+    /* 0.28 rather than 0.34 deliberately. A week where one of you did nine things
+       and the other did one still scores 0.33 - that is a week where somebody was
+       carrying it, which is "drifting", not "far apart". "Far apart" is reserved
+       for a week where almost nothing happened at all. */
+    if(score >= 0.28) return "Drifting";
+    return "Far apart";
+  }
+
   function friendlyPhotoDate(dateStr){
     if(!dateStr) return "";
     var y = shiftISO(todayISO(), -1);
@@ -20146,9 +20416,10 @@
     }
   });
 
-  // refresh the check-in card as the day rolls over
+  // refresh the check-in card as the day rolls over. It lives on Today now, not Tasks -
+  // watching the wrong view here would have left a stale code on screen past midnight.
   setInterval(function(){
-    if(document.getElementById("view-tasks").classList.contains("active")){
+    if(document.getElementById("view-today").classList.contains("active")){
       renderCheckin();
     }
   }, 60000);
