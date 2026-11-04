@@ -10355,7 +10355,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 124;
+  var BUILD_NUM = 125;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -13305,6 +13305,34 @@
     });
     row.appendChild(input); row.appendChild(btn);
     body.appendChild(row);
+
+    /* BUILD 125 - the switch, on the thing it switches off.
+
+       Build 124 put "do you live together" in Settings and told Moody where to
+       find it. He asked the next day why the check-in card was still there, which
+       is the correct question: a control that removes a card belongs ON the card,
+       not three screens away behind a heading nobody reads. The lock screen got
+       its own door for exactly this reason; this is the same door, upstairs.
+
+       Still a link rather than a button: it is not the thing you came here to do,
+       and it should not compete with Connect. */
+    var lt = document.createElement("button");
+    lt.type = "button";
+    lt.className = "small-link";
+    lt.textContent = "We live together \u2014 stop asking for codes";
+    lt.addEventListener("click", function(){
+      if(!confirm("Stop the daily code trade?\n\nIt's for when you're apart - it stops " +
+                  "the daily codes, the missed-code lock and this card. Turn it back on in " +
+                  "Settings whenever you like. This changes it for both of you.")) return;
+      state.liveTogether = true;
+      state.liveTogetherMtime = Date.now();
+      save(); scheduleSync();
+      applyConnLock();
+      renderAll();
+      toast("Codes off \u2014 enjoy being in the same room \uD83D\uDC9E");
+      track("live_together", {ok: true, source: "card"});
+    });
+    body.appendChild(lt);
   }
 
   function lockInDay(personId, dateISO){
