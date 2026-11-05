@@ -3235,6 +3235,35 @@
      label on two lines. It still never wraps at any normal size.
      Build 121: there are six tabs now, and the longest label is "Memories". */
   .tabs .tab-t{ white-space:normal; overflow-wrap:anywhere; min-width:0; max-width:100%; }
+
+  /* BUILD 126 - counts on the tab icons.
+
+     Absolutely positioned, so a badge can never widen a column or push a label
+     onto two lines - the strip is already six tabs on a 320px screen and has no
+     room to give. The button is the positioning context.
+
+     Two badges, two meanings, two colours, and the colour is never the only
+     signal: the number is the signal, and both carry a full sentence in
+     aria-label because "3" on its own tells a screen reader nothing.
+
+       rose   something is late          Tasks
+       jade   something is waiting FOR you, pleasantly   Rewards
+
+     --on-accent for the ink, because both grounds are filled accents and that is
+     the token that flips with the theme. */
+  .tabs button{ position:relative; }
+  .tab-badge{
+    position:absolute; top:1px; left:50%; margin-left:4px;
+    min-width:16px; height:16px; padding:0 4px;
+    display:inline-flex; align-items:center; justify-content:center;
+    border-radius:999px; background:var(--rose); color:var(--on-accent);
+    font-size:0.5625rem; font-weight:800; line-height:1;
+    font-variant-numeric:tabular-nums; letter-spacing:0;
+    box-shadow:0 0 0 2px var(--bg);
+    pointer-events:none;
+  }
+  .tab-badge.calm{ background:var(--jade); }
+  .tab-badge[hidden]{ display:none; }
   /* An iPhone SE is 375 and all six fit there. 320 is the old SE and the narrowest thing
      iOS still runs, where six labels are over their columns, so they step down rather
      than get cut in half. */
@@ -4493,8 +4522,8 @@
        one icon set, one place, and a tab label that is still readable in the source. -->
   <div class="tabs">
     <button data-tab="today" class="active" data-ico="sun"><span class="tab-t">Today</span></button>
-    <button data-tab="tasks" data-ico="check"><span class="tab-t">Tasks</span></button>
-    <button data-tab="rewards" data-ico="gift"><span class="tab-t">Rewards</span></button>
+    <button data-tab="tasks" data-ico="check"><span class="tab-badge" id="badgeTasks" hidden></span><span class="tab-t">Tasks</span></button>
+    <button data-tab="rewards" data-ico="gift"><span class="tab-badge" id="badgeRewards" hidden></span><span class="tab-t">Rewards</span></button>
     <!-- "Scores", not "Leaderboard". The strip was tuned for five tabs and the word was
          already 1-2px over its column on a 320px screen; at six it wrapped to two lines
          on a 390. The shorter word is also the more honest one - this is two people, not
@@ -10355,7 +10384,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 125;
+  var BUILD_NUM = 126;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14325,6 +14354,61 @@
      The reward half carries its own "already answered this week" guard on top, so
      a Sunday where you have already proposed something shows the quest alone. */
   function isSunday(){ return new Date().getDay() === 0; }
+
+  /* ===========================================================================
+     BUILD 126 - the two counts on the tab strip.
+
+     Moody: "shouldn't the number of due tasks for me be shown under tasks, and
+     rewards available on rewards". Yes - and the useful word in that sentence is
+     FOR ME. A badge that counts the household's overdue tasks tells you to go and
+     look; a badge that counts YOURS tells you to go and do something.
+
+     TASKS counts open tasks that are overdue or due today, assigned to this phone's
+     owner or to both of you. Not the whole list - a number that never reaches zero
+     is wallpaper within a week.
+
+     REWARDS counts two different things that both mean "there is something here
+     for you": spins you have earned and not spent, and reward ideas your person
+     proposed that are waiting on YOUR yes. Both are a tap away from done, and
+     neither of them is late, so the badge is jade rather than rose.
+
+     Deliberately deviceOwner() and not currentUser: "viewing as" is a debugging
+     control, and the tab strip should not change its numbers because somebody
+     tapped the switcher to see the other side. */
+  function dueSoonCount(pid){
+    if(!pid) return 0;
+    var today = todayISO();
+    return (state.tasks || []).filter(function(t){
+      if(t.status !== "open" || !t.dueDate) return false;
+      if(t.assignedTo !== pid && t.assignedTo !== "both") return false;
+      return t.dueDate <= today;
+    }).length;
+  }
+  function rewardsWaitingCount(pid){
+    if(!pid) return 0;
+    var spins = ((state.points || {})[pid] || {}).spinsAvailable || 0;
+    var toApprove = (state.rewardRequests || []).filter(function(r){
+      return r && r.proposedBy && r.proposedBy !== pid;
+    }).length;
+    return spins + toApprove;
+  }
+  function setTabBadge(id, n, calm, one, many){
+    var el = document.getElementById(id);
+    if(!el) return;
+    if(!n){ el.hidden = true; el.textContent = ""; el.removeAttribute("aria-label"); return; }
+    el.hidden = false;
+    // a two-digit badge still fits the column; three digits would not
+    el.textContent = n > 99 ? "99+" : String(n);
+    el.classList.toggle("calm", !!calm);
+    el.setAttribute("aria-label", n + " " + (n === 1 ? one : many));
+  }
+  function renderTabBadges(){
+    var me = deviceOwner();
+    setTabBadge("badgeTasks", dueSoonCount(me), false,
+                "task due or overdue", "tasks due or overdue");
+    setTabBadge("badgeRewards", rewardsWaitingCount(me), true,
+                "reward waiting for you", "rewards waiting for you");
+  }
 
   function renderQuest(){
     var wrap = document.getElementById("questBody");
@@ -19218,6 +19302,7 @@
       });
     }
     renderMilestoneBanner();
+    renderTabBadges();
     renderUsBar();
     renderPhotoMissNotice();
     renderNtfy();
