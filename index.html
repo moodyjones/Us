@@ -4862,20 +4862,37 @@
     border-radius:12px; border:1px solid var(--line);
     background:var(--s2);
   }
-  /* Closure: the strip fades at both ends so it reads as continuing past the window
-     rather than as a list that happens to be three long.
-     The mask belongs on the STRIP, not on .reel. On the container it faded the
-     container's own background too, and what showed through was the page's
-     --wash-c - a teal radial gradient - which put a mint band across the top and
-     bottom rows of a cream card. */
-  .reel-strip{
-    will-change:transform;
-    -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.15),#000 42px,#000 132px,rgba(0,0,0,.15));
-    mask-image:linear-gradient(180deg,rgba(0,0,0,.15),#000 42px,#000 132px,rgba(0,0,0,.15));
-    -webkit-mask-size:100% 174px; mask-size:100% 174px;
-    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
-    -webkit-mask-position:0 var(--reel-mask, 0px); mask-position:0 var(--reel-mask, 0px);
+  /* BUILD 138 - THE REEL WENT BLANK, and this is why.
+
+     136 put the fade on .reel (the window) and it ate the window's own background,
+     letting the page's teal wash through. So 137 moved it onto .reel-strip. That is
+     worse, and it is the bug Moody hit: a mask on the STRIP travels WITH the strip.
+     It is 174px tall, pinned to the strip's own top, and `mask-repeat: no-repeat`
+     means every pixel outside the mask image is fully transparent. The strip travels
+     6,322px. Three rows after the spin starts, the mask is thousands of pixels above
+     the window and the whole reel is invisible - so the spin looks like the thing
+     vanishing and a dialog appearing to tell you what you won.
+
+     A mask was the wrong tool twice. The fade is a SCRIM now: two gradients in the
+     window's own colour, painted over the strip, fixed to the window because they
+     are children of the window. The strip underneath is never touched.
+
+     Both gradients need that colour AT ZERO ALPHA - `transparent` is rgba(0,0,0,0),
+     so a cream-to-transparent gradient travels through grey and hangs a dirty band
+     over the rows. Same trap as --ground-0 in 134. */
+  .reel-strip{ will-change:transform; }
+  :root{ --reel-0:rgba(29,24,36,0); }
+  :root[data-mode="light"]{ --reel-0:rgba(251,240,232,0); }
+  .reel::before,
+  .reel::after{
+    content:""; position:absolute; left:0; right:0;
+    /* 44px covered three quarters of a 58px row and the neighbours stopped being
+       readable as context. 28 fades the edge without eating the row. */
+    height:28px;
+    z-index:3; pointer-events:none;
   }
+  .reel::before{ top:0;    background:linear-gradient(180deg, var(--s2), var(--reel-0)); }
+  .reel::after{  bottom:0; background:linear-gradient(0deg,   var(--s2), var(--reel-0)); }
   .reel-row{
     height:58px; display:flex; align-items:center; gap:var(--sp-5);
     padding:0 var(--sp-7); box-sizing:border-box;
@@ -4897,9 +4914,13 @@
   }
   /* Rarity is the one thing on this strip that earns weight, and it gets weight
      rather than a fourth hue - the row is already carrying an emoji and a name. */
-  .reel-row.tier-rare .rr-t{ color:var(--text); font-weight:600; }
+  .reel-row.rr-t-rare .rr-t{ color:var(--text); font-weight:600; }
+  /* belt and braces: nothing in this sheet may paint a reel row */
+  .reel-row{ background:none; }
   .reel-win{
-    position:absolute; left:0; right:0; top:58px; height:58px; z-index:2;
+    /* above the scrim: at z-index 2 the top edge of the lit band was being painted
+       over by the top fade, so the band read as open at the top */
+    position:absolute; left:0; right:0; top:58px; height:58px; z-index:4;
     pointer-events:none;
     border-top:1px solid var(--moody); border-bottom:1px solid var(--moody);
     background:color-mix(in srgb, var(--moody) 7%, transparent);
@@ -4988,6 +5009,50 @@
      a tick that has not been filled in, which is what it is. */
   :root[data-skin="pe"] .duo-chal{ color:var(--line-2); }
   :root[data-skin="pe"] .duo-chal.on{ color:var(--on-accent); }
+
+
+  /* ===========================================================================
+     BUILD 137 - "these boxes still look weird as hell".
+
+     I read that as the two person boxes twice, and fixed those twice. Measuring
+     the page instead of looking at it found the actual fault in one line:
+
+       hero-card          L16 W358     a card
+       chal-wrap          L16 W358     padding: 0 16px   <-- the page gutter, again
+         chal-card        L32 W326     32px narrower than everything beside it
+       card collapsible   L16 W358     a card
+
+     .chal-wrap re-applies --gutter INSIDE an element that is already inside the
+     gutter, so the challenge is the only card on the screen that is indented. On
+     top of that it is a mint gradient with a jade border at an 18px radius, while
+     its neighbours are plain cards at 12px - a different width AND a different
+     material, which is exactly "the sober one is not the same size".
+
+     It becomes a card like the others. The challenge is distinguished by what it
+     says, not by being a different colour of box; jade stays, once, on the day
+     number and the bar it belongs to.
+     =========================================================================== */
+  :root[data-skin="pe"] .chal-wrap{
+    padding-left:0; padding-right:0;
+    margin:0 auto var(--card-gap);
+    max-width:none;
+  }
+  :root[data-skin="pe"] .chal-card{
+    background:var(--s1);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:none;
+    padding:var(--card-pad) var(--gutter);
+  }
+  /* The one accent this card keeps, on the two things that carry its state. */
+  :root[data-skin="pe"] .chal-day{ color:var(--jade); }
+  :root[data-skin="pe"] .chal-bar > span,
+  :root[data-skin="pe"] .chal-bar i{ background:var(--jade); }
+  /* The tinted inks were written for a mint ground and go muddy on a white one. */
+  :root[data-skin="pe"] .chal-card{ --chal-ink:var(--text); --chal-ink-hi:var(--text); --chal-dim:var(--faint); }
+  :root[data-skin="pe"] .chal-msg{ color:var(--muted); }
+  :root[data-skin="pe"] .chal-sub{ color:var(--faint); }
+  :root[data-skin="pe"] .chal-toggle{ color:var(--muted); }
 
 </style>
 </head>
@@ -11148,7 +11213,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 136;
+  var BUILD_NUM = 138;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -16070,6 +16135,7 @@
      =========================================================================== */
   var REEL_ROW = 58;        // px, one prize
   var REEL_REPEATS = 7;     // strip length, so a 4s travel never runs out of rows
+  var reelLandedIndex = -1; // where the last spin stopped, so a re-render can restore it
 
   function reelPool(){
     var list = weightedRewardList();
@@ -16113,7 +16179,10 @@
       for(var i = 0; i < pool.length; i++) rows.push(pool[i]);
     }
     strip.innerHTML = rows.map(function(x){
-      return '<div class="reel-row tier-' + escapeHtml(x.tier || "common") + '">' +
+      // rr-t-* and not tier-*: .tier-common and friends are this sheet's reward-CHIP
+      // tints (mint, lavender, gold fills), so the plain names put a coloured band
+      // behind every row of the reel.
+      return '<div class="reel-row rr-t-' + escapeHtml(x.tier || "common") + '">' +
              reelRowHtml(x) + "</div>";
     }).join("");
     strip.style.transition = "none";
@@ -16147,9 +16216,10 @@
        winner first, two repeats from the end so there is always strip left to move. */
     var pool = reelEl._pool || [];
     var target = pool.length * (REEL_REPEATS - 2) + Math.floor(pool.length / 2);
+    reelLandedIndex = target;
     var cell = strip.children[target];
     if(cell){
-      cell.className = "reel-row tier-" + (chosen.tier || "common");
+      cell.className = "reel-row rr-t-" + (chosen.tier || "common");
       cell.innerHTML = reelRowHtml(chosen);
     }
     // the window shows three rows, so centring row N means travelling N-1 rows up
@@ -16164,7 +16234,26 @@
     setTimeout(function(){
       state.rewardsWon.push({id:uid(), personId:uid_, rewardId:chosen.id, name:chosen.name, tier:chosen.tier, emoji:chosen.emoji, date:new Date().toISOString()});
       save();
+      /* BUILD 138: renderRewards() rebuilds the strip and resets it to translateY(0),
+         so dismissing the dialog used to reveal a reel scrolled back to the top with
+         the prize nowhere on it. The result should still be sitting in the lit band
+         when the dialog comes away. */
+      var keepStrip = document.getElementById("reelStrip");
+      var keepT = keepStrip ? keepStrip.style.transform : null;
+      var keepTr = keepStrip ? keepStrip.style.transition : null;
       renderRewards();
+      var newStrip = document.getElementById("reelStrip");
+      if(newStrip && keepT){
+        newStrip.style.transition = "none";
+        newStrip.style.transform = keepT;
+        var keepCell = newStrip.children[reelLandedIndex];
+        if(keepCell){
+          keepCell.className = "reel-row rr-t-" + (chosen.tier || "common");
+          keepCell.innerHTML = reelRowHtml(chosen);
+        }
+        void newStrip.offsetHeight;
+        newStrip.style.transition = keepTr || "";
+      }
       renderStats();
       var tierLabel = chosen.tier==="rare" ? "RARE WIN! 🌟" : (chosen.tier==="uncommon" ? "Nice pull! ✨" : "You got:");
       showModal(chosen.emoji, tierLabel, chosen.name);
@@ -19785,34 +19874,17 @@
       card.appendChild(m);
     }
 
-    // today's two ticks. Only your own is tappable — marking your partner's day for them
-    // is exactly the kind of small dishonesty that makes a shared tracker worthless.
-    /* BUILD 136: this row moved onto the two rings in the hero. Hidden rather than
-       deleted so the timeline below still has the element it measures against. */
-    var people = document.createElement("div");
-    people.className = "chal-people";
-    people.hidden = true;
-    state.people.forEach(function(pn){
-      var on = challengeChecked(c, pn.id, today);
-      var mine = (pn.id === me);
-      var btn = document.createElement("button");
-      btn.className = "chal-p is-" + pn.id + (on ? " on" : "") + (mine ? " mine" : "");
-      btn.innerHTML =
-        '<span class="tick">\u2713</span>' +
-        '<span><span class="nm">' + escapeHtml(mine ? "You" : personName(pn.id)) + '</span>' +
-        '<br><span class="sub">' + (on ? "marked today" : (mine ? "tap to mark" : "not yet")) + '</span></span>';
-      if(mine && idx >= 0){
-        btn.addEventListener("click", function(){
-          setChallengeCheck(me, today, !challengeChecked(activeChallenge(), me, today));
-          renderChallenge(); renderTasks(); renderHero();
-        });
-      } else {
-        btn.disabled = true;
-        btn.style.cursor = "default";
-      }
-      people.appendChild(btn);
-    });
-    card.appendChild(people);
+    /* BUILD 137 - the two boxes are GONE, not hidden.
+
+       136 built this row and set people.hidden = true, and I checked the attribute
+       and called it done. The attribute was set. The row was still 50px tall and
+       fully visible, because `.chal-people{display:flex}` is a class selector and
+       outranks the user-agent's `[hidden]{display:none}` - so `hidden` on an element
+       the sheet gives a display to is decoration. I verified a flag instead of a
+       pixel, which is the whole reason Moody saw the same boxes twice.
+
+       There is nothing to hide now. The two marks live on the two rings in the hero,
+       beside the faces they describe, and this row is not constructed at all. */
 
     var toggle = document.createElement("button");
     var open = chalTimelineOpen();
