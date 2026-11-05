@@ -197,6 +197,23 @@
   }
   .brand-word .bw-red{ color:var(--moody); }
   .brand-word .bw-purple{ color:var(--rae); }
+
+  /* ---- the readout under the lockup ---- */
+  .hud{
+    display:flex; flex-direction:column; align-items:center;
+    gap:2px;
+    margin-top:var(--sp-6);
+    font-family:var(--mono); font-variant-numeric:tabular-nums;
+    font-size:var(--eyebrow); letter-spacing:.04em; text-transform:uppercase;
+    color:var(--faint); line-height:1.9;
+  }
+  .hud-row{
+    display:flex; align-items:center; justify-content:center;
+    flex-wrap:wrap; gap:0 var(--sp-7);
+  }
+  .hud-cell{ display:inline-flex; align-items:baseline; gap:5px; white-space:nowrap; }
+  .hud-cell b{ font-weight:700; color:var(--muted); }
+  .hud .ver-line{ margin:0; padding:0; min-height:0; border:0; background:none; }
   header h1{
     margin:0;
     font-size:1.625rem;
@@ -2411,6 +2428,18 @@
 
     --ui:"Instrument Sans",-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     --display:"Instrument Serif","Iowan Old Style",Georgia,serif;
+    /* BUILD 128 - the third face: a monospace for FACTS.
+
+       An expressive face for ideas, a mono for things that are measured - counts,
+       scores, dates, readouts, the small uppercase labels that name a number. The
+       app had exactly three mono elements in it before this; everything countable
+       was set in the same sans as the prose, so a step count read like a sentence.
+
+       ui-monospace, NOT a webfont. On an iPhone that resolves to SF Mono, which is
+       as good as anything Google would serve and costs zero bytes, zero requests
+       and zero flash of fallback text on an app that opens offline. The app
+       already loads four families; a fifth for digits would be indefensible. */
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,"Roboto Mono",monospace;
 
     /* Shadows go nearly flat. The separation comes from the rules now; keeping
        the old drop shadows as well is what makes a design look like two designs. */
@@ -3257,6 +3286,11 @@
     min-width:16px; height:16px; padding:0 4px;
     display:inline-flex; align-items:center; justify-content:center;
     border-radius:999px; background:var(--rose); color:var(--on-accent);
+    /* Build 127: this inherited nothing and fell through to the UA's default, so
+       every badge in the app was rendering in Arial while the rest of the strip
+       was Instrument Sans. Found by auditing against the design references, not
+       by looking - at 9px the difference is invisible until you measure it. */
+    font-family:var(--ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
     font-size:0.5625rem; font-weight:800; line-height:1;
     font-variant-numeric:tabular-nums; letter-spacing:0;
     box-shadow:0 0 0 2px var(--bg);
@@ -4304,6 +4338,53 @@
   /* Headings set in a display serif are the ones that strand a single word on a line. */
   h1, h2, h3, .ms-sub, .hero-greet{ text-wrap:balance; }
 
+  /* ===========================================================================
+     BUILD 128 - mono on the facts.
+
+     An expressive face for ideas, a monospace for things that are MEASURED:
+     counts, scores, steps, deadlines, and the small uppercase labels that name
+     one of those numbers.
+
+     AT THE END OF THE SHEET ON PURPOSE. The first attempt sat up with the other
+     type rules and lost silently to a dozen later component rules that each set
+     their own font-family - the chips took it, the scores and the labels did not,
+     and the only way to tell was to read the computed style of every one. A
+     cross-cutting rule that has to beat a hundred specific ones belongs last.
+
+     What is deliberately NOT mono: the challenge day, the recap figures and the
+     hero greeting. Those are headlines that happen to contain a number - they are
+     read as a statement, not consulted as a reading. And nothing inside prose: a
+     sentence with a number in it is still a sentence.
+
+     tabular-nums throughout, so a score going 9 -> 10 does not shift the layout
+     and two numbers in a column line up on the digit. That is most of the reason
+     to use a mono at all. */
+  /* Two of these need the extra weight: .us-bar .us-pts (0,2,0) and
+     :root[data-skin="pe"] .cue-label (0,3,0) both set their own family. */
+  .us-bar .us-pts, :root .hero-cue .cue-label, :root .hero-scope .cue-label,
+  .us-pts, .month-num, .board-score, .fig,
+  .stat .num, .stat .label,
+  .duo-health, .duo-cost,
+  .tab-badge,
+  .cc-count, .setup-count,
+  .due-tag, .diff-easy, .diff-medium, .diff-hard,
+  .tier-common, .tier-uncommon, .tier-rare,
+  .mt-v, .mt-l, .mf-v, .ml-v,
+  .tt-day, .dnum, .ddate,
+  .code-label, .code-value,
+  .ver-line,
+  .us-who, .cue-label, .chal-title{
+    font-family:var(--mono);
+    font-variant-numeric:tabular-nums;
+  }
+  /* A mono at the same nominal size reads larger and looser than the sans it
+     replaces - SF Mono's x-height is taller and every glyph is on the widest
+     advance. These three are the ones where that showed: tightened back so the
+     line lengths and the column widths are what they were. */
+  .us-who, .cue-label{ letter-spacing:.055em; }
+  .tab-badge{ letter-spacing:-.02em; }
+  .duo-cost{ letter-spacing:-.01em; }
+
 </style>
 </head>
 <body>
@@ -4464,7 +4545,21 @@
        and the number is how you tell whether the thing you just uploaded is the thing you
        are looking at. It earns its place — so it comes back, doing more than it used to:
        it also says whether a newer build is waiting, and tapping it goes and gets it. -->
-  <button type="button" class="ver-line" id="verLine" aria-live="polite"></button>
+  <!-- BUILD 129: the readout.
+
+       What was here: the build number. Developer chrome, and the only changing
+       thing in a header that otherwise says the same four lines forever.
+
+       What is here now: the four numbers this app actually knows about the two of
+       you today, in the frame rather than three screens down - steps, the day of
+       whatever you are running, how far apart the scores are, and how much of the
+       month is left. Mono, because they are readings.
+
+       The build line survives as the last cell, because it has earned its place
+       twice now by being how you tell whether the thing you uploaded is the thing
+       you are looking at - and it is still the tap target that goes and gets the
+       new one. -->
+  <div class="hud" id="hud" aria-live="polite"></div>
 </header>
 
 <main>
@@ -10384,7 +10479,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 127;
+  var BUILD_NUM = 129;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -19330,6 +19425,7 @@
       });
     }
     renderMilestoneBanner();
+    renderHud();
     renderTabBadges();
     renderUsBar();
     renderPhotoMissNotice();
@@ -19412,7 +19508,77 @@
   var UPDATE_TRY_KEY = "us-update-attempt";
 
   // The header line. Four states, and only one of them is meant to be noticed.
+  /* ===========================================================================
+     BUILD 129 - the readout.
+
+     Four cells at most, and every one of them is a number that was already true
+     and already in the app - this invents nothing and fetches nothing. A cell
+     that has no answer today does not render, so the row shrinks rather than
+     filling itself with zeroes and em-dashes.
+
+       STEPS    today's, from the Health pipeline, yours only
+       DAY      N/30 of whatever challenge is running
+       GAP      how far apart the two scores are, named for whoever is up
+       LEFT     days remaining in the month, because everything expires on the 1st
+
+     The build line is rebuilt as the last cell by setVerLine(), which is why this
+     renders the others and then leaves it alone. */
+  function hudCells(){
+    var me = deviceOwner() || state.currentUser;
+    var out = [];
+
+    var h = (state.healthCache || {})[me];
+    if(h && h.date === todayISO() && h.steps > 0){
+      out.push(["steps", Number(h.steps).toLocaleString()]);
+    }
+
+    var c = activeChallenge();
+    if(c && !c.endedAt){
+      var n = challengeDayNumber(c, todayISO());
+      if(n >= 1 && n <= c.days) out.push(["day", n + "/" + c.days]);
+    }
+
+    try{
+      var mk = monthKey();
+      var people = (state.people || []).slice(0, 2);
+      if(people.length === 2){
+        var a = monthPointsFor(people[0].id, mk), b = monthPointsFor(people[1].id, mk);
+        var gap = Math.abs(a - b);
+        out.push(["gap", gap === 0 ? "level"
+          : (gap + " " + personName(a > b ? people[0].id : people[1].id))]);
+      }
+    }catch(e){}
+
+    // not daysLeftPhrase(): it already ends in "left", and the cell is labelled "left"
+    var dl = daysLeftInMonth();
+    out.push(["left", dl + (dl === 1 ? " day" : " days")]);
+    return out;
+  }
+  function renderHud(){
+    var el = document.getElementById("hud");
+    if(!el) return;
+    var cells = hudCells();
+    /* No separator characters between the cells. They read well on one line and badly
+       the moment the row wraps - at 320px the middle dot ended up stranded at the end of
+       the first line, introducing nothing. A separator that cannot know where the line
+       breaks is the wrong tool; the gap and the label/value weight contrast do the same
+       job and survive any width. */
+    var html = cells.map(function(c){
+      return '<span class="hud-cell">' + escapeHtml(c[0]) + ' <b>' + escapeHtml(c[1]) + '</b></span>';
+    }).join('');
+    /* The build line gets its own row rather than a fifth cell. As a cell it wrapped
+       onto the second line on a 390 screen WITH its leading separator, which reads as
+       a bullet point introducing nothing. It is also a different kind of thing from
+       the four readings - it is a control - so the break is honest. */
+    el.innerHTML = '<span class="hud-row">' + html + '</span>' +
+      '<button type="button" class="ver-line" id="verLine"></button>';
+    document.getElementById("verLine").addEventListener("click", function(){ checkForUpdate(true); });
+    setVerLine(lastVerKind || "idle", lastVerLive);
+  }
+  var lastVerKind = "idle", lastVerLive = null;
+
   function setVerLine(kind, live){
+    lastVerKind = kind; lastVerLive = live;
     var el = document.getElementById("verLine");
     if(!el) return;
     el.className = "ver-line" + (kind === "update" ? " update" : (kind === "busy" ? " busy" : ""));
@@ -19479,7 +19645,7 @@
       .catch(function(){ setVerLine("idle"); if(manual) toast("Couldn't reach the site to check"); });
   }
   document.getElementById("forceUpdateBtn").addEventListener("click", function(){ checkForUpdate(true); });
-  document.getElementById("verLine").addEventListener("click", function(){ checkForUpdate(true); });
+  renderHud();
   setVerLine("idle");
   setTimeout(function(){ checkForUpdate(false); }, 1500);
 
