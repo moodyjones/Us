@@ -4385,6 +4385,446 @@
   .tab-badge{ letter-spacing:-.02em; }
   .duo-cost{ letter-spacing:-.01em; }
 
+
+  /* ===========================================================================
+     BUILD 133 - THE REDRAW.
+
+     One sentence of action: THE DAY FILLS UP IN TWO COLOURS. The split day-bar
+     is the signature move. Everything on this screen is quieter than it.
+
+     Four changes, each from the reference rules rather than from taste:
+
+       1. TIGHT DISPLAY, SMALL BODY. Headlines sat at -1% tracking and 1.1
+          line-height; running text at 13px. The rule is -3% to -5% at 0.86-0.95,
+          and body at 16-20px. 13px body is most of why this read as a 2014 app.
+
+       2. THREE TEXT TIERS AND ONE ACCENT. Coral, violet, jade, gold and rose,
+          each in its own outlined capsule, on one row. The card recipe allows
+          one. Difficulty becomes quiet mono metadata, so colour can stop meaning
+          "how hard" and start meaning "whose" - the only thing in a shared list
+          worth a colour.
+
+       3. NO CARD AROUND A LIST. Border, fill, radius and shadow each announce a
+          separate object. Put them on everything and the hierarchy flattens:
+          a card, holding a card, holding rows. The rows sit on the page now.
+
+       4. A RADIUS SCALE. 999px on pills, chips, badges, filters and the button
+          meant nothing could look more important than anything else.
+
+     PLACED LAST IN THE SHEET ON PURPOSE. Build 128 learned this the expensive
+     way: a cross-cutting rule that has to beat a hundred specific ones belongs
+     at the end, not in the middle where every later component rule outranks it.
+     =========================================================================== */
+  :root{
+    /* Parts Bin P-09's curve. Ours was cubic-bezier(.2,.8,.2,1), which is close
+       enough to look right and different enough to feel unrelated to every other
+       moving thing in the family. */
+    --ease-out:cubic-bezier(.22,1,.36,1);
+  }
+
+  /* ---- 1. display: tight and large, body: plain and 16px ---- */
+  :root[data-skin="pe"] .card h2,
+  :root[data-skin="pe"] .modal h3,
+  :root[data-skin="pe"] .hero-h,
+  :root[data-skin="pe"] .w3-clear-h{
+    letter-spacing:-.035em;
+    line-height:.94;
+  }
+  :root[data-skin="pe"] .task .title{
+    font-size:1rem;
+    font-weight:500;
+    letter-spacing:-.011em;
+    line-height:1.32;
+  }
+
+  /* ---- 2. the meta row: one tier, mono, no capsules ---- */
+  :root[data-skin="pe"] .task .meta{
+    display:flex; flex-wrap:wrap; align-items:baseline;
+    gap:2px var(--sp-5); margin-top:5px;
+  }
+  :root[data-skin="pe"] .task .meta .diff-tag,
+  :root[data-skin="pe"] .task .meta .due-tag,
+  :root[data-skin="pe"] .task .meta .repeat-tag,
+  :root[data-skin="pe"] .task .meta .tier-tag{
+    background:none; border:0; border-radius:0; padding:0;
+    font-family:var(--mono); font-size:.6875rem; font-weight:500;
+    letter-spacing:.07em; text-transform:uppercase;
+    color:var(--faint);
+  }
+  :root[data-skin="pe"] .task .meta .meta-for{
+    font-family:var(--mono); font-size:.6875rem; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  /* The clock drawn beside a word that already says "due" is the icon saying it
+     twice. The word survives; at 11px the drawing never read anyway. */
+  :root[data-skin="pe"] .task .meta .due-tag .dt-i{ display:none; }
+  /* Urgency is the one thing in this row that earns colour, and it needs to beat
+     the filled-chip rule that (0,3,1) outranks the line above. */
+  :root[data-skin="pe"] .task .meta .due-tag.overdue,
+  :root[data-skin="pe"] .task.due-today .meta .due-tag{
+    background:none; border-color:transparent;
+    color:var(--rose); font-weight:600;
+  }
+
+  /* ---- the one accent: whose row this is ---- */
+  :root[data-skin="pe"] .task.who-p1{ border-left-color:var(--moody); }
+  :root[data-skin="pe"] .task.who-p2{ border-left-color:var(--rae); }
+  :root[data-skin="pe"] .task.who-both{ border-left-color:var(--jade); }
+  :root[data-skin="pe"] .task.done.who-p1,
+  :root[data-skin="pe"] .task.done.who-p2,
+  :root[data-skin="pe"] .task.done.who-both{ border-left-color:var(--line-2); }
+
+  /* ---- 3. the open list stops being an object ---- */
+  :root[data-skin="pe"] #openTasksCard{
+    background:none; border:0; box-shadow:none;
+    padding:0; margin-bottom:var(--section-gap);
+  }
+  :root[data-skin="pe"] #openTasksCard > h2{ padding-left:2px; }
+
+  /* ---- 4. the list pills: labels, not capsules ---- */
+  :root[data-skin="pe"] .list-pills{ gap:var(--sp-9); }
+  :root[data-skin="pe"] .list-pills button{
+    background:none; border:0; border-radius:0; box-shadow:none;
+    padding:6px 0; color:var(--faint);
+    font-family:var(--mono); font-size:.75rem; font-weight:500;
+    letter-spacing:.08em; text-transform:uppercase;
+  }
+  :root[data-skin="pe"] .list-pills button.active{
+    background:none; color:var(--text);
+    box-shadow:inset 0 -2px 0 var(--moody);
+  }
+  /* One icon style and one size, says the widget rule. A second icon inside a
+     text label, at a third size, is the one to drop. */
+  :root[data-skin="pe"] .list-pills button .pill-ico{ display:none; }
+
+  /* ---- the signature move, at the size a signature move needs ---- */
+  :root[data-skin="pe"] .w3-prog{ margin:0 0 var(--sp-12); }
+  :root[data-skin="pe"] .w3-prog-txt{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:var(--sp-6); margin-bottom:var(--sp-5);
+  }
+  :root[data-skin="pe"] .w3-prog-txt > span{
+    display:flex; align-items:baseline; gap:var(--sp-5); min-width:0;
+  }
+  :root[data-skin="pe"] .w3-prog-txt b{
+    font-family:var(--display); font-weight:400;
+    font-size:2.75rem; line-height:.86; letter-spacing:-.04em;
+    color:var(--text); font-variant-numeric:tabular-nums;
+  }
+  :root[data-skin="pe"] .w3-prog-txt b i{
+    font-style:normal; font-size:1.125rem; letter-spacing:-.02em; color:var(--faint);
+  }
+  :root[data-skin="pe"] .w3-prog-txt u{
+    text-decoration:none; font-family:var(--mono); font-size:.6875rem;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--faint);
+  }
+  :root[data-skin="pe"] .w3-prog-meta{ color:var(--faint); }
+  /* A 6px rounded bar is a pill. A 3px square one is a measurement. */
+  :root[data-skin="pe"] .w3-bar{ height:3px; border-radius:0; gap:0; }
+  :root[data-skin="pe"] .w3-bar span{ border-radius:0; }
+
+  /* ---- All clear: the end of the flow, so it keeps its warmth and loses its box ---- */
+  :root[data-skin="pe"] .w3-clear{
+    border:0; border-radius:12px; padding:var(--sp-10) var(--sp-8);
+  }
+  :root[data-skin="pe"] .w3-clear-cta{
+    border-radius:8px; font-family:var(--mono); font-size:.6875rem;
+    letter-spacing:.1em; text-transform:uppercase;
+  }
+
+  /* ---- quick-add chips, same treatment as everything else that was a capsule ---- */
+  :root[data-skin="pe"] .w3-chip{
+    background:none; border:0; border-radius:0; padding:0;
+    font-family:var(--mono); font-size:.6875rem; font-weight:500;
+    letter-spacing:.07em; text-transform:uppercase; color:var(--text);
+  }
+  :root[data-skin="pe"] .w3-qa{ gap:var(--sp-5); }
+
+
+  /* ---- BUILD 133, second pass: what the first pass left behind ---- */
+
+  /* "Stuff - open" said the list name that the active pill says two lines above,
+     and the word "open", which the group headers and the "4 to go" both carry.
+     Three ways of saying it, in the largest type on the screen. */
+  :root[data-skin="pe"] #openTasksHeader{ display:none; }
+
+  /* The two filters were the heaviest objects on the page once the task rows
+     stopped being boxes: 17px of body text in rounded outlines, sitting above
+     a list whose own titles are 16px. They are controls you set once, so they
+     read as metadata now and let the list lead. */
+  :root[data-skin="pe"] .task-filter-bar{ gap:var(--sp-4); margin-bottom:var(--sp-8); }
+  :root[data-skin="pe"] .task-filter-bar select{
+    font-family:var(--mono); font-size:.6875rem; font-weight:500;
+    letter-spacing:.07em; text-transform:uppercase;
+    padding:7px 26px 7px 10px; border-radius:7px;
+    background-color:transparent; border-color:var(--line);
+    color:var(--muted); min-height:36px;
+  }
+
+  /* The accent bar ran the full height of the row, hairline to hairline, which
+     made a four-row list read as four tall coloured gates. Inset top and bottom
+     it becomes a mark against the title instead of a frame around the row. */
+  :root[data-skin="pe"] .task{
+    border-left-color:transparent !important;
+    position:relative;
+  }
+  :root[data-skin="pe"] .task.who-p1::before,
+  :root[data-skin="pe"] .task.who-p2::before,
+  :root[data-skin="pe"] .task.who-both::before{
+    content:""; position:absolute; left:0; top:15px;
+    width:3px; height:22px; border-radius:2px;
+  }
+  :root[data-skin="pe"] .task.who-p1::before{ background:var(--moody); }
+  :root[data-skin="pe"] .task.who-p2::before{ background:var(--rae); }
+  :root[data-skin="pe"] .task.who-both::before{ background:var(--jade); }
+  :root[data-skin="pe"] .task.done::before{ background:var(--line-2) !important; }
+
+
+  /* ---- BUILD 133, the Today hero ----
+
+     Seven centred rows stacked before you reached a tab: wordmark, tagline,
+     motto, HUD, build line, the two rings, the score. Centred stack after
+     centred stack is the single clearest tell of a generated page, and here
+     it was also saying the same thing twice - "Together, to get there" and
+     "Plan. Do. Grow." are one sentence written in two fonts.
+  */
+  :root[data-skin="pe"] #mottoLine{ display:none; }
+  :root[data-skin="pe"] header .sub.tagline{
+    letter-spacing:.1em; font-size:.6875rem; color:var(--faint);
+  }
+
+  /* The penalty was a filled pink capsule under a name - the loudest object in
+     the hero, for the one piece of information nobody wants emphasised. It is a
+     fact about today, so it is set like every other fact in this app. */
+  :root[data-skin="pe"] .duo-cost{
+    background:none; border:0; border-radius:0; padding:0; margin-top:6px;
+    font-family:var(--mono); font-size:.6562rem; font-weight:600;
+    letter-spacing:.07em; text-transform:uppercase; color:var(--rose);
+  }
+
+  /* The rings are the one place a photo of the two of them belongs, so they stay
+     the object. What goes is the glow under them: a cast shadow on a cream ground
+     reads as a sticker, and the coloured border already separates them. */
+  :root[data-skin="pe"] .duo-frame{
+    box-shadow:none; border-width:2px;
+  }
+  :root[data-skin="pe"] .duo-empty{
+    font-family:var(--mono); font-size:.625rem; letter-spacing:.06em;
+    text-transform:uppercase; font-weight:500; color:var(--faint);
+  }
+  :root[data-skin="pe"] .duo-empty .plus{ font-size:1.5rem; margin-bottom:3px; }
+
+
+  /* ===========================================================================
+     BUILD 134 - THE SIGNATURE MOVE.
+
+     Action sentence: YOUR OWN DAY IS THE ROOM THE SCORES STAND IN.
+
+     MATERIAL (rule 10, which 133 skipped entirely). Two, named:
+       SOFT MATTE   - calm, human. The app everywhere else: no gloss, no cast
+                      shadow on cream, light carried by a hairline.
+       FROSTED GLASS - clean, technical. ONE place only, the Scores dashboard,
+                      because that is the one screen that is a dashboard and the
+                      only one with a photograph underneath worth frosting.
+     Naming them is the point: "glass" applied wherever it looked nice is how a
+     dashboard ends up generic.
+
+     GLASS, the six layers, in order:
+       1. deep gradient, 3 stops ....... .bg-ground::before, warm not blue
+       2. pattern at ~8% ............... .glass-card::before, 2px dot grid
+       3. the surface .................. 72% tinted fill + blur(26px) saturate(150%)
+       4. rim light, 1px at ~28% white . inset 0 1px 0
+       5. glare, ~18% white ............ .glass-card::after, top-left, fixed angle
+       6. two shadows .................. 8px tight + 34px soft
+
+     WHAT RULE 11 FORBIDS, and how each is met:
+       - no raw photo under text ....... every number sits on a 72% fill
+       - heavy blur .................... 26px on the card, 30px on the ground
+       - big solid numbers ............. .stat .num to 2.5rem, no transparency
+       - 4.5:1 on the busiest part ..... measured against the real photo, not assumed
+       - a solid fallback .............. prefers-reduced-transparency AND @supports
+       - no glass on small controls .... buttons, chips and pills stay matte
+       - no blue glow .................. the only hues here are theirs, coral and iris
+     =========================================================================== */
+
+  /* ---- layer 1: the ground ---- */
+  :root[data-skin="pe"] #view-board{ position:relative; z-index:0; }
+  .board-ground{
+    position:absolute; z-index:0; pointer-events:none;
+    top:calc(var(--section-gap) * -1); bottom:-56px;
+    left:calc(var(--gutter) * -1); right:calc(var(--gutter) * -1);
+    overflow:hidden; opacity:0; transition:opacity .5s ease;
+  }
+  .board-ground.has-photo{ opacity:1; }
+  .board-ground i{
+    position:absolute; inset:-40px;     /* overscan, so the blur has no soft edge */
+    background-image:inherit; background-size:cover; background-position:50% 32%;
+    /* 22px, not 30. Far enough past the point where a face resolves, close enough
+       that the picture still has shape - at 30 it stopped being their photograph
+       and became a warm smudge, which is a gradient with extra steps. */
+    /* CONTRAST, MEASURED. The first cut sat at 1.94:1 under "Dead level." in Night
+       and 3.05:1 under a stat number in Daylight, against a test photo carrying a
+       pure-white block and a pure-black one. Rule 11 wants 4.5:1 on the BUSIEST part,
+       and the two levers are the fill and the photograph. contrast() is the honest
+       one: "calm" is a property of the picture, and a frame that spans white to black
+       is not calm whatever you put over it. Compressed to a mid band it still reads
+       as their room and stops fighting the type. */
+    filter:blur(22px) saturate(.85) contrast(.68) brightness(.6);
+  }
+  :root[data-mode="light"] .board-ground i{ filter:blur(22px) saturate(.8) contrast(.68) brightness(1.06); }
+  /* layer 1 proper: three stops in the ground's own warmth. A blue-to-purple wash
+     here is the exact thing the stock-look warning names.
+     The fade needs the ground colour AT ZERO ALPHA, not `transparent` - CSS
+     interpolates `transparent` through rgba(0,0,0,0), so a cream-to-transparent
+     gradient travels through grey and hangs a dirty halo over the photo. */
+  :root{ --ground-0:rgba(26,18,32,0); }
+  :root[data-mode="light"]{ --ground-0:rgba(255,248,243,0); }
+  .board-ground::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(176deg,
+      var(--bg) 0%,
+      var(--ground-0) 15%,
+      var(--ground-0) 76%,
+      var(--bg) 100%);
+  }
+  .board-ground{ background-image:none; }
+  .board-ground.has-photo i{ background-image:inherit; }
+  :root[data-skin="pe"] #view-board > .card,
+  :root[data-skin="pe"] #view-board > div:not(.board-ground){ position:relative; z-index:1; }
+
+  /* ---- layers 2-6: the glass ---- */
+  :root[data-skin="pe"] #view-board.on-photo > .card{
+    /* 80%: the top of rule 11's 60-80% band, because the floor the band exists to
+       protect is the 4.5:1, and at 72% the measurement said no. */
+    background:color-mix(in srgb, var(--card) 80%, transparent);
+    -webkit-backdrop-filter:blur(26px) saturate(150%);
+    backdrop-filter:blur(26px) saturate(150%);
+    border:1px solid color-mix(in srgb, var(--line-2) 70%, transparent);
+    border-radius:16px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.28),            /* 4: rim light */
+      0 8px 10px -6px rgba(40,24,16,.22),             /* 6: tight */
+      0 34px 60px -24px rgba(40,24,16,.38);           /* 6: soft */
+    overflow:hidden;
+  }
+  :root[data-mode="light"][data-skin="pe"] #view-board.on-photo > .card{
+    background:color-mix(in srgb, var(--card) 80%, transparent);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.7),
+      0 8px 10px -6px rgba(92,52,30,.14),
+      0 34px 60px -24px rgba(92,52,30,.22);
+  }
+  /* layer 2: pattern at ~8%, so the surface has a texture instead of being a sheet */
+  :root[data-skin="pe"] #view-board.on-photo > .card::before{
+    content:""; position:absolute; inset:0; pointer-events:none; display:block;
+    background-image:radial-gradient(currentColor .5px, transparent .5px);
+    background-size:7px 7px; opacity:.055;
+  }
+  /* layer 5: glare, fixed angle. It moves with tilt in the reel; on a page that
+     does not tilt, a travelling highlight is decoration, so it sits still. */
+  :root[data-skin="pe"] #view-board.on-photo > .card::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(126deg,
+      rgba(255,255,255,.18) 0%,
+      rgba(255,255,255,.06) 26%,
+      rgba(255,255,255,0) 52%);
+  }
+
+  /* ---- big solid numbers (rule 11, and the widget rule: make the key number huge) ---- */
+  :root[data-skin="pe"] #view-board .stat .num{
+    font-size:2.5rem; line-height:.9; letter-spacing:-.035em;
+    color:var(--text);
+  }
+  :root[data-skin="pe"] #view-board .stat .label{
+    font-family:var(--mono); font-size:.625rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted); margin-top:5px;
+  }
+
+  /* ---- the solid fallback, both ways it can be asked for ---- */
+  @media (prefers-reduced-transparency: reduce){
+    .board-ground{ display:none; }
+    :root[data-skin="pe"] #view-board.on-photo > .card{
+      background:var(--card); -webkit-backdrop-filter:none; backdrop-filter:none;
+      border-color:var(--line);
+    }
+    :root[data-skin="pe"] #view-board.on-photo > .card::before,
+    :root[data-skin="pe"] #view-board.on-photo > .card::after{ display:none; }
+  }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    :root[data-skin="pe"] #view-board.on-photo > .card{ background:var(--card); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .board-ground{ transition:none; }
+  }
+
+
+  /* Three text tiers and ONE accent, enforced inside the glass. A person's name set
+     in their own colour is a fourth hue competing with the photograph underneath,
+     and it was the measurement's other failure: coral at 13px over the fill came
+     back at 3.3:1. The bar beside it is already that person's colour, and a bar is
+     a graphic - it carries no contrast duty. So the colour moves to the bar and the
+     label joins the text tiers. */
+  :root[data-skin="pe"] #view-board.on-photo .race-name,
+  :root[data-skin="pe"] #view-board.on-photo .race-num{ color:var(--text); }
+  :root[data-skin="pe"] #view-board.on-photo .race-note,
+  :root[data-skin="pe"] #view-board.on-photo .stat .label{ color:var(--muted); }
+  /* The bar's track has to stay visible through the glass, where a 10% tint vanishes. */
+  :root[data-skin="pe"] #view-board.on-photo .race-bar{
+    background:color-mix(in srgb, var(--text) 16%, transparent);
+  }
+
+
+  /* ---- the glass gets its own text tiers ----
+
+     Build 120's lesson, one surface further on: --night was never "the dark colour",
+     it was "the colour that reads on top of a filled accent", and the two only looked
+     alike while the ground was dark. The same thing is true here. --muted and --faint
+     are tuned for a flat card; over 80% fill on a photograph they are a tier too pale,
+     and the measurement said so - 2.70:1 under "Tasks owned" in Night, 3.48:1 under a
+     gold figure in Daylight. Redefining the two tokens ON the glass card cascades to
+     everything inside it, so no component rule has to know it is standing on glass. */
+  :root[data-skin="pe"] #view-board.on-photo > .card{
+    --muted:#D6CEDC;
+    --faint:#CFC6D6;
+  }
+  :root[data-mode="light"][data-skin="pe"] #view-board.on-photo > .card{
+    --muted:#45353E;
+    --faint:#4C3C46;
+  }
+  /* A figure in an accent hue is a fourth colour over a photograph and the one the
+     measurement failed hardest on. The tier it belongs to is the first one. */
+  :root[data-skin="pe"] #view-board.on-photo .lb-pts,
+  :root[data-skin="pe"] #view-board.on-photo .stat.jade .num,
+  :root[data-skin="pe"] #view-board.on-photo .stat.gold .num{ color:var(--text); }
+
+
+  /* ---- BUILD 134: the loader, as content (rule 2) ---- */
+  .splash-receipts{
+    font-family:var(--mono);
+    font-size:0.6875rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); text-align:center;
+    animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) 1.56s both;
+  }
+  /* A thin progress pill, not a spinner: it says how long is left, which is the one
+     thing a spinner refuses to tell you. Its 2.1s matches the curtain's own 2.18s,
+     so it finishes just before the app arrives rather than snapping off mid-fill. */
+  .splash-pill{
+    width:84px; height:2px; border-radius:2px; overflow:hidden;
+    background:color-mix(in srgb, var(--text) 14%, transparent);
+    margin-top:var(--sp-2);
+    animation:splash-rise .4s cubic-bezier(.22,.9,.3,1) 1.72s both;
+  }
+  .splash-pill i{
+    display:block; height:100%; width:100%; border-radius:2px; transform-origin:left;
+    background:linear-gradient(90deg, var(--moody), var(--rae));
+    animation:splash-fill 2.1s cubic-bezier(.3,.7,.3,1) .1s both;
+  }
+  @keyframes splash-fill{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+  @media (prefers-reduced-motion: reduce){
+    .splash-receipts, .splash-pill{ animation:none; }
+    .splash-pill i{ animation:none; transform:scaleX(1); }
+  }
+
 </style>
 </head>
 <body>
@@ -4398,7 +4838,14 @@
     <path class="sp-c" d="M75.8 84.9L97.3 119L144.7 73.9"/>
   </svg>
   <div class="splash-word"><span>W</span><span>E</span><span>D</span><span>O</span></div>
-  <div class="splash-line">Together — To Get There.</div>
+  <!-- BUILD 134, rule 2: the wait is content. What was here was the slogan, which is
+       the one line on the splash that is true of every couple who ever installed this.
+       These three are true of exactly these two, and they are read off their own saved
+       state before the app has even parsed. A first install has no receipts, so it gets
+       the slogan back rather than three invented numbers. -->
+  <div class="splash-line" id="splashLine">Together — To Get There.</div>
+  <div class="splash-receipts" id="splashReceipts" hidden></div>
+  <div class="splash-pill" aria-hidden="true"><i></i></div>
 </div>
 <script>(function(){
   var el = document.getElementById("splash");
@@ -4420,6 +4867,40 @@
     for(var i = 0; i < ps.length; i++){
       var L = Math.ceil(ps[i].getTotalLength());
       ps[i].style.setProperty("--len", L);
+    }
+  }catch(e){}
+
+  /* The receipts, read straight from the save. No app code has run yet, so this
+     parses the blob itself rather than waiting for state - which is the whole point:
+     the numbers are on screen in the first frame, not after the boot it is covering. */
+  try{
+    var raw = localStorage.getItem("us-tasks-rewards-v1");
+    if(raw){
+      var st = JSON.parse(raw), bits = [];
+      var album = st.album || {}, days = Object.keys(album);
+      var first = st.installedAt;
+      days.forEach(function(d){ if(!first || d < first) first = d; });
+      if(first){
+        var n = Math.round((Date.now() - Date.parse(first + "T12:00:00")) / 86400000);
+        if(n >= 1) bits.push(n.toLocaleString() + (n === 1 ? " day" : " days"));
+      }
+      var shots = 0;
+      days.forEach(function(d){
+        var slot = album[d] || {};
+        ["p1","p2"].forEach(function(p){ if(slot[p] && slot[p].photo) shots++; });
+      });
+      if(shots) bits.push(shots.toLocaleString() + (shots === 1 ? " photo" : " photos"));
+      var done = (st.tasks || []).filter(function(t){ return t.status === "done"; }).length;
+      if(done) bits.push(done.toLocaleString() + " done");
+      if(bits.length >= 2){
+        var r = document.getElementById("splashReceipts");
+        var line = document.getElementById("splashLine");
+        if(r && line){
+          r.textContent = bits.join("  \u00b7  ");
+          r.hidden = false;
+          line.hidden = true;
+        }
+      }
     }
   }catch(e){}
 
@@ -4758,7 +5239,7 @@
       </select>
     </div>
 
-    <div class="card">
+    <div class="card" id="openTasksCard">
       <h2 id="openTasksHeader">Open tasks</h2>
       <div id="openTasks"></div>
     </div>
@@ -4894,6 +5375,10 @@
 
   <!-- LEADERBOARD VIEW -->
   <div class="view" id="view-board">
+    <!-- BUILD 134: the ground this whole tab stands on is their own most recent photo.
+         Marked aria-hidden because it is a surface, not content - everything it is
+         behind is still read in order. -->
+    <div class="board-ground" id="boardGround" aria-hidden="true"><i></i></div>
     <div class="card" id="statsCard">
       <h2>Your stats</h2>
       <div class="stats-empty-hint" id="statsEmptyHint"></div>
@@ -7584,7 +8069,10 @@
     });
     var addBtn = document.createElement("button");
     addBtn.className = "add-list";
-    addBtn.textContent = "+ New list";
+    // BUILD 133: the pills are text now, and "+ New list" was the longest label on the
+    // row by half again - so it was always the one hanging off the edge, clipped to
+    // "+ NEW LI". The plus already says what it does.
+    addBtn.textContent = "+ New";
     addBtn.addEventListener("click", function(){
       var card = document.getElementById("newListCard");
       card.style.display = (card.style.display === "none") ? "block" : "none";
@@ -10487,7 +10975,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 131;
+  var BUILD_NUM = 134;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -12172,7 +12660,13 @@
     wrap.className = "task-wrap";
 
     var row = document.createElement("div");
-    row.className = "task" + (t.status==="done" ? " done" : "") + taskUrgencyClass(t);
+    /* BUILD 133: the left edge used to carry urgency, in one of three warm colours,
+       while difficulty carried three more in outlined capsules beside the title - five
+       accents on one row. Urgency moves to the due text, where it is one word and can
+       be read; the edge carries the only thing the row needs colour for, which is
+       whose task it is. */
+    row.className = "task" + (t.status==="done" ? " done" : "") +
+      taskUrgencyClass(t) + " who-" + (t.assignedTo || "both");
     var check = document.createElement("div");
     check.className = "check";
     check.textContent = t.status==="done" ? "✓" : "";
@@ -19522,9 +20016,50 @@
     };
   })();
 
+  /* ===========================================================================
+     BUILD 134 - THE GROUND.
+
+     Rule 11 asks for a real, calm, PLACE-SPECIFIC photo under a glass dashboard,
+     and warns in the same breath that glass plus a blue glow plus a purple
+     gradient is the generic AI dashboard. The way out of that is not a better
+     gradient; it is that this app already receives, every single day, the most
+     place-specific photograph it could possibly ask for. Two of them.
+
+     "Calm" is the part that has to be made rather than found. A selfie is not a
+     calm photo. Blurred past the point where a face resolves, dimmed and pulled
+     towards the theme's own warmth, it stops being a portrait competing with the
+     numbers and becomes the room the numbers are standing in - which is what the
+     rule is actually after.
+     =========================================================================== */
+  function boardGroundPhoto(){
+    var al = state.album || {};
+    var days = Object.keys(al).sort().reverse();
+    var me = deviceOwner() || state.currentUser || "p1";
+    var other = me === "p1" ? "p2" : "p1";
+    // A fortnight back and no further. Older than that and the "today" of the
+    // dashboard is standing in a room from last month.
+    for(var i = 0; i < days.length && i < 14; i++){
+      var d = al[days[i]] || {};
+      var src = photoSrc((d[me] || {}).photo) || photoSrc((d[other] || {}).photo);
+      if(src) return src;
+    }
+    return null;
+  }
+  function renderBoardGround(){
+    var el = document.getElementById("boardGround");
+    if(!el) return;
+    var src = boardGroundPhoto();
+    // No photo yet is a real state, not a broken one: the tab keeps the app's own
+    // wash and the cards stay solid, so nothing reads as a failed image load.
+    el.style.backgroundImage = src ? 'url("' + src + '")' : "";
+    el.classList.toggle("has-photo", !!src);
+    document.getElementById("view-board").classList.toggle("on-photo", !!src);
+  }
+
   function renderAll(){
     // Cheap, and it catches a crossing that happened on the other phone and arrived by
     // sync — a milestone belongs to the pair, so either phone noticing is enough.
+    try{ renderBoardGround(); }catch(e){}
     var freshMs = recordMilestones();
     if(freshMs){
       save();
@@ -21056,6 +21591,417 @@
       renderCheckin();
     }
   }, 60000);
+
+
+
+  /* =====================================================================================
+     BUILD 132 — four upgrades, written in another chat against Build 105 (the dark look)
+     and brought across whole. Nothing above this line was edited; two pieces that had been
+     tuned for a dark ground were re-cut for Daylight and are marked BUILD 132 below.
+       1. Gliding tab bar: one indicator slides to the active tab in the owner's colour.
+       2. List pills scroll in one row, with the next pill peeking past a soft fade.
+       3. Progress line over the open list, and an "All clear" card when it empties.
+       4. Smart quick-add: "dishes for Rae tomorrow hard" fills the form as you type.
+     Everything here wraps existing functions; nothing above was edited.
+     ===================================================================================== */
+  (function build103(){
+    /* BUILD 132: --moody/--rae rather than --pink/--purple. Same values in both themes,
+       but these two are the names that mean "this person", so a future palette pass that
+       moves --pink cannot quietly change whose colour is whose. */
+    var OWNER_COL = { p1:"var(--moody)", p2:"var(--rae)", both:"var(--jade)" };
+    function ownerId(){ return deviceOwner() || state.currentUser || "p1"; }
+    function colFor(id){ return OWNER_COL[id] || "var(--jade)"; }
+    function nameFor(id){
+      var p = (state.people||[]).find(function(x){ return x.id === id; });
+      return p ? p.name : "";
+    }
+
+    var css = document.createElement("style");
+    css.textContent = [
+      /* 1 — tabs */
+      ".tabs{position:sticky;}",
+      ".tabs .w3-ind{position:absolute;left:0;top:0;height:0;width:0;pointer-events:none;z-index:0;",
+      "  border-radius:999px;background:var(--s3,var(--card2));box-shadow:var(--sh-1,none);",
+      "  border:1px solid var(--line-2,var(--border));",
+      /* BUILD 133: Parts Bin P-09's curve, not one that merely looks like it.
+         cubic-bezier(.22,1,.36,1) is what every other sliding indicator in the
+         family uses; ours was (.2,.8,.2,1), close enough to pass and different
+         enough that WeDO moved unlike everything beside it. */
+      "  transition:transform 220ms var(--ease-out),width 220ms var(--ease-out),height 220ms var(--ease-out);}",
+      ".tabs .w3-ind::after{content:'';position:absolute;left:50%;bottom:4px;width:14px;height:3px;margin-left:-7px;",
+      "  border-radius:3px;background:var(--w3-col,var(--jade));}",
+      ".tabs.w3-on button{position:relative;z-index:1;}",
+      ".tabs.w3-on button.active{background:transparent !important;border-color:transparent !important;box-shadow:none !important;}",
+      ".tabs button:focus-visible{outline:2px solid var(--w3-col,var(--jade));outline-offset:2px;}",
+      ":root[data-skin='pe'] .tabs .w3-ind{background:none;border:0;box-shadow:none;border-radius:0;}",
+      ":root[data-skin='pe'] .tabs .w3-ind::after{left:0;right:0;width:auto;margin:0;bottom:-1px;height:2px;border-radius:0;}",
+      ":root[data-skin='pe'] .tabs.w3-on button.active{border-bottom-color:transparent !important;}",
+      /* 2 — list pills */
+      ".list-pills{flex-wrap:nowrap !important;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;",
+      "  margin-left:-16px;margin-right:-16px;padding:2px 16px 6px;scroll-padding:0 16px;}",
+      ".list-pills::-webkit-scrollbar{display:none;}",
+      ".list-pills button{flex:0 0 auto;scroll-snap-align:start;}",
+      /* BUILD 132 - a mask is theme-agnostic, so this one LOOKED portable. It is not.
+         The cue is "there is another pill past the edge", and it only works while the
+         faded pill still reads as a pill. On the dark ground a pill is --card2 #2E2139
+         against #1A1220, which survives being taken to 35%. In Daylight a pill is --s2
+         #FBF0E8 against --bg #FFF8F3 - about two percent apart before anything fades it -
+         so the same mask erases the peeking pill altogether and the row looks like it
+         simply ends. Depth and floor become tokens: a shorter, shallower fade on cream,
+         where the clipped edge of the pill is doing most of the work anyway. */
+      ":root{--w3-fade-w:28px;--w3-fade-a:.35;--w3-fade-w2:40px;}",
+      ":root[data-mode=\"light\"]{--w3-fade-w:16px;--w3-fade-a:.62;--w3-fade-w2:24px;}",
+      ".list-pills.w3-more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - var(--w3-fade-w)),rgba(0,0,0,var(--w3-fade-a)));mask-image:linear-gradient(90deg,#000 calc(100% - var(--w3-fade-w)),rgba(0,0,0,var(--w3-fade-a)));}",
+      ".list-pills.w3-more-l{-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,var(--w3-fade-a)),#000 var(--w3-fade-w));mask-image:linear-gradient(90deg,rgba(0,0,0,var(--w3-fade-a)),#000 var(--w3-fade-w));}",
+      ".list-pills.w3-more-l.w3-more-r{-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,var(--w3-fade-a)),#000 var(--w3-fade-w2),#000 calc(100% - var(--w3-fade-w)),rgba(0,0,0,var(--w3-fade-a)));mask-image:linear-gradient(90deg,rgba(0,0,0,var(--w3-fade-a)),#000 var(--w3-fade-w2),#000 calc(100% - var(--w3-fade-w)),rgba(0,0,0,var(--w3-fade-a)));}",
+      /* 3 — progress line + all clear */
+      ".w3-prog{margin:-2px 0 14px;}",
+      ".w3-prog-txt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;color:var(--muted);margin-bottom:8px;}",
+      ".w3-prog-txt b{color:var(--text);font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}",
+      ".w3-prog-meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--faint,var(--muted));white-space:nowrap;}",
+      ".w3-bar{display:flex;gap:2px;height:6px;border-radius:6px;overflow:hidden;background:var(--line,rgba(245,237,230,.10));}",
+      ".w3-bar span{display:block;height:100%;transition:flex-grow 400ms cubic-bezier(.2,.8,.2,1);}",
+      /* BUILD 132 - the wash was three hard-coded dark-theme rgbas. A 14% mint over cream
+         is not a quieter version of the same idea, it is dirt: Build 120's whole lesson.
+         So it becomes a token, defined once per ground, and the card reads it. The light
+         values are the SAME hues from the Daylight block (jade #0B7A5E, violet #5A3BC4,
+         persimmon #C9482A) and end warm rather than at transparent, because a wash that
+         fades to nothing over cream turns grey on the way out. */
+      ":root{--w3-clear-wash:linear-gradient(160deg,rgba(79,209,181,.14),rgba(167,139,250,.08) 60%,transparent);}",
+      ":root[data-mode=\"light\"]{--w3-clear-wash:linear-gradient(160deg,rgba(11,122,94,.10),rgba(90,59,196,.055) 55%,rgba(201,72,42,.04));}",
+      ".w3-clear{text-align:left;padding:18px 16px;border-radius:16px;border:1px solid var(--line-2,var(--border));",
+      "  background:var(--w3-clear-wash);}",
+      /* The heading took the UI face at weight 800. Every other card heading in this app
+         is set in --display, which is a serif under the look he actually runs. */
+      ".w3-clear-h{font-family:var(--display,inherit);font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--text);margin-bottom:6px;}",
+      ".w3-clear-p{font-size:14px;line-height:1.5;color:var(--muted);}",
+      ".w3-clear-p b{font-weight:700;}",
+      ".w3-clear-cta{margin-top:12px;background:none;border:1px solid var(--line-2,var(--border));color:var(--text);",
+      "  border-radius:999px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}",
+      /* 4 — quick-add chips */
+      ".w3-qa{display:none;flex-wrap:wrap;align-items:center;gap:6px;margin:-2px 0 2px;}",
+      ".w3-qa.show{display:flex;}",
+      ".w3-qa-lbl{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--faint,var(--muted));margin-right:2px;}",
+      ".w3-chip{font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--s2,var(--card2));",
+      "  border:1px solid var(--line-2,var(--border));color:var(--text);}",
+      ".w3-chip i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px;}",
+      ".w3-qa-undo{margin-left:auto;background:none;border:0;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;padding:6px 2px;min-height:32px;}",
+      ".w3-hint{font-size:11.5px;color:var(--faint,var(--muted));margin:-4px 0 2px;}",
+      "@media (prefers-reduced-motion:reduce){.tabs .w3-ind,.w3-bar span{transition:none;}}"
+    ].join("\n");
+    document.head.appendChild(css);
+
+    /* ---------- 1. Gliding tab bar ---------- */
+    var tabs = document.querySelector(".tabs");
+    var ind = null;
+    function tabButtons(){ return Array.prototype.slice.call(tabs.querySelectorAll("button[data-tab]")); }
+    function placeInd(){
+      if(!tabs || !ind) return;
+      var a = tabs.querySelector("button.active");
+      if(!a || !a.offsetWidth){ ind.style.width = "0px"; return; }
+      ind.style.width = a.offsetWidth + "px";
+      ind.style.height = a.offsetHeight + "px";
+      ind.style.transform = "translate(" + a.offsetLeft + "px," + a.offsetTop + "px)";
+      tabs.style.setProperty("--w3-col", colFor(ownerId()));
+    }
+    function syncAria(){
+      tabButtons().forEach(function(b){
+        var on = b.classList.contains("active");
+        b.setAttribute("role","tab");
+        b.setAttribute("aria-selected", on ? "true" : "false");
+        b.setAttribute("tabindex", on ? "0" : "-1");
+        b.setAttribute("aria-controls", "view-" + b.dataset.tab);
+      });
+    }
+    if(tabs){
+      tabs.setAttribute("role","tablist");
+      tabs.setAttribute("aria-label","Sections");
+      ind = document.createElement("span");
+      ind.className = "w3-ind"; ind.setAttribute("aria-hidden","true");
+      tabs.insertBefore(ind, tabs.firstChild);
+      tabs.classList.add("w3-on");
+      // The click handlers above flip .active; read the result on the next frame.
+      tabs.addEventListener("click", function(){ requestAnimationFrame(function(){
+        placeInd(); syncAria();
+        // Switching INTO Tasks is the first moment its pills have a width worth measuring.
+        try{ fadeEdges(); }catch(e){}
+      }); });
+      tabs.addEventListener("keydown", function(e){
+        var bs = tabButtons(), i = bs.indexOf(document.activeElement);
+        if(i < 0) return;
+        var n = null;
+        if(e.key === "ArrowRight") n = (i + 1) % bs.length;
+        else if(e.key === "ArrowLeft") n = (i - 1 + bs.length) % bs.length;
+        else if(e.key === "Home") n = 0;
+        else if(e.key === "End") n = bs.length - 1;
+        if(n === null) return;
+        e.preventDefault();
+        bs[n].click(); bs[n].focus();
+      });
+      window.addEventListener("resize", placeInd);
+      if(document.fonts && document.fonts.ready) document.fonts.ready.then(placeInd);
+      /* The icons are swapped in on boot and change each tab's width; wait for them.
+         P-09 places twice on every selection for the same reason - a label that grows
+         moves the target after the first measurement - so the 230ms repeat is the
+         part's, matched to the 220ms transition it is chasing. */
+      setTimeout(placeInd, 60); setTimeout(placeInd, 600);
+      tabs.addEventListener("click", function(){ setTimeout(placeInd, 230); });
+      // No slide on first paint — it should already be sitting there.
+      ind.style.transition = "none";
+      requestAnimationFrame(function(){ placeInd(); syncAria(); requestAnimationFrame(function(){ ind.style.transition = ""; }); });
+    }
+
+    /* ---------- 2. List pills: one row, next one peeking ---------- */
+    function fadeEdges(){
+      var w = document.getElementById("listSwitcher");
+      if(!w) return;
+      var max = w.scrollWidth - w.clientWidth;
+      w.classList.toggle("w3-more-r", max > 2 && w.scrollLeft < max - 2);
+      w.classList.toggle("w3-more-l", w.scrollLeft > 2);
+    }
+    var _rls = renderListSwitcher;
+    renderListSwitcher = function(){
+      var r = _rls.apply(this, arguments);
+      var w = document.getElementById("listSwitcher");
+      if(w){
+        if(!w._w3){
+          w._w3 = 1;
+          w.addEventListener("scroll", fadeEdges, {passive:true});
+          window.addEventListener("resize", fadeEdges);
+          /* BUILD 132: the row is measured for overflow, and at install time the Tasks
+             view is still display:none - so scrollWidth and clientWidth are both 0, max
+             is 0, and the fade is decided to be unnecessary and never reconsidered. You
+             land on Today, tap Tasks, and the pills run off the edge with no cue at all.
+             A ResizeObserver catches the moment the row gets a real width, and the icon
+             swap and web font landing later besides. */
+          if(typeof ResizeObserver === "function"){
+            try{ new ResizeObserver(fadeEdges).observe(w); }catch(e){}
+          }
+        }
+        var a = w.querySelector("button.active");
+        // Keep the chosen list in view; a selected pill hiding off-screen is a lie about state.
+        if(a && (a.offsetLeft < w.scrollLeft || a.offsetLeft + a.offsetWidth > w.scrollLeft + w.clientWidth)){
+          w.scrollLeft = Math.max(0, a.offsetLeft - 16);
+        }
+        fadeEdges();
+      }
+      return r;
+    };
+
+    /* ---------- 3. Progress line + All clear ---------- */
+    function weekStart(){
+      var d = new Date(); d.setHours(0,0,0,0);
+      var dow = (d.getDay() + 6) % 7; // Monday = 0
+      d.setDate(d.getDate() - dow);
+      return d;
+    }
+    var _rt = renderTasks;
+    renderTasks = function(){
+      var r = _rt.apply(this, arguments);
+      try{ drawProgress(); }catch(e){}
+      return r;
+    };
+    function drawProgress(){
+      var open = document.getElementById("openTasks");
+      var old = document.getElementById("w3Prog");
+      if(old) old.remove();
+      if(!open) return;
+      var listObj = listById(state.currentList);
+      if(listObj && listObj.experienceBased) return;
+      var vf = viewFilter();
+      var inList = state.tasks.filter(function(t){ return t.listId === state.currentList && !isTrip(t) && matchesAssigneeFilter(t, vf.assignee); });
+      var openN = inList.filter(function(t){ return t.status === "open"; }).length;
+      var today = todayISO(), ws = weekStart();
+      var doneToday = [], doneWeek = [];
+      inList.forEach(function(t){
+        if(t.status !== "done" || !t.completedAt) return;
+        var d = new Date(t.completedAt);
+        if(isNaN(d)) return;
+        if(todayISO(d) === today) doneToday.push(t);
+        if(d >= ws) doneWeek.push(t);
+      });
+      var useToday = doneToday.length > 0;
+      var done = useToday ? doneToday : doneWeek;
+      var verb = (listVerb(state.currentList) || "Done").toLowerCase();
+
+      // Peak-end: the list just emptied and somebody did something today. Say who, by name.
+      if(openN === 0 && doneToday.length){
+        var by = {};
+        doneToday.forEach(function(t){ var k = t.completedBy || "?"; by[k] = (by[k] || 0) + 1; });
+        var parts = Object.keys(by).filter(function(k){ return nameFor(k); }).map(function(k){
+          return '<b style="color:' + colFor(k) + '">' + escapeHtml(nameFor(k)) + '</b> ' + by[k];
+        });
+        var who = parts.length === 2 ? parts[0] + ", " + parts[1] : (parts[0] || "");
+        open.innerHTML =
+          '<div class="w3-clear" role="status">' +
+            '<div class="w3-clear-h">All clear.</div>' +
+            '<div class="w3-clear-p">' + doneToday.length + ' ' + verb + ' today' + (who ? ' &middot; ' + who : '') +
+            '. Nothing left on ' + escapeHtml(listObj ? listObj.name : "this list") + '.</div>' +
+            '<button type="button" class="w3-clear-cta" id="w3ClearAdd">Add the next one</button>' +
+          '</div>';
+        var cta = document.getElementById("w3ClearAdd");
+        if(cta) cta.addEventListener("click", function(){ var f = document.getElementById("fabAdd"); if(f) f.click(); });
+        return;
+      }
+      if(openN === 0) return;           // the existing empty state already covers this
+      if(!done.length) return;          // never show a bar sitting at zero
+
+      var total = done.length + openN;
+      var by2 = {};
+      done.forEach(function(t){ var k = t.completedBy || "both"; by2[k] = (by2[k] || 0) + 1; });
+      var segs = Object.keys(by2).map(function(k){
+        return '<span title="' + escapeHtml(nameFor(k) || "Together") + '" style="flex-grow:' + by2[k] + ';background:' + colFor(k) + '"></span>';
+      }).join("") + '<span style="flex-grow:' + openN + ';background:transparent"></span>';
+      var box = document.createElement("div");
+      box.className = "w3-prog"; box.id = "w3Prog";
+      box.innerHTML =
+        /* BUILD 133: "make the key number huge" - the count was 15px inside a 13px line.
+           Split so the display face can take the numerator and the denominator can stay
+           small beside it, rather than scaling "4 of 8" as one lump. */
+        '<div class="w3-prog-txt"><span><b>' + done.length + '<i>/' + total + '</i></b>' +
+        '<u>' + verb + ' ' + (useToday ? 'today' : 'this week') + '</u></span>' +
+        '<span class="w3-prog-meta">' + openN + ' to go</span></div>' +
+        '<div class="w3-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + done.length + '" aria-label="' + done.length + ' of ' + total + ' ' + verb + '">' + segs + '</div>';
+      open.parentNode.insertBefore(box, open);
+    }
+
+    // The boot render ran before these wrappers existed; draw once now.
+    try{ renderListSwitcher(); drawProgress(); }catch(e){}
+
+    /* ---------- 4. Smart quick-add ---------- */
+    var titleEl = document.getElementById("taskTitle");
+    var form = document.getElementById("taskForm");
+    if(!titleEl || !form) return;
+    var chips = document.createElement("div");
+    chips.className = "w3-qa"; chips.setAttribute("aria-live","polite");
+    titleEl.parentNode.insertBefore(chips, titleEl.nextSibling);
+    var hint = document.createElement("div");
+    hint.className = "w3-hint";
+    hint.textContent = "Tip: end with who, when and how hard, like “for Rae friday hard”.";
+    chips.parentNode.insertBefore(hint, chips.nextSibling);
+
+    var DAYS = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+    var DAYS3 = ["sun","mon","tue","wed","thu","fri","sat"];
+    function addDays(n){ var d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate() + n); return d; }
+    function nextDow(i){ var d = addDays(0), diff = (i - d.getDay() + 7) % 7; return addDays(diff === 0 ? 7 : diff); }
+    function fmtDue(d){
+      var diff = Math.round((new Date(todayISO(d) + "T12:00") - new Date(todayISO() + "T12:00")) / 86400000);
+      if(diff === 0) return "Today";
+      if(diff === 1) return "Tomorrow";
+      if(diff < 7) return DAYS[d.getDay()].charAt(0).toUpperCase() + DAYS[d.getDay()].slice(1);
+      return d.toLocaleDateString(undefined, {month:"short", day:"numeric"});
+    }
+    // Only phrases at the END of the title count. "Buy hard drive" stays a title;
+    // "Buy a drive hard" is a hard task. That one rule is what keeps this from eating words.
+    function parse(raw){
+      var s = raw.replace(/\s+$/, ""), out = {};
+      var names = (state.people||[]).map(function(p){ return {id:p.id, n:p.name.toLowerCase()}; });
+      for(var guard = 0; guard < 6; guard++){
+        var low = s.toLowerCase(), m;
+        if(!out.diff && (m = low.match(/(?:^|\s)(easy|quick|medium|hard|big)$/))){
+          out.diff = {quick:"easy", big:"hard"}[m[1]] || m[1];
+        } else if(!out.repeat && (m = low.match(/(?:^|\s)(daily|every ?day|weekly|every ?week)$/))){
+          out.repeat = /day|daily/.test(m[1]) ? "daily" : "weekly";
+        } else if(!out.due && (m = low.match(/(?:^|\s)(?:(?:by|on|due)\s+)?(today|tonight|tomorrow|tmrw|tmr|next week|this weekend|weekend|in (\d{1,2}) days?|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)$/))){
+          var w = m[1], d;
+          if(w === "today" || w === "tonight") d = addDays(0);
+          else if(/^(tomorrow|tmrw|tmr)$/.test(w)) d = addDays(1);
+          else if(w === "next week") d = addDays(7);
+          else if(/weekend/.test(w)) d = nextDow(6);
+          else if(m[2]) d = addDays(parseInt(m[2], 10));
+          else { var i = DAYS.indexOf(w); if(i < 0) i = DAYS3.indexOf(w.slice(0,3)); d = nextDow(i); }
+          out.due = d;
+        } else if(!out.who && (m = low.match(/(?:^|\s)(?:for|with)\s+([a-z]+)$/))){
+          var tok = m[1], hit = null;
+          if(/^(us|both|together|we)$/.test(tok)) hit = "both";
+          else if(tok === "me") hit = ownerId();
+          else names.forEach(function(p){ if(p.n === tok) hit = p.id; });
+          if(!hit) break;
+          out.who = hit;
+        } else if(!out.who && (m = low.match(/(?:^|\s)(together)$/))){
+          out.who = "both";
+        } else break;
+        s = s.slice(0, s.length - m[0].length).replace(/\s+$/, "");
+      }
+      out.title = s;
+      out.any = !!(out.diff || out.repeat || out.due || out.who);
+      return out;
+    }
+    function visible(el){ return el && el.offsetParent !== null; }
+    var off = false, lastAuto = {}, prior = {};
+    function apply(p){
+      var sel;
+      // Only touch a field we set ourselves, or one still at its default. A choice made by
+      // hand in the form always wins over a word in the title.
+      function setIf(id, val){
+        var el = document.getElementById(id);
+        if(!el || !visible(el)) return false;
+        if(el.dataset.w3hand === "1") return false;
+        if(!(id in prior)) prior[id] = el.value;
+        el.value = val; lastAuto[id] = val; return true;
+      }
+      var bits = [];
+      if(p.who && setIf("taskAssignee", p.who)) bits.push('<span class="w3-chip"><i style="background:' + colFor(p.who) + '"></i>' + (p.who === "both" ? "Together" : "For " + escapeHtml(nameFor(p.who))) + '</span>');
+      if(p.due && setIf("taskDueDate", todayISO(p.due))) bits.push('<span class="w3-chip">Due ' + (function(f){ return /^(Today|Tomorrow)$/.test(f) ? f.toLowerCase() : f; })(fmtDue(p.due)) + '</span>');
+      if(p.diff && setIf("taskDifficulty", p.diff)) bits.push('<span class="w3-chip">' + p.diff.charAt(0).toUpperCase() + p.diff.slice(1) + '</span>');
+      if(p.repeat && setIf("taskRepeat", p.repeat)) bits.push('<span class="w3-chip">' + (p.repeat === "daily" ? "Every day" : "Every week") + '</span>');
+      return bits;
+    }
+    ["taskAssignee","taskDueDate","taskDifficulty","taskRepeat"].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.addEventListener("change", function(){ if(el.value !== lastAuto[id]) el.dataset.w3hand = "1"; });
+    });
+    // A word in one task's title must not leak into the next task: put back what each
+    // field held before we touched it (this form otherwise keeps its last choices).
+    function restore(keep){
+      Object.keys(prior).forEach(function(id){
+        if(keep && keep[id]) return;
+        var el = document.getElementById(id);
+        if(el && el.dataset.w3hand !== "1") el.value = prior[id];
+        delete prior[id]; delete lastAuto[id];
+      });
+    }
+    function resetAuto(){
+      restore(null);
+      ["taskAssignee","taskDueDate","taskDifficulty","taskRepeat"].forEach(function(id){
+        var el = document.getElementById(id);
+        if(el) delete el.dataset.w3hand;
+      });
+      lastAuto = {}; prior = {}; off = false;
+      chips.classList.remove("show"); chips.innerHTML = ""; hint.style.display = "";
+    }
+    function refresh(){
+      if(off){ restore(null); chips.classList.remove("show"); return; }
+      var p = parse(titleEl.value);
+      var ok = p.any && p.title;
+      restore(ok ? {taskAssignee:!!p.who, taskDueDate:!!p.due, taskDifficulty:!!p.diff, taskRepeat:!!p.repeat} : null);
+      var bits = ok ? apply(p) : [];
+      if(bits.length){
+        chips.innerHTML = '<span class="w3-qa-lbl">Got it</span>' + bits.join("") +
+          '<button type="button" class="w3-qa-undo" id="w3QaUndo">Keep as typed</button>';
+        chips.classList.add("show"); hint.style.display = "none";
+        document.getElementById("w3QaUndo").addEventListener("click", function(){ off = true; refresh(); titleEl.focus(); });
+      } else {
+        chips.classList.remove("show"); chips.innerHTML = ""; hint.style.display = "";
+      }
+    }
+    titleEl.addEventListener("input", refresh);
+    // Runs before the form's own submit handler (capture on an ancestor), so the title it
+    // reads is the clean one: "dishes for Rae tomorrow hard" is saved as "Dishes".
+    var sheet = document.getElementById("addTaskSheet") || form.parentNode;
+    sheet.addEventListener("submit", function(e){
+      if(e.target !== form || off) return;
+      var p = parse(titleEl.value);
+      if(p.any && p.title){
+        apply(p);
+        titleEl.value = p.title.charAt(0).toUpperCase() + p.title.slice(1);
+      }
+      setTimeout(resetAuto, 0);
+    }, true);
+    var cancel = document.getElementById("sheetCancel");
+    if(cancel) cancel.addEventListener("click", resetAuto);
+    sheet.addEventListener("click", function(e){ if(e.target === sheet) resetAuto(); });
+  })();
 
 })();
 </script>
