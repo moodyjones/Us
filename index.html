@@ -6709,6 +6709,14 @@
           if(r.name==="Partner cooks your favorite meal") r.name = "Your love cooks your favorite meal";
         });
         // migrate old saves: give lists their icons + WeDO-era names
+        /* BUILD 130: scrub readings that were stored before the sanity gate existed.
+           Without this the 1551h sleep already on the phone survives forever, because a
+           same-day reading with sleep now correctly dropped carries the old value forward. */
+        if(parsed.healthCache){
+          ["p1","p2"].forEach(function(pid){
+            if(parsed.healthCache[pid]) healthSanity(parsed.healthCache[pid], null);
+          });
+        }
         if(parsed.lists) parsed.lists.forEach(function(l){
           if(!l.emoji){
             l.emoji = l.id==="list-todo" ? "✅" : l.id==="list-buy" ? "🛒" : l.id==="list-exp" ? "🎟️" : "📋";
@@ -10479,7 +10487,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 129;
+  var BUILD_NUM = 130;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -10829,13 +10837,84 @@
     }
     out.sleepHours = sh != null ? Math.round(sh * 100) / 100 : null;
 
+    healthSanity(out, sh != null ? (kv.sleepmin != null || kv.sleepmins != null || kv.sleepminutes != null ? "sleepmin" : null) : null);
+
     if(out.steps == null && out.calories == null && out.sleepHours == null){
+      // Either nothing parsed as a number, or everything that did was impossible. The two
+      // need different advice, so the sanity gate's own words win when it has any.
+      if(out.implausible && out.implausible.length){
+        return {error:"every figure in it was impossible", implausible:out.implausible};
+      }
       // overwhelmingly this is [Steps] arriving literally — the variables were typed into the
       // text action rather than inserted from the variable bar above the keyboard
       return {error:"none of the values came through as numbers"};
     }
     out.updatedAt = kv.at || new Date().toISOString();
     return out;
+  }
+
+  /* ===========================================================================
+     BUILD 130 - the app had no idea what a human body can do.
+
+     A reading of "1551h 20m sleep" was stored, synced, shown on the Today screen
+     and counted in the health race without one line of code pausing over it. The
+     cause was a Shortcut labelling SECONDS as sleepmin=, and the app's job is not
+     to know that - but it is absolutely its job to know that nobody sleeps for
+     sixty-four days.
+
+     So: a figure outside what a body can produce is DROPPED, never stored, and the
+     pipeline panel says which figure and what almost certainly caused it. Dropping
+     beats clamping, because a clamped 16h would look like a real lie-in and send
+     him hunting for a bug that had already been papered over.
+
+     Bounds are deliberately generous - they exist to catch a BROKEN PIPE, not to
+     referee a good week.
+     =========================================================================== */
+  function healthBoundMax(field){
+    return field === "steps" ? 120000 : field === "calories" ? 20000 : field === "sleepHours" ? 18 : Infinity;
+  }
+
+  function healthSanity(out, sleepKey){
+    if(!out) return out;
+    var bad = [];
+    ["steps", "calories", "sleepHours"].forEach(function(f){
+      var v = out[f], max = healthBoundMax(f);
+      if(v == null) return;
+      if(!isFinite(v) || v < 0 || v > max){
+        bad.push({field: f, value: v, hint: healthWhy(f, v, sleepKey)});
+        out[f] = null;
+      }
+    });
+    if(bad.length) out.implausible = bad;
+    return out;
+  }
+
+  // The likeliest cause, in the words of the thing the person has to go and change.
+  function healthWhy(field, v, sleepKey){
+    if(field === "sleepHours"){
+      /* Two faults stack here, and the first hides the second. Shortcuts sums a duration in
+         SECONDS, so seconds sent under sleepmin= are 60x too big; undo that and what is left
+         is often STILL too big, because Apple's sleep samples overlap. Naming only one of
+         them sends him back for a second round, so both are said when both are present. */
+      var overlap = "overlapping sleep samples are being added together \u2014 \"In Bed\" spans " +
+                    "the whole night and Core, Deep and REM all sit inside it. In Find Health " +
+                    "Samples, filter out In Bed and Awake so only the asleep stages are summed.";
+      if(sleepKey === "sleepmin" && v > 60){
+        var asSec = Math.round(v / 60 * 10) / 10;
+        return "that is this many SECONDS sent under the sleepmin= key \u2014 Shortcuts sums a " +
+               "duration in seconds. Change that key in the Shortcut's URL to sleepsec=, which " +
+               "reads " + asSec + "h" + (asSec > 18 ? ". That is still too much, because " + overlap : ".");
+      }
+      if(v > 18 && v <= 48) return overlap;
+      return "no reading this large can be a night's sleep, so the Shortcut is sending the " +
+             "wrong unit or summing the wrong samples.";
+    }
+    if(field === "steps"){
+      return "Find Health Samples returns raw samples from every source, so a phone and a " +
+             "watch that both count steps are added together. Add a Source filter so only " +
+             "one device is summed.";
+    }
+    return "the Shortcut is sending the wrong unit for this one.";
   }
 
   // The older delivery format, kept so a gist written months ago still reads.
@@ -10846,13 +10925,14 @@
     if(j.steps == null && j.sleepHours == null && j.calories == null){
       return {error:"JSON with no steps, calories or sleep in it"};
     }
-    return {
+    // Same gate as the text path - a bad figure is bad whichever shape it arrived in.
+    return healthSanity({
       date: /^\d{4}-\d{2}-\d{2}$/.test(String(j.date || "")) ? j.date : todayISO(),
       steps: healthNum(j.steps),
       calories: healthNum(j.calories),
       sleepHours: j.sleepHours != null ? Math.round(healthNum(j.sleepHours) * 100) / 100 : null,
       updatedAt: j.updatedAt || new Date().toISOString()
-    };
+    }, null);
   }
 
   // ONE set of rules for accepting a reading, whichever path it arrived on. The gist reader
@@ -11105,7 +11185,11 @@
   function ntfyHealthUrl(pid, kind){
     var t = ntfyHealthTopic(pid);
     if(!t) return "";
-    if(kind === "morning") return NTFY_HEALTH_POLL + t + "/publish?message=sleepmin=";
+    /* BUILD 130: was sleepmin=. Shortcuts' "Calculate the Sum of Duration" returns
+       SECONDS, so every sleep reading built from this URL was sixty times too large -
+       1551 hours of it, in the case that finally made this obvious. The key names the
+       unit, so the key is what had to change. */
+    if(kind === "morning") return NTFY_HEALTH_POLL + t + "/publish?message=sleepsec=";
     // Separator is a pipe, not a semicolon. A semicolon is a legacy query-parameter
     // delimiter and Go — which ntfy is written in — rejects a whole query string that
     // contains one, so ?message=steps=…;cal=… was discarded entirely and ntfy stored its
@@ -11390,6 +11474,24 @@
       return '<div class="hd-line">' + (iconForEmoji(icon, 15) || icon) + " " + text + "</div>";
     }
     function code(t){ return '<div class="hd-code">' + escapeHtml(t) + "</div>"; }
+    /* BUILD 130: a figure the gate threw out is the single most useful thing this panel
+       can say, because it names the Shortcut action to go and change. It goes UNDER the
+       green tick on purpose - the pipe is working, one number in it is not. */
+    function implausibleLines(o, who){
+      // called with a parsed reading on the happy path and with the diag record on the
+      // failure one, and .implausible rides on whichever of the two is handed over
+      var bad = (o && (o.implausible || (o.reading && o.reading.implausible))) || [];
+      var s2 = "";
+      bad.forEach(function(b){
+        var shown = b.field === "sleepHours" ? (Math.round(b.value * 10) / 10) + "h of sleep"
+                  : b.field === "steps"      ? Math.round(b.value).toLocaleString() + " steps"
+                                             : Math.round(b.value).toLocaleString() + " calories";
+        s2 += line("\u26a0\ufe0f", "<b>" + escapeHtml(shown) + "</b> came through for " + who +
+                   ", which is not possible, so it was thrown away rather than stored \u2014 " +
+                   escapeHtml(b.hint));
+      });
+      return s2;
+    }
 
     if(!d){
       out += line("·", "Not checked yet — tap <b>Test the connection</b>.");
@@ -11399,6 +11501,7 @@
         (age === 0 ? "today" : age != null ? age + " day" + (age === 1 ? "" : "s") + " ago"
                                            : escapeHtml(String((d.reading||{}).date || "?"))));
       if(d.raw) out += code(d.raw);
+      out += implausibleLines(d.reading, nm);
       if(age != null && age >= 2){
         out += line("⚠️", "Nothing newer has come in, so " + nm + "'s shortcut hasn't run since then. " +
                           "Check the daily automation is still switched on.");
@@ -11428,8 +11531,9 @@
       out += line("❌", "A reading arrived but WeDO couldn't read it" +
                         (d.error ? " — " + escapeHtml(d.error) : "") + ".");
       if(d.raw) out += code(d.raw);
+      out += implausibleLines(d, nm);
       out += line("🔧", "The address should end with " +
-                        "<b>?message=steps=…|cal=…|sleep=…</b>, with the three values inserted " +
+                        "<b>?message=steps=…|cal=…|sleepsec=…</b>, with the values inserted " +
                         "from the variable bar rather than typed.");
     } else if(d.reason === "offline"){
       out += line("·", "Couldn't reach the internet just now — this says nothing about the setup. " +
@@ -19794,7 +19898,10 @@
       "bar. Leave the method as GET and add no headers.\n\n" +
       "Sleep is a separate shortcut, run in the morning, because a 9pm run can't measure a " +
       "sleep that started at 10:48pm. Its address is:\n\n" + ntfyHealthUrl(me, "morning") + "\n\n" +
-      "with SleepMins inserted after sleepmin=." +
+      "with the Sum of Duration inserted after sleepsec= \u2014 Shortcuts measures a " +
+      "duration in seconds, so that is the unit the key asks for.\n\n" +
+      "In Find Health Samples for sleep, turn the limit OFF and filter out In Bed and " +
+      "Awake, or the stages that overlap get added together." +
       (ok ? "" : "\n\n(Couldn't reach the clipboard — copy it from here by hand.)"));
   });
   /* ---- the look switcher ----
@@ -20043,8 +20150,10 @@
       "Build the shortcut on " + personName(them) + "'s phone in the Shortcuts app.\n\n" +
       "EVENING (steps + calories, 9pm):\n" + url + "\n\n" +
       "MORNING (sleep only, ~10am):\n" + ntfyHealthUrl(them, "morning") + "\n\n" +
-      "Insert Steps and Cals after their = signs in the evening one, and SleepMins after " +
-      "sleepmin= in the morning one. Leave the method as GET and add no headers.\n\n" +
+      "Insert Steps and Cals after their = signs in the evening one, and the Sum of " +
+      "Duration after sleepsec= in the morning one \u2014 Shortcuts measures a duration in " +
+      "seconds. Turn the limit OFF and filter out In Bed and Awake on the sleep lookup, or " +
+      "the overlapping stages get added together. Leave the method as GET, no headers.\n\n" +
       "Nothing needs setting up in WeDO on their phone \u2014 whichever phone has WeDO open " +
       "picks the readings up for both of you." +
       (ok ? "" : "\n\n(Couldn't reach the clipboard \u2014 copy it from here by hand.)"));
