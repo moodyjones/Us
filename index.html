@@ -10487,7 +10487,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 130;
+  var BUILD_NUM = 131;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -11177,11 +11177,15 @@
   }
   // The whole shortcut, as one address. Everything after message= is the same key=value line
   // the gist path used, so the parser is shared and nothing new had to be invented.
-  // Two addresses, same topic. Sleep is a MORNING measurement and steps are an EVENING one,
-  // and one run at 9pm cannot capture both: a 24-hour window double-counts last night, a
-  // 12-hour window misses a sleep that started at 10:48pm. That was diagnosed the hard way
-  // and then left as "delete the sleep bit by hand", which is a step that gets missed. So
-  // the app hands out the right address for the run being built.
+  /* BUILD 131 - this comment used to defend a two-shortcut split, and its reasoning was
+     wrong. It claimed a 24-hour window at 9pm "double-counts last night". It does not:
+     at 9pm the only sleep in the last 24 hours is the one that ended this morning, and
+     tonight's has not happened yet. What was actually being double-counted was Apple's
+     OVERLAPPING sleep samples - "In Bed" spanning the whole night with Core, Deep and REM
+     sitting inside it - which a source filter fixes and no window ever could. A real bug
+     was diagnosed as a scheduling problem and paid for with a second automation nobody
+     noticed had stopped running. One address now carries all three readings; the morning
+     variant stays for anyone who already built the split. */
   function ntfyHealthUrl(pid, kind){
     var t = ntfyHealthTopic(pid);
     if(!t) return "";
@@ -11194,7 +11198,11 @@
     // delimiter and Go — which ntfy is written in — rejects a whole query string that
     // contains one, so ?message=steps=…;cal=… was discarded entirely and ntfy stored its
     // default body ("triggered") instead of the numbers. A pipe carries no such meaning.
-    return NTFY_HEALTH_POLL + t + "/publish?message=steps=|cal=";
+    /* BUILD 131: sleepsec joins the one address. The split into an evening and a morning
+       shortcut was reasoning about the wrong night - at 9pm the sleep worth showing is the
+       one that ENDED this morning, and it has been in Health since breakfast. Two shortcuts
+       meant two automations to keep alive, and the second one dying is invisible. */
+    return NTFY_HEALTH_POLL + t + "/publish?message=steps=|cal=|sleepsec=";
   }
 
   function readHealthFromNtfy(pid, done){
@@ -19631,31 +19639,42 @@
     var me = deviceOwner() || state.currentUser;
     var out = [];
 
+    /* ===========================================================================
+       BUILD 131 - a HUD that was restating the page back to itself.
+
+       "day 4/30" and "left 26 days" are the same fact twice over: a 30-day challenge
+       that starts with the month makes them complementary by arithmetic, so one is
+       always 30 minus the other. Worse, "left 26 days" and "gap 35 Moody" are printed
+       VERBATIM under the race bar on this same screen ("Moody by 35 - 26 days left."),
+       and the challenge day has its own card below. All four cells were echoes.
+
+       A strip this high up has to carry what is NOT already on the screen. Sleep is
+       nowhere else above the fold, and how in step you are has only ever been said in
+       pixels - the distance between two hearts - with the words confined to a tooltip
+       nobody on a touchscreen can reach.
+       =========================================================================== */
     var h = (state.healthCache || {})[me];
     if(h && h.date === todayISO() && h.steps > 0){
       out.push(["steps", Number(h.steps).toLocaleString()]);
     }
-
-    var c = activeChallenge();
-    if(c && !c.endedAt){
-      var n = challengeDayNumber(c, todayISO());
-      if(n >= 1 && n <= c.days) out.push(["day", n + "/" + c.days]);
+    // last night's, not today's - sleep belongs to the night that just ended, so a reading
+    // dated today IS last night. Missing is left missing: an empty cell beats a dash that
+    // looks like a measurement of nothing.
+    if(h && h.date === todayISO() && h.sleepHours != null){
+      out.push(["slept", fmtSleep(h.sleepHours).trim()]);
     }
 
+    /* "gap 35 Moody" went the same way as the other two. It is the race bar's own
+       caption - "Moody by 35" - set one screen higher in smaller type, and with four
+       cells the row wrapped to two lines on every phone narrower than 430. Three cells
+       that each say something new fit one line everywhere. */
+
+    // the hearts' distance, finally said out loud
     try{
-      var mk = monthKey();
-      var people = (state.people || []).slice(0, 2);
-      if(people.length === 2){
-        var a = monthPointsFor(people[0].id, mk), b = monthPointsFor(people[1].id, mk);
-        var gap = Math.abs(a - b);
-        out.push(["gap", gap === 0 ? "level"
-          : (gap + " " + personName(a > b ? people[0].id : people[1].id))]);
-      }
+      var sy = syncScore();
+      if(sy && sy.days) out.push(["sync", syncWord(sy.score).toLowerCase()]);
     }catch(e){}
 
-    // not daysLeftPhrase(): it already ends in "left", and the cell is labelled "left"
-    var dl = daysLeftInMonth();
-    out.push(["left", dl + (dl === 1 ? " day" : " days")]);
     return out;
   }
   function renderHud(){
@@ -19892,16 +19911,22 @@
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); ok = true; }
     }catch(e){}
     showModal("🍎", ok ? "Copied — paste it into the shortcut" : "Your health link",
-      "This is " + personName(me) + "'s EVENING address — steps and calories, run at 9pm:\n\n" +
+      "One shortcut, run at 9pm. This is " + personName(me) + "'s address:\n\n" +
       url + "\n\n" +
-      "Put the cursor after steps= and after cal= and insert Steps and Cals from the variable " +
-      "bar. Leave the method as GET and add no headers.\n\n" +
-      "Sleep is a separate shortcut, run in the morning, because a 9pm run can't measure a " +
-      "sleep that started at 10:48pm. Its address is:\n\n" + ntfyHealthUrl(me, "morning") + "\n\n" +
-      "with the Sum of Duration inserted after sleepsec= \u2014 Shortcuts measures a " +
-      "duration in seconds, so that is the unit the key asks for.\n\n" +
-      "In Find Health Samples for sleep, turn the limit OFF and filter out In Bed and " +
-      "Awake, or the stages that overlap get added together." +
+      "THE ONE RULE: every Find Health Samples needs a SOURCE filter naming a single device, " +
+      "or you get every device's copy added together \u2014 a phone and a watch both counting " +
+      "steps is how 13,000 becomes 26,000.\n\n" +
+      "STEPS \u2014 Find Health Samples, Steps, today, Source is your iPhone, limit OFF. " +
+      "Calculate the Sum. Set a variable.\n\n" +
+      "CALORIES \u2014 the same again with Active Energy.\n\n" +
+      "SLEEP \u2014 Find Health Samples, Sleep, in the last 1 day, Source is your WHOOP (or " +
+      "your watch), limit OFF. Calculate the Sum of DURATION. One source is also what keeps " +
+      "\u201CIn Bed\u201D from being counted on top of Core, Deep and REM.\n\n" +
+      "Then insert those three variables after steps=, cal= and sleepsec=, from the bar above " +
+      "the keyboard rather than typed. Shortcuts measures a duration in seconds, which is what " +
+      "sleepsec= asks for. Method GET, no headers.\n\n" +
+      "At 9pm the sleep worth showing is the one that ended this morning, so it is already in " +
+      "Health \u2014 there is no second shortcut any more." +
       (ok ? "" : "\n\n(Couldn't reach the clipboard — copy it from here by hand.)"));
   });
   /* ---- the look switcher ----
@@ -20148,12 +20173,13 @@
     }catch(e){}
     showModal("\uD83C\uDF4E", ok ? "Copied \u2014 " + personName(them) + "'s link" : personName(them) + "'s health link",
       "Build the shortcut on " + personName(them) + "'s phone in the Shortcuts app.\n\n" +
-      "EVENING (steps + calories, 9pm):\n" + url + "\n\n" +
-      "MORNING (sleep only, ~10am):\n" + ntfyHealthUrl(them, "morning") + "\n\n" +
-      "Insert Steps and Cals after their = signs in the evening one, and the Sum of " +
-      "Duration after sleepsec= in the morning one \u2014 Shortcuts measures a duration in " +
-      "seconds. Turn the limit OFF and filter out In Bed and Awake on the sleep lookup, or " +
-      "the overlapping stages get added together. Leave the method as GET, no headers.\n\n" +
+      "One shortcut, run at 9pm:\n" + url + "\n\n" +
+      "Three Find Health Samples \u2014 Steps, Active Energy, and Sleep over the last 1 day " +
+      "\u2014 each with a SOURCE filter naming ONE device and the limit OFF, each followed by " +
+      "Calculate the Sum (Sum of DURATION for sleep) and a Set Variable. Without the source " +
+      "filter every device's copy is added together.\n\n" +
+      "Insert the three variables after steps=, cal= and sleepsec= from the bar above the " +
+      "keyboard. Shortcuts measures a duration in seconds. Method GET, no headers.\n\n" +
       "Nothing needs setting up in WeDO on their phone \u2014 whichever phone has WeDO open " +
       "picks the readings up for both of you." +
       (ok ? "" : "\n\n(Couldn't reach the clipboard \u2014 copy it from here by hand.)"));
