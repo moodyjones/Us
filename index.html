@@ -10384,7 +10384,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 126;
+  var BUILD_NUM = 127;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14281,7 +14281,11 @@
     t2.innerHTML = icon("bulb", 19, "hd-i") + " What would you actually want this week?";
     var sub2 = document.createElement("div");
     sub2.className = "nudge-sub";
-    sub2.textContent = "Add one thing to the wheel. " + personName(otherPerson(me)) +
+    /* BUILD 127: the same fact, in the place you would act on it. The three-a-month
+       allowance resets silently, and a reset nobody mentions is a reset nobody uses. */
+    var fresh = proposalsThisMonth(me) === 0 && parseInt(todayISO().slice(8, 10), 10) <= 7;
+    sub2.textContent = (fresh ? "Your three ideas for the month just reset. " : "") +
+      "Add one thing to the wheel. " + personName(otherPerson(me)) +
       " approves it before it goes on, so ask for something real.";
     var inp = document.createElement("input");
     inp.type = "text";
@@ -15572,6 +15576,30 @@
         out.push({kind:"save", key:"spin", urgency: 100 - left,
           title:"Spins expire " + (left <= 1 ? "tonight" : "in " + left + " days"),
           body: spins + (spins === 1 ? " spin goes" : " spins go") + " unspent at the end of the month."});
+      }
+    }catch(e){}
+
+    /* --- the wheel's allowance just reset ---
+
+       BUILD 127. The month-turn had exactly one voice: "your spins expired, that's
+       what you lost." Nobody was ever told the other half - that the three reward
+       proposals you each get RESET at the same moment, and the wheel is now ready
+       for something new. One of those is a receipt for a loss and the other is an
+       invitation, and the app was only ever sending the receipt.
+
+       Days 1-4, so it survives a couple of days of not opening the app, and keyed
+       by month so it can only land once. Silent if they have already proposed
+       something this month - the point is the reset, and somebody who has used it
+       does not need telling it happened. */
+    try{
+      var dayOfMonth = parseInt(today.slice(8, 10), 10);
+      if(dayOfMonth <= 4 && proposalsThisMonth(me) === 0){
+        var poolN = (state.rewards || []).length;
+        out.push({kind:"save", key:"reward-reset-" + monthKeyNow(), urgency: 65,
+          title:"Three new reward ideas",
+          body: poolN
+            ? "Your three for the month just reset. What do you actually want this time?"
+            : "The wheel is empty - your three ideas for the month are waiting."});
       }
     }catch(e){}
 
