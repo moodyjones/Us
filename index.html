@@ -4825,6 +4825,170 @@
     .splash-pill i{ animation:none; transform:scaleX(1); }
   }
 
+
+  /* ---- BUILD 135: the motto, on the splash ---- */
+  .splash-motto{
+    display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+    gap:0 var(--sp-5);
+    font-family:var(--ui, -apple-system, sans-serif);
+    font-size:0.875rem; font-weight:600; letter-spacing:.01em;
+    color:var(--text); text-align:center;
+    animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) 1.42s both;
+  }
+  .splash-motto span{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+  .splash-motto .sp-red{ color:var(--moody); }
+  .splash-motto .sp-purple{ color:var(--rae); }
+  .splash-motto .sp-h{ width:13px; height:13px; flex:none; }
+  /* Only the two words that name a person keep their colour; "Grow." is the one both
+     of them do, so it sits in the text tier rather than borrowing somebody's hue. */
+  .splash-motto .sp-red:last-child{ color:var(--text); }
+  .splash-motto .sp-red:last-child .sp-h{ color:var(--moody); }
+
+  /* The stack is one line longer than it was, so the cascade and the curtain both
+     move back a quarter second - the pill was finishing with 0.38s to spare and
+     would now be arriving as the curtain started. */
+  .splash-receipts{ animation-delay:1.64s; }
+  .splash-pill{ animation-delay:1.82s; }
+  .splash{ animation-delay:2.42s; }
+
+
+  /* ===========================================================================
+     BUILD 136 - the three things Moody found on his own phone.
+     =========================================================================== */
+
+  /* ---- 1. the reel ---- */
+  .reel{
+    position:relative; height:174px; overflow:hidden;
+    border-radius:12px; border:1px solid var(--line);
+    background:var(--s2);
+  }
+  /* Closure: the strip fades at both ends so it reads as continuing past the window
+     rather than as a list that happens to be three long.
+     The mask belongs on the STRIP, not on .reel. On the container it faded the
+     container's own background too, and what showed through was the page's
+     --wash-c - a teal radial gradient - which put a mint band across the top and
+     bottom rows of a cream card. */
+  .reel-strip{
+    will-change:transform;
+    -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.15),#000 42px,#000 132px,rgba(0,0,0,.15));
+    mask-image:linear-gradient(180deg,rgba(0,0,0,.15),#000 42px,#000 132px,rgba(0,0,0,.15));
+    -webkit-mask-size:100% 174px; mask-size:100% 174px;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-position:0 var(--reel-mask, 0px); mask-position:0 var(--reel-mask, 0px);
+  }
+  .reel-row{
+    height:58px; display:flex; align-items:center; gap:var(--sp-5);
+    padding:0 var(--sp-7); box-sizing:border-box;
+  }
+  .reel-row.is-empty{ color:var(--faint); justify-content:center; height:174px; }
+  .rr-e{ font-size:1.125rem; width:22px; text-align:center; flex:none; }
+  .rr-n{
+    flex:1; min-width:0;
+    /* Build 128 put mono on data. "Full body massage" is not data - it is the name
+       of a thing somebody wrote, and it was inheriting the card's mono and reading
+       like a filename. */
+    font-family:var(--ui, -apple-system, sans-serif);
+    font-size:0.9375rem; font-weight:500; color:var(--text);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .rr-t{
+    font-family:var(--mono); font-size:0.625rem; letter-spacing:.11em;
+    text-transform:uppercase; color:var(--faint); flex:none;
+  }
+  /* Rarity is the one thing on this strip that earns weight, and it gets weight
+     rather than a fourth hue - the row is already carrying an emoji and a name. */
+  .reel-row.tier-rare .rr-t{ color:var(--text); font-weight:600; }
+  .reel-win{
+    position:absolute; left:0; right:0; top:58px; height:58px; z-index:2;
+    pointer-events:none;
+    border-top:1px solid var(--moody); border-bottom:1px solid var(--moody);
+    background:color-mix(in srgb, var(--moody) 7%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .reel-strip{ transition:none !important; }
+  }
+
+  /* ---- 2. the sober mark, on the ring ---- */
+  .duo-chal{
+    position:absolute; right:4px; bottom:4px; z-index:3;
+    width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--card); border:2px solid var(--line-2);
+    color:transparent;
+    box-shadow:0 1px 3px rgba(40,24,16,.22);
+    transition:background .18s ease, border-color .18s ease, color .18s ease;
+  }
+  .duo-chal.mine{ cursor:pointer; }
+  .duo-chal.on{ color:var(--on-accent); }
+  .duo-chal.on.is-p1{ background:var(--moody); border-color:var(--moody); }
+  .duo-chal.on.is-p2{ background:var(--rae); border-color:var(--rae); }
+  .duo-chal .dc-i{ display:block; }
+  /* The frame clips its photo, so the mark has to sit outside that clip. */
+  .duo-slot{ position:relative; }
+  .duo-slot .duo-chal{ right:2px; bottom:2px; }
+
+  /* ---- 3. the photos, at the size they deserve ----
+
+     Their own two faces are the best thing on this screen and they were 118px
+     wide under seven lines of text each. The ring grows by a third and the type
+     under it comes down a tier, which is the same amount of screen saying less
+     and showing more. */
+  :root[data-skin="pe"] .duo-frame{ max-width:158px; }
+  :root[data-skin="pe"] .duo-name{ font-size:0.9375rem; margin-top:10px; }
+  :root[data-skin="pe"] .duo-when{
+    font-family:var(--mono); font-size:0.625rem; letter-spacing:.1em;
+    text-transform:uppercase; margin-top:2px;
+  }
+  :root[data-skin="pe"] .duo-note{ font-size:0.8125rem; line-height:1.45; }
+  :root[data-skin="pe"] .duo-q{ font-size:0.75rem; }
+  :root[data-skin="pe"] .duo-health{ font-size:0.625rem; letter-spacing:.08em; }
+  /* WHERE THE SPACE ACTUALLY WENT. max-width:158px did nothing on its own: the row
+     is 358px, its own gutter takes 32, and the heart pair between the rings is a
+     flex child up to 52px wide - so each ring was handed 128 and the cap never came
+     near. Three reclamations, and 118px becomes 158px:
+        gutter  16 -> 10   (the row is the page's gutter here; 10 is still a margin)
+        gap     10 ->  6   (two faces side by side should read as a pair)
+        hearts  52 -> 42   (the SPREAD still runs 0 to its full range; only the
+                            resting size shrinks, so the sync reading is unchanged) */
+  :root[data-skin="pe"] .duo-row{
+    gap:var(--sp-3);
+    padding-left:10px; padding-right:10px;
+    max-width:460px;
+  }
+  :root[data-skin="pe"] .duo-heart{
+    width:calc(22px + var(--duo-split, 0) * 20px);
+  }
+  :root[data-skin="pe"] .duo-heart .dh-b{
+    left:calc(6px + var(--duo-split, 0) * 20px);
+  }
+  /* The question above the answer earns its line (Build 104: an answer with no
+     question read as one word attributed to somebody). It does not earn three. */
+  :root[data-skin="pe"] .duo-q{
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+
+
+  /* The mark was appended inside .duo-frame, which clips to a circle - so a 26px
+     badge at the lower right showed as a 4px crescent. The frame keeps its round
+     shape; the clipping moves onto the image itself, which is the only child that
+     needed it. */
+  :root[data-skin="pe"] .duo-frame{ overflow:visible; }
+  :root[data-skin="pe"] .duo-frame img{ border-radius:50%; }
+  /* 85.4% is where a circle's edge crosses its own 45 degree line, so the mark sits
+     ON the rim rather than floating inside or outside it. */
+  :root[data-skin="pe"] .duo-chal{
+    right:auto; bottom:auto;
+    left:78%; top:78%;
+    transform:translate(-50%, -50%);
+  }
+
+
+  /* An empty circle reads as a blank sticker on a photograph. A pale tick reads as
+     a tick that has not been filled in, which is what it is. */
+  :root[data-skin="pe"] .duo-chal{ color:var(--line-2); }
+  :root[data-skin="pe"] .duo-chal.on{ color:var(--on-accent); }
+
 </style>
 </head>
 <body>
@@ -4843,7 +5007,17 @@
        These three are true of exactly these two, and they are read off their own saved
        state before the app has even parsed. A first install has no receipts, so it gets
        the slogan back rather than three invented numbers. -->
-  <div class="splash-line" id="splashLine">Together — To Get There.</div>
+  <!-- BUILD 135: the motto lives here now. 133 hid it on the Today screen to stop
+       seven centred rows stacking, which was a layout argument used to delete a brand
+       mark - not my call to make. A slogan's place is the front door, so it took the
+       splash's old line rather than disappearing. The hearts are inlined rather than
+       hydrated through data-ico: this markup is painted before the app's icon code has
+       parsed, and a race there shows two empty gaps where the hearts should be. -->
+  <div class="splash-motto" id="splashMotto">
+    <span class="sp-red"><svg class="sp-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg> Plan.</span>
+    <span class="sp-purple"><svg class="sp-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg> Do.</span>
+    <span class="sp-red"><svg class="sp-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg> Grow.</span>
+  </div>
   <div class="splash-receipts" id="splashReceipts" hidden></div>
   <div class="splash-pill" aria-hidden="true"><i></i></div>
 </div>
@@ -4892,14 +5066,12 @@
       if(shots) bits.push(shots.toLocaleString() + (shots === 1 ? " photo" : " photos"));
       var done = (st.tasks || []).filter(function(t){ return t.status === "done"; }).length;
       if(done) bits.push(done.toLocaleString() + " done");
+      /* The motto and the receipts are not an either-or any more: one says what WeDO
+         is, the other says what these two have done. A fresh install simply has no
+         second line, which is honest rather than empty. */
       if(bits.length >= 2){
         var r = document.getElementById("splashReceipts");
-        var line = document.getElementById("splashLine");
-        if(r && line){
-          r.textContent = bits.join("  \u00b7  ");
-          r.hidden = false;
-          line.hidden = true;
-        }
+        if(r){ r.textContent = bits.join("  \u00b7  "); r.hidden = false; }
       }
     }
   }catch(e){}
@@ -5321,9 +5493,10 @@
         <div class="stat"><div class="num" id="tasksToNextSpin">5</div><div class="label">Tasks to next spin</div></div>
       </div>
       <div class="spin-expiry" id="spinExpiryNote" style="display:none;"></div>
-      <div class="wheel-wrap">
-        <div class="wheel-pointer"></div>
-        <canvas id="wheelCanvas" width="260" height="260"></canvas>
+      <!-- BUILD 136: a reel, not a pie. See drawWheel() for why. -->
+      <div class="reel" id="reel">
+        <div class="reel-win" aria-hidden="true"></div>
+        <div class="reel-strip" id="reelStrip" aria-live="polite"></div>
       </div>
       <button class="primary" id="spinBtn" style="width:100%;margin-top:8px;">Spin!</button>
     </div>
@@ -10975,7 +11148,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 134;
+  var BUILD_NUM = 136;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -15878,46 +16051,85 @@
   // curated, harmonized wheel palette (was a full rainbow)
   var WHEEL_COLORS = ["#ff6f91","#e05a7a","#ffc857","#5fd6c4","#c9698a","#e8a26a","#8fb8c9","#b884a8"];
 
-  function drawWheel(){
-    var canvas = document.getElementById("wheelCanvas");
-    var ctx = canvas.getContext("2d");
+  /* ===========================================================================
+     BUILD 136 - THE REEL.
+
+     The wheel was eight hard-coded rainbow colours, an eleven-pixel emoji per
+     slice and a brown triangle. The decoration was the smaller problem. The real
+     one is that a pie chart of prizes CANNOT SHOW YOU THE PRIZES: at 260px with
+     fifteen in the pool, each slice had room for one glyph, so the screen whose
+     entire job is "look what you could win" never said what any of it was.
+
+     A reel says it. The names are on it, at a readable size, and the one you land
+     on is in a lit band in the middle. Odds stay visible the way slice width used
+     to carry them - a prize appears on the strip in proportion to its weight, so a
+     rare one is genuinely scarcer to look at.
+
+     The selection maths below is untouched. This is presentation only: the same
+     weighted draw picks the winner, and the strip is then told where to stop.
+     =========================================================================== */
+  var REEL_ROW = 58;        // px, one prize
+  var REEL_REPEATS = 7;     // strip length, so a 4s travel never runs out of rows
+
+  function reelPool(){
     var list = weightedRewardList();
-    var cx = 130, cy = 130, r = 120;
-    ctx.clearRect(0,0,260,260);
-    if(list.length===0){
-      ctx.fillStyle = "#272e4f";
-      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    if(!list.length) return [];
+    var min = list.reduce(function(m, i){ return Math.min(m, i.weight); }, Infinity);
+    var pool = [];
+    list.forEach(function(it){
+      // capped at 8, or one common prize carpets the whole strip and the rare ones
+      // stop appearing at all - which would be a lie in the other direction
+      var n = Math.max(1, Math.min(8, Math.round(it.weight / min)));
+      for(var k = 0; k < n; k++) pool.push(it.reward);
+    });
+    for(var i = pool.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+    }
+    return pool;
+  }
+
+  function reelRowHtml(r){
+    return '<span class="rr-e">' + escapeHtml(r.emoji || "\u2726") + '</span>' +
+           '<span class="rr-n">' + escapeHtml(r.name) + '</span>' +
+           '<span class="rr-t">' + escapeHtml(r.tier || "") + '</span>';
+  }
+
+  // Name kept: renderRewards() and the spin handler both call it.
+  function drawWheel(){
+    var strip = document.getElementById("reelStrip");
+    var reel = document.getElementById("reel");
+    if(!strip || !reel) return;
+    var pool = reelPool();
+    if(!pool.length){
+      strip.style.transition = "none";
+      strip.style.transform = "translateY(0px)";
+      strip.innerHTML = '<div class="reel-row is-empty">Nothing on the reel yet</div>';
+      reel._pool = []; reel._rows = [];
       return;
     }
-    var total = list.reduce(function(s,i){return s+i.weight;},0);
-    var start = 0;
-    list.forEach(function(item, idx){
-      var slice = (item.weight/total) * Math.PI*2;
-      ctx.beginPath();
-      ctx.moveTo(cx,cy);
-      ctx.arc(cx,cy,r,start,start+slice);
-      ctx.closePath();
-      ctx.fillStyle = WHEEL_COLORS[idx % WHEEL_COLORS.length];
-      ctx.fill();
-      ctx.save();
-      ctx.translate(cx,cy);
-      ctx.rotate(start + slice/2);
-      ctx.textAlign = "right";
-      ctx.fillStyle = "#141830";
-      ctx.font = "bold 11px sans-serif";
-      var label = item.reward.emoji;
-      ctx.fillText(label, r-14, 4);
-      ctx.restore();
-      start += slice;
-    });
-    canvas._list = list;
+    var rows = [];
+    for(var r = 0; r < REEL_REPEATS; r++){
+      for(var i = 0; i < pool.length; i++) rows.push(pool[i]);
+    }
+    strip.innerHTML = rows.map(function(x){
+      return '<div class="reel-row tier-' + escapeHtml(x.tier || "common") + '">' +
+             reelRowHtml(x) + "</div>";
+    }).join("");
+    strip.style.transition = "none";
+    strip.style.transform = "translateY(0px)";
+    reel._pool = pool; reel._rows = rows;
   }
 
   document.getElementById("spinBtn").addEventListener("click", function(){
     var uid_ = state.currentUser;
     var p = state.points[uid_];
     if(!p || !(p.spinsAvailable>0)) return;
-    var list = document.getElementById("wheelCanvas")._list || weightedRewardList();
+    var reelEl = document.getElementById("reel");
+    var strip = document.getElementById("reelStrip");
+    if(!reelEl || !strip) return;
+    if(!reelEl._pool || !reelEl._pool.length) drawWheel();
+    var list = weightedRewardList();
     if(list.length===0){ toast("Add some rewards first!"); return; }
 
     var total = list.reduce(function(s,i){return s+i.weight;},0);
@@ -15929,19 +16141,23 @@
       if(r <= acc){ chosen = list[i].reward; chosenIdx = i; break; }
     }
 
-    // figure target angle for chosenIdx segment center, add spins
-    var start=0, segStart=0, segEnd=0;
-    for(var j=0;j<list.length;j++){
-      var slice = (list[j].weight/total)*Math.PI*2;
-      if(j===chosenIdx){ segStart=start; segEnd=start+slice; }
-      start += slice;
+    /* Where it stops. The draw above already chose; the strip is told to land on it
+       rather than the other way round, so no amount of rounding in the travel can
+       disagree with the prize that gets recorded. The target row is written with the
+       winner first, two repeats from the end so there is always strip left to move. */
+    var pool = reelEl._pool || [];
+    var target = pool.length * (REEL_REPEATS - 2) + Math.floor(pool.length / 2);
+    var cell = strip.children[target];
+    if(cell){
+      cell.className = "reel-row tier-" + (chosen.tier || "common");
+      cell.innerHTML = reelRowHtml(chosen);
     }
-    var segCenter = (segStart+segEnd)/2;
-    var degCenter = segCenter * 180/Math.PI;
-    // pointer is at top (0deg = 3 o'clock in canvas draw, but pointer visually at top -90deg offset)
-    var targetDeg = 360*5 + (270 - degCenter);
-    var canvas = document.getElementById("wheelCanvas");
-    canvas.style.transform = "rotate("+targetDeg+"deg)";
+    // the window shows three rows, so centring row N means travelling N-1 rows up
+    strip.style.transition = "none";
+    strip.style.transform = "translateY(0px)";
+    void strip.offsetHeight;                       // commit the reset before animating
+    strip.style.transition = "transform 4s cubic-bezier(.12,.72,.12,1)";
+    strip.style.transform = "translateY(" + (-(target - 1) * REEL_ROW) + "px)";
 
     p.spinsAvailable--;
     p.spinsUsed = (p.spinsUsed||0) + 1;
@@ -17172,6 +17388,33 @@
           (isMe ? "Add today's photo" : "Waiting on " + escapeHtml(personName(p.id)));
         frame.appendChild(empty);
       }
+      /* BUILD 136: the sober mark, on the face it belongs to.
+
+         It used to be two tinted boxes inside the challenge card, three cards further
+         down the page - so the fact "Rae stayed dry today" was rendered nowhere near
+         Rae. The two boxes were also different widths, because one said "tap to mark"
+         and the other "marked today" and nothing made them agree.
+
+         On the ring it needs no label: filled in that person's colour means they are in
+         for today, hollow means not yet. Your own is tappable, theirs never is - marking
+         somebody else's sober day for them is the small dishonesty that makes a shared
+         tracker worthless. */
+      var chal = activeChallenge();
+      if(chal && !chal.endedAt){
+        var dn = challengeDayNumber(chal, today);
+        if(dn >= 1 && dn <= chal.days){
+          var on = challengeChecked(chal, p.id, today);
+          var mark = document.createElement("span");
+          mark.className = "duo-chal is-" + p.id + (on ? " on" : "") + (isMe ? " mine" : "");
+          mark.innerHTML = icon("check", 12, "dc-i", 3);
+          mark.setAttribute("role", "img");
+          mark.setAttribute("aria-label",
+            (isMe ? "You have" : personName(p.id) + " has") + (on ? "" : " not") +
+            " marked today on " + (chal.title || "the challenge"));
+          if(isMe) mark.title = on ? "Marked today \u2014 tap to undo" : "Tap to mark today";
+          frame.appendChild(mark);
+        }
+      }
       slot.appendChild(frame);
 
       var name = document.createElement("div");
@@ -17264,7 +17507,21 @@
         slot.appendChild(hrow);
       }
 
-      slot.addEventListener("click", function(){ onDuoSlotTap(p.id, isMe); });
+      slot.addEventListener("click", function(ev){
+        // the mark sits inside the slot, which is itself a button, so it cannot BE a
+        // button - its tap is caught here and never reaches the photo picker
+        var hit = ev.target && ev.target.closest && ev.target.closest(".duo-chal.mine");
+        if(hit){
+          ev.preventDefault(); ev.stopPropagation();
+          var cc = activeChallenge();
+          if(cc && !cc.endedAt){
+            setChallengeCheck(me, today, !challengeChecked(cc, me, today));
+            renderChallenge(); renderTasks(); renderHero();
+          }
+          return;
+        }
+        onDuoSlotTap(p.id, isMe);
+      });
       row.appendChild(slot);
 
       if(i === 0 && people.length > 1){
@@ -19530,8 +19787,11 @@
 
     // today's two ticks. Only your own is tappable — marking your partner's day for them
     // is exactly the kind of small dishonesty that makes a shared tracker worthless.
+    /* BUILD 136: this row moved onto the two rings in the hero. Hidden rather than
+       deleted so the timeline below still has the element it measures against. */
     var people = document.createElement("div");
     people.className = "chal-people";
+    people.hidden = true;
     state.people.forEach(function(pn){
       var on = challengeChecked(c, pn.id, today);
       var mine = (pn.id === me);
