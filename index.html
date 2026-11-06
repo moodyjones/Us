@@ -2347,8 +2347,18 @@
 
   /* motion: views breathe in, tasks check out */
   @media (prefers-reduced-motion: no-preference){
-    .view.active{animation:viewIn .18s ease-out;}
-    @keyframes viewIn{from{opacity:.55;transform:translateY(5px);}to{opacity:1;transform:none;}}
+    /* BUILD 143. This was `transform:translateY(5px)` on .view, and it had a bug that
+       measuring found and looking never would: a transformed element becomes the
+       containing block for its `position:fixed` descendants. The + button lives inside
+       #view-tasks, so for the 180ms of this animation it was positioned against the
+       VIEW rather than the viewport - measured at top:434 on an 844px screen, roughly
+       mid-screen, before snapping to the bottom corner when the animation ended.
+       Every single switch into Tasks did this.
+       It is an opacity fade now. Nothing in this app needs a view to slide, the
+       indicator under the tabs already says which way you moved, and opacity cannot
+       create a containing block. */
+    .view.active{animation:viewIn var(--mo-150) var(--ease-out);}
+    @keyframes viewIn{from{opacity:0;}to{opacity:1;}}
     .task-wrap{transition:opacity .28s ease, transform .28s ease;}
     .task-wrap.completing{opacity:0;transform:translateX(14px);}
     .task .check, .buy-card .buy-check{transition:background .15s ease, border-color .15s ease;}
@@ -2411,6 +2421,7 @@
     --bg:#0E0B13; --night:#0E0B13; --ink:#0E0B13;
     --card:#151119; --card2:#1D1824;
     --s1:#151119; --s2:#1D1824; --s3:#262033;
+    --ground-hatch:rgba(245,237,230,.11);
 
     /* Rules, not borders. Solid hairlines at a fixed value hold their weight on
        an OLED screen; translucent white over a near-black ground disappears. */
@@ -4037,6 +4048,7 @@
     --bg:#FFF8F3;
     --card:#FFFFFF;   --card2:#FBF0E8;
     --s1:#FFFFFF;     --s2:#FBF0E8;    --s3:#F5E3D8;
+    --ground-hatch:rgba(93,58,38,.14);
     --line:#EFE0D4;   --line-2:#E1CBB9; --border:#EFE0D4;
 
     /* --night and --ink are NOT the ground. Both are only ever used as
@@ -4055,7 +4067,10 @@
     --gold:#8F6509;
 
     /* ---- buttons ---- */
-    --grad-primary-a:#D9512F; --grad-primary-b:#BC3A21; --on-primary:#FFFFFF;
+    /* BUILD 142: light end nudged #D9512F -> #CD4828. White on the old light end
+       measured 4.06:1 at the top-left corner of the gradient, under AA for 14px.
+       #CD4828 measures 4.61:1 and is indistinguishable at a glance. */
+    --grad-primary-a:#CD4828; --grad-primary-b:#BC3A21; --on-primary:#FFFFFF;
     --grad-gold-b:#7E5807;    --on-gold:#FFFFFF;        --on-teal:#FFFFFF;
 
     /* ---- washes. Warm brown rather than black: a grey wash over cream reads
@@ -4420,6 +4435,21 @@
        enough to look right and different enough to feel unrelated to every other
        moving thing in the family. */
     --ease-out:cubic-bezier(.22,1,.36,1);
+    /* BUILD 143 - ONE MOTION LANGUAGE.
+       Before this there were twenty-four distinct durations in the stylesheet: .12s,
+       .14s, .15s, .16s, .18s, .2s, .22s, .24s, .25s, .26s, .28s, .3s, .34s, .38s, .4s,
+       .45s, .5s, .55s, .7s, 220ms, 320ms, 400ms and two more. Nobody chose twenty-four
+       speeds; they accumulated one build at a time, and the result is an app where two
+       things that should feel the same feel slightly different and you cannot say why.
+       Four tokens. Enter on --ease-out, exit on --mo-in. Anything that is not one of
+       these four is an exception and has to say why in a comment beside it.
+       The two standing exceptions, both deliberate:
+         - the morph sheet's damped spring (Build 141) - the app's ONE signature move,
+           and a spring is the thing that makes it read as one object rather than two;
+         - the reel's long travel (Build 136), which is a slot machine and is supposed
+           to take longer than a piece of interface. */
+    --mo-100:100ms; --mo-150:150ms; --mo-200:200ms; --mo-300:300ms;
+    --mo-in:cubic-bezier(.7,0,.84,0);
   }
 
   /* ---- 1. display: tight and large, body: plain and 16px ---- */
@@ -4929,6 +4959,78 @@
     .reel-strip{ transition:none !important; }
   }
 
+  /* ===========================================================================
+     BUILD 143 - THE REWARDS SCREEN, WHICH IS THE ONE HE CALLED SLOP.
+
+     Three things were wrong and all three were visible in the screenshot:
+     the prize name was being clipped mid-word ("Your love does one chore f..."),
+     the selected band was two hard coral rules across the width - a table border,
+     not a payline - and the Spin button when you had no spins was the coral
+     gradient at opacity .5, which is a washed salmon with unreadable white on it.
+     =========================================================================== */
+
+  /* ---- the row stacks, so the name gets the whole width ---- */
+  .reel-row{ gap:var(--sp-6); }
+  .rr-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .rr-n{
+    /* The tier used to sit beside the name and take 90px off it. Underneath, the
+       name has the row to itself and stops being truncated at any realistic length. */
+    font-size:0.9375rem; line-height:1.25;
+  }
+  .reel-row .rr-t{ flex:none; align-self:flex-start; }
+
+  /* ---- the payline ---- */
+  .reel-win{
+    border:0;
+    border-radius:10px;
+    /* inset ring rather than two rules: a band with ends reads as a window you are
+       looking through, two rules across the full width read as a table. */
+    box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--moody) 62%, transparent);
+    background:color-mix(in srgb, var(--moody) 9%, transparent);
+    /* the window is inset from the reel's edge so the ring has somewhere to be */
+    left:var(--sp-3); right:var(--sp-3);
+  }
+  /* Two ticks, left and right, on the centre line. This is the one place in the app
+     where a machine is deciding something for you, and rule 9 says a machine should
+     feel like an instrument. */
+  .reel-win::before, .reel-win::after{
+    content:""; position:absolute; top:50%; width:5px; height:5px;
+    margin-top:-2.5px; background:var(--moody);
+    clip-path:polygon(0 0, 100% 50%, 0 100%);
+  }
+  .reel-win::before{ left:-1px; }
+  .reel-win::after{ right:-1px; transform:scaleX(-1); }
+
+  /* ---- the meter under the spin count ---- */
+  .sp-meter{ display:flex; gap:3px; height:6px; margin:var(--sp-4) 0 var(--sp-3); }
+  .sp-meter i{
+    flex:1; border-radius:2px; background:var(--line-2);
+    transition:background var(--mo-300) var(--ease-out);
+  }
+  .sp-meter i.on{ background:var(--moody); }
+  .mono-num{ font-family:var(--mono) !important; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+
+  /* ---- a disabled button that looks unavailable, not broken ---- */
+  /* The skin paints primaries through `:root[data-skin="pe"] button.primary`, which is
+     (0,3,1). A plain `button.primary:disabled` is (0,2,1) and loses - the button kept its
+     full coral gradient while disabled, so "5 more tasks for a spin" read as a live CTA.
+     The disabled rule matches the skin's own weight rather than reaching for !important. */
+  .primary:disabled, button.primary:disabled, .btn-primary:disabled,
+  :root[data-skin="pe"] .primary:disabled,
+  :root[data-skin="pe"] button.primary:disabled,
+  :root[data-skin="pe"] .btn-primary:disabled{
+    background-image:none;
+    background-color:var(--s2);
+    color:var(--muted);
+    box-shadow:inset 0 0 0 1px var(--line-2);
+    cursor:default;
+  }
+  .primary:disabled:active, :root[data-skin="pe"] button.primary:disabled:active{ transform:none; }
+
+  @media (prefers-reduced-motion: reduce){
+    .sp-meter i{ transition:none; }
+  }
+
   /* ---- 2. the sober mark, on the ring ---- */
   .duo-chal{
     position:absolute; right:4px; bottom:4px; z-index:3;
@@ -5053,6 +5155,321 @@
   :root[data-skin="pe"] .chal-msg{ color:var(--muted); }
   :root[data-skin="pe"] .chal-sub{ color:var(--faint); }
   :root[data-skin="pe"] .chal-toggle{ color:var(--muted); }
+
+
+  /* ---- BUILD 139: the topic, as a thing to read and copy ---- */
+  .ntfy-topic{
+    display:flex; flex-direction:column; gap:3px;
+    padding:12px var(--sp-7); margin-top:var(--sp-4);
+    border:1px solid var(--line-2); border-radius:10px;
+    background:var(--s2);
+  }
+  .ntfy-topic .nt-lbl{
+    font-family:var(--mono); font-size:.625rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  .ntfy-topic .nt-val{
+    font-family:var(--mono); font-size:1rem; font-weight:500; color:var(--text);
+    word-break:break-all; -webkit-user-select:all; user-select:all;
+  }
+
+
+  /* ===========================================================================
+     BUILD 140 - what Moody found on the Tasks list, and the sync reading.
+     =========================================================================== */
+
+  /* ---- 1. the bar and the circle were never on the same line ----
+     The bar was position:absolute at top:15px, measured from the row's top edge.
+     The circle is centred, by .task{align-items:center}. On a one-line row those
+     two land within a couple of pixels of each other and it looks deliberate. On
+     "5. Put the Apple Health export and WorkoutExport.csv in the UNBOUND folder",
+     which is three lines, the bar is up beside the first line and the circle is
+     40px below it. Centring the bar makes them agree at every height. */
+  :root[data-skin="pe"] .task.who-p1::before,
+  :root[data-skin="pe"] .task.who-p2::before,
+  :root[data-skin="pe"] .task.who-both::before{
+    top:50%; transform:translateY(-50%);
+    height:22px;
+  }
+
+  /* ---- 2. difficulty as a level ---- */
+  .diff-pips{
+    display:inline-flex; align-items:flex-end; gap:2px; height:10px;
+    vertical-align:-1px;
+  }
+  .diff-pips i{ display:block; width:3px; border-radius:1px; background:var(--line-2); }
+  .diff-pips i:nth-child(1){ height:4px; }
+  .diff-pips i:nth-child(2){ height:7px; }
+  .diff-pips i:nth-child(3){ height:10px; }
+  .diff-pips i.on{ background:var(--muted); }
+  /* The one case where difficulty is worth a colour: a hard task you have not done. */
+  :root[data-skin="pe"] .task:not(.done) .diff-hard i.on{ background:var(--rose); }
+  :root[data-skin="pe"] .task.done .diff-pips i.on{ background:var(--line-2); }
+  /* an empty owner span must not leave a gap in a flex row */
+  :root[data-skin="pe"] .task .meta .meta-for:empty{ display:none; }
+
+  /* ---- 4. the gap carries the sync reading ----
+     6px in step, 30px far apart. The rings are flex children, so they give up at
+     most 12px each at the far end - a visible closing and opening of the distance
+     between two faces, rather than four pixels between two icons. */
+  :root[data-skin="pe"] .duo-row{
+    gap:calc(var(--sp-3) + var(--duo-split, 0) * 24px);
+    transition:gap .55s cubic-bezier(.22,.9,.3,1);
+  }
+  /* and the hearts get their travel back, inside that gap */
+  :root[data-skin="pe"] .duo-heart{
+    width:calc(20px + var(--duo-split, 0) * 26px);
+    opacity:calc(1 - var(--duo-split, 0) * .35);
+  }
+  :root[data-skin="pe"] .duo-heart .dh-b{
+    left:calc(5px + var(--duo-split, 0) * 26px);
+  }
+  @media (prefers-reduced-motion: reduce){
+    :root[data-skin="pe"] .duo-row{ transition:none; }
+  }
+
+
+  /* ---- BUILD 140: the sound switch ---- */
+  .sfx-row{
+    display:flex; align-items:flex-start; gap:var(--sp-5);
+    margin-top:var(--sp-7); cursor:pointer;
+  }
+  .sfx-row input{ flex:none; margin-top:2px; width:18px; height:18px; accent-color:var(--moody); }
+  .sfx-row span{ font-size:0.75rem; color:var(--muted); line-height:1.55; }
+  .sfx-row strong{ color:var(--text); }
+
+
+  /* ===========================================================================
+     BUILD 141 - the morph sheet, the press, and the entrance.
+     =========================================================================== */
+  .tmorph{ position:fixed; inset:0; z-index:var(--z-sheet); }
+  .tmorph[hidden]{ display:none !important; }
+  .tm-veil{
+    position:absolute; inset:0; opacity:0;
+    background:var(--scrim, rgba(20,16,26,.55));
+    -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+    transition:opacity 320ms cubic-bezier(.4,0,.2,1);
+  }
+  /* BUILD 141: anchored to the row, not to the viewport. A clip-path morph can only
+     describe a box INSIDE the destination box - Math.max(0, ...) on every inset - so a
+     sheet centred on screen while the row sat 400px below it produced a degenerate
+     first frame (fully clipped) and then a pop. Placed over the row it came from, the
+     insets are real at every sample and the sheet reads as that row growing. */
+  .tm-sheet{
+    position:absolute; left:50%; top:0; transform:translateX(-50%);
+    width:min(calc(100vw - 32px), 420px);
+    max-height:min(76vh, 560px); overflow:auto;
+    background:var(--s1); border:1px solid var(--line); border-radius:18px;
+    box-shadow:0 8px 10px -6px rgba(40,24,16,.22), 0 34px 60px -24px rgba(40,24,16,.44);
+    outline:none;
+  }
+  .tm-body{ padding:var(--sp-12) var(--sp-10) var(--sp-10); display:flex; flex-direction:column; gap:var(--sp-5); }
+  .tm-kicker{
+    margin:0; font-family:var(--mono); font-size:.625rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  .tm-title{
+    margin:0; font-family:var(--display); font-weight:400;
+    font-size:1.75rem; line-height:1.02; letter-spacing:-.03em; color:var(--text);
+    text-wrap:balance;
+  }
+  .tm-facts{
+    display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:var(--sp-5) var(--sp-7); margin-top:var(--sp-2);
+  }
+  .tm-fact{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .tm-fk{
+    font-family:var(--mono); font-size:.5938rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  .tm-fv{ font-size:.9375rem; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .tm-fv.late{ color:var(--rose); font-weight:600; }
+  .tm-note{
+    font-size:.8125rem; color:var(--muted); padding-top:var(--sp-4);
+    border-top:1px solid var(--line);
+  }
+  .tm-note[hidden]{ display:none; }
+  .tm-actions{ display:flex; flex-wrap:wrap; gap:var(--sp-4); margin-top:var(--sp-4); }
+  .tm-actions .tm-done{ flex:1 1 100%; }
+  .tm-actions .ghost{ flex:1 1 0; min-width:0; }
+  .tm-close{
+    position:absolute; top:10px; right:10px;
+    width:38px; height:38px; display:grid; place-items:center;
+    border:0; border-radius:50%; cursor:pointer;
+    background:color-mix(in srgb, var(--text) 7%, transparent); color:var(--muted);
+  }
+  .tm-close:focus-visible, .tm-sheet:focus-visible{ outline:2px solid var(--moody); outline-offset:2px; }
+
+  /* ---- the press. The card recipe asks for it by name: hover lifts, press
+          compresses, ~120ms. A row that does not move under your thumb is the
+          single cheapest reason a list feels like a document. ---- */
+  :root[data-skin="pe"] .task{
+    transition:background .18s ease, transform .12s cubic-bezier(.4,0,.2,1);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  :root[data-skin="pe"] .task:active{ transform:scale(.988); }
+  :root[data-skin="pe"] .task:focus-visible{ outline:2px solid var(--moody); outline-offset:-2px; border-radius:6px; }
+  /* the tick and the action rail keep their own feel and must not scale with the row */
+  :root[data-skin="pe"] .task:active .check,
+  :root[data-skin="pe"] .task:active .task-actions{ transform:scale(1.012); }
+
+  /* ---- the entrance. 200ms ease-out at a 40ms stagger, from the card recipe.
+          Twelve rows is 480ms to the last one; beyond that they arrive together
+          rather than making somebody wait for row twenty. ---- */
+  #openTasks.stagger .task-wrap{
+    animation:taskIn 200ms cubic-bezier(.2,.8,.2,1) backwards;
+  }
+  @keyframes taskIn{ from{ opacity:0; transform:translateY(7px); } }
+  #openTasks.stagger .task-wrap:nth-child(1){ animation-delay:0ms; }
+  #openTasks.stagger .task-wrap:nth-child(2){ animation-delay:40ms; }
+  #openTasks.stagger .task-wrap:nth-child(3){ animation-delay:80ms; }
+  #openTasks.stagger .task-wrap:nth-child(4){ animation-delay:120ms; }
+  #openTasks.stagger .task-wrap:nth-child(5){ animation-delay:160ms; }
+  #openTasks.stagger .task-wrap:nth-child(6){ animation-delay:200ms; }
+  #openTasks.stagger .task-wrap:nth-child(7){ animation-delay:240ms; }
+  #openTasks.stagger .task-wrap:nth-child(8){ animation-delay:280ms; }
+  #openTasks.stagger .task-wrap:nth-child(9){ animation-delay:320ms; }
+  #openTasks.stagger .task-wrap:nth-child(10){ animation-delay:360ms; }
+  #openTasks.stagger .task-wrap:nth-child(n+11){ animation-delay:400ms; }
+
+  @media (prefers-reduced-motion: reduce){
+    .tm-veil{ transition:none; }
+    :root[data-skin="pe"] .task{ transition:background .18s ease; }
+    :root[data-skin="pe"] .task:active{ transform:none; }
+    #openTasks.stagger .task-wrap{ animation:none; }
+  }
+
+
+  /* ---- BUILD 141: the row's own affordance ---- */
+  :root[data-skin="pe"] .act-more .ic-chev{ transform:rotate(-90deg); }
+  :root[data-skin="pe"] .act-more{ opacity:.55; }
+  :root[data-skin="pe"] .task-wrap.acts-open .act-more{ transform:none; }
+  :root[data-skin="pe"] .task-wrap.acts-open .act-more .ic-chev{ transform:rotate(0deg); }
+  :root[data-skin="pe"] .tm-fail[data-sure="1"]{ color:var(--rose); border-color:var(--rose); }
+
+
+  /* ===========================================================================
+     BUILD 142 - THE WALL OF DAYS.
+     Today at full width, every day behind it one swipe back. The next card is
+     deliberately cut by the edge: a card cut off at the edge says swipe, and it
+     is the only instruction this needs.
+     =========================================================================== */
+  .daywall{
+    display:flex; align-items:flex-start; gap:var(--sp-5);
+    overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x mandatory; scrollbar-width:none;
+    margin-left:calc(var(--gutter) * -1); margin-right:calc(var(--gutter) * -1);
+    padding:0 var(--gutter) var(--sp-4);
+    scroll-padding-left:var(--gutter);
+    -webkit-overflow-scrolling:touch;
+  }
+  .daywall::-webkit-scrollbar{ display:none; }
+  .dw-card{ scroll-snap-align:start; flex:0 0 auto; }
+  .daywall:empty{ display:none; }
+
+  .dw-past{
+    width:128px; display:flex; flex-direction:column; align-items:center;
+    gap:var(--sp-4); padding:var(--sp-5) 0 0;
+    background:none; border:0; cursor:pointer; font:inherit; color:inherit;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .14s cubic-bezier(.4,0,.2,1), opacity .2s ease;
+    opacity:1;
+  }
+  .dw-past:active{ transform:scale(.97); }
+  .dw-past:hover, .dw-past:focus-visible{ opacity:1; }
+  .dw-past:focus-visible{ outline:2px solid var(--moody); outline-offset:3px; border-radius:12px; }
+
+  /* BUILD 142b: ONE TILE PER DAY, NOT TWO BADGES.
+     The first pass drew each day as two 50px rings. Three problems, all visible in the
+     screenshot: the photos were too small to be worth looking at (he has said this about
+     every photo in the app), eleven loose circles in a row read as one blob rather than
+     eleven days, and the card looked nothing like the sheet it morphs into - so P-03's
+     clip-path widening had nothing to widen FROM.
+     A day is now a single 128x96 tile split down the middle, which is the sheet's own
+     two-frame layout at rail scale. The photos get 2.4x the area, the tile is obviously
+     one object, and the morph now reads as that object growing. The divider is the
+     container's own background showing through a 2px grid gap - no extra element. */
+  .dw-pair{
+    display:grid; grid-template-columns:1fr 1fr; gap:2px;
+    width:128px; height:96px; border-radius:var(--r-object); overflow:hidden;
+    background:var(--line-2);
+  }
+  .dw-face{
+    position:relative; overflow:hidden; background:var(--s2);
+    display:block; min-width:0;
+  }
+  /* Identity is a 3px bar at the foot of each half rather than a coloured ring. A ring
+     round a photo is jewellery; a bar under it is a label, and it survives being 64px. */
+  .dw-face::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:3px;
+    background:var(--line-2);
+  }
+  .dw-face.is-p1::after{ background:var(--moody); }
+  .dw-face.is-p2::after{ background:var(--rae); }
+  /* A day one of you missed stays empty. The gap IS the information, so it is drawn as
+     an absence - the person's hue at 10% under a hatch - and never as a neutral grey,
+     which would read as "no data" rather than "nobody posted". */
+  .dw-face.empty{
+    background:
+      repeating-linear-gradient(135deg,
+        var(--ground-hatch) 0 2px, transparent 2px 7px),
+      var(--s2);
+  }
+  .dw-face.empty::after{ opacity:.42; }
+  .dw-face.is-p1.empty{ box-shadow:inset 0 0 0 99px color-mix(in srgb, var(--moody) 9%, transparent); }
+  .dw-face.is-p2.empty{ box-shadow:inset 0 0 0 99px color-mix(in srgb, var(--rae) 9%, transparent); }
+  .dw-face img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .dw-when{
+    font-family:var(--mono); font-size:.625rem; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--faint); white-space:nowrap;
+  }
+  .dw-marks{ display:flex; align-items:center; gap:var(--sp-4); min-height:14px; }
+  .dw-mark{
+    display:inline-flex; align-items:center; gap:2px;
+    font-family:var(--mono); font-size:.5938rem; color:var(--faint);
+  }
+  .dw-mark.m-check{ color:var(--jade); }
+  .dw-mark.m-spark{ color:var(--moody); }
+  .dw-mark i{ font-style:normal; }
+
+  /* BUILD 142b: Today's hero belongs to Today. See the tab handler for why.
+     A rule that must beat many specific ones is written with the id it governs rather
+     than with !important - #duoRow is 100 points of specificity and .duo-row is 10. */
+  :root:not([data-view="today"]) #duoRow,
+  :root:not([data-view="today"]) #dayWall{ display:none; }
+
+  /* ---- the day sheet ---- */
+  .tmorph.is-day .tm-sheet{ width:min(calc(100vw - 32px), 460px); }
+  .tm-faces{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-7); }
+  .tf-col{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .tf-frame{
+    aspect-ratio:1/1; width:100%; border-radius:14px; overflow:hidden;
+    border:1.5px solid var(--line-2); background:var(--s2);
+    display:grid; place-items:center;
+  }
+  .tf-frame.is-p1{ border-color:var(--moody); }
+  .tf-frame.is-p2{ border-color:var(--rae); }
+  .tf-frame img{ width:100%; height:100%; object-fit:cover; }
+  .tf-frame.empty span{
+    font-family:var(--mono); font-size:.5938rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  .tf-name{ font-size:.8125rem; font-weight:600; color:var(--text); }
+  .tf-q{ font-family:var(--mono); font-size:.5938rem; letter-spacing:.08em;
+         text-transform:uppercase; color:var(--faint); line-height:1.5; }
+  .tf-a{ font-size:.875rem; font-style:italic; color:var(--muted); line-height:1.45; }
+  .tm-did-list{ display:flex; flex-wrap:wrap; gap:var(--sp-3); }
+  .tm-did{
+    font-family:var(--mono); font-size:.625rem; letter-spacing:.06em;
+    color:var(--muted); padding:3px 8px; border-radius:5px;
+    background:color-mix(in srgb, var(--text) 6%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .dw-past{ transition:none; }
+    .dw-past:active{ transform:none; }
+  }
 
 </style>
 </head>
@@ -5285,7 +5702,17 @@
   <!-- What the app would have pushed, shown where it can actually be read. It is here and
        not buried in a tab because a reminder you have to go looking for isn't one. -->
   <div class="rem-strip" id="reminderStrip" style="display:none;"></div>
+  <!-- BUILD 142 - THE WALL OF DAYS. Rule 6: don't grid the product, put it where it
+       lives and make that object the navigation. WeDO's product was never tasks - it is
+       the days the two of you showed up for each other. So that is the thing you move
+       through. Today is the first card at full width; every day behind it is a card you
+       swipe back to. The gaps are real days nobody posted, and they stay visible. -->
   <div class="duo-row" id="duoRow"></div>
+  <!-- The history runs under today rather than beside it. One rail holding a full-height
+       hero card and a row of 128px day cards takes its height from the tallest item, so
+       swiping to the history left a hero-sized hole under it. Today is today; the wall is
+       every day behind it. -->
+  <div class="daywall" id="dayWall" aria-label="Earlier days"></div>
   <!-- The thing the whole app is about, and until now it was two numbers on a tab nobody
        opened. Who is ahead this month, how far, and how many days are left to do something
        about it — directly under the two of you, where the question gets asked. -->
@@ -5555,7 +5982,13 @@
       <p style="color:var(--muted);font-size:0.8125rem;margin-top:-4px;">Every 5 tasks earns a spin. Spins expire at the end of the month. You each add three reward ideas a month — the other one decides how rare it is.</p>
       <div class="stat-row" style="margin-bottom:10px;">
         <div class="stat"><div class="num" id="spinsAvailable">0</div><div class="label">Spins ready</div></div>
-        <div class="stat"><div class="num" id="tasksToNextSpin">5</div><div class="label">Tasks to next spin</div></div>
+        <!-- BUILD 143: this was the number 5 counting DOWN to your next spin, which is
+             the goal-gradient law backwards - it starts you at the far end and never shows
+             the ground you covered. It is 0/5 climbing with a five-segment meter under it
+             now: the same fact, read as progress made rather than distance left. -->
+        <div class="stat"><div class="num mono-num" id="tasksToNextSpin">0/5</div>
+          <div class="sp-meter" id="spinMeter" aria-hidden="true"></div>
+          <div class="label">To your next spin</div></div>
       </div>
       <div class="spin-expiry" id="spinExpiryNote" style="display:none;"></div>
       <!-- BUILD 136: a reel, not a pie. See drawWheel() for why. -->
@@ -5779,6 +6212,14 @@
       <div class="look-opt" data-look="b"><span class="look-a">Aa</span>Warm</div>
       <div class="look-opt" data-look="c"><span class="look-a">Aa</span>No serif</div>
     </div>
+    <!-- BUILD 140: per phone, like the look. Nothing here claims to control the ringer -
+         iOS routes Web Audio through it, so the hardware switch already silences all of
+         this and a second switch that pretended to would just be a lie with a toggle. -->
+    <label class="sfx-row" for="sfxToggle">
+      <input type="checkbox" id="sfxToggle">
+      <span><strong>Sound.</strong> A short tone when you finish something, and a warmer
+      one when it was a together task. Your phone&rsquo;s silent switch turns it off too.</span>
+    </label>
     <hr>
     <button class="ghost" id="exportBtn" style="width:100%;">Copy my data</button>
     <textarea id="syncBox" placeholder="Paste their code (or a backup file's contents) here…"></textarea>
@@ -7758,6 +8199,87 @@
     try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){}
   }
 
+  /* ===========================================================================
+     BUILD 140 - SOUND.
+
+     The completion celebration has always been silent on these two phones.
+     navigator.vibrate does not exist in iOS Safari, so buzz() has been a no-op
+     here for its whole life, and what is left is a 1.4s visual sweep on a screen
+     you are already looking at. That is the "very very weak" Moody means.
+
+     Synthesised, not sampled: three oscillators and a gain envelope cost nothing
+     to host, nothing to download, and cannot 404 on a phone with no signal. The
+     context is created on the first tap, because iOS will not start audio outside
+     a user gesture - and a tick on a checkbox IS that gesture, so it works from
+     the first completion rather than needing a warm-up tap somewhere.
+
+     Deliberately quiet. Peak gain 0.05, nothing longer than 650ms, no sound at
+     all on render, sync or arrival - only on something YOU just did. iOS routes
+     Web Audio through the ringer channel, so the hardware silent switch already
+     turns all of it off and no in-app setting has to pretend to do that.
+     =========================================================================== */
+  var SFX_KEY = "us-sfx-v1";
+  function sfxOn(){
+    try{ return localStorage.getItem(SFX_KEY) !== "0"; }catch(e){ return true; }
+  }
+  function setSfx(on){
+    try{ localStorage.setItem(SFX_KEY, on ? "1" : "0"); }catch(e){}
+  }
+  var audioCtx = null;
+  function sfxCtx(){
+    if(audioCtx) return audioCtx;
+    try{
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      audioCtx = new AC();
+    }catch(e){ audioCtx = null; }
+    return audioCtx;
+  }
+  // one note. `when` is seconds from now, so a phrase is written as offsets.
+  function sfxNote(ctx, freq, when, dur, peak, type){
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || "sine";
+    o.frequency.setValueAtTime(freq, ctx.currentTime + when);
+    // a 12ms ramp instead of a hard start: a square-edged gain change is a click,
+    // and a click is the one thing that makes a synthesised sound feel cheap
+    g.gain.setValueAtTime(0.0001, ctx.currentTime + when);
+    g.gain.exponentialRampToValueAtTime(peak, ctx.currentTime + when + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + when + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(ctx.currentTime + when);
+    o.stop(ctx.currentTime + when + dur + 0.02);
+  }
+  function sfx(name){
+    if(!sfxOn()) return;
+    var ctx = sfxCtx();
+    if(!ctx) return;
+    try{
+      if(ctx.state === "suspended") ctx.resume();
+      if(name === "tick"){
+        // your own task: two notes, a fifth apart, done in a tenth of a second
+        sfxNote(ctx, 660, 0,     0.09, 0.040, "sine");
+        sfxNote(ctx, 990, 0.055, 0.11, 0.030, "sine");
+      } else if(name === "together"){
+        // both of you: a major triad that arrives rather than a beep that stops.
+        // Two voices on the last note, an octave apart, so it lands wider than the
+        // two before it - which is the whole point of the sound existing.
+        sfxNote(ctx, 523.25, 0,    0.22, 0.038, "sine");   // C5
+        sfxNote(ctx, 659.25, 0.10, 0.24, 0.036, "sine");   // E5
+        sfxNote(ctx, 783.99, 0.20, 0.42, 0.040, "sine");   // G5
+        sfxNote(ctx, 392.00, 0.20, 0.52, 0.026, "triangle"); // G4 under it
+      } else if(name === "epic"){
+        sfxNote(ctx, 523.25, 0,    0.20, 0.036, "sine");
+        sfxNote(ctx, 659.25, 0.09, 0.20, 0.034, "sine");
+        sfxNote(ctx, 783.99, 0.18, 0.20, 0.036, "sine");
+        sfxNote(ctx, 1046.5, 0.27, 0.58, 0.044, "sine");
+        sfxNote(ctx, 523.25, 0.27, 0.62, 0.028, "triangle");
+      } else if(name === "spin"){
+        sfxNote(ctx, 880, 0, 0.08, 0.030, "triangle");
+        sfxNote(ctx, 1320, 0.07, 0.10, 0.024, "triangle");
+      }
+    }catch(e){}
+  }
+
   /* The Strava-style wipe. A circle grows out of the point you touched, the tick draws
      itself at full size, a line of text holds for a beat, and the whole thing fades.
      Pointer-events are off throughout, so a mistimed tap goes to the app underneath
@@ -7832,17 +8354,27 @@
     // The buzz is the one part that still happens with motion turned off: it is feedback,
     // not animation, and someone who dislikes movement has not asked to stop being told
     // that the thing they pressed worked.
-    buzz(cfg.buzz);
-    if(motionOff()) return;
-    // Two sweeps at once is just one sweep you cannot read. Crossing off the task that
-    // also tips you over 2,500 points genuinely does fire both, so the second waits its
-    // turn rather than being thrown away - you earned it, you get to see it.
+    /* Two sweeps at once is just one sweep you cannot read. Crossing off the task that
+       also tips you over 2,500 points genuinely does fire both, so the second waits its
+       turn rather than being thrown away - you earned it, you get to see it.
+
+       BUILD 140: this check moved ABOVE the feedback. It used to sit below, so a queued
+       celebration played its sound once on the way into the queue and again when it came
+       out - two ticks for one event, which is exactly how a new sound starts feeling
+       cheap. Nothing is heard until the celebration it belongs to actually runs, which
+       also means a together completion that tips you over a milestone now reads as two
+       phrases in sequence rather than a mush. */
     if(cfg.sweep && Date.now() < celBusyUntil && !opts.__queued){
       var wait = celBusyUntil - Date.now() + 160;
       opts.__queued = true;
       setTimeout(function(){ celebrate(level, opts); }, wait);
       return;
     }
+    buzz(cfg.buzz);
+    // Sound is feedback, not animation: someone who turned motion off has not asked to
+    // stop being told that the thing they pressed worked. So it fires before the return.
+    sfx(level === "together" ? "together" : (level === "epic" ? "epic" : "tick"));
+    if(motionOff()) return;
     try{
       if(cfg.sweep){
         celBusyUntil = Date.now() + 1450;
@@ -7923,12 +8455,21 @@
   });
 
   // ---------- tabs ----------
+  document.documentElement.setAttribute("data-view",
+    (document.querySelector(".tabs button.active") || {dataset:{}}).dataset.tab || "today");
   document.querySelectorAll(".tabs button").forEach(function(btn){
     btn.addEventListener("click", function(){
       document.querySelectorAll(".tabs button").forEach(function(b){b.classList.remove("active");});
       btn.classList.add("active");
       document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active");});
       document.getElementById("view-"+btn.dataset.tab).classList.add("active");
+      /* BUILD 142b: the hero is a TODAY thing. Today's two rings, the wall of days and
+         the swipe cue were rendering above all six tabs, so opening Tasks put ~500px of
+         Today between you and the first task - on a 844px phone the list began below the
+         fold on the tab whose entire job is the list. The tab is on :root now and the
+         stylesheet folds the hero away everywhere except Today. The score bar stays: it
+         is 90px, it is the stake, and it is true on every tab. */
+      document.documentElement.setAttribute("data-view", btn.dataset.tab);
       // Memories is the one tab that may need the network. Kick the fetch on the way in
       // rather than on load, so a tab nobody opens costs nothing.
       if(btn.dataset.tab === "memories"){ renderMemories(); if(memMonth) loadAlbumMonth(memMonth); }
@@ -8647,7 +9188,9 @@
     link:  icon("link",  15),
     check: icon("check", 15, null, 3),
     cross: icon("x",     15, null, 2.4),
-    more:  icon("more",  15, null, 2.6)
+    more:  icon("more",  15, null, 2.6),
+    // BUILD 141: rotated to point right, where the sheet comes from
+    chev:  icon("chevron", 16, "ic-chev", 2.2)
   };
 
   // Hand-drawn product illustrations. These show instantly and are what you see
@@ -9115,20 +9658,60 @@
     var me = deviceOwner() || state.currentUser;
     var wrap = document.createElement("div");
 
+    /* ===========================================================================
+       BUILD 139 - THE REASON NOTIFICATIONS HAVE NEVER WORKED.
+
+       "Subscribe this phone" was an <a> to https://ntfy.sh/<topic>. That is the
+       topic's WEB PAGE. Opening it in Safari subscribes nothing: the iOS app is a
+       separate application and does not receive topics from a browser. ntfy's own
+       docs put deep linking (ntfy://) under Android only; on iOS the topic has to be
+       typed into the app.
+
+       And the trap is that it LOOKS like it worked. The web page shows the topic
+       live, so "Send me a test" lands on screen a second later, in front of you,
+       while the phone itself stays silent. Every test passed. No notification ever
+       arrived. Eighty builds.
+
+       So the topic is the thing on the screen now, not a link - big, copyable, with
+       the three taps that actually subscribe an iPhone. */
     var step = document.createElement("p");
-    step.style.cssText = "font-size:0.75rem;color:var(--muted);margin-bottom:8px;";
+    step.style.cssText = "font-size:0.75rem;color:var(--muted);margin-bottom:8px;line-height:1.55;";
     step.innerHTML = "<strong>1.</strong> Install <em>ntfy</em> from the App Store. " +
-                     "<strong>2.</strong> Tap Subscribe below on this phone. " +
-                     "<strong>3.</strong> Do the same on the other phone.";
+                     "<strong>2.</strong> Open it, tap <b>+</b>, paste the topic below, tap <b>Subscribe</b>. " +
+                     "<strong>3.</strong> Same on the other phone. " +
+                     "<em>Opening the ntfy website does not subscribe this phone \u2014 it has " +
+                     "to be done inside the app.</em>";
     wrap.appendChild(step);
 
-    var sub = document.createElement("a");
-    sub.href = ntfyLink(me);
-    sub.target = "_blank"; sub.rel = "noopener";
-    sub.className = "ghost";
-    sub.style.cssText = "display:block;width:100%;text-align:center;text-decoration:none;padding:10px;border-radius:12px;";
-    sub.textContent = "Subscribe this phone (" + (personName(me) || "you") + ")";
-    wrap.appendChild(sub);
+    var topicBox = document.createElement("div");
+    topicBox.className = "ntfy-topic";
+    topicBox.innerHTML = '<span class="nt-lbl">' + escapeHtml(personName(me) || "your") +
+      "'s topic</span><span class=\"nt-val\">" + escapeHtml(ntfyTopic(me)) + "</span>";
+    wrap.appendChild(topicBox);
+
+    var copy = document.createElement("button");
+    copy.className = "ghost"; copy.style.cssText = "width:100%;margin-top:6px;";
+    copy.textContent = "Copy the topic";
+    copy.addEventListener("click", function(){
+      var t = ntfyTopic(me);
+      var done = false;
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(t); done = true;
+        }
+      }catch(e){}
+      // A clipboard that refuses is routine on iOS; selecting the text is the fallback
+      // that always works, and it is also the thing he can read out loud.
+      if(!done){
+        try{
+          var r = document.createRange();
+          r.selectNodeContents(topicBox.querySelector(".nt-val"));
+          var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        }catch(e){}
+      }
+      toast(done ? "Copied \u2014 paste it into the ntfy app" : "Select the topic above and copy it");
+    });
+    wrap.appendChild(copy);
 
     var row = document.createElement("div");
     row.className = "row2"; row.style.marginTop = "6px";
@@ -11213,7 +11796,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 138;
+  var BUILD_NUM = 143;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -11562,6 +12145,37 @@
       if(sv != null) sh = sv > 20 ? (sv > 1200 ? sv / 3600 : sv / 60) : sv;
     }
     out.sleepHours = sh != null ? Math.round(sh * 100) / 100 : null;
+
+    /* ===========================================================================
+       BUILD 139 - the app can see the Shortcut's commonest bug, so it should say so.
+
+       In Shortcuts a bare magic variable resolves to the NEAREST PRECEDING action.
+       A shortcut with three "Calculate the Sum" actions and a URL reading
+       ...?message=steps=[Sum]|cal=[Sum]|sleepmin=[Sum] therefore sends the SAME
+       number three times - whatever the last Calculate produced, which is the sleep
+       duration. The fix is a Set Variable after each Calculate, and the app has told
+       him that twice in words. It has never been able to tell him from the data.
+
+       It can: three identical raw values is a signature, not a coincidence. Nobody
+       walks 27,000 steps, burns 27,000 calories and sleeps 27,000 of anything on the
+       same day. Caught here, it reports the cause instead of filing a sleep duration
+       as a step count. */
+    var rawTriple = [kv.steps, (kv.cal != null ? kv.cal : kv.calories),
+                     (kv.sleepmin != null ? kv.sleepmin : kv.sleepsec)];
+    var allSame = rawTriple[0] != null && rawTriple.every(function(v){
+      return v != null && String(v).trim() === String(rawTriple[0]).trim();
+    });
+    if(allSame){
+      return {error:"steps, calories and sleep all arrived as the same number (" +
+                    String(rawTriple[0]).trim() + ")",
+              shortcutBug:"magic-variable"};
+    }
+    // Two of three identical is the same fault, caught one Set Variable short.
+    var pairSame = rawTriple[0] != null && rawTriple[1] != null &&
+                   String(rawTriple[0]).trim() === String(rawTriple[1]).trim();
+    if(pairSame){
+      out.shortcutBug = "magic-variable-pair";
+    }
 
     healthSanity(out, sh != null ? (kv.sleepmin != null || kv.sleepmins != null || kv.sleepminutes != null ? "sleepmin" : null) : null);
 
@@ -12211,6 +12825,21 @@
     /* BUILD 130: a figure the gate threw out is the single most useful thing this panel
        can say, because it names the Shortcut action to go and change. It goes UNDER the
        green tick on purpose - the pipe is working, one number in it is not. */
+    /* BUILD 139: the one Shortcut fault the data can prove. */
+    function shortcutBugLines(o){
+      var bug = (o && (o.shortcutBug || (o.reading && o.reading.shortcutBug))) || null;
+      if(!bug) return "";
+      var s2 = line("\ud83d\udd27",
+        "<b>This is the Shortcut, not the link.</b> In Shortcuts a bare " +
+        "<b>Sum</b> means \u201cthe result of the action just above\u201d \u2014 so three " +
+        "<b>Sum</b>s in one address all read the LAST one, which is the sleep total.");
+      s2 += line("\u2192",
+        "After each <b>Calculate the Sum</b>, add <b>Set Variable</b> \u2014 name them " +
+        "<b>stepcount</b>, <b>calcount</b>, <b>sleepsecs</b>. Then put those three in the " +
+        "address instead of Sum, inserting each from the bar above the keyboard.");
+      return s2;
+    }
+
     function implausibleLines(o, who){
       // called with a parsed reading on the happy path and with the diag record on the
       // failure one, and .implausible rides on whichever of the two is handed over
@@ -12266,6 +12895,7 @@
                         (d.error ? " — " + escapeHtml(d.error) : "") + ".");
       if(d.raw) out += code(d.raw);
       out += implausibleLines(d, nm);
+      out += shortcutBugLines(d);
       out += line("🔧", "The address should end with " +
                         "<b>?message=steps=…|cal=…|sleepsec=…</b>, with the values inserted " +
                         "from the variable bar rather than typed.");
@@ -12932,7 +13562,17 @@
     var meta = document.createElement("div");
     meta.className = "meta";
     var tierLabel = (list.tierLabels && list.tierLabels[t.difficulty]) || t.difficulty;
-    var diffTag = '<span class="diff-tag diff-'+t.difficulty+'">'+escapeHtml(tierLabel)+'</span>';
+    /* BUILD 140: EASY / MEDIUM / HARD were three more runs of mono caps at the same size
+       and weight as everything else in the row, so difficulty, the due date and the owner
+       all read as one undifferentiated line of shouting. Difficulty is a LEVEL - the one
+       thing in this row that is genuinely ordinal - so it gets a shape that is ordinal
+       too. Three rising bars, lit to the level, like signal strength. The word stays for
+       anyone listening rather than looking. */
+    var diffRank = t.difficulty === "hard" ? 3 : (t.difficulty === "medium" ? 2 : 1);
+    var diffTag = '<span class="diff-pips diff-' + escapeHtml(t.difficulty) +
+      '" role="img" aria-label="' + escapeHtml(tierLabel) + '" title="' + escapeHtml(tierLabel) + '">' +
+      [1,2,3].map(function(n){ return '<i' + (n <= diffRank ? ' class="on"' : '') + '></i>'; }).join("") +
+      '</span>';
     var repeatTag = (t.repeat && t.repeat!=="none") ? ' <span class="repeat-tag">' + icon("refresh", 10, "rt-i") + ' '+t.repeat+'</span>' : '';
     var priceTag = "";
     var totalP = taskTotal(t);
@@ -12950,7 +13590,14 @@
     // Build 102: this one escaped the Build 100 pass and it is the most-repeated string in
     // the app - every together task carries it. The emoji was also wrapping onto its own
     // line on a narrow row, which is what made it obvious.
-    var assignText = isTogether ? ("Together " + icon("heart", 12, "bp-i")) : ("For " + personName(t.assignedTo));
+    /* BUILD 140: "FOR MOODY" on every single row, while the filter above says
+       "For Moody", is the row repeating the control. And the coloured bar down the left
+       has said whose it is since 133. So the name appears only when it is actually
+       telling you something: when the list is showing both of you. */
+    var vfNow = viewFilter();
+    var ownerRedundant = !isTogether && vfNow.assignee !== "all" && vfNow.assignee !== "both";
+    var assignText = isTogether ? ("Together " + icon("heart", 12, "bp-i"))
+                   : (ownerRedundant ? "" : ("For " + personName(t.assignedTo)));
     if(t.status==="done"){
       if(isTogether){
         assignText += " · " + verb + " together";
@@ -13003,14 +13650,37 @@
       }));
       actions.appendChild(tray);
 
-      var more = iconBtn(ICON.more, "More actions", function(ev){
+      /* BUILD 141: a chevron, not three dots.
+
+         136 refused this on the grounds that the row opened nothing, so a chevron
+         would promise a screen that never arrived. It arrives now. "Things that act
+         alike look alike" is the rule, and a row that opens a sheet looks like every
+         other row in iOS that opens a sheet. The three dots stay reachable by long
+         press for anyone who learned the tray. */
+      var more = iconBtn(ICON.chev, "Open", function(ev){
         ev.stopPropagation();
-        toggleRowActions(wrap);
+        tmOpen(t, row);
       });
       more.classList.add("act-more");
       actions.appendChild(more);
       attachLongPress(row, function(){ toggleRowActions(wrap); });
     }
+    /* BUILD 141: a tap on the row BODY opens it. Before this the only thing a row did
+       was the tick and a "..." that slid three icons out - the row itself, which is the
+       biggest target on the screen, did nothing at all. The tick and the action buttons
+       stop the event themselves, so they keep their own jobs. */
+    row.addEventListener("click", function(ev){
+      if(ev.target.closest(".check") || ev.target.closest(".task-actions")) return;
+      if(wrap.classList.contains("acts-open")) return;
+      tmOpen(t, row);
+    });
+    row.setAttribute("tabindex", "0");
+    row.addEventListener("keydown", function(ev){
+      if(ev.key === "Enter" || ev.key === " "){
+        if(ev.target !== row) return;
+        ev.preventDefault(); tmOpen(t, row);
+      }
+    });
 
     row.appendChild(check); row.appendChild(info); row.appendChild(actions);
     wrap.appendChild(row);
@@ -15077,9 +15747,30 @@
       }
     }
     countUp("spinsAvailable", p.spinsAvailable || 0);
-    countUp("tasksToNextSpin", 5 - (p.progressToSpin||0));
-    document.getElementById("spinBtn").disabled = !(p.spinsAvailable > 0);
-    document.getElementById("spinBtn").style.opacity = (p.spinsAvailable>0) ? "1":"0.5";
+    var prog = Math.max(0, Math.min(5, p.progressToSpin || 0));
+    var tn = document.getElementById("tasksToNextSpin");
+    if(tn) tn.textContent = prog + "/5";
+    var meter = document.getElementById("spinMeter");
+    if(meter){
+      if(meter.children.length !== 5){
+        meter.innerHTML = "";
+        for(var mi = 0; mi < 5; mi++) meter.appendChild(document.createElement("i"));
+      }
+      for(var mj = 0; mj < 5; mj++){
+        meter.children[mj].className = (mj < prog) ? "on" : "";
+      }
+    }
+    var sb = document.getElementById("spinBtn");
+    sb.disabled = !(p.spinsAvailable > 0);
+    /* BUILD 143: this was style.opacity = .5, which took the white label on the coral
+       gradient down with it and left a washed salmon button with text you could barely
+       read - a disabled control that looked broken rather than unavailable. The
+       disabled state is a real style now (see .primary:disabled) and the label says
+       what is missing instead of inviting a tap that does nothing. */
+    sb.style.opacity = "";
+    sb.textContent = (p.spinsAvailable > 0)
+      ? (p.spinsAvailable > 1 ? "Spin · " + p.spinsAvailable + " ready" : "Spin")
+      : ((5 - prog) + " more " + ((5 - prog) === 1 ? "task" : "tasks") + " for a spin");
   }
 
   // ---------- monthly / power couple view ----------
@@ -16156,9 +16847,13 @@
   }
 
   function reelRowHtml(r){
+    // BUILD 143: name and tier stack. Side by side, the tier took ~90px off the name
+    // and every prize longer than four words was clipped mid-word on a 390px screen.
     return '<span class="rr-e">' + escapeHtml(r.emoji || "\u2726") + '</span>' +
-           '<span class="rr-n">' + escapeHtml(r.name) + '</span>' +
-           '<span class="rr-t">' + escapeHtml(r.tier || "") + '</span>';
+           '<span class="rr-body">' +
+             '<span class="rr-n">' + escapeHtml(r.name) + '</span>' +
+             '<span class="rr-t">' + escapeHtml(r.tier || "") + '</span>' +
+           '</span>';
   }
 
   // Name kept: renderRewards() and the spin handler both call it.
@@ -17623,7 +18318,17 @@
         var sy = syncScore();
         // 0 when you are in step, 1 when you are not. Driven as a custom property so
         // the CSS owns the geometry and this owns the arithmetic.
-        heart.style.setProperty("--duo-split", (1 - sy.score).toFixed(3));
+        var split = (1 - sy.score).toFixed(3);
+        heart.style.setProperty("--duo-split", split);
+        /* BUILD 140: the reading moves up to the ROW. 123 put it in two 17px icons;
+           136 then cut their travel from 26px to 20px to reclaim ring width, which
+           left a signal about the state of a relationship expressed as four pixels
+           nobody could see. The gap between the two faces is the largest thing on
+           this screen and it is already the literal distance between the two of you,
+           so it carries it: tight when you are in step, wide when you are not. The
+           rings grow and shrink with it, which means being in step is also the state
+           where you see the most of each other. */
+        if(row && row.style) row.style.setProperty("--duo-split", split);
         heart.classList.toggle("in-step", sy.score >= 0.82);
         var label = syncWord(sy.score);
         heart.setAttribute("aria-label", label + " \u2014 tap to see what that counts");
@@ -19636,6 +20341,19 @@
   document.getElementById("newQuoteBtn").addEventListener("click", randomQuote);
 
   // ---------- sync export/import ----------
+  (function(){
+    var box = document.getElementById("sfxToggle");
+    if(!box) return;
+    box.checked = sfxOn();
+    box.addEventListener("change", function(){
+      setSfx(box.checked);
+      // play the thing being switched on, from inside the gesture that switched it -
+      // which is also what unlocks audio on iOS, so the first real completion is not
+      // the one that silently fails to make a sound
+      if(box.checked) sfx("tick");
+    });
+  })();
+
   document.getElementById("exportBtn").addEventListener("click", function(){
     state.paired = true;
     save();
@@ -20392,6 +21110,7 @@
     // Cheap, and it catches a crossing that happened on the other phone and arrived by
     // sync — a milestone belongs to the pair, so either phone noticing is enough.
     try{ renderBoardGround(); }catch(e){}
+    try{ renderDayWall(); }catch(e){}
     var freshMs = recordMilestones();
     if(freshMs){
       save();
@@ -21959,7 +22678,11 @@
          cubic-bezier(.22,1,.36,1) is what every other sliding indicator in the
          family uses; ours was (.2,.8,.2,1), close enough to pass and different
          enough that WeDO moved unlike everything beside it. */
-      "  transition:transform 220ms var(--ease-out),width 220ms var(--ease-out),height 220ms var(--ease-out);}",
+      /* BUILD 143: width and height come off the transition list. Animating a layout
+         property forces layout on every frame of every tab change, and the six tabs are
+         equal width anyway - so the animation never had anything to show. What travels
+         is the transform, which is the only thing that ever moved. */
+      "  transition:transform var(--mo-200) var(--ease-out);}",
       ".tabs .w3-ind::after{content:'';position:absolute;left:50%;bottom:4px;width:14px;height:3px;margin-left:-7px;",
       "  border-radius:3px;background:var(--w3-col,var(--jade));}",
       ".tabs.w3-on button{position:relative;z-index:1;}",
@@ -22057,6 +22780,10 @@
         placeInd(); syncAria();
         // Switching INTO Tasks is the first moment its pills have a width worth measuring.
         try{ fadeEdges(); }catch(e){}
+        try{
+          var at = tabs.querySelector("button.active");
+          if(at && at.dataset.tab === "tasks") tmStaggerList();
+        }catch(e){}
       }); });
       tabs.addEventListener("keydown", function(e){
         var bs = tabButtons(), i = bs.indexOf(document.activeElement);
@@ -22333,6 +23060,623 @@
     var cancel = document.getElementById("sheetCancel");
     if(cancel) cancel.addEventListener("click", resetAuto);
     sheet.addEventListener("click", function(e){ if(e.target === sheet) resetAuto(); });
+  })();
+
+
+  /* =====================================================================================
+     BUILD 141 - THE TASK ROW BECOMES THE THING YOU OPENED.
+
+     Builds 133-140 were all subtraction: capsules, nested cards, five accents, a mint
+     box, 13px body. Every one made the list cleaner and not one made it richer, and
+     clean plus nothing is basic. This is the first thing added back.
+
+     Parts Bin P-03, applied to the project its own mapping names. Mechanism kept whole:
+       - a damped spring sampled at 60fps, not an ease curve pretending to be one
+       - a clip-path inset that starts hugging the SOURCE element and widens as p^2.2,
+         so the sheet appears from behind the row rather than as a frame around it
+       - content lines entering on a 45ms stagger after a 140ms hold
+       - focus trapped, Escape closes, focus handed back to the row it came from
+     Surface restyled to WeDO: no photo travels, because a task row has no photo. What
+     travels is the row's own outline.
+     ===================================================================================== */
+  function tmClamp(v, lo, hi){ return v < lo ? lo : (v > hi ? hi : v); }
+
+  // A damped spring from 0 to 1 sampled at 60fps until it settles. P-03's, verbatim:
+  // the numbers are the licensed part and re-deriving them by eye is how a family of
+  // components stops moving like a family.
+  function tmSpring(bounce, stiffness){
+    bounce = bounce == null ? 0.18 : bounce;
+    stiffness = stiffness || 200;
+    var zeta = tmClamp(1 - bounce, 0.15, 1);
+    var c = 2 * zeta * Math.sqrt(stiffness);
+    var x = 0, v = 0, dt = 1 / 240, t = 0, calm = 0, samples = [0];
+    while(t < 3){
+      for(var n = 0; n < 4; n++){ v += (stiffness * (1 - x) - c * v) * dt; x += v * dt; }
+      t += 1 / 60;
+      samples.push(x);
+      calm = (Math.abs(1 - x) < 0.002 && Math.abs(v) < 0.02) ? calm + 1 : 0;
+      if(calm > 3) break;
+    }
+    samples[samples.length - 1] = 1;
+    return {samples: samples, duration: Math.round(t * 1000)};
+  }
+
+  // The inset that shows only `inner` of the box `outer`, both in page coordinates.
+  function tmClip(inner, outer, radius){
+    var top    = Math.max(0, inner.top - outer.top);
+    var left   = Math.max(0, inner.left - outer.left);
+    var right  = Math.max(0, outer.left + outer.width - (inner.left + inner.width));
+    var bottom = Math.max(0, outer.top + outer.height - (inner.top + inner.height));
+    return "inset(" + top.toFixed(1) + "px " + right.toFixed(1) + "px " +
+           bottom.toFixed(1) + "px " + left.toFixed(1) + "px round " + radius.toFixed(1) + "px)";
+  }
+
+  var tmEl = null, tmOpenFor = null, tmReturnTo = null, tmBusy = false;
+
+  function tmBuild(){
+    if(tmEl) return tmEl;
+    tmEl = document.createElement("div");
+    tmEl.className = "tmorph";
+    tmEl.hidden = true;
+    tmEl.innerHTML =
+      '<div class="tm-veil" data-tm="veil"></div>' +
+      '<div class="tm-sheet" role="dialog" aria-modal="true" tabindex="-1" data-tm="sheet">' +
+        '<div class="tm-body">' +
+          '<p class="tm-kicker" data-tm-line data-tm="kicker"></p>' +
+          '<h3 class="tm-title" data-tm-line data-tm="title"></h3>' +
+          '<div class="tm-facts" data-tm-line data-tm="facts"></div>' +
+          '<div class="tm-note" data-tm-line data-tm="note"></div>' +
+          '<div class="tm-actions" data-tm-line data-tm="actions"></div>' +
+        '</div>' +
+        '<button class="tm-close" type="button" data-tm="close" aria-label="Close">' +
+          icon("x", 18) + '</button>' +
+      '</div>';
+    document.body.appendChild(tmEl);
+    tmEl.querySelector('[data-tm="veil"]').addEventListener("click", tmClose);
+    tmEl.querySelector('[data-tm="close"]').addEventListener("click", tmClose);
+    tmEl.addEventListener("keydown", function(ev){
+      if(ev.key === "Escape"){ ev.preventDefault(); tmClose(); return; }
+      if(ev.key !== "Tab") return;
+      // Focus stays inside while it is open. Without this the first Tab lands on the
+      // list behind, which is inert and therefore silently unreachable.
+      var f = [].slice.call(tmEl.querySelectorAll('button:not([disabled]), a[href]'));
+      if(!f.length) return;
+      var i = f.indexOf(document.activeElement);
+      var next = i < 0 ? (ev.shiftKey ? f.length - 1 : 0)
+                       : (i + (ev.shiftKey ? f.length - 1 : 1)) % f.length;
+      ev.preventDefault(); f[next].focus();
+    });
+    return tmEl;
+  }
+
+  function tmFill(t){
+    var list = listById(t.listId) || {};
+    var tierLabel = (list.tierLabels && list.tierLabels[t.difficulty]) || t.difficulty;
+    var rank = t.difficulty === "hard" ? 3 : (t.difficulty === "medium" ? 2 : 1);
+    var who = t.assignedTo === "both" ? "Together" : ("For " + personName(t.assignedTo));
+    tmEl.querySelector('[data-tm="kicker"]').textContent =
+      (list.name || "Task") + "  ·  " + who;
+    tmEl.querySelector('[data-tm="title"]').textContent = t.title || "";
+
+    var facts = [];
+    facts.push('<span class="tm-fact"><span class="tm-fk">Effort</span>' +
+      '<span class="tm-fv"><span class="diff-pips diff-' + escapeHtml(t.difficulty) + '">' +
+      [1,2,3].map(function(n){ return "<i" + (n <= rank ? ' class="on"' : "") + "></i>"; }).join("") +
+      "</span> " + escapeHtml(tierLabel) + "</span></span>");
+    facts.push('<span class="tm-fact"><span class="tm-fk">Worth</span><span class="tm-fv">' +
+      (DIFF_POINTS[t.difficulty] || 0) + " pts</span></span>");
+    if(t.dueDate){
+      var od = isOverdue(t);
+      facts.push('<span class="tm-fact"><span class="tm-fk">Due</span><span class="tm-fv' +
+        (od ? " late" : "") + '">' + escapeHtml(fmtDueDate(t.dueDate)) + "</span></span>");
+    }
+    if(t.repeat && t.repeat !== "none"){
+      facts.push('<span class="tm-fact"><span class="tm-fk">Repeats</span><span class="tm-fv">' +
+        escapeHtml(t.repeat) + "</span></span>");
+    }
+    tmEl.querySelector('[data-tm="facts"]').innerHTML = facts.join("");
+
+    var noteEl = tmEl.querySelector('[data-tm="note"]');
+    var fails = taskFails(t);
+    noteEl.innerHTML = fails.length
+      ? ("Marked as didn’t happen " + fails.length + (fails.length === 1 ? " time." : " times."))
+      : "";
+    noteEl.hidden = !fails.length;
+
+    var acts = tmEl.querySelector('[data-tm="actions"]');
+    acts.innerHTML = "";
+    if(t.status === "open"){
+      var done = document.createElement("button");
+      done.className = "primary tm-done"; done.type = "button";
+      done.textContent = listVerb(t.listId) || "Done";
+      done.addEventListener("click", function(){
+        var o = tmReturnTo ? originOf(tmReturnTo) : null;
+        tmClose(function(){ completeTask(t.id, o); });
+      });
+      acts.appendChild(done);
+    }
+    var edit = document.createElement("button");
+    edit.className = "ghost"; edit.type = "button"; edit.textContent = "Edit";
+    edit.addEventListener("click", function(){
+      tmClose(function(){ openEditIds[t.id] = true; renderAll(); });
+    });
+    acts.appendChild(edit);
+    if(t.status === "open"){
+      var fail = document.createElement("button");
+      fail.className = "ghost tm-fail"; fail.type = "button";
+      fail.textContent = "Didn\u2019t happen";
+      // Two taps, not a hold: a sheet you deliberately opened is already the
+      // confirmation the hold existed to provide on a row you might brush past.
+      fail.addEventListener("click", function(){
+        if(fail.dataset.sure !== "1"){
+          fail.dataset.sure = "1";
+          fail.textContent = "Sure? \u2212" + failPoints(t) + " pts";
+          setTimeout(function(){
+            if(fail.dataset.sure === "1"){ fail.dataset.sure = ""; fail.textContent = "Didn\u2019t happen"; }
+          }, 3200);
+          return;
+        }
+        tmClose(function(){ markTaskFailed(t.id); });
+      });
+      acts.appendChild(fail);
+    }
+    var del = document.createElement("button");
+    del.className = "ghost"; del.type = "button"; del.textContent = "Remove";
+    del.addEventListener("click", function(){ tmClose(function(){ deleteTaskWithUndo(t); }); });
+    acts.appendChild(del);
+  }
+
+  function tmOpen(t, rowEl){
+    if(tmBusy || !rowEl) return;
+    tmBuild();
+    tmEl.classList.remove("is-day");
+    tmEl.querySelector('[data-tm="facts"]').className = "tm-facts";
+    tmEl.querySelector('[data-tm="note"]').className = "tm-note";
+    tmFill(t);
+    tmOpenFor = t.id;
+    tmPresent(rowEl);
+  }
+
+  /* BUILD 142: the opening itself, lifted out of tmOpen so a day card and a task row
+     arrive the same way. Two different openings would be two signature moves, and
+     rule 1 allows one. */
+  function tmPresent(rowEl){
+    tmReturnTo = rowEl;
+    tmEl.hidden = false;
+    tmEl.classList.add("open");
+
+    var from = rowEl.getBoundingClientRect();
+    var sheet = tmEl.querySelector('[data-tm="sheet"]');
+    // Lay it out over the row it came from, clamped inside the viewport, BEFORE
+    // measuring - the morph has to target where the sheet really lands.
+    sheet.style.top = "0px";
+    var h = sheet.offsetHeight;
+    var vh = window.innerHeight || 800;
+    var mid = from.top + from.height / 2;
+    sheet.style.top = tmClamp(mid - h / 2, 16, Math.max(16, vh - h - 16)) + "px";
+    var to = sheet.getBoundingClientRect();
+    var sp = tmSpring(0.18, 200);
+    var still = motionOff();
+
+    tmEl.querySelector('[data-tm="veil"]').style.opacity = "1";
+    if(still){
+      sheet.style.clipPath = "";
+      sheet.focus({preventScroll:true});
+      return;
+    }
+    tmBusy = true;
+    var frames = sp.samples.map(function(p, i){
+      var e = Math.pow(tmClamp(p, 0, 1), 2.2);
+      var box = {
+        left:   from.left   + (to.left   - from.left)   * e,
+        top:    from.top    + (to.top    - from.top)    * e,
+        width:  from.width  + (to.width  - from.width)  * e,
+        height: from.height + (to.height - from.height) * e
+      };
+      return {offset: i / Math.max(1, sp.samples.length - 1),
+              clipPath: tmClip(box, to, 10 + (18 - 10) * e)};
+    });
+    try{
+      sheet.animate(frames, {duration: sp.duration, fill: "backwards"});
+      [].slice.call(tmEl.querySelectorAll("[data-tm-line]")).forEach(function(line, n){
+        if(line.hidden) return;
+        line.animate([{opacity:0, transform:"translateY(9px)"}, {opacity:1, transform:"none"}],
+          {duration:520, delay:140 + n * 45, easing:"cubic-bezier(.2,.8,.2,1)", fill:"backwards"});
+      });
+    }catch(e){}
+    setTimeout(function(){ tmBusy = false; }, sp.duration);
+    sheet.focus({preventScroll:true});
+  }
+
+  function tmClose(then){
+    if(!tmEl || tmEl.hidden) return;
+    var sheet = tmEl.querySelector('[data-tm="sheet"]');
+    var back = tmReturnTo;
+    var finish = function(){
+      tmEl.hidden = true;
+      tmEl.classList.remove("open");
+      tmOpenFor = null; tmReturnTo = null; tmBusy = false;
+      tmEl.classList.remove("is-day");
+      // hand focus back to the row it came out of, not to the top of the document
+      if(back && back.isConnected && back.focus) { try{ back.focus({preventScroll:true}); }catch(e){} }
+      if(typeof then === "function") then();
+    };
+    tmEl.querySelector('[data-tm="veil"]').style.opacity = "0";
+    if(motionOff() || !back || !back.isConnected){ finish(); return; }
+    var to = sheet.getBoundingClientRect();
+    var from = back.getBoundingClientRect();
+    tmBusy = true;
+    try{
+      var a = sheet.animate(
+        [{clipPath: tmClip(to, to, 18)}, {clipPath: tmClip(from, to, 10)}],
+        {duration: 260, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards"});
+      a.finished.then(finish).catch(finish);
+    }catch(e){ finish(); }
+  }
+
+  /* The list plays its entrance when you ARRIVE at it, not on every save. renderTasks
+     runs on every tick of state; replaying a stagger there would make the list twitch
+     each time the other phone synced. */
+  function tmStaggerList(){
+    var box = document.getElementById("openTasks");
+    if(!box || motionOff()) return;
+    box.classList.remove("stagger");
+    void box.offsetWidth;
+    box.classList.add("stagger");
+  }
+
+
+  /* =====================================================================================
+     BUILD 142 - THE WALL OF DAYS.
+
+     Rule 6, finally: "don't grid products; put them where they live and make that object
+     the navigation." Every build so far treated WeDO's product as tasks, and tasks are
+     not the product. Nobody downloads this to manage chores. The product is the days the
+     two of you showed up for each other - two faces, two answers, what got done - and
+     those days have only ever existed as a grid in a tab called Memories.
+
+     They are the navigation now. Today is the first card at full width, and the whole of
+     your history runs back behind it, one swipe per day. A day nobody posted is a gap and
+     stays a gap: a streak you can see is only worth anything if a break is visible too.
+
+     Action sentence: YOU FLIP BACK THROUGH THE DAYS YOU SHOWED UP FOR EACH OTHER.
+
+     The card you tap opens with P-03's morph, the same spring and the same clip-path
+     widening, because a second way of opening something would be a second signature move
+     and rule 1 allows one.
+     ===================================================================================== */
+  /* A FUNCTION, NOT A VAR. This block sits at the end of the IIFE and renderAll()
+     runs during boot, above it - so `var DW_BACK = 60` hoists the NAME and not the
+     value, `i <= undefined` is false, and the wall builds zero cards in silence.
+     Build 134 hit this exact trap with HEALTH_BOUNDS and the note is in the build
+     log; I walked into it again anyway. A function declaration hoists whole. */
+  function dwBack(){ return 60; }   // days of history built at once
+
+  function dwPhoto(dateISO, pid){
+    var slot = ((state.album || {})[dateISO] || {})[pid];
+    return slot ? photoSrc(slot.photo) : null;
+  }
+  function dwDoneOn(dateISO){
+    return (state.tasks || []).filter(function(t){
+      if(t.status !== "done" || !t.completedAt) return false;
+      var d = new Date(t.completedAt);
+      return !isNaN(d) && todayISO(d) === dateISO;
+    });
+  }
+  function dwLabel(dateISO){
+    var d = new Date(dateISO + "T12:00:00");
+    if(isNaN(d)) return dateISO;
+    var y = shiftISO(todayISO(), -1);
+    if(dateISO === y) return "Yesterday";
+    return d.toLocaleDateString(undefined, {weekday:"short", day:"numeric"});
+  }
+
+  function renderDayWall(){
+    var wall = document.getElementById("dayWall");
+    if(!wall) return;
+    // today's card is markup, not generated - everything the hero already does lives in it
+    [].slice.call(wall.querySelectorAll(".dw-past")).forEach(function(n){ n.remove(); });
+
+    var people = (state.people || []).slice(0, 2);
+    if(people.length < 2) return;
+    var a = people[0].id, b = people[1].id;
+    var today = todayISO();
+    var chal = activeChallenge();
+
+    for(var i = 1, back = dwBack(); i <= back; i++){
+      var d = shiftISO(today, -i);
+      var pa = dwPhoto(d, a), pb = dwPhoto(d, b);
+      var done = dwDoneOn(d);
+      // A day with nothing at all in it is not drawn. Thirty blank cards would make the
+      // wall look like the app had been abandoned rather than like a month going by.
+      if(!pa && !pb && !done.length) continue;
+
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "dw-card dw-past" + ((pa && pb) ? " both" : "");
+      card.dataset.date = d;
+      card.setAttribute("aria-label", dwLabel(d) + " — open");
+
+      var pair = document.createElement("div");
+      pair.className = "dw-pair";
+      [[a, pa], [b, pb]].forEach(function(x){
+        var f = document.createElement("span");
+        f.className = "dw-face is-" + x[0] + (x[1] ? "" : " empty");
+        if(x[1]){
+          var im = document.createElement("img");
+          im.src = x[1]; im.alt = ""; im.loading = "lazy"; im.decoding = "async";
+          f.appendChild(im);
+        }
+        pair.appendChild(f);
+      });
+      card.appendChild(pair);
+
+      var lab = document.createElement("span");
+      lab.className = "dw-when";
+      lab.textContent = dwLabel(d);
+      card.appendChild(lab);
+
+      var marks = document.createElement("span");
+      marks.className = "dw-marks";
+      if(done.length) marks.appendChild(dwMark("check", done.length));
+      if(chal && challengeChecked(chal, a, d) && challengeChecked(chal, b, d)){
+        marks.appendChild(dwMark("spark", null));
+      }
+      card.appendChild(marks);
+
+      (function(dd, el){
+        el.addEventListener("click", function(){ tmOpenDay(dd, el); });
+      })(d, card);
+      wall.appendChild(card);
+    }
+  }
+  function dwMark(kind, n){
+    var m = document.createElement("span");
+    m.className = "dw-mark m-" + kind;
+    m.innerHTML = (kind === "check" ? icon("check", 10, null, 3) : icon("heart", 10)) +
+                  (n ? '<i>' + n + "</i>" : "");
+    return m;
+  }
+
+  function tmFillDay(dateISO){
+    var people = (state.people || []).slice(0, 2);
+    var a = people[0].id, b = people[1].id;
+    var done = dwDoneOn(dateISO);
+    var d = new Date(dateISO + "T12:00:00");
+
+    tmEl.querySelector('[data-tm="kicker"]').textContent =
+      isNaN(d) ? dateISO : d.toLocaleDateString(undefined,
+        {weekday:"long", month:"long", day:"numeric"}).toUpperCase();
+    // The title is the day's own record, not the name of the screen it opens in.
+    // "A day on the wall" described the furniture; who showed up is the only fact on
+    // this card that the two photos underneath don't already state out loud.
+    var hasA = !!dwPhoto(dateISO, a), hasB = !!dwPhoto(dateISO, b);
+    var me = deviceOwner() || state.currentUser || a;
+    tmEl.querySelector('[data-tm="title"]').textContent =
+      (hasA && hasB) ? "You both showed up."
+      : (hasA || hasB) ? ((hasA ? a : b) === me ? "You showed up."
+                                                : personName(hasA ? a : b) + " showed up.")
+      : done.length ? (done.length + (done.length === 1 ? " thing done." : " things done."))
+      : "A quiet day.";
+
+    var facts = tmEl.querySelector('[data-tm="facts"]');
+    facts.className = "tm-faces";
+    facts.innerHTML = [a, b].map(function(pid){
+      var src = dwPhoto(dateISO, pid);
+      var note = photoNoteFrom(pid, dateISO);
+      return '<div class="tf-col">' +
+        '<div class="tf-frame is-' + pid + (src ? "" : " empty") + '">' +
+          (src ? '<img src="' + src + '" alt="">' : '<span>no photo</span>') + "</div>" +
+        '<div class="tf-name">' + escapeHtml(personName(pid)) + "</div>" +
+        (note && note.q ? '<div class="tf-q">' + escapeHtml(note.q) + "</div>" : "") +
+        (note && note.body ? '<div class="tf-a">“' + escapeHtml(note.body) + "”</div>" : "") +
+        "</div>";
+    }).join("");
+
+    var noteEl = tmEl.querySelector('[data-tm="note"]');
+    noteEl.innerHTML = done.length
+      ? done.map(function(t){
+          return '<span class="tm-did">' + escapeHtml(t.title) + "</span>";
+        }).join("")
+      : "";
+    noteEl.hidden = !done.length;
+    noteEl.className = "tm-note tm-did-list";
+
+    var acts = tmEl.querySelector('[data-tm="actions"]');
+    acts.innerHTML = "";
+  }
+
+  function tmOpenDay(dateISO, el){
+    if(tmBusy || !el) return;
+    tmBuild();
+    tmFillDay(dateISO);
+    tmEl.classList.add("is-day");
+    tmPresent(el);
+  }
+
+  /* =====================================================================================
+     BUILD 143 - ONE NAVIGATION MECHANISM.
+
+     The tab strip has had a gliding indicator, tablist semantics, a roving tabindex and
+     arrow keys since Build 133. The list switcher directly below it - Stuff, Trips,
+     Experiences, Shopping - had none of them: its active mark was an inset box-shadow
+     that teleported, it had no roles, and the keyboard could not reach past the first
+     one. Two rows of the same thing, eight pixels apart, behaving differently.
+
+     "Things that act alike look alike" is the similarity law, and the fix is not a new
+     component - it is the SAME indicator, the same curve and the same keyboard contract
+     moved down a row. Nothing new to learn, one less thing that moves its own way.
+     ===================================================================================== */
+  (function build143(){
+    var css = document.createElement("style");
+    css.textContent = [
+      /* The pills already scroll horizontally with a mask on the edges, so the bar lives
+         INSIDE the scroller and travels with the content rather than fighting it. */
+      ".list-pills{ position:relative; }",
+      ".pill-ind{",
+      "  position:absolute; left:0; top:0; width:1px; height:2px;",
+      "  border-radius:2px; background:var(--moody,var(--rose)); opacity:0;",
+      "  transform-origin:0 50%; transform:translateX(0) scaleX(0);",
+      "  pointer-events:none; z-index:0;",
+      /* scaleX on a 1px bar, never width. The tab strip could get away with animating
+         width because all six tabs are the same size; these pills are not - STUFF is
+         half of EXPERIENCES - so the bar has to change length as it travels, and doing
+         that with a transform keeps it off the layout path. */
+      "  transition:transform var(--mo-200) var(--ease-out), opacity var(--mo-150) var(--ease-out);",
+      "}",
+      ".list-pills.ind-on .pill-ind{ opacity:1; }",
+      /* the teleporting mark steps aside once the travelling one is live */
+      ".list-pills.ind-on button.active,",
+      ":root[data-skin=\"pe\"] .list-pills.ind-on button.active{ box-shadow:none; }",
+      ".list-pills button{ position:relative; z-index:1; }",
+
+      /* ---- press compresses. Every other tappable surface in this app has done this
+              since Build 141; the two navigation rows were the last that did not. ---- */
+      ".tabs button, .list-pills button{",
+      "  transition:transform var(--mo-100) var(--ease-out), color var(--mo-200) var(--ease-out);",
+      "}",
+      ".tabs button:active, .list-pills button:active{ transform:scale(.96); }",
+      ".list-pills button:focus-visible{ outline:2px solid var(--moody,var(--rose)); outline-offset:2px; border-radius:4px; }",
+
+      /* ---- BUILD 143: the navigation labels were 10.5px.
+              R5 on the pin-up wall is "tight display, SMALL BODY" and small body means
+              16-20px; 10.5px is not small body, it is fine print, and it was on the six
+              words this app navigates by. It is also what forced "Leaderboard" to become
+              "Scores" back in Build 121 - the word was fighting for room that the type
+              size had already given away.
+              Measured at four widths before changing it: "Memories" is the longest label
+              and at 10.5px it took 49px of a 60px column on a 390 screen. There was 11px
+              of headroom sitting unused. Two steps up, each one measured rather than
+              guessed, and the existing <=359px step-down is left alone because at 320 the
+              column is 48px and 10.5px already fills it. ---- */
+      /* The columns are flex:1 1 0 and the label centres itself, so the 2px of side
+         padding bought nothing and cost 4px of content width - which is exactly what
+         "Memories" wrapped by at 12px. Dropping it is the whole fix. */
+      "@media (min-width:360px){ .tabs button, :root[data-skin=\"pe\"] .tabs button{ font-size:.6875rem; padding-left:0; padding-right:0; } }",
+      "@media (min-width:380px){ .tabs button, :root[data-skin=\"pe\"] .tabs button{ font-size:.75rem; } }",
+
+      "@media (prefers-reduced-motion:reduce){",
+      "  .pill-ind{ transition:none; }",
+      "  .tabs button, .list-pills button{ transition:none; }",
+      "  .tabs button:active, .list-pills button:active{ transform:none; }",
+      "}"
+    ].join("\n");
+    document.head.appendChild(css);
+
+    /* ---------- the bar ---------- */
+    function pillHost(){ return document.getElementById("listSwitcher"); }
+    function pillInd(host){
+      var i = host.querySelector(".pill-ind");
+      if(!i){
+        i = document.createElement("span");
+        i.className = "pill-ind";
+        i.setAttribute("aria-hidden", "true");
+        host.insertBefore(i, host.firstChild);
+      }
+      return i;
+    }
+    function placePills(animate){
+      var host = pillHost();
+      if(!host) return;
+      var a = host.querySelector("button.active");
+      /* Measured while the Tasks view is display:none every width is 0. Build 132 lost
+         a whole afternoon to exactly this with the edge fade; the answer then and now is
+         to decline to place rather than to place at zero and call it done. */
+      if(!a || !a.offsetWidth){ host.classList.remove("ind-on"); return; }
+      var ind = pillInd(host);
+      var reduce = false;
+      try{ reduce = matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+      if(!animate || reduce) ind.style.transition = "none";
+      ind.style.top = (a.offsetTop + a.offsetHeight - 2) + "px";
+      ind.style.transform = "translateX(" + a.offsetLeft + "px) scaleX(" + a.offsetWidth + ")";
+      host.classList.add("ind-on");
+      if(!animate || reduce){ void ind.offsetWidth; ind.style.transition = ""; }
+    }
+
+    /* ---------- the keyboard contract, copied from the tab strip on purpose ---------- */
+    function pillButtons(){
+      var host = pillHost();
+      if(!host) return [];
+      /* "+ New" opens a form - it is an action sitting in a row of filters, so it takes
+         its own tab stop and stays out of the arrow-key cycle. Putting it in would mean
+         arrowing through your lists could create one. */
+      return [].slice.call(host.querySelectorAll("button:not(.add-list)"));
+    }
+    function syncPillAria(){
+      pillButtons().forEach(function(b){
+        var on = b.classList.contains("active");
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.setAttribute("tabindex", on ? "0" : "-1");
+      });
+    }
+
+    var host0 = pillHost();
+    if(host0){
+      host0.addEventListener("keydown", function(e){
+        var bs = pillButtons(), i = bs.indexOf(document.activeElement);
+        if(i < 0) return;
+        var n = null;
+        if(e.key === "ArrowRight") n = (i + 1) % bs.length;
+        else if(e.key === "ArrowLeft") n = (i - 1 + bs.length) % bs.length;
+        else if(e.key === "Home") n = 0;
+        else if(e.key === "End") n = bs.length - 1;
+        if(n === null) return;
+        e.preventDefault();
+        bs[n].click();
+        /* The click runs renderAll(), which empties #listSwitcher and builds it again -
+           so the button we just clicked no longer exists and focusing it drops focus to
+           the body. A keyboard user arrowing through their lists lost their place on
+           every press. Re-find the active button after the rebuild and focus THAT.
+           The tab strip never hit this because tabs are markup and are never rebuilt. */
+        requestAnimationFrame(function(){
+          var a = document.querySelector("#listSwitcher button.active");
+          if(a) a.focus();
+        });
+      });
+      host0.addEventListener("scroll", function(){ placePills(false); }, {passive:true});
+      window.addEventListener("resize", function(){ placePills(false); });
+      if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ placePills(false); });
+    }
+
+    /* renderListSwitcher rebuilds the row from scratch on every save, which throws the
+       bar away with it. Wrap rather than edit: the same pattern Build 132 used for the
+       edge fade, so there is still one renderer and one place that knows about pills. */
+    var _rls143 = renderListSwitcher;
+    renderListSwitcher = function(){
+      var r = _rls143.apply(this, arguments);
+      try{ syncPillAria(); placePills(false); }catch(e){}
+      return r;
+    };
+
+    /* A click flips .active inside the original handler; read the result after it. */
+    document.addEventListener("click", function(e){
+      var b = e.target && e.target.closest && e.target.closest("#listSwitcher button");
+      if(!b) return;
+      requestAnimationFrame(function(){ syncPillAria(); placePills(true); });
+    }, true);
+
+    /* Arriving on Tasks is the first moment the pills have a width worth measuring. */
+    var tabsEl = document.querySelector(".tabs");
+    if(tabsEl) tabsEl.addEventListener("click", function(){
+      requestAnimationFrame(function(){ placePills(false); });
+      setTimeout(function(){ placePills(false); }, 240);
+    });
+
+    /* ---------- the views are panels, and now say so ---------- */
+    [].slice.call(document.querySelectorAll(".tabs button[data-tab]")).forEach(function(b){
+      var id = "tab-" + b.dataset.tab;
+      b.id = b.id || id;
+      var v = document.getElementById("view-" + b.dataset.tab);
+      if(!v) return;
+      v.setAttribute("role", "tabpanel");
+      v.setAttribute("aria-labelledby", b.id);
+      /* A panel with no focusable child has to be focusable itself or a screen reader
+         user arrows out of the tab strip into nothing. */
+      if(!v.hasAttribute("tabindex")) v.setAttribute("tabindex", "0");
+    });
+
+    setTimeout(function(){ syncPillAria(); placePills(false); }, 80);
+    setTimeout(function(){ placePills(false); }, 700);
   })();
 
 })();
