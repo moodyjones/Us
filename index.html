@@ -6261,11 +6261,9 @@
          shortcut that was already working. The address is in the shared state, so either
          phone can read the other's. Nothing needs to happen in WeDO on their phone at all. -->
     <button class="ghost" id="healthLinkOtherBtn" style="width:100%;margin-top:6px;">Copy the other phone’s Health link</button>
-    <!-- One shortcut instead of three services. OneSignal needs a registration iOS keeps
-         dropping, ntfy needs its own app to stay subscribed, and Safari's Notify Me needs a
-         tab left open. The Shortcuts app is the one thing on these phones that has never
-         failed, and a notification it raises itself is local — nothing to deliver. -->
-    <button class="ghost" id="bridgeBtn" style="width:100%;margin-top:6px;">Notifications the easy way — set up</button>
+    <!-- BUILD 145: the Shortcuts notification bridge stood here. It was the safest of the
+         three - a local notification has nothing to deliver - but it only fired at set
+         times, and three half-built routes were the actual problem. -->
     <!-- Subscribing is a one-time thing per phone, and the URL is the whole of it — so this
          copies the address and shows the four taps rather than explaining iCalendar. -->
     <button class="ghost" id="calFeedBtn" style="width:100%;margin-top:6px;">Due dates in your Calendar — set up</button>
@@ -6275,7 +6273,39 @@
     <button class="ghost" id="shortcutTailBtn" style="width:100%;margin-top:6px;opacity:.7;">Old Safari shortcut ending (gist + token)</button>
     <div id="syncStatusLabel" style="font-size:0.6875rem;color:var(--muted);margin-top:6px;text-align:center;"></div>
     <hr>
-    <p style="font-size:0.75rem;color:var(--muted);"><strong>Push notifications.</strong> Get notified when your person adds or finishes something — the setup guide (WeDO-Notifications-Setup.md) walks through creating a free OneSignal account. Paste the App ID (safe to share) and REST API key (stays on this phone, same trust level as your GitHub token above) below, then tap Enable on <em>each</em> phone.</p>
+    <!-- BUILD 144: this paragraph told him three times to read WeDO-Notifications-Setup.md.
+         That file has never existed on the live site - it returns 404 - so the instructions
+         the app kept pointing at could not be read, which is the simplest available reason
+         push was never set up in the first place. The steps live IN the app now. A panel
+         cannot 404. -->
+    <p style="font-size:0.75rem;color:var(--muted);"><strong>Push notifications.</strong> Get notified when your person adds or finishes something. This needs a free OneSignal account — the five steps are below. Paste the App ID (safe to share) and REST API key (stays on this phone, same trust level as your GitHub token above), then tap Enable on <em>each</em> phone.</p>
+    <details class="setup-steps">
+      <summary>How to get the two keys (about 5 minutes, once)</summary>
+      <ol>
+        <li>Go to <b>onesignal.com</b> and make a free account.</li>
+        <li>New App/Website → name it <b>WeDO</b> → platform <b>Web</b>.</li>
+        <li>Choose <b>Typical Site</b>. Site URL: <b>https://moodyjones.github.io/Us/</b> —
+            it must match exactly, including the trailing slash. Leave "My site is not fully
+            HTTPS" unticked.</li>
+        <li>Skip the code step: WeDO already ships the SDK and the worker file.</li>
+        <li>Settings → <b>Keys &amp; IDs</b>. Copy the <b>App ID</b> and the
+            <b>REST API Key</b> into the two boxes below, tap <b>Save</b>, then
+            <b>Enable on this phone</b>. Do the same on the other phone.</li>
+      </ol>
+      <p><b>iPhone will not deliver push to a Safari tab.</b> WeDO has to be opened from
+         the Home Screen icon. Permission belongs to that installed copy, not to Safari —
+         each icon is its own small app with its own permission.</p>
+      <p><b>Updating WeDO does not break this.</b> The icon points at an address, so a new
+         version just loads. You never have to re-add it because the app changed.</p>
+      <p>There are only three reasons to delete the icon and add it again: you tapped
+         <b>Don't Allow</b> at some point (iOS will not ask twice for the same installed
+         copy); you added it with <b>Open as Web App</b> turned off, which makes a plain
+         bookmark that push cannot reach; or you added it from an address other than
+         <b>moodyjones.github.io/Us/</b>. Re-adding wipes that copy's WeDO data, so let it
+         sync first.</p>
+      <p>Not working after that? Use <b>Something looks off?</b> at the bottom of this
+         panel — it names the exact step that is failing.</p>
+    </details>
     <input type="text" id="onesignalAppIdInput" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="OneSignal App ID">
     <input type="password" id="onesignalRestKeyInput" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="OneSignal REST API key" style="margin-top:6px;">
     <div class="row2" style="margin-top:6px;">
@@ -6290,12 +6320,7 @@
     <!-- What OneSignal actually said. Until this existed the send was fire-and-forget and
          every refusal looked exactly like a working app with a quiet phone. -->
     <div id="pushDiag" class="push-diag"></div>
-    <hr>
-    <p style="font-size:0.75rem;color:var(--muted);"><strong>Reminders &amp; alerts (ntfy).</strong>
-      Delivers through the free <em>ntfy</em> app instead of the browser, which is why it actually
-      arrives on iPhone. No account, no keys. Set it up once here, then each of you taps
-      Subscribe on your own phone.</p>
-    <div id="ntfyBody"></div>
+    <!-- BUILD 145: the ntfy block stood here. One notification route now. -->
     <hr>
     <p style="font-size:0.75rem;color:var(--muted);"><strong>Something looks off?</strong> Run this on BOTH phones and compare — it checks the build, sync setup, connections, and trip images, and says exactly what's wrong.</p>
     <button class="ghost" id="tourReplayBtn" style="width:100%;margin-bottom:6px;">Replay the welcome tour</button>
@@ -9503,24 +9528,27 @@
   // logs "who did what" for the in-app catch-up feed, and — if configured — fires a
   // real push to the other phone via OneSignal. Never throws: a broken/missing push
   // setup should never stop the actual task/task-add/etc from completing.
-  // ================= NTFY: notifications that actually arrive =================
-  // Web push on iOS has never worked reliably here: it needs the app installed to the Home
-  // Screen, a service worker at exactly the right scope, and a permission grant that iOS
-  // quietly drops. ntfy sidesteps all of it by delivering through its own native app.
+  // ================= BUILD 145: ntfy notifications removed =================
+  // WeDO shipped THREE notification systems - OneSignal push, ntfy, and a Shortcuts
+  // bridge - and none of the three was ever finished end to end. Each needed its own
+  // external setup, each had a dead end, and the settings panel offered all three as
+  // though any of them were ready. Three half-built routes is not three chances of a
+  // notification arriving; it is three ways to not finish setting one up.
   //
-  // Two topics, one each. You publish to your partner's; you subscribe to your own. Nobody
-  // types anything — the app generates them and hands each phone a link that opens the ntfy
-  // app already subscribed.
-  var NTFY_BASE = "https://ntfy.sh/";
-  var NTFY_SCHED_KEY = "us-ntfy-scheduled-v1";
-
-  function ntfyCfg(){ return state.ntfy || null; }
-  function ntfyOn(){ var c = ntfyCfg(); return !!(c && c.on && c.topics && c.topics.p1 && c.topics.p2); }
-  function ntfyTopic(pid){ var c = ntfyCfg(); return (c && c.topics && c.topics[pid]) || ""; }
-  function ntfyLink(pid){ var t = ntfyTopic(pid); return t ? (NTFY_BASE + t) : ""; }
-
-  // 16 random chars from a 32-char alphabet ≈ 80 bits. Guessing one is not a realistic
-  // attack; someone reading it over your shoulder is, which is why the text stays vague.
+  // Moody picked OneSignal: it is the only one that fires the MOMENT the other person
+  // does something, rather than at a polling interval, and the only one where the
+  // notification comes from WeDO rather than from somebody else's app. Everything it
+  // needs is already deployed and correct - SDK, service worker, manifest - so the
+  // whole of what was missing was the instructions, which Build 144 moved into the app.
+  //
+  // What ntfy is still used for, and why it stays: it is the TRANSPORT for Apple Health.
+  // The health Shortcut publishes steps, calories and sleep to an ntfy topic and the app
+  // polls it. That is a data pipe, not a notification, it has no UI, and deleting it
+  // would break the sleep fix that landed one build ago. It lives further down the file
+  // under NTFY_HEALTH_POLL and is untouched.
+  //
+  // ntfyNewTopic is the one function kept from the deleted block - the health topics are
+  // minted with it too.
   function ntfyNewTopic(prefix){
     var abc = "abcdefghijkmnopqrstuvwxyz23456789", out = "";
     var buf = new Uint8Array(16);
@@ -9529,291 +9557,6 @@
       : buf.forEach(function(_, i){ buf[i] = Math.floor(Math.random() * 256); });
     for(var i = 0; i < buf.length; i++) out += abc[buf[i] % abc.length];
     return "wedo-" + prefix + "-" + out;
-  }
-  function ntfyEnsureTopics(){
-    var c = state.ntfy || {on: true, detail: true, remindAt: "21:00", topics: {}};
-    c.topics = c.topics || {};
-    if(!c.topics.p1) c.topics.p1 = ntfyNewTopic("a");
-    if(!c.topics.p2) c.topics.p2 = ntfyNewTopic("b");
-    if(c.on == null) c.on = true;
-    if(c.detail == null) c.detail = true;
-    if(!c.remindAt) c.remindAt = "21:00";
-    state.ntfy = c;
-    save(); scheduleSync();
-    return c;
-  }
-
-  // One POST. Headers carry the title, the tap-through and any delay.
-  function ntfySend(toPid, opts){
-    opts = opts || {};
-    var topic = ntfyTopic(toPid);
-    if(!topic) return Promise.resolve(false);
-    var headers = {"Content-Type": "text/plain"};
-    if(opts.title) headers["X-Title"] = opts.title;
-    if(opts.tags) headers["X-Tags"] = opts.tags;
-    if(opts.click) headers["X-Click"] = opts.click;
-    if(opts.delay) headers["X-Delay"] = opts.delay;   // "tomorrow, 9pm" / "3h" / unix ts
-    return fetch(NTFY_BASE + topic, {method: "POST", headers: headers, body: String(opts.body || "")})
-      .then(function(r){ return r.ok; })
-      .catch(function(){ return false; });
-  }
-
-  // What the notification is allowed to say. With detail off it names nothing at all; with
-  // it on it names the person and the KIND of thing, never the content — no note text, no
-  // task titles. A trophy called "30 days no drinking" is not something to put on a lock
-  // screen, let alone on a channel whose only protection is an unguessable name.
-  function ntfyPhrase(actorPid, text){
-    var c = ntfyCfg();
-    if(!c || !c.detail) return "Something new in WeDO";
-    var who = personName(actorPid) || "Your person";
-    var t = String(text || "").toLowerCase();
-    if(/photo/.test(t))                 return who + " posted today's photo";
-    if(/crossed off|trophy/.test(t))    return who + " crossed something off";
-    if(/note/.test(t))                  return who + " left you a note";
-    if(/challenge|day \d/.test(t))      return who + " marked today";
-    if(/reward|spin/.test(t))           return who + " claimed a reward";
-    if(/quest/.test(t))                 return who + " started a quest";
-    if(/check.?in|code/.test(t))        return who + " checked in";
-    return who + " did something";
-  }
-
-  function ntfyNotifyPartner(actorPid, text){
-    if(!ntfyOn()) return;
-    var to = otherPerson(actorPid);
-    if(!to) return;
-    ntfySend(to, {
-      title: "WeDO",
-      body: ntfyPhrase(actorPid, text),
-      tags: "sparkles",
-      click: location.origin + location.pathname
-    });
-  }
-
-  // ---- evening reminders ----
-  // A web app cannot wake itself up: nothing of ours is running at 9pm. So we hand the
-  // reminder to ntfy in advance and let it hold onto it. ntfy will hold a message for at
-  // most THREE DAYS, so every time either of you opens the app we top the queue back up to
-  // three nights. Stop opening it for three days and the reminders lapse — that limit is
-  // ntfy's, not a choice.
-  function ntfySchedKey(){
-    try{ return JSON.parse(localStorage.getItem(NTFY_SCHED_KEY) || "{}") || {}; }catch(e){ return {}; }
-  }
-  function ntfySchedSave(o){ try{ localStorage.setItem(NTFY_SCHED_KEY, JSON.stringify(o)); }catch(e){} }
-
-  function scheduleEveningReminders(){
-    if(!ntfyOn()) return;
-    var me = deviceOwner() || state.currentUser;
-    if(!me) return;
-    var c = ntfyCfg();
-    var hhmm = (c.remindAt || "21:00").split(":");
-    var hour = parseInt(hhmm[0], 10), min = parseInt(hhmm[1], 10) || 0;
-    var done = ntfySchedKey(), changed = false;
-    // prune anything older than a week so this doesn't grow forever
-    var cutoff = addDaysToISO(todayISO(), -7);
-    for(var k in done){ if(k < cutoff) { delete done[k]; changed = true; } }
-
-    for(var d = 0; d < 3; d++){
-      var day = addDaysToISO(todayISO(), d);
-      if(done[day]) continue;
-      var when = new Date();
-      when.setDate(when.getDate() + d);
-      when.setHours(hour, min, 0, 0);
-      var secs = Math.round((when.getTime() - Date.now()) / 1000);
-      if(secs < 30) continue;                       // tonight's slot has already passed
-      if(secs > 3 * 86400 - 120) continue;          // beyond what ntfy will hold
-      /* eslint-disable no-loop-func */
-      (function(dayISO){
-        ntfySend(me, {
-          title: "WeDO",
-          body: "Evening check \u2014 photo, today's mark, anything left on the list.",
-          tags: "crescent_moon",
-          click: location.origin + location.pathname,
-          delay: String(Math.round(when.getTime() / 1000))
-        }).then(function(ok){
-          if(!ok) return;
-          var cur = ntfySchedKey(); cur[dayISO] = 1; ntfySchedSave(cur);
-        });
-      })(day);
-      done[day] = 1; changed = true;
-    }
-    if(changed) ntfySchedSave(done);
-  }
-
-  function renderNtfy(){
-    var box = document.getElementById("ntfyBody");
-    if(!box) return;
-    var c = ntfyCfg();
-    box.innerHTML = "";
-    if(!c || !c.topics || !c.topics.p1 || !c.topics.p2){
-      var mk = document.createElement("button");
-      mk.className = "ghost"; mk.style.width = "100%";
-      mk.textContent = "Create our notification channel";
-      mk.addEventListener("click", function(){
-        ntfyEnsureTopics(); renderNtfy();
-        toast("Channel created \u2014 now tap Subscribe on each phone");
-      });
-      box.appendChild(mk);
-      return;
-    }
-    var me = deviceOwner() || state.currentUser;
-    var wrap = document.createElement("div");
-
-    /* ===========================================================================
-       BUILD 139 - THE REASON NOTIFICATIONS HAVE NEVER WORKED.
-
-       "Subscribe this phone" was an <a> to https://ntfy.sh/<topic>. That is the
-       topic's WEB PAGE. Opening it in Safari subscribes nothing: the iOS app is a
-       separate application and does not receive topics from a browser. ntfy's own
-       docs put deep linking (ntfy://) under Android only; on iOS the topic has to be
-       typed into the app.
-
-       And the trap is that it LOOKS like it worked. The web page shows the topic
-       live, so "Send me a test" lands on screen a second later, in front of you,
-       while the phone itself stays silent. Every test passed. No notification ever
-       arrived. Eighty builds.
-
-       So the topic is the thing on the screen now, not a link - big, copyable, with
-       the three taps that actually subscribe an iPhone. */
-    var step = document.createElement("p");
-    step.style.cssText = "font-size:0.75rem;color:var(--muted);margin-bottom:8px;line-height:1.55;";
-    step.innerHTML = "<strong>1.</strong> Install <em>ntfy</em> from the App Store. " +
-                     "<strong>2.</strong> Open it, tap <b>+</b>, paste the topic below, tap <b>Subscribe</b>. " +
-                     "<strong>3.</strong> Same on the other phone. " +
-                     "<em>Opening the ntfy website does not subscribe this phone \u2014 it has " +
-                     "to be done inside the app.</em>";
-    wrap.appendChild(step);
-
-    var topicBox = document.createElement("div");
-    topicBox.className = "ntfy-topic";
-    topicBox.innerHTML = '<span class="nt-lbl">' + escapeHtml(personName(me) || "your") +
-      "'s topic</span><span class=\"nt-val\">" + escapeHtml(ntfyTopic(me)) + "</span>";
-    wrap.appendChild(topicBox);
-
-    var copy = document.createElement("button");
-    copy.className = "ghost"; copy.style.cssText = "width:100%;margin-top:6px;";
-    copy.textContent = "Copy the topic";
-    copy.addEventListener("click", function(){
-      var t = ntfyTopic(me);
-      var done = false;
-      try{
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(t); done = true;
-        }
-      }catch(e){}
-      // A clipboard that refuses is routine on iOS; selecting the text is the fallback
-      // that always works, and it is also the thing he can read out loud.
-      if(!done){
-        try{
-          var r = document.createRange();
-          r.selectNodeContents(topicBox.querySelector(".nt-val"));
-          var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-        }catch(e){}
-      }
-      toast(done ? "Copied \u2014 paste it into the ntfy app" : "Select the topic above and copy it");
-    });
-    wrap.appendChild(copy);
-
-    var row = document.createElement("div");
-    row.className = "row2"; row.style.marginTop = "6px";
-    var test = document.createElement("button");
-    test.className = "ghost"; test.textContent = "Send me a test";
-    test.addEventListener("click", function(){
-      test.disabled = true; test.textContent = "Sending\u2026";
-      ntfySend(me, {title:"WeDO", body:"Test \u2014 if you can read this, reminders will arrive.",
-                    tags:"white_check_mark", click: location.origin + location.pathname})
-        .then(function(ok){
-          test.disabled = false; test.textContent = "Send me a test";
-          toast(ok ? "Sent \u2014 check your phone" : "Couldn't reach ntfy \u2014 try again");
-        });
-    });
-    row.appendChild(test);
-    var toggle = document.createElement("button");
-    toggle.className = "ghost";
-    toggle.textContent = c.on ? "Turn off" : "Turn on";
-    toggle.addEventListener("click", function(){
-      c.on = !c.on; c.mtime = Date.now(); save(); scheduleSync(); renderNtfy();
-      if(c.on) scheduleEveningReminders();
-      toast(c.on ? "Reminders on" : "Reminders off");
-    });
-    row.appendChild(toggle);
-    wrap.appendChild(row);
-
-    var timeRow = document.createElement("div");
-    timeRow.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.75rem;color:var(--muted);";
-    timeRow.innerHTML = "<span>Evening nudge at</span>";
-    var t = document.createElement("input");
-    t.type = "time"; t.value = c.remindAt || "21:00";
-    t.style.cssText = "flex:1;min-width:0;";
-    t.addEventListener("change", function(){
-      c.remindAt = t.value || "21:00"; c.mtime = Date.now();
-      try{ localStorage.removeItem(NTFY_SCHED_KEY); }catch(e){}   // re-queue at the new time
-      save(); scheduleSync(); scheduleEveningReminders();
-      toast("Nudge moved to " + c.remindAt);
-    });
-    timeRow.appendChild(t);
-    wrap.appendChild(timeRow);
-
-    var det = document.createElement("label");
-    det.style.cssText = "display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:0.75rem;color:var(--muted);line-height:1.5;";
-    var cb = document.createElement("input");
-    cb.type = "checkbox"; cb.checked = !!c.detail;
-    cb.style.cssText = "width:auto;margin-top:2px;flex:0 0 auto;";
-    cb.addEventListener("change", function(){
-      c.detail = cb.checked; c.mtime = Date.now(); save(); scheduleSync();
-    });
-    det.appendChild(cb);
-    var dl = document.createElement("span");
-    dl.innerHTML = "Say who did what (\u201cRae posted today\u2019s photo\u201d). " +
-      "Off means every alert just says \u201cSomething new in WeDO\u201d. " +
-      "Either way the actual content \u2014 notes, titles \u2014 never leaves the app.";
-    det.appendChild(dl);
-    wrap.appendChild(det);
-
-    var warn = document.createElement("p");
-    warn.style.cssText = "font-size:0.6875rem;color:var(--muted);margin-top:10px;line-height:1.55;";
-    warn.innerHTML = "Your channel name is your password \u2014 anyone who has it can read " +
-      "these alerts and send you fake ones. Don\u2019t paste it anywhere public.";
-    wrap.appendChild(warn);
-
-    // Safari's own page-watcher, pointed at something it can actually see change
-    var sep = document.createElement("hr");
-    sep.style.cssText = "border:none;border-top:1px solid var(--border);margin:14px 0 12px;";
-    wrap.appendChild(sep);
-    var sfHead = document.createElement("p");
-    sfHead.style.cssText = "font-size:0.75rem;color:var(--muted);line-height:1.55;";
-    sfHead.innerHTML = "<strong>Safari \u201cNotify Me\u201d (optional, iOS 27+).</strong> " +
-      "A second, slower net. Safari can\u2019t watch WeDO itself \u2014 the page never changes, " +
-      "everything is drawn after it loads \u2014 but it can watch this summary, which updates " +
-      "whenever either of you does something. Checks about once an hour.";
-    wrap.appendChild(sfHead);
-    var sfBtn = document.createElement("button");
-    sfBtn.className = "ghost";
-    sfBtn.style.cssText = "width:100%;margin-top:8px;";
-    sfBtn.textContent = "Copy the page for Safari to watch";
-    sfBtn.addEventListener("click", function(){
-      var gid = gistIdFromUrl();
-      if(!gid){ toast("Save your Gist link first"); return; }
-      var url = "https://gist.githubusercontent.com/raw/" + gid + "/" + STATUS_FILE;
-      // iOS only allows clipboard writes inside a user gesture, so write synchronously here
-      var ok = false;
-      try{
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(url); ok = true;
-        }
-      }catch(e){}
-      toast(ok ? "Link copied" : "Couldn\u2019t reach the clipboard");
-      showModal("\uD83D\uDC41\uFE0F", "Let Safari watch it",
-        url + "\n\nTo set it up:\n\n" +
-        "1. Open it in Safari.\n" +
-        "2. Tap the \u24D8 or \u201cAa\u201d button in the address bar.\n" +
-        "3. Choose \u201cNotify Me When Page Updates\u201d.\n\n" +
-        "Safari will then nudge you when something new lands \u2014 roughly hourly, and not " +
-        "at all while your phone is idle or in Low Power Mode. It's a backstop, not a " +
-        "replacement: only the ntfy reminders above can arrive at a time you choose.");
-    });
-    wrap.appendChild(sfBtn);
-
-    box.appendChild(wrap);
   }
 
   // ── The line Safari watches ──────────────────────────────────
@@ -9992,8 +9735,9 @@
       // keep the shared gist small — same lesson learned from the photo-storage issue
       state.activityLog.sort(function(a,b){ return b.at - a.at; });
       if(state.activityLog.length > 150) state.activityLog.length = 150;
+      // BUILD 145: ntfyNotifyPartner(owner, text) sat here too. OneSignal is the one
+      // route now, and sendPushToPartner is it.
       sendPushToPartner(owner, text);
-      ntfyNotifyPartner(owner, text);
     }catch(e){}
   }
   // Every push this phone has tried to send, and what OneSignal said back. Never synced.
@@ -11487,24 +11231,26 @@
         read:function(){ A.place = (document.getElementById("obPlace").value || "").trim(); return null; }
       },
       {
+        /* BUILD 145: this step walked you through ntfy - create a channel, install
+           their app, subscribe, send a test. Push needs a free account made on a
+           computer, which is not an onboarding tap, so this step stops pretending it
+           can be finished here and says where it lives instead. */
         id:"notify", ico:"phone", title:"Notifications",
-        text:"The part everyone asks about. Three minutes, no account.",
+        text:"One route, set up once, and it needs two minutes on a laptop.",
         skip:true,
         body:function(){
           return '<div class="ob-note" style="margin-top:0;">' +
-            '<b>1.</b> Tap <b>Create the channel</b> below.<br>' +
-            '<b>2.</b> Install <b>ntfy</b> from the App Store.<br>' +
-            '<b>3.</b> Tap <b>Subscribe</b>, then <b>Send a test</b> \u2014 it should arrive on this phone.' +
-            '</div>' +
-            '<div class="row2" style="margin-top:12px;">' +
-              '<button type="button" class="ghost" id="obMakeCh">Create the channel</button>' +
-              '<button type="button" class="ghost" id="obSub">Subscribe</button>' +
-            '</div>' +
-            '<button type="button" class="ghost" id="obTest" style="width:100%;margin-top:8px;">Send a test</button>' +
-            '<div class="ob-test" id="obTestOut"></div>';
+            'WeDO can tell you the moment ' + escapeHtml(personName(otherPerson(ob.answers.me || deviceOwner() || "p1")) || "your person") +
+            ' ticks something off. It needs a free <b>OneSignal</b> account \u2014 two keys, ' +
+            'pasted once on each phone.<br><br>' +
+            'The five steps are in <b>Settings \u2192 Push notifications</b>, under the two key boxes. ' +
+            'Everything else is already built into the app.<br><br>' +
+            '<b>One iPhone rule:</b> push is never delivered to a Safari tab. Open WeDO from the ' +
+            'Home Screen icon \u2014 and if you added that icon before setting this up, remove it and add it again.' +
+            '</div>';
         },
         read:function(){ return null; },
-        wire:function(){ obWireNotify(); }
+        wire:function(){}
       },
       {
         id:"counted", ico:"eye", title:"What WeDO counts",
@@ -11581,36 +11327,7 @@
     document.getElementById("obBg").classList.add("show");
   }
 
-  function obWireNotify(){
-    var out = document.getElementById("obTestOut");
-    var say = function(cls, txt){ out.className = "ob-test " + (cls || ""); out.textContent = txt; };
-    document.getElementById("obMakeCh").addEventListener("click", function(){
-      ntfyEnsureTopics(); save(); scheduleSync();
-      say("", "Channel created. Now install ntfy and tap Subscribe.");
-    });
-    document.getElementById("obSub").addEventListener("click", function(){
-      var me = ob.answers.me || deviceOwner() || "p1";
-      var link = (typeof ntfyLink === "function") ? ntfyLink(me) : "";
-      if(!link){ say("bad", "Create the channel first."); return; }
-      say("", "Opening ntfy\u2026 subscribe, then come back and send a test.");
-      try{ window.open(link, "_blank"); }catch(e){}
-    });
-    document.getElementById("obTest").addEventListener("click", function(){
-      var me = ob.answers.me || deviceOwner() || "p1";
-      if(typeof ntfyTopic !== "function" || !ntfyTopic(me)){ say("bad", "Create the channel first."); return; }
-      say("", "Sending\u2026");
-      ntfySend(me, {title:"WeDO", body:"That worked. This is what a nudge looks like.", tags:"wave"})
-        .then(function(ok){
-          ob.answers.notifyOk = !!ok;
-          /* "Sent" is not "arrived" - ntfy accepting the POST only proves the channel
-             exists. The phone still has to be subscribed, so the wording asks them to
-             look rather than claiming success on their behalf. */
-          say(ok ? "ok" : "bad", ok
-            ? "Sent. Did it arrive? If not, you are not subscribed yet \u2014 tap Subscribe."
-            : "That did not send. Check the channel was created.");
-        });
-    });
-  }
+  /* BUILD 145: obWireNotify() wired the onboarding ntfy buttons. Gone with them. */
 
   /* Everything the couple typed, turned into the app they will actually open.
      Written to their OWN slots: names and the trip are shared and only the first
@@ -11796,7 +11513,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 143;
+  var BUILD_NUM = 146;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -11919,8 +11636,8 @@
     if(calOn && !dueN && !((state.milestones || []).length)){
       add(false, "Calendar is empty", "nothing has a due date, so the feed has nothing to show");
     }
-    add(bridgeMarkedDone(), "Notification shortcut",
-      bridgeMarkedDone() ? "you marked this built" : "not built (or not ticked off) on this phone");
+    /* BUILD 145: this reported a checkbox you ticked yourself about a Shortcut the app
+       could not see. The push lines below report things that are actually measurable. */
     var ruleFrom = photoRuleFrom();
     add(!!ruleFrom, "Daily photo rule",
       ruleFrom ? ("−" + PHOTO_MISS_POINTS + "/day, counting from " + ruleFrom) : "not started");
@@ -12132,7 +11849,30 @@
     }
     if(sh == null && (kv.sleepmin != null || kv.sleepmins != null || kv.sleepminutes != null)){
       sv = healthNum(kv.sleepmin != null ? kv.sleepmin : (kv.sleepmins != null ? kv.sleepmins : kv.sleepminutes));
-      if(sv != null) sh = sv / 60;
+      /* BUILD 144 - WHY SLEEP NEVER WORKED, AND IT WAS NOT THE APP.
+
+         Build 130 found the cause: Shortcuts' "Calculate the Sum of Duration" returns
+         SECONDS, and the URL said sleepmin=. 130 fixed the URL THE APP GENERATES. It
+         could not fix the Shortcut already sitting on his phone, which has gone on
+         sending seconds under sleepmin= ever since, and nobody told him to go back and
+         change that one key.
+
+         So every morning: 27000 arrives, 27000/60 = 450 hours, the sanity gate from 130
+         correctly refuses to file 450 hours of sleep, and the card shows nothing at all.
+         Steps and calories were fine the whole time, which is exactly what he reported -
+         "steps still wrong, sleep is still not showing".
+
+         18 hours is the sanity ceiling, so 1080 is the largest number that can honestly
+         be minutes of sleep. Anything above it under this key is seconds. Accept it,
+         convert it, and SAY so - a silent rescue would leave the Shortcut mislabelled
+         forever and the next person to read the URL just as confused. (Postel's law:
+         accept what arrives, then clean it up, then tell them.) */
+      if(sv != null && sv > 1080){
+        sh = sv / 3600;
+        out.unitFixed = "sleepmin";
+      } else if(sv != null){
+        sh = sv / 60;
+      }
     }
     if(sh == null && (kv.sleeph != null || kv.sleephours != null)){
       sv = healthNum(kv.sleeph != null ? kv.sleeph : kv.sleephours);
@@ -12853,6 +12593,17 @@
                    ", which is not possible, so it was thrown away rather than stored \u2014 " +
                    escapeHtml(b.hint));
       });
+      /* BUILD 144: the app now rescues seconds sent under sleepmin= rather than binning
+         them, so sleep works again on an unmodified Shortcut. It still says what it did:
+         a silent fix leaves the Shortcut mislabelled forever. */
+      var uf = (o && (o.unitFixed || (o.reading && o.reading.unitFixed))) || null;
+      if(uf === "sleepmin"){
+        s2 += line("\ud83d\udd27",
+          "Your sleep is arriving as <b>seconds</b> under the <b>sleepmin=</b> key \u2014 " +
+          "Shortcuts' <b>Calculate the Sum of Duration</b> returns seconds. The app spotted " +
+          "it and converted it, so the number above is right. To fix it at the source, " +
+          "open the Shortcut and change that one key in the address to <b>sleepsec=</b>.");
+      }
       return s2;
     }
 
@@ -16716,15 +16467,13 @@
     if(state.spinWarnMonth[me] === mk) return;
     state.spinWarnMonth[me] = mk;
     save(); scheduleSync();
-    if(typeof ntfySend === "function" && typeof ntfyOn === "function" && ntfyOn()){
-      ntfySend(me, {
-        title: "WeDO",
-        body: unspent + (unspent === 1 ? " spin expires" : " spins expire") +
-              (left === 0 ? " tonight" : " in " + left + (left === 1 ? " day" : " days")) + " — use them",
-        tags: "hourglass_flowing_sand",
-        click: location.origin + location.pathname
-      });
-    }
+    /* BUILD 145: this nudge went out over ntfy. It is a push now, through the one
+       route, so it arrives as WeDO rather than as somebody else's app. */
+    try{
+      sendPushToSelf(me, "WeDO",
+        unspent + (unspent === 1 ? " spin expires" : " spins expire") +
+        (left === 0 ? " tonight" : " in " + left + (left === 1 ? " day" : " days")) + " \u2014 use them");
+    }catch(e){}
   }
 
   function renderSpinExpiry(){
@@ -20796,7 +20545,9 @@
 
   // Every open tops the reminder queue back up. This is the whole mechanism — there is no
   // server, so the app can only ever schedule ahead while someone has it open.
-  setTimeout(function(){ try{ scheduleEveningReminders(); }catch(e){} }, 2500);
+  /* BUILD 145: scheduleEveningReminders() queued ntfy pushes for 9pm and went with the
+     ntfy block. OneSignal has its own scheduled send (see the 8pm reminder below), so
+     there is nothing to re-create here. */
 
   // Reading is the common case; adding is the rare one. The button steps aside while the
   // page is moving and comes back when it stops.
@@ -21127,7 +20878,6 @@
     renderTabBadges();
     renderUsBar();
     renderPhotoMissNotice();
-    renderNtfy();
     renderChallenge();
     renderSetupCard();
     renderBackupNag();
@@ -21715,28 +21465,9 @@
   }
   renderCalendarRow();
 
-  document.getElementById("bridgeBtn").addEventListener("click", function(){
-    var me = deviceOwner() || state.currentUser;
-    var gid = gistIdFromUrl();
-    if(!me){ toast("Pick whose phone this is first"); return; }
-    if(!gid){ toast("Save your Gist link on this phone first"); return; }
-    var url = "https://gist.githubusercontent.com/raw/" + gid + "/" + STATUS_FILE;
-    var ok = false;
-    try{
-      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); ok = true; }
-    }catch(e){}
-    showModal("\uD83D\uDD14", ok ? "Copied \u2014 paste it into the shortcut" : "Your status address",
-      "No push service, no extra app. One shortcut on this phone reads the shared file and " +
-      "raises the notification itself.\n\n" + url + "\n\n" +
-      "In Shortcuts, new shortcut:\n" +
-      "1. Get Contents of URL \u2014 paste the address above\n" +
-      "2. Match Text \u2014 pattern:  " + me + "unread=(\\d+)\n" +
-      "3. If  Match 1  is not  0  then:\n" +
-      "4.   Match Text on the contents again \u2014 pattern:  " + me + "line=(.+)\n" +
-      "5.   Show Notification with that match\n\n" +
-      "Then add it as a Time of Day automation at 8am, 1pm and 8pm, with Run Immediately ON " +
-      "and Notify When Run OFF. Opening WeDO marks things read, so it goes quiet by itself.");
-  });
+  /* BUILD 145: the Shortcuts bridge handler stood here - it copied a gist status
+     address and printed five Shortcuts actions. Removed with the rest of that route. */
+
 
   document.getElementById("healthLinkOtherBtn").addEventListener("click", function(){
     var me = deviceOwner() || state.currentUser;
@@ -21974,6 +21705,30 @@
   if(state.onesignalAppId && deviceOwner()){
     withOneSignal(async function(OneSignal){
       await OneSignal.login(deviceOwner());
+
+      /* BUILD 146 - THE "IT WORKED ONCE AND THEN STOPPED" FAILURE.
+
+         iOS drops a Home Screen web app's push subscription on its own, without telling
+         the app and without touching the permission - OneSignal's own iOS guidance is to
+         resync on EVERY launch for exactly this reason. Until now WeDO only re-tagged the
+         identity here, so a dropped subscription stayed dropped until somebody happened to
+         open Settings and tap Enable again.
+
+         Opting back in while permission is already "granted" does NOT prompt - the prompt
+         IS the permission, and that is untouched. So permission is checked first and the
+         call is skipped in every other state, which also means a phone that said no is
+         never nagged. */
+      try{
+        var perm = (typeof Notification !== "undefined") ? Notification.permission : "default";
+        if(perm === "granted"){
+          var sub = null, opted = null;
+          try{ sub = OneSignal.User.PushSubscription.id; }catch(e){}
+          try{ opted = OneSignal.User.PushSubscription.optedIn; }catch(e){}
+          if(!sub || opted === false){
+            await OneSignal.User.PushSubscription.optIn();
+          }
+        }
+      }catch(e){}
     });
   }
 
@@ -22372,35 +22127,32 @@
         }
       },
       {
-        /* Same problem, same fix. This one cannot be detected — the Shortcut lives on the
-           phone and the app has no way to see it — so it is honest about that and lets
-           you tick it off yourself rather than pretending to know. */
-        key: "bridge",
-        label: "Notification shortcut",
-        done: !!bridgeMarkedDone(),
+        /* BUILD 145: the Shortcuts bridge item stood here. Push is the one route now, and
+           unlike the bridge it can actually be DETECTED - so this item reports the real
+           state of the subscription instead of asking you to tick a box you might be
+           wrong about. */
+        key: "push",
+        label: "Push notifications",
+        done: !!(pushConfigured() && state.onesignalAppId),
         optional: true,
         skippable: true,
-        why: "Optional. A shortcut on your phone checks WeDO every so often and raises a " +
-             "local notification when the other one has done something. No push service " +
-             "involved, which is why it works when nothing else has.",
+        why: "Get told the moment your person ticks something off. Needs a free OneSignal " +
+             "account once \u2014 the five steps are in Settings, under the two key boxes.",
         build: function(body){
+          var p = document.createElement("div");
+          p.innerHTML = "iPhone will not deliver push to a Safari tab, so WeDO has to be " +
+            "opened from the <strong>Home Screen icon</strong>. If you added that icon " +
+            "before setting this up, remove it and add it again.";
+          body.appendChild(p);
           var go = document.createElement("button");
           go.className = "ghost";
-          go.style.cssText = "width:100%;";
-          go.textContent = "Show me how";
+          go.style.cssText = "width:100%;margin-top:8px;";
+          go.textContent = "Open the setup steps";
           go.addEventListener("click", function(){
-            var b = document.getElementById("bridgeBtn");
-            if(b) b.click();
+            var d = document.querySelector(".setup-steps");
+            if(d){ d.open = true; d.scrollIntoView({block:"center"}); }
           });
-          var did = document.createElement("button");
-          did.className = "ghost";
-          did.style.cssText = "width:100%;margin-top:7px;";
-          did.textContent = "I've built it \u2014 tick this off";
-          did.addEventListener("click", function(){
-            try{ localStorage.setItem("us-bridge-done-v1", "1"); }catch(e){}
-            renderSetupCard();
-          });
-          body.appendChild(go); body.appendChild(did);
+          body.appendChild(go);
         }
       },
       {
@@ -22421,12 +22173,6 @@
       }
     ];
   }
-  /* The Shortcut bridge lives on the phone, not in the app, so there is nothing to detect.
-     Rather than guess, this records that you said you'd built it. */
-  function bridgeMarkedDone(){
-    try{ return localStorage.getItem("us-bridge-done-v1") === "1"; }catch(e){ return false; }
-  }
-
   function renderSetupCard(){
     var card = document.getElementById("setupCard");
     if(!card) return false;
@@ -23554,6 +23300,27 @@
          "Memories" wrapped by at 12px. Dropping it is the whole fix. */
       "@media (min-width:360px){ .tabs button, :root[data-skin=\"pe\"] .tabs button{ font-size:.6875rem; padding-left:0; padding-right:0; } }",
       "@media (min-width:380px){ .tabs button, :root[data-skin=\"pe\"] .tabs button{ font-size:.75rem; } }",
+
+      /* ---- BUILD 144: the setup steps that used to live in a file that 404s ---- */
+      ".setup-steps{ margin:var(--sp-5) 0 var(--sp-6); font-size:.75rem; color:var(--muted); }",
+      ".setup-steps > summary{",
+      "  cursor:pointer; list-style:none; padding:var(--sp-6) 0;",
+      "  font-family:var(--mono); font-size:.6875rem; letter-spacing:.07em; text-transform:uppercase;",
+      "  color:var(--text); display:flex; align-items:center; gap:var(--sp-5);",
+      "}",
+      ".setup-steps > summary::-webkit-details-marker{ display:none; }",
+      ".setup-steps > summary::before{",
+      "  content:\"\"; width:7px; height:7px; flex:none;",
+      "  border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor;",
+      "  transform:rotate(-45deg); margin-left:2px;",
+      "  transition:transform var(--mo-200) var(--ease-out);",
+      "}",
+      ".setup-steps[open] > summary::before{ transform:rotate(45deg); }",
+      ".setup-steps ol{ margin:0 0 var(--sp-6); padding-left:1.35em; display:grid; gap:var(--sp-5); }",
+      ".setup-steps li{ line-height:1.5; }",
+      ".setup-steps p{ margin:0 0 var(--sp-5); line-height:1.5; }",
+      ".setup-steps b{ color:var(--text); font-weight:600; }",
+      "@media (prefers-reduced-motion:reduce){ .setup-steps > summary::before{ transition:none; } }",
 
       "@media (prefers-reduced-motion:reduce){",
       "  .pill-ind{ transition:none; }",
