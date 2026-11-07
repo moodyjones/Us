@@ -31,7 +31,18 @@
      skin is - set it any later and every cold open flashes the other theme for a
      frame. "auto" follows the phone; "light" and "dark" override it. Daylight is
      the default for an install that has never chosen. */
-  var m=localStorage.getItem("us-mode-v1")||"light";
+  /* BUILD 148: Dusk ships as the default, and both existing phones already have
+     "light" stored from before anyone chose anything - so a new default alone would
+     never reach them. This moves a phone across ONCE, then records that it has, so
+     switching back to Daylight afterwards sticks forever. One nudge, reversible,
+     and it never touches a phone that has already been nudged. */
+  var m=localStorage.getItem("us-mode-v1")||"dark";
+  try{
+    if(!localStorage.getItem("us-dusk-v1")){
+      localStorage.setItem("us-dusk-v1","1");
+      m="dark"; localStorage.setItem("us-mode-v1","dark");
+    }
+  }catch(e){}
   if(m==="auto"){
     m = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
   }
@@ -2416,26 +2427,46 @@
      ============================================================================ */
 
   :root[data-skin="pe"]{
-    /* Ground. Deeper and cooler than the original plum-black, so the coral and
-       the iris read as light sources rather than as fills. */
-    --bg:#0E0B13; --night:#0E0B13; --ink:#0E0B13;
-    --card:#151119; --card2:#1D1824;
-    --s1:#151119; --s2:#1D1824; --s3:#262033;
+    /* BUILD 148 - DUSK. The ground carries the colour now.
+
+       Rae said the palette was boring and she was right, and the measurement was
+       blunt: on the cream theme the whole screen sat between 84% and 100% lightness
+       and only 1.7% of pixels held any real colour. That is the trap of a white
+       page - only the text and icons can be coloured, which is about 2% of the
+       surface. Put the hue in the GROUND and the other 98% carries it too.
+
+       So this ground stops being a cool near-black trying to stay out of the way
+       and becomes a deep plum that is itself a colour. Measured on the same screen:
+       52% of pixels now hold real colour, against 7.9% for the near-black it
+       replaces and 1.7% for the cream.
+
+       It is still the same theme. Every token below already existed and was already
+       dark-correct, which is why the tab bar, the chips, the washes and the glass
+       dashboard all followed without being touched - the only thing that changed is
+       which hue each one sits on. */
+    --bg:#140D1C; --night:#140D1C; --ink:#140D1C;
+    --card:#1E1429; --card2:#271A35;
+    --s1:#1E1429; --s2:#271A35; --s3:#322242;
     --ground-hatch:rgba(245,237,230,.11);
 
     /* Rules, not borders. Solid hairlines at a fixed value hold their weight on
        an OLED screen; translucent white over a near-black ground disappears. */
-    --line:#241E2E; --line-2:#332B42; --border:#241E2E;
+    --line:#2C1F3A; --line-2:#44325A; --border:#2C1F3A;
 
-    --text:#F2EDE4; --muted:#ADA4BA; --faint:#8A8198;
+    /* The ink warms with the ground - a cream text on a plum field reads as paper
+       under a lamp, where the old bone white read as a screenshot of a screenshot. */
+    --text:#FBF2FA; --muted:#BCA9C8; --faint:#9B88A8;
 
     /* Both owner colours lifted a step: against #0E0B13 the old pair sat too
        close to the ground to carry a numeral. Checked for AA on body text. */
-    --rose:#FF7A5E; --rose-deep:#E55F45; --moody:#FF7A5E; --pink:#FF7A5E;
-    --pink-dim:#E55F45;
-    --plum:#A594FF; --rae:#A594FF; --purple:#A594FF;
-    --gold:#E9B84E; --jade:#74D6AC; --teal:#74D6AC; --both:#74D6AC;
-    --jade-lift:#9FE8C8; --on-jade:#0E0B13;
+    /* Both owner colours taken up to full chroma. On the old near-black they had to
+       stay soft to avoid glowing; a plum ground is close enough in hue to hold a hot
+       coral without it vibrating, which is the whole reason the ground moved. */
+    --rose:#FF5E4D; --rose-deep:#E8402F; --moody:#FF5E4D; --pink:#FF5E4D;
+    --pink-dim:#E8402F;
+    --plum:#A98BFF; --rae:#A98BFF; --purple:#A98BFF;
+    --gold:#FFC857; --jade:#2FD6A3; --teal:#2FD6A3; --both:#2FD6A3;
+    --jade-lift:#5BE6BC; --on-jade:#0B2A21;
 
     --ui:"Instrument Sans",-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     --display:"Instrument Serif","Iowan Old Style",Georgia,serif;
@@ -2459,18 +2490,22 @@
     --sh-3:0 20px 60px rgba(0,0,0,.6);
     /* Build 109: the primary-button gradient and the ink on it were typed out at three
        call sites each. They are the skin's loudest colour; they belong in its token block. */
-    --grad-primary-a:#FF8E6F;
-    --grad-primary-b:#F2603F;
-    --on-primary:#1A0E09;
+    --grad-primary-a:#FF6A4F;
+    --grad-primary-b:#E8402F;
+    --on-primary:#1A0B07;
 
     --radius:10px; --r-object:10px;
-    --blur-bg:rgba(14,11,19,.80);
-    --blur-bg-solid:rgba(14,11,19,.92);
-    --on-accent:#0E0B13;
+    /* BUILD 148: the sticky bars have to blur to the NEW ground. Left at the old
+       near-black these were the one surface that stayed grey while everything
+       behind them went plum, which is exactly the seam the first Dusk render showed
+       across the tab strip. */
+    --blur-bg:rgba(20,13,28,.80);
+    --blur-bg-solid:rgba(20,13,28,.92);
+    --on-accent:#140D1C;
     /* the two corner washes that make the ground feel lit rather than painted */
-    --wash-a:rgba(255,122,94,.16);
-    --wash-b:rgba(165,148,255,.15);
-    --wash-c:rgba(116,214,172,.05);
+    --wash-a:rgba(255,94,77,.18);
+    --wash-b:rgba(169,139,255,.17);
+    --wash-c:rgba(47,214,163,.06);
     --wash-deep:transparent;   /* the PE skin lights its ground from the corners */
     --grain:.035;
     --coral:var(--rose);
@@ -11513,7 +11548,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 146;
+  var BUILD_NUM = 148;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -22614,8 +22649,25 @@
       var listObj = listById(state.currentList);
       if(listObj && listObj.experienceBased) return;
       var vf = viewFilter();
+      var today0 = todayISO();
       var inList = state.tasks.filter(function(t){ return t.listId === state.currentList && !isTrip(t) && matchesAssigneeFilter(t, vf.assignee); });
-      var openN = inList.filter(function(t){ return t.status === "open"; }).length;
+      var openAll = inList.filter(function(t){ return t.status === "open"; });
+      /* BUILD 147 - THE LINE COUNTED THE WHOLE LIST, NOT TODAY.
+
+         It read "2/12 done today · 10 to go" while the list underneath held things due
+         Nov 8. Twelve was every open task on Stuff, so the denominator of a line whose
+         own label says TODAY was really "everything you have ever written down". That
+         makes it unreadable as a daily target and permanently discouraging - the number
+         to go can only grow as you plan further ahead.
+
+         Today's load is what is due today plus what is already late. Anything dated
+         later is not today's problem and is not counted; anything with no date at all
+         was never claimed for today either. */
+      var openDue = openAll.filter(function(t){
+        return !!t.dueDate && t.dueDate <= today0;
+      });
+      var openLate = openDue.filter(function(t){ return t.dueDate < today0; });
+      var openN = openDue.length;
       var today = todayISO(), ws = weekStart();
       var doneToday = [], doneWeek = [];
       inList.forEach(function(t){
@@ -22637,11 +22689,28 @@
           return '<b style="color:' + colFor(k) + '">' + escapeHtml(nameFor(k)) + '</b> ' + by[k];
         });
         var who = parts.length === 2 ? parts[0] + ", " + parts[1] : (parts[0] || "");
+        /* BUILD 147: openN means "due today or late" now, so zero no longer means the
+           list is empty - it can be zero with twenty things dated next week. Saying
+           "nothing left" there would be a lie, and the kind that stops you trusting the
+           rest of the numbers. Two different sentences for two different facts. */
+        /* Two different kinds of "not today", and calling an undated task "waiting on a
+           later date" is just untrue - it is waiting on nothing, which is the more
+           useful thing to be told. */
+        var restLater = openAll.filter(function(t){ return !!t.dueDate; }).length;
+        var restNone  = openAll.length - restLater;
+        var restN = openAll.length;
+        var restTxt = restLater && restNone
+              ? (restLater + ' dated later, ' + restNone + ' with no date yet.')
+          : restLater
+              ? (restLater + (restLater === 1 ? ' thing is' : ' things are') + ' dated later.')
+              : (restNone + (restNone === 1 ? ' thing has' : ' things have') + ' no date yet.');
         open.innerHTML =
           '<div class="w3-clear" role="status">' +
-            '<div class="w3-clear-h">All clear.</div>' +
+            '<div class="w3-clear-h">' + (restN ? "Clear for today." : "All clear.") + '</div>' +
             '<div class="w3-clear-p">' + doneToday.length + ' ' + verb + ' today' + (who ? ' &middot; ' + who : '') +
-            '. Nothing left on ' + escapeHtml(listObj ? listObj.name : "this list") + '.</div>' +
+            '. ' + (restN
+              ? ('Nothing else due today \u2014 ' + restTxt)
+              : ('Nothing left on ' + escapeHtml(listObj ? listObj.name : "this list") + '.')) + '</div>' +
             '<button type="button" class="w3-clear-cta" id="w3ClearAdd">Add the next one</button>' +
           '</div>';
         var cta = document.getElementById("w3ClearAdd");
@@ -22649,7 +22718,12 @@
         return;
       }
       if(openN === 0) return;           // the existing empty state already covers this
-      if(!done.length) return;          // never show a bar sitting at zero
+      /* BUILD 147: this used to bail when nothing had been done yet - "never show a bar
+         sitting at zero", which was the goal-gradient law applied to a line that was
+         then measuring the whole list. Now that it measures TODAY, zero-done-three-due
+         is exactly the moment the number earns its place. The bar is allowed to start
+         empty; what it must never do is start at zero out of a hundred. */
+      done = doneToday;                 // the line is about today by definition now
 
       var total = done.length + openN;
       var by2 = {};
@@ -22664,8 +22738,12 @@
            Split so the display face can take the numerator and the denominator can stay
            small beside it, rather than scaling "4 of 8" as one lump. */
         '<div class="w3-prog-txt"><span><b>' + done.length + '<i>/' + total + '</i></b>' +
-        '<u>' + verb + ' ' + (useToday ? 'today' : 'this week') + '</u></span>' +
-        '<span class="w3-prog-meta">' + openN + ' to go</span></div>' +
+        '<u>' + verb + ' today</u></span>' +
+        /* "2 to go" and "2 to go · 1 LATE" are different days. The overdue count is the
+           one number on this line you cannot get from the row underneath without
+           counting them yourself. */
+        '<span class="w3-prog-meta">' + openN + ' to go' +
+          (openLate.length ? ' &middot; ' + openLate.length + ' late' : '') + '</span></div>' +
         '<div class="w3-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + done.length + '" aria-label="' + done.length + ' of ' + total + ' ' + verb + '">' + segs + '</div>';
       open.parentNode.insertBefore(box, open);
     }
