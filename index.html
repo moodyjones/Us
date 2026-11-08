@@ -171,7 +171,7 @@
     padding-bottom:60px;
   }
   header{
-    padding:28px 20px 16px;
+    padding:32px 24px 16px;
     text-align:center;
   }
   .brand-row{
@@ -191,13 +191,16 @@
      never clamps - they all grow together with the text-size slider, which is the
      exact thing the ceiling exists to stop. 42px is where the lockup stops fitting
      a 320px screen. */
-  :root header h1.brand-row{ gap:10px; font-size:clamp(1.5rem, 1.875rem, 42px); }
+  :root header h1.brand-row{ gap:12px; font-size:clamp(1.5rem, 1.875rem, 42px); }
   .brand-mark{
     /* em, not px. Build 109 made 1rem follow iOS's text-size slider, so a fixed
        mark beside a rem-sized word drifts apart the moment anybody touches it -
        and at the largest setting the "O" was clipped off the right edge. Both
        halves now scale from the same number. */
-    height:1.53em; width:2.07em; flex:none; display:block; overflow:visible;
+    /* BUILD 152: the heart's viewBox is 110x96, not the W's 160x104, so the box
+       follows it - a mark left in the old box renders squashed. Height is the
+       anchor because it is what sits beside the wordmark's cap height. */
+    height:1.53em; width:1.75em; flex:none; display:block; overflow:visible;
   }
   /* The wordmark is set in the app's own face so it moves with the look switch,
      and sized off the mark rather than the root so the two always agree. */
@@ -208,6 +211,28 @@
   }
   .brand-word .bw-red{ color:var(--moody); }
   .brand-word .bw-purple{ color:var(--rae); }
+
+  /* ---- BUILD 155: the wordmark ----
+     Sized in em off the h1 so it rides the iOS text-size slider with everything
+     else, exactly as the old mark did. The three fills are tokens, not literals,
+     so the lockup takes the theme - and takes the Daylight hues correctly now
+     that 154 stopped the two people swapping colours between palettes. */
+  .wm{ display:block; }
+  .wm .wm-i{ fill:var(--text); }
+  /* BUILD 160: back to fills. 159's arcs were strokes because they had to stay
+     open; this mark is a filled counter again, and leaving stroke rules behind
+     would paint nothing. */
+  .wm .wm-a{ fill:var(--moody); }
+  .wm .wm-b{ fill:var(--rae); }
+  /* BUILD 168: the check takes the win colour. It is the one element in the mark
+     that is neither of them - a thing getting done belongs to both - so it carries
+     the colour the app uses for exactly that everywhere else. */
+  .wm .wm-c{ fill:var(--both); }
+  .wm-h{ height:1.32em; width:auto; flex:none; }
+  /* the stacked lockup is 1.00:1, so height drives both dimensions. 2.6em against
+     the h1's 1.875rem lands it at ~78px square - read against the 40px the
+     horizontal one occupied, that is more presence from the same ink. */
+  .wm-head{ height:2.6em; width:auto; flex:none; }
 
   /* ---- the readout under the lockup ---- */
   .hud{
@@ -222,7 +247,7 @@
     display:flex; align-items:center; justify-content:center;
     flex-wrap:wrap; gap:0 var(--sp-7);
   }
-  .hud-cell{ display:inline-flex; align-items:baseline; gap:5px; white-space:nowrap; }
+  .hud-cell{ display:inline-flex; align-items:baseline; gap:4px; white-space:nowrap; }
   .hud-cell b{ font-weight:700; color:var(--muted); }
   .hud .ver-line{ margin:0; padding:0; min-height:0; border:0; background:none; }
   header h1{
@@ -245,7 +270,7 @@
   header .sub .m-purple{color:var(--purple);}
   /* ---- live daily horoscope block ---- */
   .hero-scope{
-    margin-top:14px;padding-top:13px;border-top:1px solid var(--border);
+    margin-top:14px;padding-top:12px;border-top:1px solid var(--border);
   }
   #heroScope{
     font-size:0.8438rem;line-height:1.6;color:var(--text);
@@ -254,7 +279,7 @@
     display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
   }
   .scope-more{
-    background:none;border:none;padding:5px 0 0;cursor:pointer;
+    background:none;border:none;padding:4px 0 0;cursor:pointer;
     color:var(--purple);font-size:0.75rem;font-weight:700;
   }
   .scope-src{font-size:0.6562rem;color:var(--faint);margin-top:6px;}
@@ -280,7 +305,7 @@
     background:linear-gradient(168deg,rgba(167,139,250,.13),var(--card) 62%);
   }
   .nudge-blk{padding:2px 0;}
-  .nudge-blk.divided{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+  .nudge-blk.divided{margin-top:14px;padding-top:16px;border-top:1px solid var(--border);}
   .nudge-title{font-size:0.9688rem;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;}
   .nudge-sub{font-size:0.7812rem;color:var(--muted);line-height:1.5;margin-bottom:9px;}
   .nudge-btn{width:100%;margin-top:2px;}
@@ -292,14 +317,14 @@
     border:1px solid rgba(232,181,75,.42);
     background:linear-gradient(170deg,rgba(232,181,75,.12),var(--card) 62%);
   }
-  .setup-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .setup-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
   .setup-title{font-size:0.9688rem;font-weight:700;letter-spacing:-.01em;}
   .setup-count{font-size:0.6875rem;font-weight:700;color:var(--gold);white-space:nowrap;}
   .setup-lead{font-size:0.7812rem;color:var(--muted);line-height:1.5;margin:5px 0 12px;}
-  .setup-item{border-top:1px solid var(--border);padding:11px 0 3px;}
+  .setup-item{border-top:1px solid var(--border);padding:12px 0 4px;}
   .setup-item:first-child{border-top:none;padding-top:2px;}
   .setup-row{
-    display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;
+    display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;
     padding:4px 0;font:inherit;color:inherit;text-align:left;cursor:pointer;
   }
   .setup-dot{
@@ -311,23 +336,23 @@
   .setup-label{flex:1 1 auto;min-width:0;font-size:0.8438rem;font-weight:600;}
   .setup-tag{
     flex:0 0 auto;font-size:var(--eyebrow);font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-    color:var(--faint);background:var(--card2);padding:3px 7px;border-radius:999px;
+    color:var(--faint);background:var(--card2);padding:4px 8px;border-radius:999px;
   }
   .setup-chev{flex:0 0 auto;color:var(--faint);font-size:0.75rem;transition:transform .16s ease;}
   .setup-item.open .setup-chev{transform:rotate(90deg);}
-  .setup-body{display:none;padding:4px 0 8px 28px;font-size:0.7812rem;color:var(--muted);line-height:1.55;}
+  .setup-body{display:none;padding:4px 0 8px 32px;font-size:0.7812rem;color:var(--muted);line-height:1.55;}
   .setup-item.open .setup-body{display:block;}
   .setup-body input{margin-top:7px;}
   .setup-body .row2{margin-top:7px;}
   .setup-body .setup-status{font-size:0.7188rem;margin-top:7px;min-height:14px;}
   .setup-body code{
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.7188rem;
-    background:var(--card2);border-radius:5px;padding:1px 5px;color:var(--pink-dim);
+    background:var(--card2);border-radius:5px;padding:1px 4px;color:var(--pink-dim);
     word-break:break-all;
   }
   .setup-body .mini{
     background:none;border:none;color:var(--faint);font-size:0.7188rem;text-decoration:underline;
-    padding:6px 0 0;cursor:pointer;
+    padding:8px 0 0;cursor:pointer;
   }
   .setup-done-note{
     font-size:0.75rem;color:var(--jade);font-weight:600;margin-top:10px;
@@ -335,7 +360,7 @@
 
   /* ---- daily photo duo (top of app: you two, today) ---- */
   .duo-row{
-    display:flex;align-items:flex-start;justify-content:center;gap:14px;
+    display:flex;align-items:flex-start;justify-content:center;gap:16px;
     max-width:420px;margin:4px auto 2px;padding:0 16px;
   }
   .duo-slot{
@@ -395,7 +420,7 @@
   .duo-row.together{max-width:460px;flex-direction:column;align-items:center;gap:0;}
   .duo-slot.us{width:100%;}
   .duo-slot.us .duo-frame{
-    max-width:none;width:100%;aspect-ratio:4/3;border-radius:20px;
+    max-width:none;width:100%;aspect-ratio:4/3;border-radius:24px;
     border-color:var(--gold);
   }
   .duo-slot.us .duo-name{font-size:0.875rem;margin-top:9px;}
@@ -405,7 +430,7 @@
   }
   /* the days already captured, oldest first — the trip builds itself as you go */
   .trip-strip{
-    display:flex;gap:7px;overflow-x:auto;max-width:100%;padding:11px 2px 3px;
+    display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:12px 2px 4px;
     -webkit-overflow-scrolling:touch;scrollbar-width:none;
   }
   .trip-strip::-webkit-scrollbar{display:none;}
@@ -414,7 +439,7 @@
     -webkit-tap-highlight-color:transparent;
   }
   .trip-thumb .tt-img{
-    width:52px;height:52px;border-radius:11px;overflow:hidden;border:2px solid var(--border);
+    width:52px;height:52px;border-radius:12px;overflow:hidden;border:2px solid var(--border);
     background:var(--card2);display:flex;align-items:center;justify-content:center;
   }
   .trip-thumb .tt-img img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -433,7 +458,7 @@
     /* above the album sheet — full-size view is opened FROM the album, so it must cover it */
     position:fixed;inset:0;z-index:var(--z-album);background:rgba(20,16,26,.92);
     display:none;flex-direction:column;align-items:center;justify-content:center;
-    padding:24px;gap:14px;
+    padding:24px;gap:16px;
   }
   .photo-view-bg.show{display:flex;}
   .photo-view-bg img{
@@ -443,14 +468,14 @@
   .photo-view-cap{color:var(--overlay-ink);font-size:0.8438rem;text-align:center;font-weight:600;}
   .photo-view-close{
     background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
-    color:#fff;font-size:0.875rem;font-weight:600;padding:10px 26px;border-radius:999px;
+    color:#fff;font-size:0.875rem;font-weight:600;padding:12px 24px;border-radius:999px;
     cursor:pointer;
   }
   /* ---- trip album ---- */
   .trip-album-chip{
     position:absolute;left:12px;top:12px;z-index:3;
     background:rgba(20,16,26,.62);border:1px solid rgba(255,255,255,.34);
-    color:#fff;font-size:0.75rem;font-weight:700;padding:6px 12px;border-radius:999px;
+    color:#fff;font-size:0.75rem;font-weight:700;padding:8px 12px;border-radius:999px;
     cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
   }
   .album-bg{
@@ -460,7 +485,7 @@
   .album-bg.show{display:flex;}
   .album-sheet{
     width:100%;max-width:520px;max-height:86vh;background:var(--card);
-    border-radius:22px 22px 0 0;padding:18px 16px 26px;overflow-y:auto;
+    border-radius:24px 24px 0 0;padding:16px 16px 24px;overflow-y:auto;
   }
   .album-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
   .album-title{font-size:1.25rem;font-weight:800;letter-spacing:-.01em;}
@@ -478,11 +503,11 @@
   .td-err{font-size:0.7812rem;color:var(--pink);margin-top:9px;min-height:1em;}
   .album-recap{
     background:linear-gradient(160deg,var(--card2),var(--card));
-    border:1px solid rgba(201,138,31,.4);border-radius:14px;
-    padding:13px 15px;margin-bottom:14px;font-size:0.875rem;line-height:1.55;color:var(--text);
+    border:1px solid rgba(201,138,31,.4);border-radius:18px;
+    padding:12px 16px;margin-bottom:14px;font-size:0.875rem;line-height:1.55;color:var(--text);
   }
   .album-recap b{color:var(--gold);}
-  .album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  .album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   .album-cell{
     border:none;background:none;padding:0;cursor:pointer;position:relative;
     -webkit-tap-highlight-color:transparent;
@@ -494,7 +519,7 @@
   .album-lab{font-size:0.6562rem;font-weight:700;color:var(--muted);margin-top:4px;}
   .photo-view-remove{
     margin-top:10px;background:none;border:1px solid rgba(255,140,160,.5);
-    color:#ff9bb0;font-size:0.8125rem;font-weight:600;padding:8px 20px;border-radius:999px;
+    color:#ff9bb0;font-size:0.8125rem;font-weight:600;padding:8px 24px;border-radius:999px;
     cursor:pointer;
   }
   .switcher{
@@ -506,8 +531,8 @@
   }
   .switcher button{
     flex:1;
-    padding:10px 12px;
-    border-radius:14px;
+    padding:12px 12px;
+    border-radius:18px;
     border:1px solid var(--border);
     background:var(--card);
     color:var(--muted);
@@ -522,10 +547,10 @@
     border-color:transparent;
   }
   .list-pills{
-    display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;
+    display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;
   }
   .list-pills button{
-    padding:7px 13px;border-radius:999px;border:1px solid var(--border);
+    padding:8px 12px;border-radius:999px;border:1px solid var(--border);
     background:var(--card2);color:var(--muted);font-size:0.75rem;font-weight:600;cursor:pointer;
     white-space:nowrap;
   }
@@ -548,7 +573,7 @@
   }
   .tabs button{
     white-space:nowrap;
-    padding:8px 14px;
+    padding:8px 16px;
     border-radius:999px;
     border:1px solid var(--border);
     background:transparent;
@@ -580,7 +605,7 @@
   }
   .stat-row{
     display:flex;
-    gap:10px;
+    gap:12px;
     /* Build 109: three stats across is right at the default text size and impossible at
        the accessibility ones - the labels are uppercase with tracking, so they do not
        hyphenate or break. Wrapping lets them stack instead of spilling off the card.
@@ -591,7 +616,7 @@
     flex:1 1 92px;
     min-width:0;
     background:var(--card2);
-    border-radius:14px;
+    border-radius:18px;
     padding:12px;
     text-align:center;
   }
@@ -614,11 +639,11 @@
   .badge-pill{
     display:flex;
     align-items:center;
-    gap:6px;
+    gap:8px;
     background:var(--card2);
     border:1px solid var(--border);
     border-radius:999px;
-    padding:6px 12px;
+    padding:8px 12px;
     font-size:0.75rem;
   }
   .badge-pill.at-risk{
@@ -628,9 +653,9 @@
   .task{
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:12px;
     padding:12px;
-    border-radius:14px;
+    border-radius:18px;
     background:var(--card2);
     margin-bottom:8px;
   }
@@ -647,7 +672,7 @@
   .task .meta{font-size:0.6875rem;color:var(--muted);margin-top:2px;}
   .task .meta .meta-for{ white-space:nowrap; margin-left:10px; display:inline-block; }
   .diff-tag{
-    font-size:0.625rem;padding:2px 7px;border-radius:999px;font-weight:700;
+    font-size:0.625rem;padding:2px 8px;border-radius:999px;font-weight:700;
     text-transform:uppercase;
   }
   .diff-easy{background:var(--chip-easy-bg);color:var(--chip-easy-fg);}
@@ -663,8 +688,8 @@
     background:var(--card2);
     border:1px solid var(--border);
     color:var(--text);
-    border-radius:10px;
-    padding:10px 12px;
+    border-radius:12px;
+    padding:12px 12px;
     font-size:max(16px, 0.875rem);
     font-family:inherit;
   }
@@ -682,18 +707,18 @@
   .row2 > *{flex:1;}
   button.primary{
     background:linear-gradient(135deg,var(--pink),var(--purple));
-    color:white;border:none;border-radius:12px;padding:11px;
+    color:white;border:none;border-radius:12px;padding:12px;
     font-weight:700;font-size:0.875rem;cursor:pointer;
   }
   button.ghost{
     background:transparent;border:1px solid var(--border);color:var(--muted);
-    border-radius:12px;padding:10px;font-size:0.8125rem;cursor:pointer;
+    border-radius:12px;padding:12px;font-size:0.8125rem;cursor:pointer;
   }
   .empty{
-    text-align:center;color:var(--muted);font-size:0.8125rem;padding:20px 0;
+    text-align:center;color:var(--muted);font-size:0.8125rem;padding:24px 0;
   }
   .lb-row{
-    display:flex;align-items:center;gap:10px;padding:10px 0;
+    display:flex;align-items:center;gap:12px;padding:12px 0;
     border-bottom:1px solid var(--border);
   }
   .lb-row:last-child{border-bottom:none;}
@@ -716,12 +741,12 @@
   }
   .reward-item{
     display:flex;align-items:center;justify-content:space-between;
-    padding:10px 12px;background:var(--card2);border-radius:12px;margin-bottom:8px;
+    padding:12px 12px;background:var(--card2);border-radius:12px;margin-bottom:8px;
     /* Build 109: at 320px with iOS's largest text, a long prize name pushed its rarity
        tag 18px off the card. Wrapping puts the tag on its own line instead. */
-    flex-wrap:wrap; gap:4px 10px;
+    flex-wrap:wrap; gap:4px 12px;
   }
-  .reward-item .left{display:flex;align-items:center;gap:10px;font-size:0.875rem;
+  .reward-item .left{display:flex;align-items:center;gap:12px;font-size:0.875rem;
     flex:1 1 auto; min-width:0;}
   .reward-item .left span:last-child{ min-width:0; overflow-wrap:anywhere; }
   .reward-item .tier-tag{ flex:0 0 auto; }
@@ -730,21 +755,21 @@
   .tier-uncommon{background:var(--chip-uncommon-bg);color:var(--chip-uncommon-fg);}
   .tier-rare{background:var(--chip-rare-bg);color:var(--chip-rare-fg);}
   .note{
-    background:var(--card2);border-radius:14px;padding:12px;margin-bottom:10px;
+    background:var(--card2);border-radius:18px;padding:12px;margin-bottom:10px;
   }
   .note .from{font-size:0.6875rem;color:var(--pink);font-weight:700;margin-bottom:4px;}
   .note .text{font-size:0.875rem;line-height:1.4;}
   .note .date{font-size:0.625rem;color:var(--muted);margin-top:6px;}
   .quote-box{
-    text-align:center;padding:18px;background:linear-gradient(135deg,var(--quest-bg-a),var(--grad-deep-b));
-    border-radius:16px;border:1px solid var(--border);
+    text-align:center;padding:16px;background:linear-gradient(135deg,var(--quest-bg-a),var(--grad-deep-b));
+    border-radius:18px;border:1px solid var(--border);
   }
   .quote-box .q{font-size:0.9375rem;font-style:italic;line-height:1.5;}
   .quote-box .a{font-size:0.75rem;color:var(--muted);margin-top:8px;}
   .toast{
     position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
     background:var(--card2);border:1px solid var(--purple);color:var(--text);
-    padding:12px 20px;border-radius:14px;font-size:0.8125rem;font-weight:600;
+    padding:12px 24px;border-radius:18px;font-size:0.8125rem;font-weight:600;
     box-shadow:0 8px 24px rgba(0,0,0,0.4);
     opacity:0;pointer-events:none;transition:opacity .3s ease, transform .3s ease;
     z-index:var(--z-toast);max-width:80%;text-align:center;
@@ -752,12 +777,12 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
   .modal-bg{
     position:fixed;inset:0;background:var(--scrim);
-    display:none;align-items:center;justify-content:center;z-index:var(--z-over);padding:20px;
+    display:none;align-items:center;justify-content:center;z-index:var(--z-over);padding:24px;
   }
   .modal-bg.show{display:flex;}
   .modal{
     background:var(--card);border:1px solid var(--border);border-radius:18px;
-    padding:22px;max-width:340px;width:100%;text-align:center;
+    padding:24px;max-width:340px;width:100%;text-align:center;
   }
   .modal .emoji{font-size:2.75rem;margin-bottom:10px;}
 
@@ -805,7 +830,7 @@
      <div>: same look, and the right element for something you press. */
   .ob-pick button{
     flex:1 1 0; min-width:0; min-height:44px;
-    border:1px solid var(--border); border-radius:10px;
+    border:1px solid var(--border); border-radius:12px;
     background:var(--card2); color:var(--muted); font:inherit; font-weight:600;
     cursor:pointer; padding:var(--sp-5) var(--sp-4);
   }
@@ -845,10 +870,10 @@
   .quest-parts{display:flex;gap:8px;margin-bottom:10px;}
   .quest-part{
     flex:1;background:var(--card2);border:1px solid var(--border);border-radius:12px;
-    padding:10px;text-align:center;cursor:pointer;font-size:0.75rem;font-weight:600;
+    padding:12px;text-align:center;cursor:pointer;font-size:0.75rem;font-weight:600;
   }
   .quest-part.checked{border-color:var(--teal);background:var(--quest-ok-bg);color:var(--teal);}
-  .quest-none{font-size:0.8125rem;color:var(--muted);text-align:center;padding:6px 0;}
+  .quest-none{font-size:0.8125rem;color:var(--muted);text-align:center;padding:8px 0;}
   .fair-label{display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted);margin-bottom:4px;}
   .fair-bar{
     display:flex;height:14px;border-radius:999px;overflow:hidden;background:var(--card2);margin-bottom:14px;
@@ -856,11 +881,11 @@
   .fair-bar .a{background:var(--pink);}
   .fair-bar .b{background:var(--teal);}
   .repeat-tag{
-    font-size:0.625rem;padding:2px 7px;border-radius:999px;font-weight:700;
+    font-size:0.625rem;padding:2px 8px;border-radius:999px;font-weight:700;
     background:var(--chip-common-bg);color:var(--chip-common-fg);text-transform:uppercase;
   }
   .due-tag{
-    font-size:0.625rem;padding:2px 7px;border-radius:999px;font-weight:700;
+    font-size:0.625rem;padding:2px 8px;border-radius:999px;font-weight:700;
     background:var(--chip-live-bg);color:var(--chip-live-fg);text-transform:uppercase;
   }
   .due-tag.overdue{background:var(--chip-over-bg);color:var(--chip-over-fg);}
@@ -873,7 +898,7 @@
     flex-wrap:wrap;
   }
   .task-filter-bar select{
-    flex:1 1 140px;min-width:0;font-size:max(16px, 0.7812rem);padding:8px 10px;
+    flex:1 1 140px;min-width:0;font-size:max(16px, 0.7812rem);padding:8px 12px;
   }
   .daily-q-card{
     background:linear-gradient(135deg,var(--chip-common-bg),var(--grad-deep-b));
@@ -892,7 +917,7 @@
   .act-fail:hover,.act-fail:active{color:var(--pink);}
   /* ---- monthly recap ---- */
   .recap-verdict{
-    text-align:center;padding:16px 12px 18px;border-radius:var(--r-object);
+    text-align:center;padding:16px 12px 16px;border-radius:var(--r-object);
     background:var(--s1);border:1px solid var(--line);margin-bottom:16px;
   }
   .recap-verdict .big{font-size:1.3125rem;font-weight:800;line-height:1.25;}
@@ -920,8 +945,8 @@
     margin:0 0 9px;font-weight:700;
   }
   .recap-line{
-    display:flex;gap:9px;align-items:flex-start;font-size:0.8438rem;line-height:1.55;
-    padding:6px 0;
+    display:flex;gap:8px;align-items:flex-start;font-size:0.8438rem;line-height:1.55;
+    padding:8px 0;
   }
   .recap-line .ico{flex:0 0 20px;font-size:0.9375rem;line-height:1.35;}
   .recap-line b{font-weight:700;}
@@ -931,7 +956,7 @@
   }
   .recap-empty{font-size:0.8125rem;color:var(--faint);line-height:1.55;}
   /* ---- the month race ---- */
-  .race-row{display:flex;align-items:center;gap:10px;padding:9px 0;}
+  .race-row{display:flex;align-items:center;gap:12px;padding:8px 0;}
   .race-row + .race-row{border-top:1px solid var(--line);}
   .race-name{flex:0 0 74px;font-size:0.8125rem;font-weight:700;}
   .race-name.p1{color:var(--coral);}
@@ -946,32 +971,32 @@
   .fail-tag{
     display:inline-block;font-size:0.6562rem;font-weight:700;letter-spacing:.04em;
     color:var(--pink);border:1px solid currentColor;border-radius:999px;
-    padding:1px 7px;margin-right:6px;opacity:.85;
+    padding:1px 8px;margin-right:6px;opacity:.85;
   }
-  .alt-panel{background:var(--card2);border-radius:12px;padding:2px 12px 10px;margin-top:4px;font-size:0.75rem;}
+  .alt-panel{background:var(--card2);border-radius:12px;padding:2px 12px 12px;margin-top:4px;font-size:0.75rem;}
   .alt-panel summary{cursor:pointer;color:var(--muted);padding:8px 0;list-style:none;}
   .alt-panel summary::-webkit-details-marker{display:none;}
   .alt-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
   .alt-info a{color:var(--text);text-decoration:underline;font-size:0.75rem;}
   .alt-price{font-size:0.6875rem;color:var(--muted);margin-top:2px;}
-  .alt-add-form{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
-  .alt-add-form input,.alt-add-form select{flex:1;min-width:70px;font-size:max(16px, 0.6875rem);padding:6px 8px;}
+  .alt-add-form{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
+  .alt-add-form input,.alt-add-form select{flex:1;min-width:70px;font-size:max(16px, 0.6875rem);padding:8px 8px;}
   .alt-add-form button{white-space:nowrap;}
-  .edit-form{background:var(--card2);border:1px dashed var(--purple);border-radius:12px;padding:10px 12px;margin-top:4px;}
+  .edit-form{background:var(--card2);border:1px dashed var(--purple);border-radius:12px;padding:12px 12px;margin-top:4px;}
   .edit-form select,.edit-form input{width:100%;margin-bottom:6px;font-size:max(16px, 0.8125rem);}
 
   .exp-card{
     background:linear-gradient(135deg,var(--grad-deep-a),#272e4f);
-    border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;
+    border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:10px;
     display:flex;gap:12px;align-items:flex-start;
   }
   .exp-card .exp-emoji{font-size:1.625rem;flex-shrink:0;line-height:1.2;}
   .exp-card .exp-body{flex:1;min-width:0;}
   .exp-card .exp-title{font-size:0.9375rem;font-weight:700;}
   .exp-card .exp-sub{font-size:0.75rem;color:var(--muted);margin-top:3px;}
-  .exp-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+  .exp-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
   .exp-actions button{
-    font-size:0.75rem;padding:7px 12px;border-radius:10px;border:1px solid var(--border);
+    font-size:0.75rem;padding:8px 12px;border-radius:12px;border:1px solid var(--border);
     background:var(--card2);color:var(--text);cursor:pointer;font-weight:600;
   }
   .exp-actions button.go{
@@ -991,7 +1016,7 @@
   }
   .speech-turn{
     text-align:center;font-size:0.75rem;color:var(--muted);
-    background:var(--card2);border-radius:12px;padding:10px;margin-bottom:12px;
+    background:var(--card2);border-radius:12px;padding:12px;margin-bottom:12px;
   }
   .speech-turn strong{color:var(--pink);}
   .modal.wide{max-width:380px;text-align:left;}
@@ -1009,7 +1034,7 @@
     /* --text, not --overlay-ink. This is a tinted note on a card, not a caption over
        a photograph: --overlay-ink is white, which read fine on the dark theme's deep
        red chip and became white-on-pink the moment the chip went pale. */
-    padding:10px 12px;font-size:0.75rem;color:var(--text);margin-bottom:10px;line-height:1.5;
+    padding:12px 12px;font-size:0.75rem;color:var(--text);margin-bottom:10px;line-height:1.5;
   }
 
   /* ----- daily hero ----- */
@@ -1035,7 +1060,7 @@
   .sign-picker{
     margin-top:10px;font-size:0.6875rem;color:var(--muted);
   }
-  .sign-picker select{font-size:max(16px, 0.6875rem);padding:5px 8px;margin-left:6px;}
+  .sign-picker select{font-size:max(16px, 0.6875rem);padding:4px 8px;margin-left:6px;}
 
   /* ----- check-in ----- */
   .checkin-card{
@@ -1051,7 +1076,7 @@
     border-color:var(--teal);
   }
   .code-display{
-    text-align:center;background:var(--card2);border-radius:14px;padding:14px;margin:10px 0;
+    text-align:center;background:var(--card2);border-radius:18px;padding:16px;margin:10px 0;
   }
   .code-display .code-label{font-size:0.6875rem;color:var(--muted);margin-bottom:6px;}
   .code-display .code-value{
@@ -1064,11 +1089,11 @@
   }
   .countdown strong{color:var(--pink);}
   .pending-pill{
-    font-size:0.625rem;padding:2px 7px;border-radius:999px;font-weight:700;
+    font-size:0.625rem;padding:2px 8px;border-radius:999px;font-weight:700;
     background:var(--chip-rare-bg);color:var(--chip-rare-fg);text-transform:uppercase;
   }
   .bricked-pill{
-    font-size:0.625rem;padding:2px 7px;border-radius:999px;font-weight:700;
+    font-size:0.625rem;padding:2px 8px;border-radius:999px;font-weight:700;
     background:var(--chip-hard-bg);color:var(--chip-hard-fg);text-transform:uppercase;
   }
   .task.pending{border:1px dashed var(--gold);}
@@ -1088,7 +1113,7 @@
   }
   .streak-flame{color:var(--gold);}
   .miss-log{
-    font-size:0.6875rem;color:var(--muted);margin-top:10px;padding-top:10px;
+    font-size:0.6875rem;color:var(--muted);margin-top:10px;padding-top:12px;
     border-top:1px solid var(--border);line-height:1.6;
   }
 
@@ -1216,7 +1241,7 @@
   }
 
   /* ---- header ---- */
-  header{padding:34px 20px 8px;}
+  header{padding:32px 24px 8px;}
   header h1:not(.brand-row){
     font-family:var(--display);
     font-weight:700;
@@ -1231,7 +1256,7 @@
   .card{
     background:linear-gradient(180deg, var(--s1) 0%, var(--s2) 100%);
     border:1px solid var(--line);
-    border-radius:20px;
+    border-radius:24px;
     padding:var(--card-pad);
     margin-bottom:var(--card-gap);
     box-shadow:var(--sh-2);
@@ -1239,7 +1264,7 @@
   }
   /* hairline highlight along the top edge = real depth, not flat fill */
   .card::before{
-    content:"";position:absolute;inset:0 0 auto 0;height:1px;border-radius:20px 20px 0 0;
+    content:"";position:absolute;inset:0 0 auto 0;height:1px;border-radius:24px 24px 0 0;
     background:linear-gradient(90deg,transparent,var(--tint-3),transparent);
   }
   .card h2{
@@ -1253,11 +1278,11 @@
   }
 
   /* ---- person switcher ---- */
-  .switcher{gap:10px;}
+  .switcher{gap:12px;}
   .switcher button{
     font-family:var(--ui);font-weight:600;font-size:0.875rem;
     background:var(--s2);border:1px solid var(--line);color:var(--muted);
-    border-radius:16px;padding:12px;box-shadow:var(--sh-1);
+    border-radius:18px;padding:12px;box-shadow:var(--sh-1);
   }
   .switcher button.active{
     background:linear-gradient(140deg,var(--rose),var(--rose-deep));
@@ -1271,7 +1296,7 @@
   /* ---- tabs ---- */
   .tabs{gap:8px;margin:22px 0 16px;}
   .tabs button{
-    font-size:0.8125rem;font-weight:600;padding:9px 15px;
+    font-size:0.8125rem;font-weight:600;padding:8px 16px;
     border:1px solid var(--line);color:var(--faint);background:transparent;
   }
   .tabs button.active{
@@ -1282,9 +1307,9 @@
   /* ---- list pills ---- */
   .list-pills{gap:8px;margin-bottom:16px;}
   .list-pills button{
-    font-size:0.9062rem;font-weight:600;padding:11px 17px;
+    font-size:0.9062rem;font-weight:600;padding:12px 16px;
     background:var(--s2);border:1px solid var(--line);color:var(--muted);
-    display:inline-flex;align-items:center;gap:7px;
+    display:inline-flex;align-items:center;gap:8px;
   }
   .list-pills button .pill-ico{font-size:1.0625rem;line-height:1;}
   .list-pills button.active{
@@ -1295,8 +1320,8 @@
 
   /* ---- daily question answers ---- */
   .qa-bubble{
-    background:var(--s2);border:1px solid var(--line);border-radius:14px;
-    padding:10px 13px;margin-top:8px;font-size:0.8438rem;line-height:1.55;
+    background:var(--s2);border:1px solid var(--line);border-radius:18px;
+    padding:12px 12px;margin-top:8px;font-size:0.8438rem;line-height:1.55;
   }
   .qa-bubble.sealed{color:var(--faint);font-style:italic;border-style:dashed;}
   .qa-who{
@@ -1304,7 +1329,7 @@
     color:var(--pink);margin-bottom:3px;
   }
   .qa-status{font-size:0.7812rem;color:var(--muted);margin-top:9px;text-align:center;}
-  .qa-past{border-top:1px solid var(--line);padding-top:10px;margin-top:12px;}
+  .qa-past{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;}
   .qa-past:first-child{border-top:none;padding-top:0;margin-top:0;}
   .qa-past-q{font-size:0.7812rem;color:var(--muted);font-weight:600;}
 
@@ -1317,11 +1342,11 @@
     font-size:0.75rem;line-height:1.45;color:var(--muted);font-style:italic;
     margin-bottom:5px;
   }
-  .note-arch-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .note-arch-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px;}
   .note-arch-count{font-size:0.75rem;color:var(--faint);font-variant-numeric:tabular-nums;}
-  .note-arch-filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .note-arch-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .note-arch-filters button{
-    font-size:0.7812rem;font-weight:600;padding:7px 13px;border-radius:999px;
+    font-size:0.7812rem;font-weight:600;padding:8px 12px;border-radius:999px;
     border:1px solid var(--line);background:transparent;color:var(--faint);
     font-family:inherit;cursor:pointer;
   }
@@ -1329,12 +1354,12 @@
     background:var(--s3);color:var(--text);border-color:var(--line-2);
   }
   .note-arch{
-    border-top:1px solid var(--line);padding:11px 0 2px;
+    border-top:1px solid var(--line);padding:12px 0 2px;
   }
   .note-arch:first-child{border-top:none;padding-top:0;}
   .note-arch-meta{
     font-size:0.6875rem;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);
-    display:flex;justify-content:space-between;gap:10px;margin-bottom:4px;
+    display:flex;justify-content:space-between;gap:12px;margin-bottom:4px;
   }
   .note-arch-dir{font-weight:700;}
   .note-arch-dir.out{color:var(--muted);}
@@ -1344,14 +1369,14 @@
 
   /* ---- push diagnostics ---- */
   .push-diag{font-size:0.7188rem;line-height:1.6;color:var(--muted);margin-top:8px;}
-  .push-diag .pd-row{padding:5px 0;border-top:1px solid var(--line);}
+  .push-diag .pd-row{padding:4px 0;border-top:1px solid var(--line);}
   .push-diag .pd-row:first-child{border-top:none;}
   .push-diag .pd-bad{color:var(--pink);}
   .push-diag .pd-ok{color:var(--jade);}
   .push-diag .pd-detail{color:var(--faint);font-family:ui-monospace,Menlo,monospace;font-size:0.6562rem;word-break:break-all;}
 
   .row-entry{
-    display:block;width:100%;margin:0 0 14px;padding:11px;
+    display:block;width:100%;margin:0 0 14px;padding:12px;
     background:transparent;border:1px solid var(--line);border-radius:var(--r-object);
     color:var(--faint);font-size:0.8125rem;font-family:inherit;cursor:pointer;
   }
@@ -1389,21 +1414,21 @@
   .row-q{font-size:1rem;line-height:1.45;font-weight:600;color:var(--text);margin:6px 0 12px;}
   .row-sealed{
     font-size:0.8125rem;line-height:1.6;color:var(--faint);text-align:center;
-    border:1px dashed var(--line-2);border-radius:var(--r-object);padding:14px;margin-top:4px;
+    border:1px dashed var(--line-2);border-radius:var(--r-object);padding:16px;margin-top:4px;
   }
   .row-theirs{
     font-size:0.9062rem;line-height:1.6;color:var(--text);
-    border-left:2px solid var(--purple);padding:4px 0 4px 13px;margin-top:10px;
+    border-left:2px solid var(--purple);padding:4px 0 4px 12px;margin-top:10px;
   }
   .row-open{
     background:none;border:none;color:var(--faint);font-size:0.75rem;font-family:inherit;
-    padding:6px 2px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+    padding:8px 2px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
   }
 
   /* ---- recap awards ---- */
   /* ---- Build 115: records & trends ---- */
   .trend-wrap{ margin-top:10px; }
-  .trend-row{ display:flex; align-items:center; gap:10px; padding:5px 0; }
+  .trend-row{ display:flex; align-items:center; gap:12px; padding:4px 0; }
   .trend-who{
     flex:0 0 72px; min-width:0; font-size:0.75rem; font-weight:700;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
@@ -1415,7 +1440,7 @@
   .spark{ flex:1 1 auto; min-width:0; height:34px; display:block; }
   .trend-val{
     flex:0 0 auto; font-size:0.8125rem; font-weight:700; font-variant-numeric:tabular-nums;
-    color:var(--text); display:flex; align-items:center; gap:6px;
+    color:var(--text); display:flex; align-items:center; gap:8px;
   }
   .trend-pb{
     font-size:var(--eyebrow); font-weight:800; letter-spacing:var(--eyebrow-track);
@@ -1432,7 +1457,7 @@
   }
   .troph-month:first-child{ margin-top:2px; }
   .troph{
-    display:flex; align-items:flex-start; gap:11px; padding:10px 12px;
+    display:flex; align-items:flex-start; gap:12px; padding:12px 12px;
     background:var(--s2); border:1px solid var(--line); border-radius:12px; margin-bottom:8px;
   }
   .troph.is-first{ border-color:rgba(232,181,75,.45); }
@@ -1443,23 +1468,23 @@
   .troph-why{ font-size:0.6875rem; color:var(--faint); line-height:1.4; margin-top:3px; }
   .troph-rank{
     flex:none; font-size:var(--eyebrow); font-weight:800; letter-spacing:var(--eyebrow-track);
-    text-transform:uppercase; padding:2px 7px; border-radius:999px;
+    text-transform:uppercase; padding:2px 8px; border-radius:999px;
     background:var(--s3); color:var(--muted); white-space:nowrap;
   }
   .troph.is-first .troph-rank{ background:rgba(232,181,75,.16); color:var(--gold); }
-  .sup-row{display:flex;gap:11px;align-items:flex-start;padding:8px 0;}
+  .sup-row{display:flex;gap:12px;align-items:flex-start;padding:8px 0;}
   .sup-ico{flex:0 0 22px;font-size:1.0625rem;line-height:1.3;}
   .sup-row b{font-size:0.875rem;color:var(--text);font-weight:700;}
   .sup-who{font-size:0.875rem;color:var(--coral);font-weight:600;}
   .sup-why{font-size:0.7812rem;color:var(--faint);line-height:1.5;margin-top:2px;}
 
   /* ---- reminders ---- */
-  .rem-strip{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;}
+  .rem-strip{display:flex;flex-direction:column;gap:8px;margin:0 0 14px;}
   .rem-row{
-    display:flex;gap:9px;align-items:flex-start;
+    display:flex;gap:8px;align-items:flex-start;
     font-size:0.8125rem;line-height:1.5;color:var(--muted);
     background:var(--s1);border:1px solid var(--line);border-radius:var(--r-object);
-    padding:10px 13px;
+    padding:12px 12px;
   }
   .rem-row b{color:var(--text);font-weight:700;}
   .rem-dot{
@@ -1479,7 +1504,7 @@
   .repair-body{font-size:0.8438rem;line-height:1.55;color:var(--muted);}
   .repair-skip{
     background:none;border:none;color:var(--faint);font-size:0.7812rem;font-family:inherit;
-    padding:10px 2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+    padding:12px 2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
     display:block;margin:0 auto;
   }
 
@@ -1492,13 +1517,13 @@
   .duo-note.locked{color:var(--faint);font-style:normal;}
 
   /* ---- a trip's two half-day frames ---- */
-  .trip-pair{display:flex;gap:10px;width:100%;}
+  .trip-pair{display:flex;gap:12px;width:100%;}
   .duo-slot.half{flex:1;min-width:0;}
   .duo-slot.half.ahead{opacity:.45;}
   .duo-slot.half.is-now .duo-frame{box-shadow:0 0 0 2px var(--coral);}
 
   /* ---- memories ---- */
-  .mem-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .mem-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
   .mem-head > div{text-align:center;flex:1;min-width:0;}
   .mem-month{font-size:1rem;font-weight:700;color:var(--text);}
   .mem-sub{font-size:0.75rem;color:var(--faint);margin-top:2px;}
@@ -1508,9 +1533,9 @@
     font-size:1.125rem;line-height:1;cursor:pointer;font-family:inherit;
   }
   .mem-nav:disabled{opacity:.28;cursor:default;}
-  .mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+  .mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
   .mem-cell{
-    position:relative;aspect-ratio:1/1;border-radius:11px;overflow:hidden;
+    position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;
     border:1px solid var(--line);background:var(--s1);padding:0;cursor:pointer;
     display:flex;
   }
@@ -1542,9 +1567,9 @@
 
   /* ---- task group headers ---- */
   .task-group{
-    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
     font-size:0.7188rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--muted);margin:16px 0 7px;padding-bottom:6px;
+    color:var(--muted);margin:16px 0 7px;padding-bottom:8px;
     border-bottom:1px solid var(--line);
   }
   .task-group:first-child{margin-top:2px;}
@@ -1558,7 +1583,7 @@
   /* ---- spin expiry note ---- */
   .spin-expiry{
     font-size:0.7812rem;line-height:1.5;color:var(--muted);text-align:center;
-    padding:9px 12px;margin-bottom:10px;border-radius:var(--r-object);
+    padding:8px 12px;margin-bottom:10px;border-radius:var(--r-object);
     background:var(--s1);border:1px solid var(--line);
   }
   /* Only the last three days shout. A permanent warning is wallpaper — people stop seeing
@@ -1569,12 +1594,12 @@
   }
   .spin-expiry b{color:var(--gold);}
   .quota-note{font-size:0.7188rem;color:var(--faint);margin-top:6px;text-align:center;}
-  .rarity-pick{display:flex;gap:6px;width:100%;margin-top:8px;}
-  .rarity-pick button{flex:1;font-size:0.7188rem;padding:7px 4px;}
+  .rarity-pick{display:flex;gap:8px;width:100%;margin-top:8px;}
+  .rarity-pick button{flex:1;font-size:0.7188rem;padding:8px 4px;}
 
   /* ---- build / update line ---- */
   .ver-line{
-    display:block;margin:12px auto 0;padding:4px 10px;
+    display:block;margin:12px auto 0;padding:4px 12px;
     background:none;border:1px solid transparent;border-radius:var(--r-control);
     font-family:inherit;font-size:0.6562rem;font-weight:600;letter-spacing:.11em;
     text-transform:uppercase;color:var(--faint);cursor:pointer;
@@ -1588,7 +1613,7 @@
   .ver-line.busy{opacity:.55;}
 
   /* ---- health pipeline diagnostics ---- */
-  .health-diag{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;}
+  .health-diag{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;}
   .health-diag summary{
     cursor:pointer;font-size:0.7188rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
     color:var(--faint);list-style:none;
@@ -1605,14 +1630,14 @@
   .hd-code{
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.6875rem;line-height:1.45;
     background:var(--s1);border:1px solid var(--line);border-radius:var(--r-object);
-    padding:8px 10px;margin:5px 0 6px;color:var(--muted);
+    padding:8px 12px;margin:5px 0 6px;color:var(--muted);
     word-break:break-all;white-space:pre-wrap;
   }
   .hd-actions{margin-top:4px;}
 
   /* ---- health card ---- */
   .health-grid{
-    display:grid;grid-template-columns:1fr 44px 1fr;gap:9px 6px;align-items:center;
+    display:grid;grid-template-columns:1fr 44px 1fr;gap:8px 8px;align-items:center;
     text-align:center;margin-top:4px;
   }
   .health-name{font-size:0.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);}
@@ -1621,20 +1646,20 @@
   .health-val{font-size:1.1875rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;}
   .health-val.win{color:var(--teal);}
   .health-nudge{
-    font-size:0.7812rem;color:var(--muted);margin-top:10px;padding:8px 11px;
+    font-size:0.7812rem;color:var(--muted);margin-top:10px;padding:8px 12px;
     background:var(--s2);border:1px solid var(--line);border-radius:12px;line-height:1.5;
   }
   /* stale numbers used to announce themselves with a 10px date and nothing else, which is
      how week-old figures passed for today's. This one is meant to be impossible to skim past. */
   .health-stale-warn.is-stuck{ border-color:rgba(255,122,94,.5); }
   .health-stale-warn{
-    font-size:0.7812rem;margin-top:10px;padding:10px 12px;line-height:1.5;
+    font-size:0.7812rem;margin-top:10px;padding:12px 12px;line-height:1.5;
     background:rgba(214,158,46,.12);border:1px solid rgba(214,158,46,.45);
     border-radius:12px;color:var(--text);
   }
   .health-stale-warn b{color:var(--gold);}
   .health-stale-warn button{
-    margin-top:8px;font-size:0.75rem;padding:6px 12px;
+    margin-top:8px;font-size:0.75rem;padding:8px 12px;
   }
 
   /* ---- trip photo cards ---- */
@@ -1669,14 +1694,14 @@
   }
   .trip-state{
     display:inline-block;margin-top:6px;font-size:0.7188rem;font-weight:700;
-    padding:3px 10px;border-radius:999px;
+    padding:4px 12px;border-radius:999px;
     background:rgba(15,10,20,.5);color:rgba(255,255,255,.92);
     border:1px solid rgba(255,255,255,.3);
     -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
   }
   .trip-state.live{background:rgba(26,156,126,.85);border-color:rgba(255,255,255,.5);}
   .trip-state.warn{background:rgba(201,138,31,.9);border-color:rgba(255,255,255,.5);}
-  .trip-actions{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:7px;}
+  .trip-actions{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:8px;}
   .trip-check{
     width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.75);cursor:pointer;
     background:rgba(15,10,20,.45);color:#fff;font-size:1.0625rem;font-weight:800;
@@ -1692,7 +1717,7 @@
   .trip-badge{
     position:absolute;top:12px;left:13px;z-index:2;
     background:rgba(95,214,196,.92);color:var(--on-teal);
-    font-size:0.6875rem;font-weight:800;border-radius:999px;padding:4px 11px;
+    font-size:0.6875rem;font-weight:800;border-radius:999px;padding:4px 12px;
   }
   .trip-card.done .trip-bg{filter:saturate(.55) brightness(.75);}
 
@@ -1740,7 +1765,7 @@
     width:100%;max-width:460px;max-height:88vh;overflow-y:auto;
     background:var(--surface-lift);
     border:1px solid var(--line-2);border-bottom:none;
-    border-radius:22px 22px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px));
+    border-radius:24px 24px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px));
     animation:sheetUp .22s ease-out;
   }
   @keyframes sheetUp{from{transform:translateY(40px);opacity:.4;}to{transform:translateY(0);opacity:1;}}
@@ -1748,7 +1773,7 @@
   /* ---- hero ---- */
   .hero-card{
     background:linear-gradient(165deg,#3a2540 0%,var(--grad-deep-c) 62%);
-    border:1px solid var(--line-2);border-radius:22px;padding:20px;
+    border:1px solid var(--line-2);border-radius:24px;padding:24px;
     box-shadow:var(--sh-3);
   }
   .hero-greet{
@@ -1760,7 +1785,7 @@
     font-size:1.0312rem;line-height:1.5;color:var(--text);
   }
   .hero-author{font-size:0.7188rem;color:var(--faint);margin-top:8px;letter-spacing:.02em;}
-  .hero-cue{border-top:1px solid var(--line);margin-top:16px;padding-top:14px;font-size:0.8438rem;line-height:1.55;color:var(--text);}
+  .hero-cue{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;font-size:0.8438rem;line-height:1.55;color:var(--text);}
   .hero-cue .cue-label,.hero-scope .cue-label{
     font-family:var(--ui);font-size:var(--eyebrow);font-weight:800;
     letter-spacing:var(--eyebrow-track);color:var(--jade);margin-bottom:6px;
@@ -1770,10 +1795,10 @@
   .hero-scope .cue-label{color:var(--plum,var(--purple));}
 
   /* ---- stats: rings, not flat numerals ---- */
-  .stat-row{gap:11px;}
+  .stat-row{gap:12px;}
   .stat{
     background:linear-gradient(180deg,var(--s2),var(--s3));
-    border:1px solid var(--line);border-radius:16px;padding:15px 10px;
+    border:1px solid var(--line);border-radius:18px;padding:16px 12px;
     box-shadow:var(--sh-1);
   }
   .stat .num{
@@ -1790,14 +1815,14 @@
   /* ---- badges ---- */
   .badge-pill{
     background:var(--s3);border:1px solid var(--line-2);
-    font-size:0.7188rem;font-weight:600;padding:7px 13px;box-shadow:var(--sh-1);
+    font-size:0.7188rem;font-weight:600;padding:8px 12px;box-shadow:var(--sh-1);
   }
   .badge-pill.at-risk{border-color:var(--rose);color:var(--rose);background:rgba(255,107,138,.09);}
 
   /* ---- generic task rows ---- */
   .task{
     background:linear-gradient(180deg,var(--s2),var(--s3));
-    border:1px solid var(--line);border-radius:16px;padding:14px;
+    border:1px solid var(--line);border-radius:18px;padding:16px;
     box-shadow:var(--sh-1);gap:12px;
   }
   /* due-date urgency: a calm amber wash as the date closes in, red once it's past */
@@ -1825,7 +1850,7 @@
   .task .title{font-size:0.9062rem;font-weight:600;letter-spacing:-0.01em;line-height:1.35;}
   .task .meta{font-size:0.6875rem;color:var(--faint);margin-top:5px;}
   .diff-tag,.repeat-tag,.pending-pill,.bricked-pill,.tier-tag{
-    font-size:var(--eyebrow);letter-spacing:.07em;padding:3px 8px;border-radius:6px;font-weight:800;
+    font-size:var(--eyebrow);letter-spacing:.07em;padding:4px 8px;border-radius:6px;font-weight:800;
   }
   .diff-easy{background:rgba(79,209,181,.14);color:var(--jade);}
   .diff-medium{background:rgba(240,193,75,.14);color:var(--gold);}
@@ -1834,15 +1859,15 @@
 
   /* ══ TO BUY — image-forward product cards ══ */
   .buy-card{
-    display:flex;gap:14px;align-items:stretch;
+    display:flex;gap:16px;align-items:stretch;
     background:linear-gradient(180deg,var(--s2),var(--s3));
     border:1px solid var(--line);border-radius:18px;
-    padding:13px;margin-bottom:11px;box-shadow:var(--sh-2);
+    padding:12px;margin-bottom:11px;box-shadow:var(--sh-2);
     position:relative;overflow:hidden;
   }
   .buy-card.done{opacity:.5;}
   .buy-thumb{
-    width:86px;height:86px;flex-shrink:0;border-radius:13px;
+    width:86px;height:86px;flex-shrink:0;border-radius:18px;
     background:#fff;                     /* IKEA shots are on white */
     overflow:hidden;position:relative;
     box-shadow:0 2px 10px var(--sh-shadow);
@@ -1879,19 +1904,19 @@
     border-top:1px dashed var(--line-2);
     border-radius:0 0 18px 18px;
     margin:0;
-    padding:0 14px 10px;
+    padding:0 16px 12px;
     box-shadow:var(--sh-2);
   }
   .alt-panel summary{
-    font-size:0.6875rem;font-weight:600;color:var(--faint);padding:9px 0 4px;
-    display:flex;align-items:center;gap:6px;
+    font-size:0.6875rem;font-weight:600;color:var(--faint);padding:8px 0 4px;
+    display:flex;align-items:center;gap:8px;
   }
   .alt-panel summary:hover{color:var(--muted);}
   .alt-panel summary svg{width:12px;height:12px;flex-shrink:0;}
   .alt-panel[open] summary{color:var(--muted);}
-  .alt-add-form{gap:5px;margin-top:7px;padding-top:7px;}
-  .alt-add-form input,.alt-add-form select{font-size:max(16px, 0.6562rem);padding:6px 8px;border-radius:9px;}
-  .buy-tags{display:flex;align-items:center;gap:7px;margin-top:9px;flex-wrap:wrap;}
+  .alt-add-form{gap:4px;margin-top:7px;padding-top:8px;}
+  .alt-add-form input,.alt-add-form select{font-size:max(16px, 0.6562rem);padding:8px 8px;border-radius:12px;}
+  .buy-tags{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap;}
   .buy-check{
     width:26px;height:26px;border-radius:50%;border:2px solid var(--line-2);
     display:flex;align-items:center;justify-content:center;cursor:pointer;
@@ -1900,10 +1925,10 @@
   }
   .buy-check:hover{border-color:var(--jade);}
   .buy-card.done .buy-check{background:var(--jade);border-color:var(--jade);}
-  .buy-actions{display:flex;flex-direction:column;gap:6px;align-items:center;}
+  .buy-actions{display:flex;flex-direction:column;gap:8px;align-items:center;}
   .icon-btn{
     background:transparent;border:none;color:var(--faint);cursor:pointer;
-    padding:3px;line-height:0;border-radius:6px;transition:color .15s ease;
+    padding:4px;line-height:0;border-radius:6px;transition:color .15s ease;
   }
   .icon-btn:hover{color:var(--text);}
   .icon-btn svg{width:15px;height:15px;display:block;}
@@ -1911,10 +1936,10 @@
   /* ---- alternatives ---- */
   .alt-panel{
     background:var(--tint-1);border:1px solid var(--line);
-    border-radius:14px;padding:0 13px 11px;margin-top:-4px;margin-bottom:11px;
+    border-radius:18px;padding:0 12px 12px;margin-top:-4px;margin-bottom:11px;
   }
-  .alt-panel summary{font-size:0.75rem;font-weight:600;color:var(--muted);padding:11px 0;}
-  .alt-row{border-top:1px solid var(--line);padding:11px 0;}
+  .alt-panel summary{font-size:0.75rem;font-weight:600;color:var(--muted);padding:12px 0;}
+  .alt-row{border-top:1px solid var(--line);padding:12px 0;}
   .alt-info a{font-size:0.7812rem;font-weight:600;text-decoration:none;border-bottom:1px solid var(--line-2);}
   .alt-price{font-family:var(--display);font-weight:600;font-size:0.875rem;color:var(--gold);margin-top:4px;}
   .tier-common{background:rgba(79,209,181,.14);color:var(--jade);}
@@ -1923,12 +1948,12 @@
 
   /* ---- buttons ---- */
   button.primary{
-    font-family:var(--ui);font-weight:700;font-size:0.875rem;border-radius:14px;padding:13px;
+    font-family:var(--ui);font-weight:700;font-size:0.875rem;border-radius:18px;padding:12px;
     background:linear-gradient(140deg,var(--rose),var(--rose-deep));
     box-shadow:0 6px 18px rgba(217,74,107,.3);letter-spacing:-0.01em;
   }
   button.ghost{
-    border:1px solid var(--line-2);color:var(--muted);border-radius:13px;
+    border:1px solid var(--line-2);color:var(--muted);border-radius:18px;
     font-weight:600;font-size:0.8125rem;background:var(--tint-1);
   }
   /* ---------------------------------------------------------------------------
@@ -1954,7 +1979,7 @@
      --------------------------------------------------------------------------- */
   input,select,textarea{
     background:rgba(38,43,70,.045);border:1px solid var(--line-2);
-    border-radius:12px;padding:12px 13px;font-size:max(16px, 0.875rem);font-family:var(--ui);
+    border-radius:12px;padding:12px 12px;font-size:max(16px, 0.875rem);font-family:var(--ui);
     color:var(--text);
   }
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plum);}
@@ -1988,13 +2013,13 @@
     margin-top:8px;line-height:1.75;
   }
   .trophy-photo{
-    border-radius:14px;margin-top:12px;
+    border-radius:18px;margin-top:12px;
     box-shadow:0 6px 20px var(--sh-shadow);
     border:1px solid rgba(255,255,255,.1);
   }
   .trophy-card.no-photo{border-color:rgba(240,193,75,.62);}
   .photo-missing{
-    display:flex;align-items:center;gap:7px;margin-top:11px;padding:9px 11px;
+    display:flex;align-items:center;gap:8px;margin-top:11px;padding:8px 12px;
     background:rgba(240,193,75,.13);border:1px solid rgba(240,193,75,.4);
     border-radius:12px;font-size:0.7812rem;font-weight:600;color:var(--gold);line-height:1.45;
   }
@@ -2002,7 +2027,7 @@
     background:rgba(232,97,92,.12);border-color:rgba(232,97,92,.4);color:var(--pink);
   }
   .photo-loading{
-    margin-top:11px;padding:9px 11px;border-radius:12px;
+    margin-top:11px;padding:8px 12px;border-radius:12px;
     background:var(--tint-2);border:1px solid var(--line-2);
     font-size:0.75rem;color:var(--muted);
   }
@@ -2015,7 +2040,7 @@
     color:var(--gold);letter-spacing:-0.01em;margin-bottom:14px;
   }
   .exp-actions button{
-    font-size:0.7188rem;font-weight:600;padding:8px 13px;border-radius:11px;
+    font-size:0.7188rem;font-weight:600;padding:8px 12px;border-radius:12px;
     background:var(--tint-2);border:1px solid var(--line-2);color:var(--muted);
   }
   .exp-actions button.go{
@@ -2027,7 +2052,7 @@
   .card.collapsible{padding-top:0;padding-bottom:0;}
   .card-collapse{
     width:100%;background:none;border:none;padding:16px 0;margin:0;cursor:pointer;
-    display:flex;align-items:center;gap:10px;text-align:left;color:inherit;
+    display:flex;align-items:center;gap:12px;text-align:left;color:inherit;
   }
   .card-collapse h2{margin:0;flex:0 0 auto;}
   /* a collapsible card that also has a control of its own in the header */
@@ -2064,23 +2089,23 @@
   .chal-wrap{max-width:460px;margin:var(--card-gap) auto 0;padding:0 var(--gutter);}
   .chal-card{
     background:linear-gradient(165deg,var(--chal-bg-a),var(--chal-bg-b));
-    border:1px solid rgba(79,209,181,.34);border-radius:18px;padding:15px 16px;
+    border:1px solid rgba(79,209,181,.34);border-radius:18px;padding:16px 16px;
     box-shadow:0 8px 26px rgba(38,30,45,.12);
   }
-  .chal-top{display:flex;align-items:center;gap:11px;}
+  .chal-top{display:flex;align-items:center;gap:12px;}
   .chal-emoji{font-size:1.375rem;flex:0 0 auto;line-height:1;}
   .chal-head{flex:1;min-width:0;}
   .chal-day{font-family:var(--display);font-size:1.1875rem;font-weight:600;color:var(--chal-today);
     letter-spacing:-.015em;line-height:1.15;}
   .chal-title{font-size:0.7188rem;color:var(--chal-eyebrow);letter-spacing:.05em;text-transform:uppercase;
     font-weight:700;margin-top:2px;}
-  .chal-bar{height:6px;border-radius:99px;background:var(--tint-3);margin:11px 0 0;overflow:hidden;}
-  .chal-bar i{display:block;height:100%;border-radius:99px;
+  .chal-bar{height:6px;border-radius:999px;background:var(--tint-3);margin:11px 0 0;overflow:hidden;}
+  .chal-bar i{display:block;height:100%;border-radius:999px;
     background:linear-gradient(90deg,var(--jade),var(--jade-lift));transition:width .45s cubic-bezier(.4,0,.2,1);}
   .chal-msg{font-size:0.8438rem;line-height:1.55;color:var(--chal-ink);margin-top:11px;}
-  .chal-people{display:flex;gap:9px;margin-top:12px;}
+  .chal-people{display:flex;gap:8px;margin-top:12px;}
   .chal-p{
-    flex:1;display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:12px;
+    flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;
     background:var(--tint-2);border:1px solid var(--tint-3);
     font-size:0.8125rem;color:var(--chal-ink);cursor:pointer;text-align:left;
     transition:background .18s ease,border-color .18s ease,transform .12s ease;
@@ -2097,26 +2122,26 @@
   .chal-p .nm{font-weight:700;}
   .chal-p .sub{font-size:0.6875rem;color:var(--chal-dim);}
   .chal-toggle{
-    width:100%;margin-top:11px;background:none;border:none;padding:7px 0 1px;
+    width:100%;margin-top:11px;background:none;border:none;padding:8px 0 1px;
     font-size:0.7812rem;color:var(--chal-dim);cursor:pointer;text-align:center;
-    display:flex;align-items:center;justify-content:center;gap:6px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
   }
   .chal-toggle:active{color:var(--chal-ink);}
   .chal-toggle .cv{transition:transform .22s ease;display:inline-block;}
   .chal-toggle.open .cv{transform:rotate(180deg);}
 
   /* the downward timeline */
-  .chal-tl{margin-top:10px;border-top:1px solid var(--tint-edge);padding-top:6px;
+  .chal-tl{margin-top:10px;border-top:1px solid var(--tint-edge);padding-top:8px;
     max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1);}
   .chal-tl.open{max-height:2400px;}
-  .tl-row{display:flex;align-items:center;gap:10px;padding:5px 2px;position:relative;}
+  .tl-row{display:flex;align-items:center;gap:12px;padding:4px 2px;position:relative;}
   /* Build 118: a row you can tap is a button, so it has to stop looking like a form
      control and start being big enough to hit. 9px of padding puts it at about 37px,
      which clears the 24px minimum comfortably without turning thirty rows into a
      1,200px wall. */
   button.tl-row{
     width:100%; background:none; border:none; font:inherit; color:inherit;
-    text-align:left; padding:9px 2px; cursor:pointer; border-radius:8px;
+    text-align:left; padding:8px 2px; cursor:pointer; border-radius:8px;
     -webkit-tap-highlight-color:transparent;
   }
   button.tl-row:active{ background:var(--tint-2); }
@@ -2133,19 +2158,19 @@
   .tl-row .ddate{font-size:0.7812rem;color:var(--chal-date);flex:1;min-width:0;}
   .tl-row.today .ddate{color:var(--chal-today);font-weight:700;}
   .tl-row.future .dnum,.tl-row.future .ddate{color:var(--chal-future);}
-  .tl-row .marks{display:flex;gap:5px;flex:0 0 auto;}
+  .tl-row .marks{display:flex;gap:4px;flex:0 0 auto;}
   .tl-row .mk{
     width:19px;height:19px;border-radius:6px;font-size:0.625rem;font-weight:800;
     display:flex;align-items:center;justify-content:center;
     background:var(--tint-2);color:var(--chal-future);border:1px solid var(--tint-edge);
   }
   .tl-row .mk.yes{background:rgba(79,209,181,.2);color:var(--chal-today);border-color:rgba(79,209,181,.4);}
-  .tl-sum{font-size:0.75rem;color:var(--chal-dim);text-align:center;padding:9px 0 3px;line-height:1.6;}
+  .tl-sum{font-size:0.75rem;color:var(--chal-dim);text-align:center;padding:8px 0 4px;line-height:1.6;}
   .tl-sum b{color:var(--chal-ink);}
 
   /* the strip that appears on the linked to-do task */
   .task-chal{
-    display:flex;align-items:center;gap:8px;margin-top:8px;padding:7px 10px;border-radius:11px;
+    display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;border-radius:12px;
     background:rgba(79,209,181,.12);border:1px solid rgba(79,209,181,.3);
     font-size:0.75rem;color:var(--chal-badge);font-weight:600;
   }
@@ -2164,7 +2189,7 @@
   .checkin-card.locked{background:linear-gradient(165deg,var(--chal-bg-lock),var(--chal-bg-b));border-color:rgba(79,209,181,.45);}
   .code-display{
     background:var(--tint-3);border:1px solid var(--line);
-    border-radius:16px;padding:17px;
+    border-radius:18px;padding:16px;
   }
   .code-display .code-label{font-size:0.6562rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
   .code-display .code-value{
@@ -2177,14 +2202,14 @@
   /* ---- notes / quotes ---- */
   .note{
     background:linear-gradient(180deg,var(--s2),var(--s3));
-    border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:var(--sh-1);
+    border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--sh-1);
   }
   .note .from{font-size:0.625rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--rose);}
   .note .text{font-family:var(--display);font-size:0.9062rem;line-height:1.55;margin-top:7px;}
   .note .date{font-size:0.625rem;color:var(--faint);margin-top:9px;}
   .quote-box{
     background:linear-gradient(160deg,var(--s2),var(--s3));
-    border:1px solid var(--line-2);border-radius:18px;padding:22px;
+    border:1px solid var(--line-2);border-radius:18px;padding:24px;
   }
   .quote-box .q{font-family:var(--display);font-style:italic;font-size:1rem;line-height:1.5;}
   .daily-q-card{background:linear-gradient(165deg,var(--s2),var(--s3));border-color:rgba(79,209,181,.34);}
@@ -2195,20 +2220,20 @@
   .quest-title{font-family:var(--display);font-weight:600;font-size:1.125rem;letter-spacing:-0.015em;}
   .quest-desc{font-size:0.7812rem;color:var(--muted);}
   .quest-part{
-    border-radius:14px;font-size:0.75rem;font-weight:600;padding:12px;
+    border-radius:18px;font-size:0.75rem;font-weight:600;padding:12px;
     background:var(--tint-2);border:1px solid var(--line-2);color:var(--muted);
   }
   .quest-part.checked{background:rgba(79,209,181,.14);border-color:var(--jade);color:var(--jade);}
 
   /* ---- leaderboard ---- */
-  .lb-row{border-bottom:1px solid var(--line);padding:13px 0;}
+  .lb-row{border-bottom:1px solid var(--line);padding:12px 0;}
   .lb-rank{
     background:var(--s3);border:1px solid var(--line-2);
     font-family:var(--display);font-weight:700;font-size:0.75rem;width:26px;height:26px;
   }
   .lb-name{font-size:0.875rem;font-weight:600;}
   .lb-pts{font-family:var(--display);font-weight:700;font-size:1.0625rem;color:var(--gold);}
-  .fair-bar{height:9px;border-radius:99px;background:var(--tint-3);}
+  .fair-bar{height:9px;border-radius:999px;background:var(--tint-3);}
   .fair-bar .a{background:linear-gradient(90deg,var(--rose),var(--rose-deep));}
   .fair-bar .b{background:linear-gradient(90deg,var(--jade),#3aa892);}
   .fair-label{font-size:0.7188rem;color:var(--faint);}
@@ -2216,7 +2241,7 @@
   /* ---- rewards ---- */
   .reward-item{
     background:linear-gradient(180deg,var(--s2),var(--s3));
-    border:1px solid var(--line);border-radius:14px;padding:13px 15px;
+    border:1px solid var(--line);border-radius:18px;padding:12px 16px;
   }
   .reward-item .left{font-size:0.8438rem;font-weight:500;}
 
@@ -2224,17 +2249,17 @@
   .empty{color:var(--faint);font-size:0.8125rem;font-style:italic;}
   .modal{
     background:var(--surface-lift);
-    border:1px solid var(--line-2);border-radius:22px;box-shadow:var(--sh-3);
+    border:1px solid var(--line-2);border-radius:24px;box-shadow:var(--sh-3);
   }
   .modal h3{font-family:var(--display);font-weight:600;font-size:1.3125rem;letter-spacing:-0.015em;}
   .toast{
     background:var(--surface-lift);
-    border:1px solid var(--line-2);border-radius:15px;font-size:0.8125rem;font-weight:600;
+    border:1px solid var(--line-2);border-radius:18px;font-size:0.8125rem;font-weight:600;
     box-shadow:var(--sh-3);
   }
   .speech-turn{
     background:var(--tint-2);border:1px solid var(--line);
-    border-radius:14px;font-size:0.7812rem;color:var(--muted);
+    border-radius:18px;font-size:0.7812rem;color:var(--muted);
   }
   details.sync summary{font-size:0.8125rem;font-weight:600;color:var(--faint);}
   /* Build 109: this was border-color:var(--line)!important, fighting nine <hr>s that each
@@ -2444,29 +2469,91 @@
        dark-correct, which is why the tab bar, the chips, the washes and the glass
        dashboard all followed without being touched - the only thing that changed is
        which hue each one sits on. */
-    --bg:#140D1C; --night:#140D1C; --ink:#140D1C;
-    --card:#1E1429; --card2:#271A35;
-    --s1:#1E1429; --s2:#271A35; --s3:#322242;
+    /* BUILD 149 - AFTER HOURS. Dusk, corrected.
+
+       148's plum was built for "intimate and charged". I then wrote an options list
+       that labelled the alternative "toy-like, saturated, fun to poke", Moody picked
+       the word playful, and I handed back a children's game - primary colours, fat
+       black keylines, a lime dot, butter yellow. He was right to reject it, and the
+       brief he actually gave at the start was "cute and SEXY, modern". So this is
+       Dusk again with the things that were wrong about it fixed.
+
+       The ground goes from grey-plum to wine-black: same darkness, a warmer and less
+       synthetic undertone, so the coral sits in the same family as the room rather
+       than glowing on top of it. */
+    --bg:#140C13; --night:#140C13; --ink:#140C13;
+    --card:#1E131C; --card2:#281A26;
+    --s1:#1E131C; --s2:#281A26; --s3:#32212F;
     --ground-hatch:rgba(245,237,230,.11);
 
     /* Rules, not borders. Solid hairlines at a fixed value hold their weight on
        an OLED screen; translucent white over a near-black ground disappears. */
-    --line:#2C1F3A; --line-2:#44325A; --border:#2C1F3A;
+    --line:#2E1E2B; --line-2:#432F3F; --border:#2E1E2B;
 
     /* The ink warms with the ground - a cream text on a plum field reads as paper
        under a lamp, where the old bone white read as a screenshot of a screenshot. */
-    --text:#FBF2FA; --muted:#BCA9C8; --faint:#9B88A8;
+    --text:#F7EFF4; --muted:#BBA7B5; --faint:#9B8696;
 
     /* Both owner colours lifted a step: against #0E0B13 the old pair sat too
        close to the ground to carry a numeral. Checked for AA on body text. */
     /* Both owner colours taken up to full chroma. On the old near-black they had to
        stay soft to avoid glowing; a plum ground is close enough in hue to hold a hot
        coral without it vibrating, which is the whole reason the ground moved. */
-    --rose:#FF5E4D; --rose-deep:#E8402F; --moody:#FF5E4D; --pink:#FF5E4D;
-    --pink-dim:#E8402F;
-    --plum:#A98BFF; --rae:#A98BFF; --purple:#A98BFF;
-    --gold:#FFC857; --jade:#2FD6A3; --teal:#2FD6A3; --both:#2FD6A3;
-    --jade-lift:#5BE6BC; --on-jade:#0B2A21;
+    /* BUILD 149 - WHO OWNS WHICH COLOUR, AND THE BUG THAT HID UNDER IT.
+
+       Rae takes the coral; Moody takes the lilac. Measured before swapping: coral
+       against lilac is dE2000 35.9, and 46.1 under deuteranopia - these two hues carry
+       WHO DID WHAT on every 3px bar in the app, so they have to survive the ~8% of men
+       who cannot tell red from green apart. (Red against coral, which is what a naive
+       reading of "give Rae coral" would have produced, measures 5.4. The same colour.)
+
+       On a dark ground coral needs only ONE value: it is the LIGHT end of the pair, so
+       the same hex reads as text and as a shape. The bright direction needed two.
+
+       And --rose is NOT Moody's colour, even though it has been set to the same value
+       since the beginning. It paints the + button, overdue borders, at-risk badges and
+       error states - about twenty places that belong to the app, not to a person. They
+       only ever matched by accident. Splitting them means changing whose colour is
+       whose can never recolour an alert again; it also means that on Rae's phone, her
+       own overdue tasks stop being flagged in Moody's colour. */
+    /* THE ALIASES ARE HISTORICAL AND THEY ARE A TRAP.
+
+       --pink and --pink-dim have always meant "person one"; --plum and --purple have
+       always meant "person two". The names only ever described the VALUES those two
+       people happened to have. Swapping the people and keeping the names attached to
+       the old hues crossed them: Moody's ring took --pink (now coral) while his name
+       took --moody (now lilac), so the same person was two colours on one screen.
+       Caught by looking at the render, not by reading the diff.
+
+       So the aliases point at the identity tokens instead of carrying their own hex.
+       The names still lie - --pink resolves to a lilac - but the INDIRECTION cannot,
+       and the next person to swap a colour changes one line per person. */
+    --moody:#C3A8F0;              /* person one */
+    --pink:var(--moody); --pink-dim:#A98BE0;
+    --rae:#FF6F58;                /* person two */
+    --plum:var(--rae);   --purple:var(--rae);
+    /* and the app's own accent, which belongs to neither of them */
+    --rose:#FF6F58;  --rose-deep:#E85A44;
+    /* ---- BUILD 168: THE WIN COLOUR IS LIME ----
+       Moody asked for the check to be a bright colour, "like orange", as the
+       action/win colour throughout. Orange is the one hue that cannot do this job:
+       measured against Rae's coral under deuteranopia it is ΔE 2.4, where under 15
+       means the two are the same colour. Amber is 2.6. A done-marker that reads as
+       one of the two people is worse than no colour at all.
+
+       The current mint failed too, more quietly - ΔE 9.8 against Moody's lilac under
+       the same simulation. The "together" colour was never actually separable.
+
+       Every hue was searched for the brightest value that stays furthest from BOTH
+       people under normal, deuteranope and protanope vision while clearing contrast.
+       Lime at 94 degrees wins by a distance: worst-case ΔE 23.5 against the next
+       best at 17.9, and 11.1:1 on this ground.
+
+       It is also the one thing Moody's own reference notes name directly:
+       "chartreuse/lime/neon green on black: keep it small (a thin active indicator,
+       not a glowing tile) and pair it with something warm." Coral is the warm. */
+    --gold:#E8C98A; --jade:#61E000; --teal:#61E000; --both:#61E000;
+    --jade-lift:#6CFA00; --on-jade:#140C13;
 
     --ui:"Instrument Sans",-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     --display:"Instrument Serif","Iowan Old Style",Georgia,serif;
@@ -2490,8 +2577,8 @@
     --sh-3:0 20px 60px rgba(0,0,0,.6);
     /* Build 109: the primary-button gradient and the ink on it were typed out at three
        call sites each. They are the skin's loudest colour; they belong in its token block. */
-    --grad-primary-a:#FF6A4F;
-    --grad-primary-b:#E8402F;
+    --grad-primary-a:#FF6F58;
+    --grad-primary-b:#E85A44;
     --on-primary:#1A0B07;
 
     --radius:10px; --r-object:10px;
@@ -2499,13 +2586,53 @@
        near-black these were the one surface that stayed grey while everything
        behind them went plum, which is exactly the seam the first Dusk render showed
        across the tab strip. */
-    --blur-bg:rgba(20,13,28,.80);
-    --blur-bg-solid:rgba(20,13,28,.92);
-    --on-accent:#140D1C;
+    --blur-bg:rgba(20,12,19,.84);
+    --blur-bg-solid:rgba(20,12,19,.96);
+    --on-accent:#140C13;
+    /* BUILD 151 - THE SELECTED STATE IS ITS OWN DECISION.
+
+       150 built the selected menu cell out of --s3 and --sh-2 so it would follow any
+       palette. In this skin --sh-2 is `0 1px 0 rgba(255,255,255,.03)` - Build 128
+       deliberately flattened shadows here - and --s3 is one step off --s1. Measured
+       result: the selected tab sat at 1.20:1 against the bar. Invisible. The
+       portability was real and it erased the thing it was supposed to carry.
+
+       A selected state is not a surface tint, so it stops borrowing one. Three lines
+       per palette, stated, no inference. */
+    /* BUILD 153 - HARD OFFSET, NOT BLUR.
+
+       151 gave the selected cell a soft blurred drop shadow. Elegant, and it has no
+       3D in it: a blurred shadow says "floating slightly", a HARD offset with zero
+       blur says "this is a physical object sitting on the page". The second is what
+       Moody kept pointing at, and I had thrown the technique out along with the
+       primary colours and the butter-yellow ground it happened to arrive wearing.
+       The childishness was the palette. The shadow was never the problem. */
+    --menu-ink:#000000;                      /* what the offset is cast IN */
+    --menu-sel-fill:var(--both);             /* belongs to neither of them */
+    --menu-sel-ink:var(--on-jade);
+    --menu-sel-edge:var(--menu-ink);
+    --menu-sel-shadow:0 3px 0 var(--menu-ink);
+    --menu-bar-shadow:0 4px 0 var(--menu-ink);
+
+    /* ---- BUILD 156: the dock ----
+       The hard 0-blur black offset was mine, from the build where Moody asked for
+       the 3D effect, and it is the most toy-like object in the app: neobrutalist
+       sticker-sheet, not the thing his references do. P-10 Minimal Luxury floats
+       instead, and its selected cell is INK rather than an accent - which also
+       gets mint, a third colour belonging to neither of them, off the chrome.
+
+       sel-fill is --text and sel-ink is --bg, so the pair inverts correctly in
+       both palettes and the contrast is maximal by construction. */
+    --dock-bg:rgba(40,26,38,.86);
+    --dock-rim:rgba(255,255,255,.07);
+    --dock-shadow:inset 0 1px 0 rgba(255,255,255,.055), 0 16px 34px -14px rgba(0,0,0,.85);
+    --dock-ink:var(--muted);
+    --dock-sel-fill:var(--text);
+    --dock-sel-ink:var(--bg);
     /* the two corner washes that make the ground feel lit rather than painted */
-    --wash-a:rgba(255,94,77,.18);
-    --wash-b:rgba(169,139,255,.17);
-    --wash-c:rgba(47,214,163,.06);
+    --wash-a:rgba(255,111,88,.15);
+    --wash-b:rgba(195,168,240,.14);
+    --wash-c:rgba(111,217,180,.05);
     --wash-deep:transparent;   /* the PE skin lights its ground from the corners */
     --grain:.035;
     --coral:var(--rose);
@@ -2561,7 +2688,7 @@
     border-left:2px solid transparent;
     border-radius:0;
     box-shadow:none;
-    padding:15px 2px 15px 11px;
+    padding:16px 2px 16px 12px;
     margin-bottom:0;
   }
   :root[data-skin="pe"] .task:last-child{ border-bottom:none; }
@@ -2598,7 +2725,7 @@
   :root[data-skin="pe"] .stat-row{ gap:0; }
   :root[data-skin="pe"] .stat + .stat{
     border-left:1px solid var(--line);
-    padding-left:14px;
+    padding-left:16px;
   }
   :root[data-skin="pe"] .stat .num{
     font-family:var(--display);
@@ -2625,7 +2752,7 @@
     border:none;
     border-bottom:2px solid transparent;
     border-radius:0;
-    padding:10px 14px;
+    padding:12px 16px;
     box-shadow:none;
     color:var(--faint);
     margin-bottom:-1px;
@@ -2640,7 +2767,7 @@
   :root[data-skin="pe"] .switcher button{
     background:none;
     border:1px solid var(--line);
-    border-radius:10px;
+    border-radius:12px;
     box-shadow:none;
   }
   :root[data-skin="pe"] .switcher button.active{
@@ -2687,8 +2814,8 @@
   /* Build 109: four across is only four across while the words fit. */
   .look-row{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
   .look-opt{
-    flex:1 1 68px; min-width:0; cursor:pointer; padding:11px 6px 9px; text-align:center;
-    border:1px solid var(--border); border-radius:10px;
+    flex:1 1 68px; min-width:0; cursor:pointer; padding:12px 8px 8px; text-align:center;
+    border:1px solid var(--border); border-radius:12px;
     background:var(--card2); color:var(--muted);
     font-size:0.625rem; font-weight:600; line-height:1.25;
   }
@@ -2743,7 +2870,7 @@
 
   /* ---- icons ---- */
   .wd-i{ display:inline-block; vertical-align:-0.18em; flex:none; }
-  .tabs button{ display:inline-flex; align-items:center; gap:7px; }
+  .tabs button{ display:inline-flex; align-items:center; gap:8px; }
   .list-pills button .pill-ico{ display:inline-flex; align-items:center; }
   .list-pills button .pill-ico .wd-i{ vertical-align:0; }
   header .sub.motto .wd-i{ vertical-align:-0.12em; }
@@ -2786,8 +2913,8 @@
     position:relative;
     background:linear-gradient(180deg, var(--sheen-hi), transparent 160px), var(--s1);
     border:1px solid var(--line);
-    border-radius:16px;
-    padding:20px 18px;
+    border-radius:18px;
+    padding:24px 16px;
     overflow:hidden;
   }
   :root[data-skin="pe"] .hero-card::before{
@@ -2806,8 +2933,8 @@
     background-repeat:no-repeat;
     background-position:right 13px center;
     border:1px solid var(--line-2);
-    border-radius:10px;
-    padding:12px 38px 12px 14px;
+    border-radius:12px;
+    padding:12px 38px 12px 16px;
     color:var(--text);
     font-family:var(--ui); font-size:max(16px, 0.875rem); font-weight:500;
   }
@@ -2819,7 +2946,7 @@
   :root[data-skin="pe"] textarea{
     background:var(--field-bg);
     border:1px solid var(--line-2);
-    border-radius:10px;
+    border-radius:12px;
     color:var(--text);
     font-family:var(--ui);
   }
@@ -2864,7 +2991,7 @@
     border-radius:999px;
     font-size:0.625rem; font-weight:700;
     letter-spacing:.07em; text-transform:uppercase;
-    padding:3px 9px;
+    padding:4px 8px;
     opacity:.85;
   }
 
@@ -2894,8 +3021,8 @@
 
   /* ---- the us bar (see renderUsBar) ---- */
   .us-bar{
-    display:flex; align-items:center; gap:11px;
-    padding:13px 2px 15px;
+    display:flex; align-items:center; gap:12px;
+    padding:12px 2px 16px;
     margin:2px 0 4px;
   }
   .us-bar .us-end{ flex:none; min-width:66px; }
@@ -2951,7 +3078,7 @@
   .miss-line .ml-c{ color:var(--faint); }
 
   /* ---- header: stop it eating the first screen ---- */
-  :root[data-skin="pe"] header{ padding:26px 20px 4px; }
+  :root[data-skin="pe"] header{ padding:24px 24px 4px; }
   /* :not(.brand-row) - the h1 IS the lockup now, and this rule ties with the
      lockup's own clamp on specificity and wins on source order, which took the
      ceiling off and let the wordmark grow until it clipped. */
@@ -2997,7 +3124,7 @@
     border-radius:999px;
     font-size:var(--eyebrow); font-weight:700;
     letter-spacing:.09em; text-transform:uppercase;
-    padding:2.5px 8px;
+    padding:4px 8px;
   }
   :root[data-skin="pe"] .diff-easy{ color:var(--jade); }
   :root[data-skin="pe"] .diff-medium{ color:var(--gold); }
@@ -3012,7 +3139,7 @@
   :root[data-skin="pe"] .task .for-who{ color:var(--faint); font-size:0.7188rem; }
 
   .due-tag .dt-i{ vertical-align:-0.16em; margin-right:1px; }
-  .due-tag{ display:inline-flex; align-items:center; gap:3px; }
+  .due-tag{ display:inline-flex; align-items:center; gap:4px; }
 
   /* The pair between the two rings: yours in coral, hers in iris, offset so they overlap
      the way the rings do. */
@@ -3106,7 +3233,7 @@
        the negative margin is what reclaims the modal's padding, not the offset. */
     bottom:0;
     margin:0 -22px -22px;
-    padding:12px 22px 22px;
+    padding:12px 24px 24px;
     background:var(--card);
     z-index:2;
   }
@@ -3155,14 +3282,14 @@
   }
   .miss-days li{
     display:flex; justify-content:space-between; align-items:center;
-    padding:9px 0; font-size:0.8438rem;
+    padding:8px 0; font-size:0.8438rem;
     border-bottom:1px solid var(--line,rgba(255,255,255,.08));
   }
   .miss-days li:last-child{ border-bottom:none; }
   .miss-days .md-cost{ color:var(--gold); font-weight:700; font-variant-numeric:tabular-nums; }
   .miss-total{
     display:flex; justify-content:space-between; align-items:baseline;
-    margin-top:12px; padding-top:11px;
+    margin-top:12px; padding-top:12px;
     border-top:1px solid var(--line-2,rgba(255,255,255,.16));
   }
   .miss-total .mt-l{ font-size:var(--eyebrow); font-weight:700; letter-spacing:var(--eyebrow-track);
@@ -3171,7 +3298,7 @@
     color:var(--gold); font-variant-numeric:tabular-nums; }
   .miss-ack{
     width:100%; margin-top:14px; background:none; border:1px solid var(--line-2);
-    color:var(--text); border-radius:12px; padding:11px; font-weight:600;
+    color:var(--text); border-radius:12px; padding:12px; font-weight:600;
     font-size:0.875rem; font-family:var(--ui); cursor:pointer;
   }
 
@@ -3233,7 +3360,7 @@
   .ms-sub b{ color:var(--gold); }
   .ms-meta{ display:flex; margin-top:16px; border-top:1px solid var(--line,rgba(255,255,255,.12)); }
   .ms-meta div{ flex:1; padding-top:12px; }
-  .ms-meta div + div{ border-left:1px solid var(--line,rgba(255,255,255,.12)); padding-left:14px; }
+  .ms-meta div + div{ border-left:1px solid var(--line,rgba(255,255,255,.12)); padding-left:16px; }
   .ms-meta .l{
     font-size:var(--eyebrow); font-weight:700; letter-spacing:var(--eyebrow-track); text-transform:uppercase;
     color:var(--faint); margin-bottom:5px;
@@ -3250,14 +3377,14 @@
   .ms-shot{ width:100%; aspect-ratio:3/2; object-fit:cover; border-radius:12px;
             margin-top:14px; display:block; background:var(--tint-2); }
   .ms-go{
-    width:100%; margin-top:14px; border:none; border-radius:12px; padding:13px;
+    width:100%; margin-top:14px; border:none; border-radius:12px; padding:12px;
     font-family:var(--ui); font-weight:700; font-size:0.9375rem; cursor:pointer;
     background:linear-gradient(145deg,var(--grad-primary-a),var(--grad-primary-b)); color:var(--on-primary);
     box-shadow:0 6px 20px var(--glow-primary), inset 0 1px 0 rgba(255,255,255,.22);
   }
   .ms-dismiss{
     width:100%; margin-top:8px; background:none; border:none; color:var(--faint);
-    font-size:0.8125rem; font-family:var(--ui); cursor:pointer; padding:6px;
+    font-size:0.8125rem; font-family:var(--ui); cursor:pointer; padding:8px;
   }
   /* ---- the activity banner ---- */
   .act-card{ border-color:var(--line-2); }
@@ -3299,8 +3426,8 @@
   :root[data-skin="pe"] .tabs button{
     flex:1 1 0;
     flex-direction:column;
-    gap:3px;
-    padding:7px 2px;
+    gap:4px;
+    padding:8px 2px;
     font-size:0.6562rem;
     min-width:0;
   }
@@ -3365,8 +3492,8 @@
     margin-right:-16px;
     padding-left:16px;
     padding-right:16px;
-    padding-top:9px;
-    padding-bottom:9px;
+    padding-top:8px;
+    padding-bottom:8px;
     background:var(--blur-bg);
     -webkit-backdrop-filter:saturate(150%) blur(16px);
     backdrop-filter:saturate(150%) blur(16px);
@@ -3389,7 +3516,7 @@
     display:block;
     width:100%;
     margin:-4px 0 14px;
-    padding:9px 14px;
+    padding:8px 16px;
     border:1px dashed var(--border);
     border-radius:12px;
     background:transparent;
@@ -3413,10 +3540,10 @@
   .miss-fold{
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:12px;
     width:100%;
     margin-top:2px;
-    padding:11px 2px;
+    padding:12px 2px;
     border:0;
     border-top:1px solid var(--border);
     background:transparent;
@@ -3514,8 +3641,8 @@
   .cel-tick{ stroke-dasharray:34; stroke-dashoffset:34; animation:celTick 1.45s ease forwards; }
   .cel-say{
     position:absolute; left:0; right:0; top:58%;
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-    padding:0 28px; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding:0 32px; text-align:center;
     opacity:0; animation:celSay 1.45s ease forwards;
   }
   .cel-say b{
@@ -3641,7 +3768,7 @@
   .ptr.settling{ transition:transform .3s cubic-bezier(.16,1,.3,1), opacity .22s ease; }
   .ptr-box{
     display:flex; align-items:center; gap:8px;
-    margin-top:10px; padding:8px 15px;
+    margin-top:10px; padding:8px 16px;
     border-radius:999px;
     border:1px solid var(--border);
     background:var(--blur-bg-solid);
@@ -3708,7 +3835,7 @@
      ========================================================================= */
   .code-display.tearoff{
     position:relative;
-    padding:0 16px 14px;
+    padding:0 16px 16px;
     border-radius:4px 4px 12px 12px;
     overflow:hidden;
     background:linear-gradient(180deg, var(--tint-2), var(--tint-1));
@@ -3725,7 +3852,7 @@
   }
   .code-display.tearoff .to-head{
     display:flex; align-items:baseline; justify-content:space-between;
-    gap:10px; padding:14px 0 8px; margin-bottom:8px;
+    gap:12px; padding:16px 0 8px; margin-bottom:8px;
     border-bottom:1px solid var(--border);
   }
   .code-display.tearoff .to-dow{
@@ -3738,8 +3865,8 @@
     color:var(--faint);
   }
   .code-display.tearoff .to-stamp{
-    display:inline-flex; align-items:center; gap:5px;
-    margin-top:10px; padding:4px 11px; border-radius:999px;
+    display:inline-flex; align-items:center; gap:4px;
+    margin-top:10px; padding:4px 12px; border-radius:999px;
     border:1px solid var(--jade); color:var(--jade);
     font-size:0.6875rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase;
     transform:rotate(-3deg);
@@ -3761,7 +3888,7 @@
      ========================================================================= */
   .trip-todos{
     margin:-6px 0 18px;
-    padding-left:14px;
+    padding-left:16px;
     border-left:2px solid var(--line-2, rgba(255,255,255,.10));
   }
   .trip-todos .task-wrap:last-child .task{ border-bottom:0; }
@@ -3772,13 +3899,13 @@
   .health-doubt{ margin-top:10px; }
   .health-doubt .hd-why{
     font-size:0.7812rem; line-height:1.55; color:var(--muted);
-    padding:9px 11px; margin-bottom:8px;
-    border:1px solid var(--border); border-radius:10px;
+    padding:8px 12px; margin-bottom:8px;
+    border:1px solid var(--border); border-radius:12px;
     background:rgba(232,181,75,.06);
   }
   .health-clear{
     width:100%; padding:8px 12px;
-    border:1px dashed var(--border); border-radius:10px;
+    border:1px dashed var(--border); border-radius:12px;
     background:transparent; color:var(--faint);
     font-size:0.75rem; font-weight:650; cursor:pointer;
   }
@@ -3807,14 +3934,14 @@
      BUILD 105 — a won reward you can actually use.
      ========================================================================= */
   .won-head{
-    display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px;
     margin:14px 0 7px;
     font-size:0.6562rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase;
     color:var(--faint);
   }
   .won-head:first-child{ margin-top:2px; }
   .won-count{ font-variant-numeric:tabular-nums; }
-  .won-row{ gap:10px; }
+  .won-row{ gap:12px; }
   .won-row .left{ min-width:0; align-items:flex-start; }
   .wr-ico{ flex:none; line-height:1; margin-top:1px; color:var(--rose); }
   .wr-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
@@ -3823,7 +3950,7 @@
      rather than out by the button, because it is a fact about the prize and the button
      still does one thing. */
   .wr-mult{
-    display:inline-block; margin-left:7px; padding:1px 6px; border-radius:999px;
+    display:inline-block; margin-left:7px; padding:1px 8px; border-radius:999px;
     font-size:var(--eyebrow); font-weight:800; letter-spacing:.02em;
     background:var(--s3); color:var(--muted); vertical-align:0.08em;
     font-variant-numeric:tabular-nums;
@@ -3831,7 +3958,7 @@
   .won-row.st-done .wr-mult{ text-decoration:none; }
   .wr-sub{ font-size:0.6875rem; line-height:1.35; color:var(--faint); }
   .wr-act{ flex:none; display:flex; align-items:center; }
-  .wr-btn{ padding:7px 14px; font-size:0.7812rem; font-weight:700; border-radius:999px; }
+  .wr-btn{ padding:8px 16px; font-size:0.7812rem; font-weight:700; border-radius:999px; }
   .wr-done{
     display:inline-flex; align-items:center; gap:4px;
     font-size:0.6562rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
@@ -4094,11 +4221,42 @@
     --text:#2A1F26;   --muted:#695863;  --faint:#705D69;
 
     /* ---- the two people, and the two of them together ---- */
+    /* BUILD 154: these two were crossed. After Hours gives Moody lilac and Rae
+       coral; Daylight was still on the pre-rebrand assignment, so each person's
+       hue FLIPPED when you changed theme — the mark, the "D"/"O", the duo frames
+       and the race bars all swapped owners. Daylight now carries the same two
+       hues at light-ground strength: lilac darkened to violet, coral to brick.
+       --rose stays brick on its own because it is the app's alert, not a person. */
     --rose:#C9482A;   --rose-deep:#AA3B21;
-    --moody:#C9482A;  --pink:#C9482A;   --pink-dim:#AA3B21;
-    --plum:#5A3BC4;   --rae:#5A3BC4;    --purple:#5A3BC4;
-    --jade:#0B7A5E;   --teal:#0B7A5E;   --both:#0B7A5E;
-    --jade-lift:#076449; --on-jade:#FFFFFF;
+    --moody:#5A3BC4;  --pink:#5A3BC4;   --pink-dim:#4A2EA8;
+    --plum:#C9482A;   --rae:#C9482A;    --purple:#C9482A;
+    /* BUILD 168: the same hue, at light-ground strength. 3.1:1 on cream, which
+       clears the 3:1 floor for a GRAPHIC - a tick, a fill, an indicator - and not
+       the 4.5:1 text floor. Darkening it until it passed as text took it to #378000
+       and collapsed its separation from the two people to ΔE 11.7, which is the
+       exact trap that made the original palette muddy: every accent darkened until
+       it passed on cream, and drained in the process. So in Daylight lime marks
+       things, it does not label them.
+
+       on-jade is dark ink in BOTH themes now. White on light lime is 3.1:1 and
+       failed; the dark ink is 5.8:1. */
+    /* Two values, because lime behaves differently as a mark and as a word on a
+       cream ground, and 37 of the 67 usages are `color:`.
+
+         --both   #47A102  the MARK and fills. 3.1:1, which clears the 3:1 floor
+                           for a graphic, and keeps ΔE 23.5 from both people.
+         --jade   #378000  TEXT. 4.70:1, which clears the 4.5:1 floor for words.
+
+       Separation drops to ΔE 11.7 at the text value, and that is the honest cost:
+       darkening a bright colour until it passes on cream is exactly what drained
+       the original palette. It is acceptable here only because text says what it
+       means in words - a label reading "done" does not depend on its hue the way a
+       bare tick does.
+
+       on-jade follows the fill it sits on: dark ink on the bright mark (5.8:1),
+       paper on the darker text value (4.9:1) wherever that is used as a ground. */
+    --jade:#378000;   --teal:#378000;   --both:#47A102;
+    --jade-lift:#47A102; --on-jade:#FFF8F3;
     --gold:#8F6509;
 
     /* ---- buttons ---- */
@@ -4167,6 +4325,38 @@
     --grain:.016;
     --sh-shadow:rgba(92,52,30,.22);
     --coral:var(--rose);
+    /* BUILD 151: the same three stated for Daylight, and the mix is MUCH stronger
+       here than on the dark ground - 34% against 26%. On a dark ground a selected
+       cell can get brighter; on a light one white is already the ceiling, so the
+       only direction left is down, and a timid tint reads as nothing. Measured:
+       15% gave a 1.23:1 step against the unselected cells, 22% gave 1.36, 30%
+       gave 1.53. The same percentage in both themes would have been wrong in one
+       of them, which is the whole argument for stating it per palette. */
+    /* BUILD 153: same technique, warm ink. A hard offset needs a colour dark enough
+       to read as a cast edge rather than as a grey smudge, which on cream means the
+       ground's own hue taken most of the way to black, never a neutral grey. */
+    --menu-ink:#2A1A10;
+    --menu-sel-fill:var(--both);
+    --menu-sel-ink:var(--on-jade);
+    --menu-sel-edge:var(--menu-ink);
+    --menu-sel-shadow:0 3px 0 var(--menu-ink);
+    --menu-bar-shadow:0 4px 0 var(--menu-ink);
+
+    /* ---- BUILD 156: the dock ----
+       The hard 0-blur black offset was mine, from the build where Moody asked for
+       the 3D effect, and it is the most toy-like object in the app: neobrutalist
+       sticker-sheet, not the thing his references do. P-10 Minimal Luxury floats
+       instead, and its selected cell is INK rather than an accent - which also
+       gets mint, a third colour belonging to neither of them, off the chrome.
+
+       sel-fill is --text and sel-ink is --bg, so the pair inverts correctly in
+       both palettes and the contrast is maximal by construction. */
+    --dock-bg:#FFFFFF;
+    --dock-rim:rgba(92,52,30,.10);
+    --dock-shadow:0 1px 1px rgba(92,52,30,.05), 0 16px 34px -14px rgba(92,52,30,.30);
+    --dock-ink:var(--muted);
+    --dock-sel-fill:var(--text);
+    --dock-sel-ink:var(--bg);
   }
 
 
@@ -4190,9 +4380,18 @@
      17px x2, and a lone 2.5px.
      --------------------------------------------------------------------------- */
   :root{
-    --sp-1:2px;   --sp-2:4px;   --sp-3:6px;   --sp-4:8px;   --sp-5:10px;
-    --sp-6:12px;  --sp-7:14px;  --sp-8:16px;  --sp-9:18px;  --sp-10:20px;
-    --sp-11:22px; --sp-12:24px; --sp-13:26px; --sp-14:28px;
+    /* BUILD 156 - THIS WAS A RULER, NOT A SCALE.
+       Fourteen stops at 2px increments permits every value, so it enforces nothing:
+       the rendered app measured 23 distinct paddings and 15 distinct gaps across six
+       tabs. A scale that allows everything is the same as having no scale, and that
+       is most of why the app read as generated rather than designed.
+
+       The names are kept because there are hundreds of call sites. The VALUES snap
+       to an 8pt grid, so every existing use lands on a legal step without one line
+       of component CSS changing. Fourteen values collapse to six. */
+    --sp-1:2px;   --sp-2:4px;   --sp-3:4px;   --sp-4:8px;   --sp-5:8px;
+    --sp-6:12px;  --sp-7:12px;  --sp-8:16px;  --sp-9:16px;  --sp-10:16px;
+    --sp-11:24px; --sp-12:24px; --sp-13:24px; --sp-14:32px;
 
     /* the four that set the rhythm, named for the job rather than the size */
     --gutter:16px;       /* the page's left and right margin */
@@ -4332,20 +4531,27 @@
   .splash.skip, .splash.skip *{ animation-duration:.18s !important; animation-delay:0s !important; }
 
   .splash-mark{
-    width:min(43vw, 168px); height:auto; overflow:visible;
+    /* narrower than the W was: a heart is nearly square, so the same vw would make
+       it tower over the wordmark underneath */
+    width:min(32vw, 124px); height:auto; overflow:visible;
     transform-origin:50% 62%;
     animation:splash-beat .52s cubic-bezier(.34,1.56,.64,1) 1.12s both;
   }
   .splash-mark path{
-    fill:none; stroke-width:18; stroke-linecap:round; stroke-linejoin:round;
+    /* BUILD 149: 11 to match the header mark, and a mitred join so the two valleys
+       come to a point instead of a rounded lump. 18 was the heart's weight. */
+    fill:none; stroke-width:11; stroke-linecap:round; stroke-linejoin:round;
     /* the dash length is written by script from getTotalLength(), so the draw is
        exact for each path rather than a number guessed off the viewBox */
     stroke-dasharray:var(--len); stroke-dashoffset:var(--len);
     animation:splash-draw .72s cubic-bezier(.32,.72,.35,1) both;
   }
+  /* BUILD 154: his half, then hers, then the check they earned. The third path is
+     back and it draws LAST and fastest - the heart is the two of you turning up, the
+     check is what that produces, so it cannot arrive first. */
   .splash-mark .sp-a{ stroke:var(--moody); animation-delay:.06s; }
-  .splash-mark .sp-b{ stroke:var(--rae);   animation-delay:.24s; }
-  .splash-mark .sp-c{ stroke:var(--moody); animation-delay:.88s; animation-duration:.32s; }
+  .splash-mark .sp-b{ stroke:var(--rae);   animation-delay:.26s; }
+  .splash-mark .sp-c{ stroke:var(--both);  animation-delay:.82s; animation-duration:.34s; }
 
   .splash-word{
     font-family:var(--ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
@@ -4361,6 +4567,20 @@
   .splash-word span:nth-child(2){ animation-delay:1.25s; }
   .splash-word span:nth-child(3){ animation-delay:1.32s; color:var(--moody); }
   .splash-word span:nth-child(4){ animation-delay:1.39s; color:var(--rae); }
+
+  /* BUILD 155. Two rows rise, then the O changes colour under you. fill is
+     animatable, so "the word becomes the two of you" costs two keyframes and no
+     geometry. The arcs start as --text so there is no flash of accent before the
+     word has even landed. */
+  .splash-lockup{ width:min(46vw,188px); height:auto; }
+  .splash-lockup .wm-r1{ animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) .10s both; }
+  .splash-lockup .wm-r2{ animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) .24s both; }
+  .splash-lockup .wm-a{ animation:wm-his .42s cubic-bezier(.22,.9,.3,1) .86s both; }
+  .splash-lockup .wm-b{ animation:wm-hers .42s cubic-bezier(.22,.9,.3,1) .98s both; }
+  /* the check stays ink throughout - it is what the two of them produce, so it
+     does not need to arrive in anybody's colour */
+  @keyframes wm-his{  from{ fill:var(--text); } to{ fill:var(--moody); } }
+  @keyframes wm-hers{ from{ fill:var(--text); } to{ fill:var(--rae); } }
 
   .splash-line{
     font-family:var(--display, Georgia, serif);
@@ -4378,7 +4598,9 @@
     /* the mark arrives whole and still. Nothing draws, nothing beats, nothing
        rises - and it is off the screen in a third of the time. */
     .splash{ animation:splash-out .3s linear .5s both; }
-    .splash-mark, .splash-mark path, .splash-word span, .splash-line{
+    .splash-mark, .splash-mark path, .splash-word span, .splash-line,
+    .splash-lockup .wm-r1, .splash-lockup .wm-r2,
+    .splash-lockup .wm-a, .splash-lockup .wm-b{
       animation:none; stroke-dashoffset:0; opacity:1; transform:none;
     }
   }
@@ -4550,7 +4772,7 @@
   :root[data-skin="pe"] .list-pills{ gap:var(--sp-9); }
   :root[data-skin="pe"] .list-pills button{
     background:none; border:0; border-radius:0; box-shadow:none;
-    padding:6px 0; color:var(--faint);
+    padding:8px 0; color:var(--faint);
     font-family:var(--mono); font-size:.75rem; font-weight:500;
     letter-spacing:.08em; text-transform:uppercase;
   }
@@ -4621,7 +4843,7 @@
   :root[data-skin="pe"] .task-filter-bar select{
     font-family:var(--mono); font-size:.6875rem; font-weight:500;
     letter-spacing:.07em; text-transform:uppercase;
-    padding:7px 26px 7px 10px; border-radius:7px;
+    padding:8px 24px 8px 12px; border-radius:7px;
     background-color:transparent; border-color:var(--line);
     color:var(--muted); min-height:36px;
   }
@@ -4765,7 +4987,7 @@
     -webkit-backdrop-filter:blur(26px) saturate(150%);
     backdrop-filter:blur(26px) saturate(150%);
     border:1px solid color-mix(in srgb, var(--line-2) 70%, transparent);
-    border-radius:16px;
+    border-radius:18px;
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.28),            /* 4: rim light */
       0 8px 10px -6px rgba(40,24,16,.22),             /* 6: tight */
@@ -5017,7 +5239,7 @@
   /* ---- the payline ---- */
   .reel-win{
     border:0;
-    border-radius:10px;
+    border-radius:12px;
     /* inset ring rather than two rules: a band with ends reads as a window you are
        looking through, two rules across the full width read as a table. */
     box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--moody) 62%, transparent);
@@ -5037,7 +5259,7 @@
   .reel-win::after{ right:-1px; transform:scaleX(-1); }
 
   /* ---- the meter under the spin count ---- */
-  .sp-meter{ display:flex; gap:3px; height:6px; margin:var(--sp-4) 0 var(--sp-3); }
+  .sp-meter{ display:flex; gap:4px; height:6px; margin:var(--sp-4) 0 var(--sp-3); }
   .sp-meter i{
     flex:1; border-radius:2px; background:var(--line-2);
     transition:background var(--mo-300) var(--ease-out);
@@ -5110,7 +5332,7 @@
                             resting size shrinks, so the sync reading is unchanged) */
   :root[data-skin="pe"] .duo-row{
     gap:var(--sp-3);
-    padding-left:10px; padding-right:10px;
+    padding-left:12px; padding-right:12px;
     max-width:460px;
   }
   :root[data-skin="pe"] .duo-heart{
@@ -5161,7 +5383,7 @@
 
      .chal-wrap re-applies --gutter INSIDE an element that is already inside the
      gutter, so the challenge is the only card on the screen that is indented. On
-     top of that it is a mint gradient with a jade border at an 18px radius, while
+     top of that it is a mint gradient with a jade border at an 16px radius, while
      its neighbours are plain cards at 12px - a different width AND a different
      material, which is exactly "the sober one is not the same size".
 
@@ -5194,9 +5416,9 @@
 
   /* ---- BUILD 139: the topic, as a thing to read and copy ---- */
   .ntfy-topic{
-    display:flex; flex-direction:column; gap:3px;
+    display:flex; flex-direction:column; gap:4px;
     padding:12px var(--sp-7); margin-top:var(--sp-4);
-    border:1px solid var(--line-2); border-radius:10px;
+    border:1px solid var(--line-2); border-radius:12px;
     background:var(--s2);
   }
   .ntfy-topic .nt-lbl{
@@ -5317,7 +5539,7 @@
     font-family:var(--mono); font-size:.5938rem; letter-spacing:.14em;
     text-transform:uppercase; color:var(--faint);
   }
-  .tm-fv{ font-size:.9375rem; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .tm-fv{ font-size:.9375rem; color:var(--text); display:flex; align-items:center; gap:8px; }
   .tm-fv.late{ color:var(--rose); font-weight:600; }
   .tm-note{
     font-size:.8125rem; color:var(--muted); padding-top:var(--sp-4);
@@ -5477,9 +5699,9 @@
   /* ---- the day sheet ---- */
   .tmorph.is-day .tm-sheet{ width:min(calc(100vw - 32px), 460px); }
   .tm-faces{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-7); }
-  .tf-col{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .tf-col{ display:flex; flex-direction:column; gap:8px; min-width:0; }
   .tf-frame{
-    aspect-ratio:1/1; width:100%; border-radius:14px; overflow:hidden;
+    aspect-ratio:1/1; width:100%; border-radius:18px; overflow:hidden;
     border:1.5px solid var(--line-2); background:var(--s2);
     display:grid; place-items:center;
   }
@@ -5497,7 +5719,7 @@
   .tm-did-list{ display:flex; flex-wrap:wrap; gap:var(--sp-3); }
   .tm-did{
     font-family:var(--mono); font-size:.625rem; letter-spacing:.06em;
-    color:var(--muted); padding:3px 8px; border-radius:5px;
+    color:var(--muted); padding:4px 8px; border-radius:5px;
     background:color-mix(in srgb, var(--text) 6%, transparent);
   }
 
@@ -5506,6 +5728,225 @@
     .dw-past:active{ transform:none; }
   }
 
+
+  /* =====================================================================
+     BUILD 156 - THE TODAY SCREEN, REBUILT ON THE SYSTEM
+
+     Action sentence: TWO FACES TURN UP AND THE DAY LOCKS. That is the one
+     signature move; everything else on this screen gets quieter so it can be
+     seen. What was here instead: four centred rows of three different type
+     families, two 118px empty circles asking for a photo, and the same score
+     stated three times in the top half of the screen.
+
+     This block is last in the sheet on purpose. Every rule below wins on
+     source order against the component CSS it corrects, so there is not one
+     !important in it.
+     ===================================================================== */
+
+  /* ---- 1. the masthead ----
+     The motto line is character-for-character the splash's own line, shown
+     again on every screen for the rest of the session. Once is a brand moment;
+     always is wallpaper. */
+  header .sub.motto{ display:none; }
+  header .sub.tagline{ margin-top:4px; }
+  .hud{ margin-top:12px; gap:0; }
+
+  /* ---- 2. the pair, which is the whole point of the screen ----
+     Two 118px circles spent 230 vertical pixels mostly saying "no photo yet",
+     and an outlined circle is the one shape in the app that matches nothing
+     else in it. Rounded squares on the card radius show more picture in less
+     height and speak the same language as every other surface.
+
+     Depth per the card recipe: light from above - a hairline lit top edge, and
+     a shadow that falls DOWN - rather than a flat 3px ring of accent. */
+  .duo-row{ gap:12px; padding:0 16px; margin-bottom:8px; }
+  :root[data-skin="pe"] .duo-frame,
+  .duo-frame{
+    max-width:none; width:100%; border-radius:18px;
+    border:1px solid var(--line-2);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px -10px rgba(0,0,0,.55);
+  }
+  .duo-slot[data-side="left"] .duo-frame{ border-color:color-mix(in srgb, var(--moody) 48%, var(--line-2)); }
+  .duo-slot[data-side="right"] .duo-frame{ border-color:color-mix(in srgb, var(--rae) 48%, var(--line-2)); }
+  .duo-slot:active .duo-frame{ transform:scale(.97); transition:transform 120ms var(--ease-out); }
+
+  /* names and status are metadata, so they are set as metadata: mono, small,
+     tracked out, uppercase. The colour stays - it is the only thing on the
+     screen that says which half belongs to whom. */
+  /* not uppercase: "Partner 1 (you)" in tracked-out caps is wider than the tile
+     and was arriving as "PARTNER 1 (...". Mono alone already reads as metadata. */
+  :root[data-skin="pe"] .duo-name,
+  .duo-name{
+    font-family:var(--mono); font-size:0.6875rem; font-weight:600;
+    letter-spacing:0; text-transform:none; margin-top:8px;
+  }
+  .duo-when{
+    font-family:var(--mono); font-size:0.625rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--faint); margin-top:2px;
+  }
+  .duo-empty{ font-family:var(--mono); font-size:0.625rem; letter-spacing:.06em; }
+
+  /* ---- 3. one accent, and it belongs to one of them ----
+     The cue eyebrow was mint - a third colour owned by neither of them, and the
+     brightest thing on a screen whose subject is two people. Eyebrows are
+     metadata and metadata is faint. */
+  .hero-cue .cue-label, .hero-scope .cue-label,
+  :root[data-skin="pe"] .cue-label{ color:var(--faint); }
+
+  /* ---- 4. cards that agree with each other ----
+     One radius, one inset, one direction for the light. Inner radius is derived
+     from the outer minus the inset (24 - 8 = 16) so nested shapes curve
+     together instead of each picking a number. */
+  :root[data-skin="pe"] .card{
+    border-radius:18px; padding:16px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.045), 0 12px 28px -14px rgba(0,0,0,.5);
+  }
+  :root[data-skin="pe"] .card .card,
+  :root[data-skin="pe"] .card .inset{ border-radius:12px; }
+
+
+  /* ---- 5. the scoreline said the same thing three times ----
+     Two 27px numbers in the two accent colours were the loudest objects on the
+     screen, and they were IDENTICAL - which is precisely the fact that makes
+     them not the story. When both scores match, the only thing worth reading is
+     that they match. So the sentence becomes the headline and the two numbers
+     become what they actually are: a readout.
+
+     One thing speaks first, per the card recipe. It was previously four things
+     speaking at once in three different weights. */
+  /* .us-bar .us-pts is (0,2,0) and there is a comment 1200 lines up warning that
+     it needs matching weight. Matched, rather than reaching for !important. */
+  .us-bar .us-who{
+    font-family:var(--mono); font-size:0.625rem; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--faint); font-weight:600;
+  }
+  .us-bar .us-pts,
+  :root[data-type="c"] .us-bar .us-pts{
+    font-family:var(--mono); font-size:0.9375rem; font-weight:600;
+    font-variant-numeric:tabular-nums; letter-spacing:0;
+  }
+  .us-caption{
+    font-family:var(--display); font-size:1.125rem; line-height:1.3;
+    color:var(--text); margin-top:12px; letter-spacing:-.02em;
+  }
+  .us-caption b{ font-weight:700; }
+  .us-track{ height:3px; }
+
+  @media (prefers-reduced-motion:reduce){
+    .duo-slot:active .duo-frame{ transform:none; }
+  }
+
+
+  /* =====================================================================
+     BUILD 165 - THE MASTHEAD STOPS BEING A COLUMN OF CENTRED ROWS
+
+     Moody: "the slogan is too close to the logo... it should show for a bit
+     and then go away. It's cluttering. I also don't like sync and build being
+     dead center - that's bad design."
+
+     All three are the same fault. Four things centred one under another -
+     lockup, tagline, sync readings, build line - is not a composition, it is a
+     stack. Nothing has a left edge, so nothing relates to anything.
+     ===================================================================== */
+
+  /* ---- the slogan: a brand moment, not furniture ----
+     It is true of the brand, not of today, so it has no business holding screen
+     space for the rest of the session. It gets its room on arrival - 18px of it
+     rather than 4 - and then leaves. max-height collapses with the fade so the
+     page closes the gap rather than jumping. */
+  /* BUILD 165: out of --display and into --ui.
+     --display is Instrument Serif in this skin, so the masthead was running THREE
+     families in about 120px of height - the geometric lockup, a serif slogan and
+     the mono strip. The slogan is the one with no claim to its own voice: the
+     lockup is the brand's face and the strip is metadata. In the app's own sans,
+     tracked out and small, it reads as a caption to the mark rather than as a
+     third opinion. Two families, which is a system.
+
+     Set at the same weight as the tagline's own tracking rather than borrowed
+     from .sub, because :root[data-skin="pe"] header .sub is (0,2,1) and would
+     otherwise keep the size. */
+  :root[data-skin="pe"] header .sub.tagline,
+  header .sub.tagline{
+    font-family:var(--ui); font-weight:500;
+    font-size:0.75rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--faint);
+    margin-top:18px; overflow:hidden;
+    animation:tagline-out 520ms var(--mo-in) 4.2s both;
+  }
+  header .sub.tagline .dash{ color:var(--moody); font-weight:500; }
+  @keyframes tagline-out{
+    0%   { opacity:1; max-height:48px; margin-top:18px; }
+    60%  { opacity:0; max-height:48px; margin-top:18px; }
+    100% { opacity:0; max-height:0;    margin-top:0; }
+  }
+
+  /* ---- the HUD: a status strip, not a third centred row ----
+     Sync state reads left, the build control reads right, and the pair sits on
+     the same 16px gutter the duo row uses - so the header finally has an edge
+     to line up with. The hairline is what makes it read as chrome rather than
+     as more content. */
+  .hud{
+    flex-direction:row; align-items:baseline; justify-content:space-between;
+    /* the page's content edge is 16px - the duo row, the cards and the score bar
+       all sit there. The header pads 24, so the strip is pulled back 8 to land on
+       the same line instead of its own. Measured, not assumed: 24 - 8 = 16. */
+    gap:12px; margin:16px -8px 0; padding-top:10px;
+    border-top:1px solid var(--line);
+    line-height:1.5;
+  }
+  .hud-row{ justify-content:flex-start; flex:1 1 auto; min-width:0; gap:0 16px; }
+  .hud .ver-line{ margin:0; padding:0; flex:0 0 auto; text-align:right; }
+
+  /* At 320px the readings and the build control cannot share a line. They stack,
+     and the control takes the LEFT edge rather than hanging right on its own row -
+     a lone right-aligned item under a left-aligned one is just a second axis, which
+     is the thing this whole block exists to remove. One edge at every width. */
+  @media (max-width:359px){
+    .hud{ flex-wrap:wrap; }
+    .hud .ver-line{ width:100%; text-align:left; margin-top:4px; }
+  }
+
+  /* The rule above is a selector LIST whose first member is (0,2,1) - it has to
+     be, to beat the pe skin's own .sub sizing - so a (0,1,1) override here loses
+     and the slogan vanished anyway. Caught by the harness, not by eye. Matched.
+
+     Under reduced motion it simply stays: no motion means no disappearing act. */
+  @media (prefers-reduced-motion:reduce){
+    :root[data-skin="pe"] header .sub.tagline,
+    header .sub.tagline{ animation:none; opacity:1; max-height:none; }
+  }
+
+
+  /* ---- BUILD 166: chrome that only speaks when it has something to say ----
+     The strip is readings on the left and, on the right, nothing at all until
+     an update is actually waiting. */
+  .hud .ver-line{ display:none; }
+  .hud .ver-line[data-kind="update"],
+  .hud .ver-line[data-kind="stuck"]{
+    display:block; color:var(--rose); font-weight:700;
+  }
+  /* no readings and no alert: the strip has nothing to rule off, so it goes */
+  .hud.hud-empty{ display:none; }
+  .hud.hud-empty:has(.ver-line[data-kind="update"]),
+  .hud.hud-empty:has(.ver-line[data-kind="stuck"]){
+    display:flex; border-top:0; padding-top:0;
+  }
+
+
+  /* ---- BUILD 167: the slogan hangs off its dash ----
+     1fr auto 1fr puts the dash at the exact centre of the line whatever the two
+     halves measure, and the halves are justified inward so the words still cluster
+     around it. The text block is therefore slightly right-heavy - "To Get There."
+     is the longer half - but the AXIS is true, and the axis is what the eye reads
+     against the lockup above it. */
+  :root[data-skin="pe"] header .sub.tagline,
+  header .sub.tagline{
+    display:grid; grid-template-columns:1fr auto 1fr; align-items:baseline;
+    column-gap:.5em; justify-items:center;
+  }
+  header .sub.tagline .tl-a{ justify-self:end; }
+  header .sub.tagline .tl-b{ justify-self:start; }
+
 </style>
 </head>
 <body>
@@ -5513,12 +5954,16 @@
      it, and removed from the DOM entirely once it has played - a fixed, full-screen
      element left lying around is the classic way to make a whole app untappable. -->
 <div class="splash" id="splash" aria-hidden="true">
-  <svg class="splash-mark" viewBox="0 0 215 160" fill="none">
-    <path class="sp-a" d="M95.3 27.5C83.9 20.4 73.3 14.7 59.5 15.3C32.5 16.5 11 43.8 15.2 70.4C18.8 92.7 35.9 108.4 51.1 123.5C59.8 132.1 68.2 140.3 77.8 147.8"/>
-    <path class="sp-b" d="M108.8 42C116.2 31.5 123.1 22.9 135.5 18.3C165 7.4 194.9 27.9 198.3 58.6C201.1 84.5 181.6 102.9 165.6 120.5C157.6 129.3 146.5 143.2 133.3 142.8C128.9 142.7 124.4 140.7 120.3 139.5"/>
-    <path class="sp-c" d="M75.8 84.9L97.3 119L144.7 73.9"/>
-  </svg>
-  <div class="splash-word"><span>W</span><span>E</span><span>D</span><span>O</span></div>
+  <!-- BUILD 155: the stacked lockup. Same letterforms as the header, set WE over DO,
+       because the name is a sentence and stacking it is what makes you read it as one.
+       The square proportion is why this one is here and not the horizontal: a splash
+       and an app icon are both square holes.
+
+       The draw-on is gone with the strokes. What replaces it is better and means
+       something: the word lands in plain ink, and THEN the O turns into the two of
+       you. The old loader loop measures ".splash-mark path", finds nothing and does
+       nothing - it was already wrapped in a try. -->
+  <svg class="wm wm-v splash-lockup" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.6,26.4) scale(4.2289,4.8088)"><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d="M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
   <!-- BUILD 134, rule 2: the wait is content. What was here was the slogan, which is
        the one line on the splash that is true of every couple who ever installed this.
        These three are true of exactly these two, and they are read off their own saved
@@ -5531,9 +5976,9 @@
        hydrated through data-ico: this markup is painted before the app's icon code has
        parsed, and a race there shows two empty gaps where the hearts should be. -->
   <div class="splash-motto" id="splashMotto">
-    <span class="sp-red"><svg class="sp-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg> Plan.</span>
-    <span class="sp-purple"><svg class="sp-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg> Do.</span>
-    <span class="sp-red"><svg class="sp-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg> Grow.</span>
+    <span class="sp-red">Plan.</span>
+    <span class="sp-purple">Do.</span>
+    <span class="sp-red">Grow.</span>
   </div>
   <div class="splash-receipts" id="splashReceipts" hidden></div>
   <div class="splash-pill" aria-hidden="true"><i></i></div>
@@ -5675,30 +6120,184 @@
   <!-- Build 109: translate="no" - Safari and Chrome will happily "translate" a brand
        name and the two people's names into something else. Nothing in here is a word. -->
   <h1 class="brand-row" translate="no">
-    <!-- BUILD 120: the mark, as vectors.
+    <!-- BUILD 155 - THE MARK IS THE WORD.
 
-         It was a 698x160 PNG carried as 135KB of base64 inside this file - about
-         an eighth of the whole app - with the two colours baked into the pixels.
-         That was fine while there was one theme. It is not fine now: the cream
-         "WE" vanished the moment the ground went cream, and no palette could ever
-         reach it.
+         Four marks were put in front of Moody and all four were rejected: the traced
+         heart (120), the two-stroke W (149, "horrendous"), the redrawn heart (152,
+         "a children's game"), the heart with the check back in it (154, "looks like
+         a kid drew it and AI made it worse"). Every one of them was a picture I
+         invented and then justified with measurements. Measurement does not produce
+         taste, and four failures is a direction being wrong, not four unlucky draws.
 
-         The paths are a trace of that PNG, not a redraw: the two arcs and the tick
-         were skeletonised out of the bitmap and fitted as cubics, and the result
-         covers the original at IoU 0.88 - the missing twelfth is the anti-aliased
-         rim, which is to say it is the same mark. The wordmark is live text in the
-         app's own face, so it takes the theme with everything else.
+         The references he actually chose - Twomuch, Hello Monday, haoqi, Shopify
+         Editions, code.xr - do not contain a single pictorial icon between them.
+         They are all typography. So there is no picture here any more.
 
-         Draw order is the original's: coral, then violet over it at the valley,
-         then the tick on top. -->
-    <svg class="brand-mark" viewBox="0 0 215 160" fill="none" aria-hidden="true" focusable="false">
-      <g stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
-        <path class="bm-a" d="M95.3 27.5C83.9 20.4 73.3 14.7 59.5 15.3C32.5 16.5 11 43.8 15.2 70.4C18.8 92.7 35.9 108.4 51.1 123.5C59.8 132.1 68.2 140.3 77.8 147.8" stroke="var(--moody)"/>
-        <path class="bm-b" d="M108.8 42C116.2 31.5 123.1 22.9 135.5 18.3C165 7.4 194.9 27.9 198.3 58.6C201.1 84.5 181.6 102.9 165.6 120.5C157.6 129.3 146.5 143.2 133.3 142.8C128.9 142.7 124.4 140.7 120.3 139.5" stroke="var(--rae)"/>
-        <path class="bm-c" d="M75.8 84.9L97.3 119L144.7 73.9" stroke="var(--moody)"/>
-      </g>
-    </svg>
-    <span class="brand-word" aria-label="WeDO">WE<span class="bw-red">D</span><span class="bw-purple">O</span></span>
+         WEDO is cut from Gabarito 800 at -4% tracking, outlined to paths so it needs
+         no webfont, cannot reflow and cannot FOUT. Three of the letters are ink. The
+         O - the only round form in the word, and the last letter, which is the one
+         that sticks - is split by a 22-degree seam into two arcs, his and hers. That
+         is the entire idea: one accent moment in the whole mark, carried by a
+         letterform rather than drawn next to it.
+
+         The app icon is that O on its own, so the monogram comes OUT of the wordmark
+         instead of being a second thing to design. Same letterforms, one idea, three
+         sizes. -->
+    <!-- BUILD 157 - THE O'S COUNTER IS A HEART.
+
+         Moody, looking at the shipped wordmark: "why can't the O be the heart with
+         the check here?" Two answers, and the first one is yes.
+
+         Every heart I drew before this was a PICTURE parked beside the word, which
+         is why four of them were rejected. Made the ring of the letter it still
+         fails - at weight 800 the O's stroke is 162 units and a heart carrying that
+         weight has no counter left, so it reads as a blob with a round cap for a
+         point. But as the COUNTER it works completely: the letter keeps its exact
+         width, weight and colour in the word, and the heart is intrinsic to it.
+         It survives down to 22px.
+
+         The seam runs at -58 degrees, down the heart's own axis rather than across
+         it, so the two lobes ARE the two people. The geometry carries the meaning
+         instead of a caption doing it.
+
+         The check does NOT fit in here with it, and that was measured, not assumed:
+         the counter is 369x386, and a check needs a wide diagonal sweep that either
+         touches the ring - destroying the letter - or shrinks under reading size.
+         The counter holds one idea. The check never left the product anyway: it is
+         on every completed task, which is where it is actually seen. -->
+    <!-- BUILD 158 - THE O IS THE ORIGINAL MARK.
+
+         Moody: "can we try with the check mark in somehow / the original logo was
+         great because it was an incomplete heart".
+
+         He was right twice, and I had been describing the original wrong. I pulled
+         it out of b116-from-repo.bak - a 698x160 PNG - and looked at it properly for
+         the first time. It is not a closed heart with a tick parked inside. It is
+         TWO OPEN MONOLINE ARCS that cross at the cusp and stop short of each other
+         at the bottom, each ending in a small upward hook that echoes the check
+         sitting between them. Three ticks in a row along the bottom. That rhythm is
+         why it holds together, and it is what every redraw of mine threw away by
+         closing the heart at the point - which is also what fills the counter in and
+         makes it read as a blob.
+
+         Three redraws later the honest conclusion was that my versions keep coming
+         out worse than the thing they are copying. So this does not redraw it. The
+         PNG was separated by hue, each arc traced with potrace, and the frame
+         contour dropped - giving clean outlines of the real mark at 1.9KB of path
+         data instead of 135KB of base64. Scaled to cap height it becomes the O.
+
+         What it fixes that the PNG could not: the colours are tokens now, so the
+         mark takes the theme. Left arc is --moody, right is --rae, and the check is
+         --text, the same ink as WED - a thing getting done belongs to neither of
+         them, and it costs no third colour. The original had the check sharing the
+         left arc's red, which quietly gave every completed task to one person.
+
+         It is wider than a normal O (967 units against 734), so the word is wider
+         and the heart reads as the terminal of the lockup. That is a choice, not a
+         defect. Verified legible at 24px in the header and 22px as an icon. -->
+    <!-- BUILD 159 - IT HAS TO BE AN O FIRST.
+
+         158 scaled the original mark into the O's slot and Moody: "it's better but
+         it doesn't look like an O." Correct - the original is 1.36 wider than tall
+         with a deep cusp and a sharp point, so dropped into the word it reads as
+         WED followed by a heart symbol, not as a word.
+
+         A heart that reads as a heart is wider than tall. A letter O is a circle.
+         The more heart, the less letter, and 158 was all the way at the heart end.
+
+         So the arcs are GENERATED FROM THE CIRCLE rather than drawn as a heart:
+         r(theta) is exactly the O's centreline radius everywhere, minus a gaussian
+         dip of 70 units at the top (the cusp) and plus 34 at the bottom (the
+         point). The silhouette is therefore an O that has a heart's gestures, not
+         a heart squeezed into an O's box. Hand-placed control points were tried
+         first and collapsed the sides inward - it came out a shield.
+
+         Still the original's construction: two open arcs that stop short of each
+         other at the bottom, so the heart is never closed. That incompleteness was
+         Moody's point about the original and it is the whole idea - the two of you
+         are not a finished shape.
+
+         The check went from 84 to 52. At 84 it filled the counter, which is the
+         other half of why the letter would not read: an O with no counter is a
+         blob. At 52 the counter breathes and the O arrives first. -->
+    <!-- BUILD 160 - BACK TO THE 157 MARK.
+
+         157 was the last version Moody liked: "this is actually really cool". 158
+         put the original mark in the O slot ("better but it doesn't look like an
+         O") and 159 generated an O-shaped heart with the check inside ("Na.").
+         Asked where to leave it, he chose 157.
+
+         So this is 157 restored exactly: the O's outer contour with a heart in
+         place of its round counter under fill-rule:evenodd, split at -58 degrees
+         so the seam runs down the heart's own axis and the two lobes are the two
+         people. No check in the mark.
+
+         What the three attempts since actually established, kept here so nobody
+         re-runs them:
+           - a heart at the O's 162-unit stroke has no counter left; it reads as a
+             blob with a round cap for a point
+           - any line drawn through a heart reads as CANCELLED, not as two halves
+           - the real original is 1.36x wider than tall, so at cap height it reads
+             as WED followed by a heart symbol rather than as a word
+           - a check big enough to read fills the counter, and an O with no counter
+             is not a letter
+
+         The check is not missing from the product. It is on every completed task,
+         which is where it is seen a hundred times a day. -->
+    <!-- BUILD 161 - THE 158 MARK, SIZED AND ALIGNED.
+
+         Moody picked 158 ("this is the best one so far") and asked for the heart
+         smaller so it aligns better. Measured before touching it: the heart was
+         only 4% TALLER than the D but 65% WIDER. The width was the whole problem,
+         and the height was a red herring.
+
+         Why it was that wide: 158 scaled the mark to the O's full vertical extent
+         of 707 units, overshoot included. The mark is 1.36 times wider than tall,
+         so 707 of height bought 967 of width against the D's 586.
+
+         Now 545 tall, which lands it at 745 wide - the same as the O's advance,
+         so the heart occupies exactly the space a letter would. Width over the D
+         drops from +65% to +27%.
+
+         Vertical alignment matters as much as size here, because a heart is
+         top-heavy and comes to a point. Centring it on the cap left it floating
+         off the line. The point now sits 8 units below the baseline - the same
+         overshoot the O itself carries - and the lobes land just under cap height.
+         It reads as a letter sitting on the line.
+
+         The check is --text, the same ink as WED. The original had it sharing the
+         left arc's red, which quietly gave every completed task to one person. -->
+    <!-- BUILD 162: STACKED IN THE HEADER TOO.
+
+         Moody: "it kinda looks better stacked". Same letterforms, same mark - the
+         masthead just uses the square lockup the splash already had instead of the
+         4.13:1 horizontal one. A square sits better under a centred tagline and it
+         gives the mark more presence at the same optical weight.
+
+         The horizontal lockup is not deleted, it is simply not used here; it is
+         still the right shape for anywhere wide and short. -->
+    <!-- BUILD 163 - THE HEART IS THE LETTERS' HEIGHT NOW.
+
+         Moody: "the O or the heart is not aligned properly and is smaller than the
+         rest of the letters." Both true, and 161 caused it. 161 fixed a width
+         problem by scaling the WHOLE mark down to 545 - which made it 20% shorter
+         than the 681 cap height, so it stopped looking like a letter in the line.
+
+         The underlying constraint, stated plainly: the traced heart is 1.37 times
+         wider than tall. At the letters' height its natural width is 967 against
+         the D's 586. There is no uniform scale that gives both the right height
+         and a letter-like width - one of the two has to be compromised.
+
+         So the scale is non-uniform: height is the O's full 707 extent, so the
+         heart matches the letters and overshoots the baseline exactly as the O
+         does; width is the variable.
+
+         BUILD 164: four widths were rendered at full height - 967 (natural), 850,
+         790 and 734. Moody picked 850, a horizontal factor of 0.88. 734 pinches
+         the lobes and reads as stretched; 790 shipped in 163 and was tighter than
+         he wanted. At 850 the squeeze is not legible as distortion and the heart
+         still sits in a letter's worth of space - 850 against the D's 586. -->
+    <svg class="wm wm-v wm-head" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.6,26.4) scale(4.2289,4.8088)"><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d="M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
     
   </h1>
 
@@ -5706,7 +6305,11 @@
        the brand line, not a subtitle, so it is set as one. The motto below it is the rhythm
        version and sits secondary. I removed the first of these once as a duplicate — they
        are not duplicates, and the one I kept was the decorative half. -->
-  <div class="sub tagline">Together <span class="dash">—</span> To Get There.</div>
+  <!-- BUILD 167: the halves are wrapped so the DASH can be the axis. Centring the
+       text block put the dash at 40% of the width, because "Together" is 8 characters
+       and "To Get There." is 13 - so the one coloured mark in the line, the thing the
+       eye uses to find the centre, sat left of the lockup it is supposed to sit under. -->
+  <div class="sub tagline"><span class="tl-a">Together</span><span class="dash">—</span><span class="tl-b">To Get There.</span></div>
   <!-- "Together" already opens the line above; saying it twice in two lines was the actual
        redundancy, not the second line itself -->
   <div class="sub tagline motto" id="mottoLine"><span class="m-red" data-ico="heart"></span> <span class="m-red">Plan.</span> <span class="m-purple" data-ico="heart"></span> <span class="m-purple">Do.</span> <span class="m-red" data-ico="heart"></span> Grow.</div>
@@ -6363,7 +6966,7 @@
     <button class="ghost" id="diagBtn" style="width:100%;">Run diagnostics</button>
     <button class="ghost" id="retryImagesBtn" style="width:100%;margin-top:6px;">Retry missing trip images</button>
     <button class="ghost" id="forceUpdateBtn" style="width:100%;margin-top:6px;">Force reload latest version</button>
-    <div id="diagOut" style="display:none;font-size:0.6875rem;line-height:1.8;margin-top:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--card2);border-radius:10px;padding:10px 12px;word-break:break-word;"></div>
+    <div id="diagOut" style="display:none;font-size:0.6875rem;line-height:1.8;margin-top:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--card2);border-radius:12px;padding:12px 12px;word-break:break-word;"></div>
     <hr>
     <hr>
     <p style="font-size:0.75rem;color:var(--muted);"><strong>Living together?</strong>
@@ -7974,7 +8577,7 @@
     if(!el){
       el = document.createElement("div");
       el.id = "saveWarn";
-      el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:var(--z-alert);background:#7a1f33;color:#fff;font-size:0.7812rem;line-height:1.45;padding:10px 14px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.4);";
+      el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:var(--z-alert);background:#7a1f33;color:#fff;font-size:0.7812rem;line-height:1.45;padding:12px 16px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.4);";
       document.body.appendChild(el);
     }
     var quota = e && (e.name === "QuotaExceededError" || /quota/i.test(String(e)));
@@ -11548,7 +12151,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 148;
+  var BUILD_NUM = 168;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -13540,7 +14143,7 @@
 
     var altAdder = "";
     if(list.priceBased){
-      altAdder = '<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-2);">' +
+      altAdder = '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);">' +
         '<div style="font-size:0.6875rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:7px;">Add another option</div>' +
         '<input type="text" class="alt-name" placeholder="e.g. BROKGLIM towel (nicer)">' +
         '<input type="url" class="alt-link" placeholder="Link">' +
@@ -15660,7 +16263,7 @@
     wrap.innerHTML = "";
     unseen.forEach(function(a){
       var row = document.createElement("div");
-      row.style.cssText = "font-size:0.8125rem;padding:7px 0;border-bottom:1px solid var(--border);";
+      row.style.cssText = "font-size:0.8125rem;padding:8px 0;border-bottom:1px solid var(--border);";
       var mins = Math.max(1, Math.round((Date.now() - a.at) / 60000));
       var when = mins < 60 ? (mins + "m ago") : (mins < 1440 ? (Math.round(mins/60) + "h ago") : (Math.round(mins/1440) + "d ago"));
       row.innerHTML = "<strong>" + escapeHtml(personName(a.by)) + "</strong> " + escapeHtml(a.text) +
@@ -16364,7 +16967,7 @@
           '<button type="button" class="ghost req-cancel" data-id="'+r.id+'" style="padding:4px 10px;font-size:0.75rem;">Cancel</button>';
       }
       row.innerHTML = '<div class="left"><span>'+escapeHtml(r.emoji||"")+'</span><span>'+escapeHtml(r.name)+' <span style="color:var(--muted);font-size:0.6875rem;">— from '+escapeHtml(personName(r.proposedBy))+'</span></span></div>'+
-        '<div style="display:flex;gap:6px;align-items:center;">'+actionsHtml+'</div>' +
+        '<div style="display:flex;gap:8px;align-items:center;">'+actionsHtml+'</div>' +
         (canDecide
           ? '<div class="rarity-pick">' +
               '<button type="button" class="ghost req-approve" data-id="'+r.id+'" data-tier="common">Small · easy to land</button>' +
@@ -21040,11 +21643,19 @@
        cells the row wrapped to two lines on every phone narrower than 430. Three cells
        that each say something new fit one line everywhere. */
 
-    // the hearts' distance, finally said out loud
-    try{
-      var sy = syncScore();
-      if(sy && sy.days) out.push(["sync", syncWord(sy.score).toLowerCase()]);
-    }catch(e){}
+    /* BUILD 166 - THE SYNC CELL IS GONE, AND 131'S REASON FOR IT EXPIRED.
+
+       131 added it because the hearts' distance "has only ever been said in pixels,
+       with the words confined to a tooltip nobody on a touchscreen can reach". True
+       then. BUILD 140 made the hearts a BUTTON - tapping them opens a modal naming
+       all three counts - and nobody came back and deleted the caption.
+
+       So the state is now expressed three ways at once: the gap between the hearts,
+       the gap between the two photo frames (same --duo-split drives both), and the
+       modal on tap. A fourth, in words, one line above the thing itself, is the
+       definition of restating the page back to itself - which is the exact fault
+       131 was written to fix. Moody: "why do we need the text when we're using the
+       hearts to display that?" */
 
     return out;
   }
@@ -21060,12 +21671,19 @@
     var html = cells.map(function(c){
       return '<span class="hud-cell">' + escapeHtml(c[0]) + ' <b>' + escapeHtml(c[1]) + '</b></span>';
     }).join('');
-    /* The build line gets its own row rather than a fifth cell. As a cell it wrapped
-       onto the second line on a 390 screen WITH its leading separator, which reads as
-       a bullet point introducing nothing. It is also a different kind of thing from
-       the four readings - it is a control - so the break is honest. */
+    /* BUILD 166: the build line is still built, but CSS only shows it when its
+       kind is "update" or "stuck". "Build 165 · latest" is true roughly always and
+       actionable never - it is a permanent label for a thing that is fine. The
+       right-hand slot is now a signal channel: empty while there is nothing to say,
+       and a call to action the moment there is.
+
+       The version itself is not lost. The diagnostics panel prints it and checks it
+       against the deployed build, which is the place you go when you care. */
     el.innerHTML = '<span class="hud-row">' + html + '</span>' +
       '<button type="button" class="ver-line" id="verLine"></button>';
+    /* with the readings gone too there is nothing to rule off, so the strip removes
+       its own hairline rather than floating above nothing */
+    el.classList.toggle("hud-empty", cells.length === 0);
     document.getElementById("verLine").addEventListener("click", function(){ checkForUpdate(true); });
     setVerLine(lastVerKind || "idle", lastVerLive);
   }
@@ -22474,7 +23092,7 @@
       ":root[data-skin='pe'] .tabs.w3-on button.active{border-bottom-color:transparent !important;}",
       /* 2 — list pills */
       ".list-pills{flex-wrap:nowrap !important;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;",
-      "  margin-left:-16px;margin-right:-16px;padding:2px 16px 6px;scroll-padding:0 16px;}",
+      "  margin-left:-16px;margin-right:-16px;padding:2px 16px 8px;scroll-padding:0 16px;}",
       ".list-pills::-webkit-scrollbar{display:none;}",
       ".list-pills button{flex:0 0 auto;scroll-snap-align:start;}",
       /* BUILD 132 - a mask is theme-agnostic, so this one LOOKED portable. It is not.
@@ -22505,7 +23123,7 @@
          fades to nothing over cream turns grey on the way out. */
       ":root{--w3-clear-wash:linear-gradient(160deg,rgba(79,209,181,.14),rgba(167,139,250,.08) 60%,transparent);}",
       ":root[data-mode=\"light\"]{--w3-clear-wash:linear-gradient(160deg,rgba(11,122,94,.10),rgba(90,59,196,.055) 55%,rgba(201,72,42,.04));}",
-      ".w3-clear{text-align:left;padding:18px 16px;border-radius:16px;border:1px solid var(--line-2,var(--border));",
+      ".w3-clear{text-align:left;padding:16px 16px;border-radius:18px;border:1px solid var(--line-2,var(--border));",
       "  background:var(--w3-clear-wash);}",
       /* The heading took the UI face at weight 800. Every other card heading in this app
          is set in --display, which is a serif under the look he actually runs. */
@@ -22513,15 +23131,15 @@
       ".w3-clear-p{font-size:14px;line-height:1.5;color:var(--muted);}",
       ".w3-clear-p b{font-weight:700;}",
       ".w3-clear-cta{margin-top:12px;background:none;border:1px solid var(--line-2,var(--border));color:var(--text);",
-      "  border-radius:999px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}",
+      "  border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;}",
       /* 4 — quick-add chips */
-      ".w3-qa{display:none;flex-wrap:wrap;align-items:center;gap:6px;margin:-2px 0 2px;}",
+      ".w3-qa{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:-2px 0 2px;}",
       ".w3-qa.show{display:flex;}",
       ".w3-qa-lbl{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--faint,var(--muted));margin-right:2px;}",
-      ".w3-chip{font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--s2,var(--card2));",
+      ".w3-chip{font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--s2,var(--card2));",
       "  border:1px solid var(--line-2,var(--border));color:var(--text);}",
       ".w3-chip i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px;}",
-      ".w3-qa-undo{margin-left:auto;background:none;border:0;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;padding:6px 2px;min-height:32px;}",
+      ".w3-qa-undo{margin-left:auto;background:none;border:0;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;padding:8px 2px;min-height:32px;}",
       ".w3-hint{font-size:11.5px;color:var(--faint,var(--muted));margin:-4px 0 2px;}",
       "@media (prefers-reduced-motion:reduce){.tabs .w3-ind,.w3-bar span{transition:none;}}"
     ].join("\n");
@@ -23400,10 +24018,148 @@
       ".setup-steps b{ color:var(--text); font-weight:600; }",
       "@media (prefers-reduced-motion:reduce){ .setup-steps > summary::before{ transition:none; } }",
 
+      /* =================================================================
+         BUILD 150 - THE MENU, RESTORED AND MADE PALETTE-PROOF.
+
+         This was designed, rendered, approved and then thrown away: it only
+         ever existed as injected CSS in a prototype, and when the bright
+         palette that prototype wore was rejected I binned the whole thing.
+         The container, the filled selected cell and the counted fold had
+         nothing to do with those colours. Moody noticed before I did.
+
+         Everything below resolves through tokens, so the next palette change
+         carries the menu with it instead of reverting it.
+         ================================================================= */
+      /* ---- BUILD 156: P-10 Minimal Luxury, from the Parts Bin ----
+         Six tabs carrying icon AND label took the full width of the screen and
+         still needed a 2px frame to look like an object. The part solves it the
+         other way round: everything is an icon, and only the SELECTED tab grows
+         to say its name. The bar then wants about 300px instead of 390, so it can
+         float as a pill with air either side - which is what makes it read as an
+         object rather than a strip welded to the page.
+
+         The label collapses with max-width, not display:none, so it stays in the
+         accessibility tree and every tab keeps its name. */
+      ".tabs, :root[data-skin=\"pe\"] .tabs{",
+      "  width:max-content; max-width:calc(100% - 16px);",
+      "  margin:0 auto 16px; padding:4px;",
+      "  background:var(--dock-bg); border:1px solid var(--dock-rim);",
+      "  border-radius:999px; box-shadow:var(--dock-shadow);",
+      "  -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);",
+      "  gap:2px; overflow:visible; justify-content:center; isolation:isolate;",
+      "}",
+      ".tabs button, :root[data-skin=\"pe\"] .tabs button{",
+      "  border:0; background:none; border-radius:999px; margin:0;",
+      /* flex:0 0 auto, or the six buttons shrink to share the bar and the active
+         label is squeezed to nothing - measured at 320px, where the grown tab came
+         back as 44px wide with no room for its name. */
+      "  flex:0 0 auto; height:44px; min-height:0; min-width:44px; padding:0 11px; gap:6px;",
+      "  color:var(--dock-ink); opacity:1; font-weight:600;",
+      "  transition:color 220ms var(--ease-out), padding 220ms var(--ease-out);",
+      "}",
+      ".tabs button .tab-t, :root[data-skin=\"pe\"] .tabs button .tab-t{",
+      "  max-width:0; opacity:0; overflow:hidden; white-space:nowrap;",
+      "  transition:max-width 220ms var(--ease-out), opacity 120ms var(--mo-in);",
+      "}",
+      ".tabs button.active, :root[data-skin=\"pe\"] .tabs button.active{",
+      "  color:var(--dock-sel-ink); opacity:1; font-weight:700; padding:0 16px;",
+      "  border-bottom-color:transparent;",
+      "}",
+      ".tabs button.active .tab-t, :root[data-skin=\"pe\"] .tabs button.active .tab-t{",
+      "  max-width:104px; opacity:1;",
+      "  transition:max-width 220ms var(--ease-out), opacity 200ms var(--ease-out) 60ms;",
+      "}",
+      ".tabs button:active, :root[data-skin=\"pe\"] .tabs button:active{",
+      "  transform:scale(.94); transition:transform 120ms var(--ease-out);",
+      "}",
+      /* a 320px screen has 304px to give. Six 44px targets plus gaps plus the
+         grown label is 10px over, so the dead space either side of each icon
+         comes off first - the 44px floor is never touched. */
+      "@media (max-width:359px){",
+      "  .tabs, :root[data-skin=\"pe\"] .tabs{ max-width:calc(100% - 8px); padding:4px 2px; }",
+      "  .tabs button, :root[data-skin=\"pe\"] .tabs button{ padding:0 4px; }",
+      "  .tabs button.active, :root[data-skin=\"pe\"] .tabs button.active{ padding:0 10px; }",
+      /* Six 44px targets and their gaps already fill a 320px screen, so there is
+         nothing left for a label to grow into. Rather than let it half-render and
+         clip, it is withheld deliberately at this width: the filled pill still
+         says which tab is selected, and the name is still in the a11y tree. */
+      "  .tabs button.active .tab-t, :root[data-skin=\"pe\"] .tabs button.active .tab-t{ max-width:0; opacity:0; }",
+      "  .tabs button.active, :root[data-skin=\"pe\"] .tabs button.active{ padding:0 4px; }",
+      "}",
+      /* the glider stops being a 2px underline and becomes the selected cell */
+      /* the pe skin flattens this to a 2px underline at (0,4,0); match that weight
+         rather than reaching for !important */
+      /* the glider IS the selected cell. Ink, not an accent: the dock is chrome,
+         and chrome does not get to spend one of the two people's colours - which
+         is also how mint, belonging to neither of them, leaves the navigation. */
+      ".tabs.w3-on .w3-ind, :root[data-skin=\"pe\"] .tabs.w3-on .w3-ind{",
+      "  background:var(--dock-sel-fill); border:0;",
+      "  border-radius:999px; box-shadow:none; z-index:0;",
+      "}",
+      /* the label and icon sit ON the filled tile, so they take its ink */
+      ".tabs button.active, :root[data-skin=\"pe\"] .tabs button.active{",
+      "  color:var(--menu-sel-ink);",
+      "}",
+      ".tabs.w3-on .w3-ind::after,",
+      ":root[data-skin=\"pe\"] .tabs.w3-on .w3-ind::after{ display:none; }",
+      ".tabs button{ position:relative; z-index:1; }",
+
+      /* ---- the list rail: selected pill, and a counted fold instead of a
+              pill sliced mid-word at the edge ---- */
+      ":root[data-skin=\"pe\"] .list-pills button{",
+      "  font-family:var(--ui); font-size:.8125rem; font-weight:600;",
+      "  letter-spacing:0; text-transform:none;",
+      "  padding:8px 12px; min-height:44px;",
+      "  border:1px solid var(--line-2); border-radius:999px;",
+      "  background:var(--s1); color:var(--text); opacity:.72; box-shadow:none;",
+      "}",
+      /* Build 143 zeroes this at (0,5,1) via `.list-pills.ind-on button.active` - the
+         rule that removed the old teleporting inset mark when the glider went live.
+         It was still doing its job and it was also eating the new hard offset, so
+         this matches its weight rather than reaching for !important. */
+      ":root[data-skin=\"pe\"] .list-pills button.active,",
+      ":root[data-skin=\"pe\"] .list-pills.ind-on button.active{",
+      "  background:var(--dock-sel-fill); opacity:1; color:var(--dock-sel-ink);",
+      "  border-color:transparent; box-shadow:none;",
+      "}",
+      /* press drives the object down onto its own shadow - the whole point of a
+         hard offset is that it can be taken away */
+      ":root[data-skin=\"pe\"] .list-pills button.active:active{",
+      "  transform:scale(.96); transition:transform 120ms var(--ease-out);",
+      "}",
+      ":root[data-skin=\"pe\"] .list-pills button.add-list{",
+      "  background:transparent; border-style:dashed; opacity:.8;",
+      "}",
+      ":root[data-skin=\"pe\"] .list-pills button.add-list.is-plus{",
+      "  width:44px; min-width:44px; padding:0; font-size:1.25rem; line-height:1; flex:0 0 auto;",
+      "}",
+      ".pill-more{",
+      "  flex:0 0 auto; display:inline-flex; align-items:center; gap:4px;",
+      "  min-height:44px; padding:8px 12px; margin-left:2px;",
+      "  border:1px dashed var(--line-2); border-radius:999px;",
+      "  background:transparent; color:var(--text); opacity:.8;",
+      "  font-family:var(--ui); font-size:.8125rem; font-weight:600;",
+      "  cursor:pointer; -webkit-tap-highlight-color:transparent;",
+      "}",
+      ".pill-more b{ font-variant-numeric:tabular-nums; }",
+      ".list-pills.folded{ overflow-x:hidden; }",
+      ".list-pills button.is-folded{ display:none; }",
+      ".list-pills.folded .pill-ind{ display:none; }",
+
+      /* the dock rules above are written at (0,2,1) to beat the pe skin, so this
+         block has to carry the same weight or reduced motion silently loses. */
       "@media (prefers-reduced-motion:reduce){",
       "  .pill-ind{ transition:none; }",
-      "  .tabs button, .list-pills button{ transition:none; }",
-      "  .tabs button:active, .list-pills button:active{ transform:none; }",
+      "  .tabs button, .list-pills button,",
+      "  :root[data-skin=\"pe\"] .tabs button,",
+      "  :root[data-skin=\"pe\"] .list-pills button{ transition:none; }",
+      "  .tabs button .tab-t,",
+      "  :root[data-skin=\"pe\"] .tabs button .tab-t,",
+      "  .tabs button.active .tab-t,",
+      "  :root[data-skin=\"pe\"] .tabs button.active .tab-t{ transition:none; }",
+      "  .tabs button:active, .list-pills button:active,",
+      "  :root[data-skin=\"pe\"] .tabs button:active,",
+      "  :root[data-skin=\"pe\"] .list-pills button.active:active{ transform:none; transition:none; }",
       "}"
     ].join("\n");
     document.head.appendChild(css);
@@ -23520,8 +24276,75 @@
       if(!v.hasAttribute("tabindex")) v.setAttribute("tabindex", "0");
     });
 
+    /* ---------- BUILD 150: the counted fold ----------
+       The rail used to scroll with a mask fade, which slices a pill mid-word at the
+       edge. A sliced pill is a FALSE swipe cue: it reads as broken rather than as
+       "there is more". So the overflow collapses behind a button that says how many.
+
+       "+ New" is an action, not a list. It keeps the end of the row and never hides
+       behind a count of lists - the serial-position law puts the key action at an end.
+       It shrinks to a 44px "+" when space is tight rather than disappearing. */
+    function foldPills(){
+      var w = pillHost();
+      if(!w || !w.offsetParent) return;
+      var old = w.querySelector(".pill-more");
+      if(old) old.remove();
+      [].slice.call(w.querySelectorAll("button")).forEach(function(b){
+        b.classList.remove("is-folded");
+      });
+      var add = w.querySelector("button.add-list");
+      if(add){
+        add.classList.remove("is-plus");
+        if(add._label == null) add._label = add.textContent;
+      }
+      w.classList.remove("folded");
+      if(w.scrollWidth <= w.clientWidth + 2){ placePills(false); return; }
+
+      if(add){ add.classList.add("is-plus"); add.textContent = "+"; }
+      var lists = [].slice.call(w.querySelectorAll("button:not(.add-list)"));
+      var room = w.clientWidth - 32 - 78 - 52, used = 0, hidden = 0;
+      lists.forEach(function(b){
+        used += b.getBoundingClientRect().width + 7;
+        if(used > room && !b.classList.contains("active")){
+          b.classList.add("is-folded"); hidden++;
+        }
+      });
+      if(!hidden){
+        if(add){ add.classList.remove("is-plus"); add.textContent = add._label; }
+        placePills(false); return;
+      }
+      var m = document.createElement("button");
+      m.type = "button"; m.className = "pill-more";
+      m.setAttribute("aria-expanded", "false");
+      m.setAttribute("aria-label", "Show " + hidden + " more list" + (hidden === 1 ? "" : "s"));
+      m.innerHTML = "\u2022\u2022\u2022 <b>" + hidden + "</b>";
+      m.addEventListener("click", function(){
+        // unfold in place: the lists come back and the row scrolls again
+        w.classList.remove("folded");
+        [].slice.call(w.querySelectorAll("button.is-folded")).forEach(function(b){
+          b.classList.remove("is-folded");
+        });
+        if(add){ add.classList.remove("is-plus"); add.textContent = add._label; }
+        m.remove();
+        placePills(false);
+      });
+      w.insertBefore(m, add || null);
+      w.classList.add("folded");
+    }
+
+    var _rlsFold = renderListSwitcher;
+    renderListSwitcher = function(){
+      var r = _rlsFold.apply(this, arguments);
+      try{ foldPills(); }catch(e){}
+      return r;
+    };
+    window.addEventListener("resize", function(){ try{ foldPills(); }catch(e){} });
+    if(tabsEl) tabsEl.addEventListener("click", function(){
+      setTimeout(function(){ try{ foldPills(); }catch(e){} }, 260);
+    });
+
     setTimeout(function(){ syncPillAria(); placePills(false); }, 80);
-    setTimeout(function(){ placePills(false); }, 700);
+    setTimeout(function(){ placePills(false); try{ foldPills(); }catch(e){} }, 700);
   })();
 
 })();
