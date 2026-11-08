@@ -184,14 +184,14 @@
 
      The `:root` prefix is load-bearing. Two later rules size this same element -
      `header h1{font-size:2.125rem}` for the Original look and
-     `:root[data-skin="pe"] header h1{font-size:1.875rem}` for the other - and both
+     `:root[data-skin="pe"] header h1{font-size:1.625rem}` for the other - and both
      would otherwise win on source order and take the clamp away.
 
      The ceiling is in PIXELS on purpose. A clamp whose three values are all rem
      never clamps - they all grow together with the text-size slider, which is the
      exact thing the ceiling exists to stop. 42px is where the lockup stops fitting
      a 320px screen. */
-  :root header h1.brand-row{ gap:12px; font-size:clamp(1.5rem, 1.875rem, 42px); }
+  :root header h1.brand-row{ gap:12px; font-size:clamp(1.625rem, 1.625rem, 44px); }
   .brand-mark{
     /* em, not px. Build 109 made 1rem follow iOS's text-size slider, so a fixed
        mark beside a rem-sized word drifts apart the moment anybody touches it -
@@ -273,7 +273,7 @@
     margin-top:14px;padding-top:12px;border-top:1px solid var(--border);
   }
   #heroScope{
-    font-size:0.8438rem;line-height:1.6;color:var(--text);
+    font-size:0.875rem;line-height:1.6;color:var(--text);
   }
   #heroScope.clamped{
     display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
@@ -282,7 +282,7 @@
     background:none;border:none;padding:4px 0 0;cursor:pointer;
     color:var(--purple);font-size:0.75rem;font-weight:700;
   }
-  .scope-src{font-size:0.6562rem;color:var(--faint);margin-top:6px;}
+  .scope-src{font-size:0.625rem;color:var(--faint);margin-top:6px;}
 
   /* ---- nudge card: unspent spins + weekly reward suggestion ---- */
   /* These two cards tint themselves with their accent colour. That tint was written as a
@@ -306,8 +306,8 @@
   }
   .nudge-blk{padding:2px 0;}
   .nudge-blk.divided{margin-top:14px;padding-top:16px;border-top:1px solid var(--border);}
-  .nudge-title{font-size:0.9688rem;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;}
-  .nudge-sub{font-size:0.7812rem;color:var(--muted);line-height:1.5;margin-bottom:9px;}
+  .nudge-title{font-size:1rem;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;}
+  .nudge-sub{font-size:0.75rem;color:var(--muted);line-height:1.5;margin-bottom:9px;}
   .nudge-btn{width:100%;margin-top:2px;}
   .nudge-blk input,.nudge-blk select{width:100%;}
 
@@ -318,9 +318,9 @@
     background:linear-gradient(170deg,rgba(232,181,75,.12),var(--card) 62%);
   }
   .setup-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
-  .setup-title{font-size:0.9688rem;font-weight:700;letter-spacing:-.01em;}
+  .setup-title{font-size:1rem;font-weight:700;letter-spacing:-.01em;}
   .setup-count{font-size:0.6875rem;font-weight:700;color:var(--gold);white-space:nowrap;}
-  .setup-lead{font-size:0.7812rem;color:var(--muted);line-height:1.5;margin:5px 0 12px;}
+  .setup-lead{font-size:0.75rem;color:var(--muted);line-height:1.5;margin:5px 0 12px;}
   .setup-item{border-top:1px solid var(--border);padding:12px 0 4px;}
   .setup-item:first-child{border-top:none;padding-top:2px;}
   .setup-row{
@@ -333,25 +333,25 @@
     display:flex;align-items:center;justify-content:center;font-size:0.6875rem;
   }
   .setup-item.optional .setup-dot{border-color:var(--border);border-style:dashed;}
-  .setup-label{flex:1 1 auto;min-width:0;font-size:0.8438rem;font-weight:600;}
+  .setup-label{flex:1 1 auto;min-width:0;font-size:0.875rem;font-weight:600;}
   .setup-tag{
     flex:0 0 auto;font-size:var(--eyebrow);font-weight:800;letter-spacing:.06em;text-transform:uppercase;
     color:var(--faint);background:var(--card2);padding:4px 8px;border-radius:999px;
   }
   .setup-chev{flex:0 0 auto;color:var(--faint);font-size:0.75rem;transition:transform .16s ease;}
   .setup-item.open .setup-chev{transform:rotate(90deg);}
-  .setup-body{display:none;padding:4px 0 8px 32px;font-size:0.7812rem;color:var(--muted);line-height:1.55;}
+  .setup-body{display:none;padding:4px 0 8px 32px;font-size:0.75rem;color:var(--muted);line-height:1.55;}
   .setup-item.open .setup-body{display:block;}
   .setup-body input{margin-top:7px;}
   .setup-body .row2{margin-top:7px;}
-  .setup-body .setup-status{font-size:0.7188rem;margin-top:7px;min-height:14px;}
+  .setup-body .setup-status{font-size:0.75rem;margin-top:7px;min-height:14px;}
   .setup-body code{
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.7188rem;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.75rem;
     background:var(--card2);border-radius:5px;padding:1px 4px;color:var(--pink-dim);
     word-break:break-all;
   }
   .setup-body .mini{
-    background:none;border:none;color:var(--faint);font-size:0.7188rem;text-decoration:underline;
+    background:none;border:none;color:var(--faint);font-size:0.75rem;text-decoration:underline;
     padding:8px 0 0;cursor:pointer;
   }
   .setup-done-note{
@@ -387,12 +387,12 @@
     text-align:center;font-size:0.6875rem;line-height:1.35;color:var(--muted);
     padding:0 8px;font-weight:600;
   }
-  .duo-empty .plus{display:block;font-size:1.375rem;font-weight:400;margin-bottom:1px;color:var(--faint,var(--muted));}
+  .duo-empty .plus{display:block;font-size:1.3125rem;font-weight:400;margin-bottom:1px;color:var(--faint,var(--muted));}
   .duo-name{
-    margin-top:7px;font-size:0.7812rem;font-weight:700;letter-spacing:-.01em;
+    margin-top:7px;font-size:0.75rem;font-weight:700;letter-spacing:-.01em;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
   }
-  .duo-when{font-size:0.6562rem;color:var(--muted);margin-top:1px;}
+  .duo-when{font-size:0.625rem;color:var(--muted);margin-top:1px;}
   /* BUILD 122 - today's photo penalty, on the photo.
 
      It used to be a 276px card sitting above the task list, with a heading, two
@@ -407,10 +407,10 @@
   .duo-cost{
     display:inline-block; margin-top:5px; padding:2px 8px;
     border-radius:999px; background:var(--chip-hard-bg); color:var(--chip-hard-fg);
-    font-size:0.6562rem; font-weight:700; white-space:nowrap;
+    font-size:0.625rem; font-weight:700; white-space:nowrap;
   }
   .duo-health{
-    margin-top:5px;font-size:0.6562rem;font-weight:600;color:var(--text);
+    margin-top:5px;font-size:0.625rem;font-weight:600;color:var(--text);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
   }
   .duo-health.stale-health{opacity:.5;font-weight:500;}
@@ -450,7 +450,7 @@
   /* sits level with the middle of the two circles rather than the middle of the whole
      column (the name + date labels below make the columns taller than the circles) */
   .duo-heart{
-    align-self:flex-start;margin-top:46px;font-size:1.25rem;flex:0 0 auto;opacity:.9;
+    align-self:flex-start;margin-top:46px;font-size:1.3125rem;flex:0 0 auto;opacity:.9;
     background:none;border:0;padding:0;cursor:pointer;
   }
   /* full-size photo viewer */
@@ -465,7 +465,7 @@
     max-width:100%;max-height:72vh;border-radius:18px;
     box-shadow:0 18px 50px rgba(0,0,0,.5);
   }
-  .photo-view-cap{color:var(--overlay-ink);font-size:0.8438rem;text-align:center;font-weight:600;}
+  .photo-view-cap{color:var(--overlay-ink);font-size:0.875rem;text-align:center;font-weight:600;}
   .photo-view-close{
     background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
     color:#fff;font-size:0.875rem;font-weight:600;padding:12px 24px;border-radius:999px;
@@ -488,8 +488,8 @@
     border-radius:24px 24px 0 0;padding:16px 16px 24px;overflow-y:auto;
   }
   .album-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
-  .album-title{font-size:1.25rem;font-weight:800;letter-spacing:-.01em;}
-  .album-sub{font-size:0.7812rem;color:var(--muted);margin-top:2px;}
+  .album-title{font-size:1.3125rem;font-weight:800;letter-spacing:-.01em;}
+  .album-sub{font-size:0.75rem;color:var(--muted);margin-top:2px;}
   .album-close{
     background:var(--card2);border:1px solid var(--border);color:var(--text);
     width:32px;height:32px;border-radius:50%;cursor:pointer;flex:0 0 auto;
@@ -500,7 +500,7 @@
     color:var(--faint);margin:12px 0 5px;
   }
   #tripDatesStart, #tripDatesEnd{width:100%;}
-  .td-err{font-size:0.7812rem;color:var(--pink);margin-top:9px;min-height:1em;}
+  .td-err{font-size:0.75rem;color:var(--pink);margin-top:9px;min-height:1em;}
   .album-recap{
     background:linear-gradient(160deg,var(--card2),var(--card));
     border:1px solid rgba(201,138,31,.4);border-radius:18px;
@@ -516,7 +516,7 @@
     width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;display:block;
     border:1px solid var(--border);
   }
-  .album-lab{font-size:0.6562rem;font-weight:700;color:var(--muted);margin-top:4px;}
+  .album-lab{font-size:0.625rem;font-weight:700;color:var(--muted);margin-top:4px;}
   .photo-view-remove{
     margin-top:10px;background:none;border:1px solid rgba(255,140,160,.5);
     color:#ff9bb0;font-size:0.8125rem;font-weight:600;padding:8px 24px;border-radius:999px;
@@ -598,7 +598,7 @@
   }
   .card h2{
     margin:0 0 var(--sp-6);
-    font-size:0.9375rem;
+    font-size:0.875rem;
     color:var(--muted);
     text-transform:uppercase;
     letter-spacing:0.6px;
@@ -621,7 +621,7 @@
     text-align:center;
   }
   .stat .num{
-    font-size:1.375rem;
+    font-size:1.3125rem;
     font-weight:700;
     color:var(--gold);
   }
@@ -764,7 +764,7 @@
     text-align:center;padding:16px;background:linear-gradient(135deg,var(--quest-bg-a),var(--grad-deep-b));
     border-radius:18px;border:1px solid var(--border);
   }
-  .quote-box .q{font-size:0.9375rem;font-style:italic;line-height:1.5;}
+  .quote-box .q{font-size:0.875rem;font-style:italic;line-height:1.5;}
   .quote-box .a{font-size:0.75rem;color:var(--muted);margin-top:8px;}
   .toast{
     position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
@@ -898,13 +898,13 @@
     flex-wrap:wrap;
   }
   .task-filter-bar select{
-    flex:1 1 140px;min-width:0;font-size:max(16px, 0.7812rem);padding:8px 12px;
+    flex:1 1 140px;min-width:0;font-size:max(16px, 0.75rem);padding:8px 12px;
   }
   .daily-q-card{
     background:linear-gradient(135deg,var(--chip-common-bg),var(--grad-deep-b));
     border:1px solid var(--teal);
   }
-  .daily-q-card .q{font-size:0.9375rem;font-weight:600;line-height:1.4;}
+  .daily-q-card .q{font-size:0.875rem;font-weight:600;line-height:1.4;}
   .daily-q-card .hint{font-size:0.75rem;color:var(--muted);margin-top:8px;}
 
   .price-fields{display:flex;flex-direction:column;gap:8px;}
@@ -945,10 +945,10 @@
     margin:0 0 9px;font-weight:700;
   }
   .recap-line{
-    display:flex;gap:8px;align-items:flex-start;font-size:0.8438rem;line-height:1.55;
+    display:flex;gap:8px;align-items:flex-start;font-size:0.875rem;line-height:1.55;
     padding:8px 0;
   }
-  .recap-line .ico{flex:0 0 20px;font-size:0.9375rem;line-height:1.35;}
+  .recap-line .ico{flex:0 0 20px;font-size:0.875rem;line-height:1.35;}
   .recap-line b{font-weight:700;}
   .recap-words{
     font-size:0.875rem;line-height:1.6;color:var(--text);font-style:italic;
@@ -965,11 +965,11 @@
   .race-fill{height:100%;border-radius:999px;}
   .race-fill.p1{background:var(--coral);}
   .race-fill.p2{background:var(--purple);}
-  .race-num{flex:0 0 auto;font-size:0.9375rem;font-weight:700;font-variant-numeric:tabular-nums;}
+  .race-num{flex:0 0 auto;font-size:0.875rem;font-weight:700;font-variant-numeric:tabular-nums;}
   .race-lost{font-size:0.6875rem;color:var(--pink);font-weight:600;margin-left:5px;}
-  .race-note{font-size:0.7812rem;color:var(--faint);margin-top:10px;line-height:1.5;}
+  .race-note{font-size:0.75rem;color:var(--faint);margin-top:10px;line-height:1.5;}
   .fail-tag{
-    display:inline-block;font-size:0.6562rem;font-weight:700;letter-spacing:.04em;
+    display:inline-block;font-size:0.625rem;font-weight:700;letter-spacing:.04em;
     color:var(--pink);border:1px solid currentColor;border-radius:999px;
     padding:1px 8px;margin-right:6px;opacity:.85;
   }
@@ -992,7 +992,7 @@
   }
   .exp-card .exp-emoji{font-size:1.625rem;flex-shrink:0;line-height:1.2;}
   .exp-card .exp-body{flex:1;min-width:0;}
-  .exp-card .exp-title{font-size:0.9375rem;font-weight:700;}
+  .exp-card .exp-title{font-size:0.875rem;font-weight:700;}
   .exp-card .exp-sub{font-size:0.75rem;color:var(--muted);margin-top:3px;}
   .exp-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
   .exp-actions button{
@@ -1046,7 +1046,7 @@
     border:1px solid var(--border);border-radius:var(--radius);
     padding:16px;margin-bottom:14px;
   }
-  .hero-greet{font-size:1.0625rem;font-weight:700;margin-bottom:8px;}
+  .hero-greet{font-size:1rem;font-weight:700;margin-bottom:8px;}
   .hero-quote{font-size:0.875rem;font-style:italic;line-height:1.5;color:var(--text);}
   .hero-author{font-size:0.6875rem;color:var(--muted);margin-top:6px;}
   .hero-cue{
@@ -1108,7 +1108,7 @@
        shifted/indented to the left, and focusing this input (keyboard opens, Safari
        re-lays out) locks it into that shifted position. */
     flex:1;min-width:0;width:0;
-    font-size:1.25rem;text-align:center;letter-spacing:6px;
+    font-size:1.3125rem;text-align:center;letter-spacing:6px;
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   }
   .streak-flame{color:var(--gold);}
@@ -1178,7 +1178,7 @@
     letter-spacing:-.035em;
     font-variation-settings:'wdth' 96;
   }
-  .hero-greet{font-size:1.8125rem;line-height:1.1;}
+  .hero-greet{font-size:1.625rem;line-height:1.1;}
   .card h2{font-weight:650;letter-spacing:-.028em;}
   /* every figure in the app: tabular so the two columns line up and can be compared */
   .stat .num,.health-val,.chal-day,.duo-health,.tl-row .dnum,.code-display,
@@ -1195,7 +1195,7 @@
      so the two read as a statement and its echo rather than two competing subtitles. */
   header .sub.tagline{
     font-family:var(--display);
-    font-size:0.9375rem;
+    font-size:0.875rem;
     font-weight:600;
     letter-spacing:-.02em;
     color:var(--text);
@@ -1204,7 +1204,7 @@
   header .sub.tagline .dash{color:var(--moody);font-weight:500;}
   header .sub.tagline.motto{
     font-family:var(--ui);
-    font-size:0.7812rem;
+    font-size:0.75rem;
     font-weight:500;
     letter-spacing:0;
     color:var(--faint);
@@ -1249,7 +1249,7 @@
     letter-spacing:-0.02em;
     line-height:1;
   }
-  header .sub{font-size:0.7812rem;color:var(--faint);letter-spacing:0;margin-top:8px;}
+  header .sub{font-size:0.75rem;color:var(--faint);letter-spacing:0;margin-top:8px;}
   header .sub.tagline{margin-left:0;}
 
   /* ---- surfaces ---- */
@@ -1270,7 +1270,7 @@
   .card h2{
     font-family:var(--display);
     font-weight:600;
-    font-size:1.0625rem;
+    font-size:1rem;
     text-transform:none;      /* kill the shouty all-caps */
     letter-spacing:-0.01em;
     color:var(--text);
@@ -1307,11 +1307,11 @@
   /* ---- list pills ---- */
   .list-pills{gap:8px;margin-bottom:16px;}
   .list-pills button{
-    font-size:0.9062rem;font-weight:600;padding:12px 16px;
+    font-size:0.875rem;font-weight:600;padding:12px 16px;
     background:var(--s2);border:1px solid var(--line);color:var(--muted);
     display:inline-flex;align-items:center;gap:8px;
   }
-  .list-pills button .pill-ico{font-size:1.0625rem;line-height:1;}
+  .list-pills button .pill-ico{font-size:1rem;line-height:1;}
   .list-pills button.active{
     background:var(--text);color:var(--on-accent);border-color:transparent;
     box-shadow:var(--sh-2);
@@ -1321,17 +1321,17 @@
   /* ---- daily question answers ---- */
   .qa-bubble{
     background:var(--s2);border:1px solid var(--line);border-radius:18px;
-    padding:12px 12px;margin-top:8px;font-size:0.8438rem;line-height:1.55;
+    padding:12px 12px;margin-top:8px;font-size:0.875rem;line-height:1.55;
   }
   .qa-bubble.sealed{color:var(--faint);font-style:italic;border-style:dashed;}
   .qa-who{
-    font-size:0.6562rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    font-size:0.625rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
     color:var(--pink);margin-bottom:3px;
   }
-  .qa-status{font-size:0.7812rem;color:var(--muted);margin-top:9px;text-align:center;}
+  .qa-status{font-size:0.75rem;color:var(--muted);margin-top:9px;text-align:center;}
   .qa-past{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;}
   .qa-past:first-child{border-top:none;padding-top:0;margin-top:0;}
-  .qa-past-q{font-size:0.7812rem;color:var(--muted);font-weight:600;}
+  .qa-past-q{font-size:0.75rem;color:var(--muted);font-weight:600;}
 
   /* ---- the question after a daily photo ---- */
   .photoq-q{
@@ -1346,7 +1346,7 @@
   .note-arch-count{font-size:0.75rem;color:var(--faint);font-variant-numeric:tabular-nums;}
   .note-arch-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .note-arch-filters button{
-    font-size:0.7812rem;font-weight:600;padding:8px 12px;border-radius:999px;
+    font-size:0.75rem;font-weight:600;padding:8px 12px;border-radius:999px;
     border:1px solid var(--line);background:transparent;color:var(--faint);
     font-family:inherit;cursor:pointer;
   }
@@ -1368,12 +1368,12 @@
   .note .text.locked,.note-arch-text.locked{color:var(--faint);font-style:italic;}
 
   /* ---- push diagnostics ---- */
-  .push-diag{font-size:0.7188rem;line-height:1.6;color:var(--muted);margin-top:8px;}
+  .push-diag{font-size:0.75rem;line-height:1.6;color:var(--muted);margin-top:8px;}
   .push-diag .pd-row{padding:4px 0;border-top:1px solid var(--line);}
   .push-diag .pd-row:first-child{border-top:none;}
   .push-diag .pd-bad{color:var(--pink);}
   .push-diag .pd-ok{color:var(--jade);}
-  .push-diag .pd-detail{color:var(--faint);font-family:ui-monospace,Menlo,monospace;font-size:0.6562rem;word-break:break-all;}
+  .push-diag .pd-detail{color:var(--faint);font-family:ui-monospace,Menlo,monospace;font-size:0.625rem;word-break:break-all;}
 
   .row-entry{
     display:block;width:100%;margin:0 0 14px;padding:12px;
@@ -1388,8 +1388,8 @@
     background:linear-gradient(168deg,rgba(116,214,172,.12),var(--card) 62%);
     border:1px solid var(--line-2);margin-top:12px;
   }
-  .dry-head{font-size:0.9375rem;font-weight:700;color:var(--text);margin-bottom:6px;}
-  .dry-body{font-size:0.8438rem;line-height:1.6;color:var(--muted);}
+  .dry-head{font-size:0.875rem;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .dry-body{font-size:0.875rem;line-height:1.6;color:var(--muted);}
   .dry-acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
   .dry-acts > *{flex:1 1 130px;min-width:0;}
   .card.fair-card,
@@ -1397,27 +1397,27 @@
     background:linear-gradient(168deg,rgba(232,181,75,.11),var(--card) 62%);
     border:1px solid var(--line-2);margin-top:12px;
   }
-  .fair-head{font-size:0.9375rem;font-weight:700;color:var(--text);margin-bottom:6px;}
-  .fair-body{font-size:0.8438rem;line-height:1.6;color:var(--muted);}
+  .fair-head{font-size:0.875rem;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .fair-body{font-size:0.875rem;line-height:1.6;color:var(--muted);}
   .fair-skip{
-    background:none;border:none;color:var(--faint);font-size:0.7812rem;font-family:inherit;
+    background:none;border:none;color:var(--faint);font-size:0.75rem;font-family:inherit;
     padding:12px 2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
     display:block;margin:0 auto;
   }
 
   /* ---- after a row ---- */
   .row-timer{
-    font-size:2.875rem;font-weight:800;text-align:center;color:var(--text);
+    font-size:2.75rem;font-weight:800;text-align:center;color:var(--text);
     font-variant-numeric:tabular-nums;margin:18px 0 6px;
   }
-  .row-note{font-size:0.8438rem;line-height:1.6;color:var(--muted);text-align:center;}
+  .row-note{font-size:0.875rem;line-height:1.6;color:var(--muted);text-align:center;}
   .row-q{font-size:1rem;line-height:1.45;font-weight:600;color:var(--text);margin:6px 0 12px;}
   .row-sealed{
     font-size:0.8125rem;line-height:1.6;color:var(--faint);text-align:center;
     border:1px dashed var(--line-2);border-radius:var(--r-object);padding:16px;margin-top:4px;
   }
   .row-theirs{
-    font-size:0.9062rem;line-height:1.6;color:var(--text);
+    font-size:0.875rem;line-height:1.6;color:var(--text);
     border-left:2px solid var(--purple);padding:4px 0 4px 12px;margin-top:10px;
   }
   .row-open{
@@ -1473,10 +1473,10 @@
   }
   .troph.is-first .troph-rank{ background:rgba(232,181,75,.16); color:var(--gold); }
   .sup-row{display:flex;gap:12px;align-items:flex-start;padding:8px 0;}
-  .sup-ico{flex:0 0 22px;font-size:1.0625rem;line-height:1.3;}
+  .sup-ico{flex:0 0 22px;font-size:1rem;line-height:1.3;}
   .sup-row b{font-size:0.875rem;color:var(--text);font-weight:700;}
   .sup-who{font-size:0.875rem;color:var(--coral);font-weight:600;}
-  .sup-why{font-size:0.7812rem;color:var(--faint);line-height:1.5;margin-top:2px;}
+  .sup-why{font-size:0.75rem;color:var(--faint);line-height:1.5;margin-top:2px;}
 
   /* ---- reminders ---- */
   .rem-strip{display:flex;flex-direction:column;gap:8px;margin:0 0 14px;}
@@ -1500,17 +1500,17 @@
     background:linear-gradient(168deg,rgba(142,230,200,.12),var(--card) 62%);
     border:1px solid var(--line-2);margin-top:12px;
   }
-  .repair-head{font-size:0.9375rem;font-weight:700;color:var(--text);margin-bottom:6px;}
-  .repair-body{font-size:0.8438rem;line-height:1.55;color:var(--muted);}
+  .repair-head{font-size:0.875rem;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .repair-body{font-size:0.875rem;line-height:1.55;color:var(--muted);}
   .repair-skip{
-    background:none;border:none;color:var(--faint);font-size:0.7812rem;font-family:inherit;
+    background:none;border:none;color:var(--faint);font-size:0.75rem;font-family:inherit;
     padding:12px 2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
     display:block;margin:0 auto;
   }
 
   /* ---- the note under a photo ---- */
   .duo-note{
-    font-size:0.7188rem;line-height:1.45;color:var(--muted);font-style:italic;
+    font-size:0.75rem;line-height:1.45;color:var(--muted);font-style:italic;
     margin-top:5px;text-align:center;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
   }
@@ -1545,11 +1545,11 @@
   .mem-half img{width:100%;height:100%;object-fit:cover;display:block;}
   .mem-half.pending{
     display:flex;align-items:center;justify-content:center;
-    font-size:0.9375rem;color:var(--faint);
+    font-size:0.875rem;color:var(--faint);
   }
   .mem-day{
     position:absolute;left:5px;bottom:4px;z-index:2;
-    font-size:0.6562rem;font-weight:700;color:#fff;
+    font-size:0.625rem;font-weight:700;color:#fff;
     text-shadow:0 1px 3px rgba(0,0,0,.85);font-variant-numeric:tabular-nums;
   }
   .mem-cell.empty .mem-day{color:var(--faint);text-shadow:none;}
@@ -1557,18 +1557,18 @@
     position:absolute;right:5px;bottom:5px;z-index:2;font-size:0.625rem;
     text-shadow:0 1px 3px rgba(0,0,0,.85);
   }
-  .mem-note{font-size:0.7812rem;line-height:1.5;color:var(--faint);margin-top:14px;text-align:center;}
+  .mem-note{font-size:0.75rem;line-height:1.5;color:var(--faint);margin-top:14px;text-align:center;}
   .mem-day-photos{display:flex;gap:8px;margin-bottom:4px;}
   .mem-day-photos figure{flex:1;min-width:0;margin:0;}
   .mem-day-photos img{width:100%;border-radius:12px;display:block;}
-  .mem-day-photos figcaption{font-size:0.7188rem;color:var(--faint);text-align:center;margin-top:5px;}
+  .mem-day-photos figcaption{font-size:0.75rem;color:var(--faint);text-align:center;margin-top:5px;}
   .mem-day-note{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;}
 
 
   /* ---- task group headers ---- */
   .task-group{
     display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-    font-size:0.7188rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    font-size:0.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
     color:var(--muted);margin:16px 0 7px;padding-bottom:8px;
     border-bottom:1px solid var(--line);
   }
@@ -1582,7 +1582,7 @@
 
   /* ---- spin expiry note ---- */
   .spin-expiry{
-    font-size:0.7812rem;line-height:1.5;color:var(--muted);text-align:center;
+    font-size:0.75rem;line-height:1.5;color:var(--muted);text-align:center;
     padding:8px 12px;margin-bottom:10px;border-radius:var(--r-object);
     background:var(--s1);border:1px solid var(--line);
   }
@@ -1593,15 +1593,15 @@
     border-color:rgba(232,181,75,.38);
   }
   .spin-expiry b{color:var(--gold);}
-  .quota-note{font-size:0.7188rem;color:var(--faint);margin-top:6px;text-align:center;}
+  .quota-note{font-size:0.75rem;color:var(--faint);margin-top:6px;text-align:center;}
   .rarity-pick{display:flex;gap:8px;width:100%;margin-top:8px;}
-  .rarity-pick button{flex:1;font-size:0.7188rem;padding:8px 4px;}
+  .rarity-pick button{flex:1;font-size:0.75rem;padding:8px 4px;}
 
   /* ---- build / update line ---- */
   .ver-line{
     display:block;margin:12px auto 0;padding:4px 12px;
     background:none;border:1px solid transparent;border-radius:var(--r-control);
-    font-family:inherit;font-size:0.6562rem;font-weight:600;letter-spacing:.11em;
+    font-family:inherit;font-size:0.625rem;font-weight:600;letter-spacing:.11em;
     text-transform:uppercase;color:var(--faint);cursor:pointer;
     -webkit-tap-highlight-color:transparent;
   }
@@ -1615,7 +1615,7 @@
   /* ---- health pipeline diagnostics ---- */
   .health-diag{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;}
   .health-diag summary{
-    cursor:pointer;font-size:0.7188rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    cursor:pointer;font-size:0.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
     color:var(--faint);list-style:none;
   }
   .health-diag summary::-webkit-details-marker{display:none;}
@@ -1642,18 +1642,18 @@
   }
   .health-name{font-size:0.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);}
   .health-stale{font-size:0.625rem;color:var(--gold);letter-spacing:0;text-transform:none;font-weight:600;}
-  .health-ico{font-size:1.0625rem;}
-  .health-val{font-size:1.1875rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .health-ico{font-size:1rem;}
+  .health-val{font-size:1.125rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;}
   .health-val.win{color:var(--teal);}
   .health-nudge{
-    font-size:0.7812rem;color:var(--muted);margin-top:10px;padding:8px 12px;
+    font-size:0.75rem;color:var(--muted);margin-top:10px;padding:8px 12px;
     background:var(--s2);border:1px solid var(--line);border-radius:12px;line-height:1.5;
   }
   /* stale numbers used to announce themselves with a 10px date and nothing else, which is
      how week-old figures passed for today's. This one is meant to be impossible to skim past. */
   .health-stale-warn.is-stuck{ border-color:rgba(255,122,94,.5); }
   .health-stale-warn{
-    font-size:0.7812rem;margin-top:10px;padding:12px 12px;line-height:1.5;
+    font-size:0.75rem;margin-top:10px;padding:12px 12px;line-height:1.5;
     background:rgba(214,158,46,.12);border:1px solid rgba(214,158,46,.45);
     border-radius:12px;color:var(--text);
   }
@@ -1678,7 +1678,7 @@
   .trip-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,14,.04) 32%,rgba(10,6,14,.82));}
   .trip-info{position:absolute;left:15px;bottom:12px;z-index:2;max-width:70%;}
   .trip-dest{font-size:1.3125rem;font-weight:800;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.55);line-height:1.15;}
-  .trip-dates{font-size:0.7812rem;color:rgba(255,255,255,.88);margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.5);}
+  .trip-dates{font-size:0.75rem;color:rgba(255,255,255,.88);margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.5);}
   /* Build 109: icons that sit inline with text, so the text keeps its baseline. */
   .te-i, .rt-i, .qa-i, .bit-i, .em-i, .ts-i{ vertical-align:-0.14em; }
   .rt-i{ vertical-align:-0.16em; margin-right:1px; }
@@ -1693,7 +1693,7 @@
     border-bottom:1px dotted rgba(255,255,255,.6);padding-bottom:1px;
   }
   .trip-state{
-    display:inline-block;margin-top:6px;font-size:0.7188rem;font-weight:700;
+    display:inline-block;margin-top:6px;font-size:0.75rem;font-weight:700;
     padding:4px 12px;border-radius:999px;
     background:rgba(15,10,20,.5);color:rgba(255,255,255,.92);
     border:1px solid rgba(255,255,255,.3);
@@ -1704,7 +1704,7 @@
   .trip-actions{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:8px;}
   .trip-check{
     width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.75);cursor:pointer;
-    background:rgba(15,10,20,.45);color:#fff;font-size:1.0625rem;font-weight:800;
+    background:rgba(15,10,20,.45);color:#fff;font-size:1rem;font-weight:800;
     display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);
   }
   .trip-check:active{background:var(--teal);border-color:var(--teal);color:var(--on-teal);}
@@ -1731,7 +1731,7 @@
   .buy-cat-header .cat-ico{font-size:1rem;letter-spacing:0;}
   .buy-cat-count{
     background:var(--s2);border:1px solid var(--line);border-radius:999px;
-    padding:1px 8px;font-size:0.6562rem;color:var(--muted);letter-spacing:0;
+    padding:1px 8px;font-size:0.625rem;color:var(--muted);letter-spacing:0;
   }
 
   /* ---- FAB + add-task sheet ---- */
@@ -1743,7 +1743,7 @@
        this rule sits LATER in the sheet it was quietly undoing that fix, which is why
        the fix needed !important to survive. Removing the white removes the fight. */
     background:linear-gradient(135deg,var(--pink),var(--purple));
-    font-size:2rem;line-height:1;font-weight:400;
+    font-size:2.125rem;line-height:1;font-weight:400;
     display:flex;align-items:center;justify-content:center;padding-bottom:4px;
     box-shadow:0 8px 24px rgba(0,0,0,.5), 0 2px 8px rgba(255,111,145,.35);
   }
@@ -1777,15 +1777,15 @@
     box-shadow:var(--sh-3);
   }
   .hero-greet{
-    font-family:var(--display);font-weight:600;font-size:1.5625rem;
+    font-family:var(--display);font-weight:600;font-size:1.625rem;
     letter-spacing:-0.02em;margin-bottom:12px;
   }
   .hero-quote{
     font-family:var(--display);font-style:italic;font-weight:400;
-    font-size:1.0312rem;line-height:1.5;color:var(--text);
+    font-size:1rem;line-height:1.5;color:var(--text);
   }
-  .hero-author{font-size:0.7188rem;color:var(--faint);margin-top:8px;letter-spacing:.02em;}
-  .hero-cue{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;font-size:0.8438rem;line-height:1.55;color:var(--text);}
+  .hero-author{font-size:0.75rem;color:var(--faint);margin-top:8px;letter-spacing:.02em;}
+  .hero-cue{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;font-size:0.875rem;line-height:1.55;color:var(--text);}
   .hero-cue .cue-label,.hero-scope .cue-label{
     font-family:var(--ui);font-size:var(--eyebrow);font-weight:800;
     letter-spacing:var(--eyebrow-track);color:var(--jade);margin-bottom:6px;
@@ -1802,7 +1802,7 @@
     box-shadow:var(--sh-1);
   }
   .stat .num{
-    font-family:var(--display);font-weight:700;font-size:1.6875rem;
+    font-family:var(--display);font-weight:700;font-size:1.625rem;
     color:var(--text);letter-spacing:-0.02em;line-height:1;
   }
   .stat .label{
@@ -1815,7 +1815,7 @@
   /* ---- badges ---- */
   .badge-pill{
     background:var(--s3);border:1px solid var(--line-2);
-    font-size:0.7188rem;font-weight:600;padding:8px 12px;box-shadow:var(--sh-1);
+    font-size:0.75rem;font-weight:600;padding:8px 12px;box-shadow:var(--sh-1);
   }
   .badge-pill.at-risk{border-color:var(--rose);color:var(--rose);background:rgba(255,107,138,.09);}
 
@@ -1847,7 +1847,7 @@
   }
   .task .check:hover{border-color:var(--jade);}
   .task.done .check{background:var(--jade);border-color:var(--jade);color:var(--on-accent);font-weight:800;}
-  .task .title{font-size:0.9062rem;font-weight:600;letter-spacing:-0.01em;line-height:1.35;}
+  .task .title{font-size:0.875rem;font-weight:600;letter-spacing:-0.01em;line-height:1.35;}
   .task .meta{font-size:0.6875rem;color:var(--faint);margin-top:5px;}
   .diff-tag,.repeat-tag,.pending-pill,.bricked-pill,.tier-tag{
     font-size:var(--eyebrow);letter-spacing:.07em;padding:4px 8px;border-radius:6px;font-weight:800;
@@ -1881,10 +1881,10 @@
   .buy-thumb .fallback svg{width:100%;height:100%;display:block;}
   .buy-body{flex:1;min-width:0;display:flex;flex-direction:column;}
   .buy-price{
-    font-family:var(--display);font-weight:700;font-size:1.5rem;
+    font-family:var(--display);font-weight:700;font-size:1.625rem;
     letter-spacing:-0.025em;line-height:1;color:var(--text);
   }
-  .buy-price .cents{font-size:0.9375rem;opacity:.65;}
+  .buy-price .cents{font-size:0.875rem;opacity:.65;}
   .buy-name{
     font-size:0.875rem;font-weight:600;color:var(--text);line-height:1.3;margin-top:7px;
   }
@@ -1892,7 +1892,7 @@
     font-size:0.625rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
     color:var(--faint);margin-top:4px;
   }
-  .buy-sub{font-size:0.6562rem;color:var(--faint);margin-top:5px;}
+  .buy-sub{font-size:0.625rem;color:var(--faint);margin-top:5px;}
 
   /* alternatives: a slim footer welded onto the card, not a competing card */
   .task-wrap{margin-bottom:12px;}
@@ -1915,7 +1915,7 @@
   .alt-panel summary svg{width:12px;height:12px;flex-shrink:0;}
   .alt-panel[open] summary{color:var(--muted);}
   .alt-add-form{gap:4px;margin-top:7px;padding-top:8px;}
-  .alt-add-form input,.alt-add-form select{font-size:max(16px, 0.6562rem);padding:8px 8px;border-radius:12px;}
+  .alt-add-form input,.alt-add-form select{font-size:max(16px, 0.625rem);padding:8px 8px;border-radius:12px;}
   .buy-tags{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap;}
   .buy-check{
     width:26px;height:26px;border-radius:50%;border:2px solid var(--line-2);
@@ -1940,7 +1940,7 @@
   }
   .alt-panel summary{font-size:0.75rem;font-weight:600;color:var(--muted);padding:12px 0;}
   .alt-row{border-top:1px solid var(--line);padding:12px 0;}
-  .alt-info a{font-size:0.7812rem;font-weight:600;text-decoration:none;border-bottom:1px solid var(--line-2);}
+  .alt-info a{font-size:0.75rem;font-weight:600;text-decoration:none;border-bottom:1px solid var(--line-2);}
   .alt-price{font-family:var(--display);font-weight:600;font-size:0.875rem;color:var(--gold);margin-top:4px;}
   .tier-common{background:rgba(79,209,181,.14);color:var(--jade);}
   .tier-uncommon{background:rgba(166,126,224,.16);color:var(--plum);}
@@ -1995,9 +1995,9 @@
     border:1px solid var(--line);border-radius:18px;padding:16px;
     box-shadow:var(--sh-2);
   }
-  .exp-card .exp-emoji{font-size:1.4375rem;}
+  .exp-card .exp-emoji{font-size:1.3125rem;}
   .exp-card .exp-title{
-    font-family:var(--display);font-weight:600;font-size:1.0625rem;letter-spacing:-0.015em;
+    font-family:var(--display);font-weight:600;font-size:1rem;letter-spacing:-0.015em;
   }
   .exp-card .exp-sub{font-size:0.6875rem;color:var(--faint);margin-top:4px;letter-spacing:.02em;}
   .trophy-card{
@@ -2007,9 +2007,9 @@
     border:1px solid rgba(201,138,31,.4);
     box-shadow:0 8px 26px rgba(38,30,45,.12);
   }
-  .trophy-card .exp-title{color:var(--gold);font-size:1.1875rem;}
+  .trophy-card .exp-title{color:var(--gold);font-size:1.125rem;}
   .trophy-meta{
-    font-family:var(--display);font-size:0.7812rem;color:var(--muted);
+    font-family:var(--display);font-size:0.75rem;color:var(--muted);
     margin-top:8px;line-height:1.75;
   }
   .trophy-photo{
@@ -2021,7 +2021,7 @@
   .photo-missing{
     display:flex;align-items:center;gap:8px;margin-top:11px;padding:8px 12px;
     background:rgba(240,193,75,.13);border:1px solid rgba(240,193,75,.4);
-    border-radius:12px;font-size:0.7812rem;font-weight:600;color:var(--gold);line-height:1.45;
+    border-radius:12px;font-size:0.75rem;font-weight:600;color:var(--gold);line-height:1.45;
   }
   .photo-missing.lost{
     background:rgba(232,97,92,.12);border-color:rgba(232,97,92,.4);color:var(--pink);
@@ -2036,11 +2036,11 @@
     border-color:transparent;box-shadow:0 4px 14px rgba(240,193,75,.26);
   }
   .trophy-count{
-    font-family:var(--display);font-size:0.9375rem;font-weight:600;
+    font-family:var(--display);font-size:0.875rem;font-weight:600;
     color:var(--gold);letter-spacing:-0.01em;margin-bottom:14px;
   }
   .exp-actions button{
-    font-size:0.7188rem;font-weight:600;padding:8px 12px;border-radius:12px;
+    font-size:0.75rem;font-weight:600;padding:8px 12px;border-radius:12px;
     background:var(--tint-2);border:1px solid var(--line-2);color:var(--muted);
   }
   .exp-actions button.go{
@@ -2060,7 +2060,7 @@
   .cc-head-row .card-collapse{ flex:1; min-width:0; }
   .cc-head-row .cc-chev{ margin-left:auto; }
   .cc-count{
-    flex:1;min-width:0;font-size:0.7812rem;color:var(--faint);font-weight:600;
+    flex:1;min-width:0;font-size:0.75rem;color:var(--faint);font-weight:600;
   }
   /* Build 109: this was the character U+25BE set at 15px. A drawn chevron matches the
      weight of every other icon on the page and rotates on the same axis. */
@@ -2093,16 +2093,16 @@
     box-shadow:0 8px 26px rgba(38,30,45,.12);
   }
   .chal-top{display:flex;align-items:center;gap:12px;}
-  .chal-emoji{font-size:1.375rem;flex:0 0 auto;line-height:1;}
+  .chal-emoji{font-size:1.3125rem;flex:0 0 auto;line-height:1;}
   .chal-head{flex:1;min-width:0;}
-  .chal-day{font-family:var(--display);font-size:1.1875rem;font-weight:600;color:var(--chal-today);
+  .chal-day{font-family:var(--display);font-size:1.125rem;font-weight:600;color:var(--chal-today);
     letter-spacing:-.015em;line-height:1.15;}
-  .chal-title{font-size:0.7188rem;color:var(--chal-eyebrow);letter-spacing:.05em;text-transform:uppercase;
+  .chal-title{font-size:0.75rem;color:var(--chal-eyebrow);letter-spacing:.05em;text-transform:uppercase;
     font-weight:700;margin-top:2px;}
   .chal-bar{height:6px;border-radius:999px;background:var(--tint-3);margin:11px 0 0;overflow:hidden;}
   .chal-bar i{display:block;height:100%;border-radius:999px;
     background:linear-gradient(90deg,var(--jade),var(--jade-lift));transition:width .45s cubic-bezier(.4,0,.2,1);}
-  .chal-msg{font-size:0.8438rem;line-height:1.55;color:var(--chal-ink);margin-top:11px;}
+  .chal-msg{font-size:0.875rem;line-height:1.55;color:var(--chal-ink);margin-top:11px;}
   .chal-people{display:flex;gap:8px;margin-top:12px;}
   .chal-p{
     flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;
@@ -2123,7 +2123,7 @@
   .chal-p .sub{font-size:0.6875rem;color:var(--chal-dim);}
   .chal-toggle{
     width:100%;margin-top:11px;background:none;border:none;padding:8px 0 1px;
-    font-size:0.7812rem;color:var(--chal-dim);cursor:pointer;text-align:center;
+    font-size:0.75rem;color:var(--chal-dim);cursor:pointer;text-align:center;
     display:flex;align-items:center;justify-content:center;gap:8px;
   }
   .chal-toggle:active{color:var(--chal-ink);}
@@ -2154,8 +2154,8 @@
   .tl-row.both .dot{background:var(--jade);border-color:var(--jade);}
   .tl-row.one  .dot{background:var(--chal-rail);border-color:var(--jade);}
   .tl-row.today .dot{box-shadow:0 0 0 3px var(--chal-ring), 0 0 0 5px rgba(124,224,198,.45);}
-  .tl-row .dnum{font-size:0.7188rem;color:var(--chal-num);width:46px;flex:0 0 auto;font-variant-numeric:tabular-nums;}
-  .tl-row .ddate{font-size:0.7812rem;color:var(--chal-date);flex:1;min-width:0;}
+  .tl-row .dnum{font-size:0.75rem;color:var(--chal-num);width:46px;flex:0 0 auto;font-variant-numeric:tabular-nums;}
+  .tl-row .ddate{font-size:0.75rem;color:var(--chal-date);flex:1;min-width:0;}
   .tl-row.today .ddate{color:var(--chal-today);font-weight:700;}
   .tl-row.future .dnum,.tl-row.future .ddate{color:var(--chal-future);}
   .tl-row .marks{display:flex;gap:4px;flex:0 0 auto;}
@@ -2177,7 +2177,7 @@
   .task-chal .mini{display:flex;gap:4px;margin-left:auto;}
   .task-chal .mini span{
     /* stays at 9.5px: it is a single digit inside a 17px square, not a label. */
-    width:17px;height:17px;border-radius:5px;font-size:0.5938rem;font-weight:800;
+    width:17px;height:17px;border-radius:5px;font-size:0.625rem;font-weight:800;
     display:flex;align-items:center;justify-content:center;
     background:rgba(0,0,0,.06);color:var(--chal-badge-dim);
   }
@@ -2191,13 +2191,13 @@
     background:var(--tint-3);border:1px solid var(--line);
     border-radius:18px;padding:16px;
   }
-  .code-display .code-label{font-size:0.6562rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
+  .code-display .code-label{font-size:0.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
   .code-display .code-value{
-    font-family:var(--display);font-weight:700;font-size:2.5rem;
+    font-family:var(--display);font-weight:700;font-size:2.75rem;
     letter-spacing:var(--eyebrow-track);color:var(--gold);margin-top:8px;
   }
-  .code-hint{font-size:0.7812rem;line-height:1.55;color:var(--muted);}
-  .countdown{font-size:0.7188rem;color:var(--faint);}
+  .code-hint{font-size:0.75rem;line-height:1.55;color:var(--muted);}
+  .countdown{font-size:0.75rem;color:var(--faint);}
 
   /* ---- notes / quotes ---- */
   .note{
@@ -2205,7 +2205,7 @@
     border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--sh-1);
   }
   .note .from{font-size:0.625rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--rose);}
-  .note .text{font-family:var(--display);font-size:0.9062rem;line-height:1.55;margin-top:7px;}
+  .note .text{font-family:var(--display);font-size:0.875rem;line-height:1.55;margin-top:7px;}
   .note .date{font-size:0.625rem;color:var(--faint);margin-top:9px;}
   .quote-box{
     background:linear-gradient(160deg,var(--s2),var(--s3));
@@ -2213,12 +2213,12 @@
   }
   .quote-box .q{font-family:var(--display);font-style:italic;font-size:1rem;line-height:1.5;}
   .daily-q-card{background:linear-gradient(165deg,var(--s2),var(--s3));border-color:rgba(79,209,181,.34);}
-  .daily-q-card .q{font-family:var(--display);font-weight:600;font-size:1.0625rem;line-height:1.45;letter-spacing:-0.015em;}
+  .daily-q-card .q{font-family:var(--display);font-weight:600;font-size:1rem;line-height:1.45;letter-spacing:-0.015em;}
 
   /* ---- quest ---- */
   .quest-card{background:linear-gradient(165deg,#332a44,var(--grad-deep-c));border-color:rgba(166,126,224,.36);}
   .quest-title{font-family:var(--display);font-weight:600;font-size:1.125rem;letter-spacing:-0.015em;}
-  .quest-desc{font-size:0.7812rem;color:var(--muted);}
+  .quest-desc{font-size:0.75rem;color:var(--muted);}
   .quest-part{
     border-radius:18px;font-size:0.75rem;font-weight:600;padding:12px;
     background:var(--tint-2);border:1px solid var(--line-2);color:var(--muted);
@@ -2232,18 +2232,18 @@
     font-family:var(--display);font-weight:700;font-size:0.75rem;width:26px;height:26px;
   }
   .lb-name{font-size:0.875rem;font-weight:600;}
-  .lb-pts{font-family:var(--display);font-weight:700;font-size:1.0625rem;color:var(--gold);}
+  .lb-pts{font-family:var(--display);font-weight:700;font-size:1rem;color:var(--gold);}
   .fair-bar{height:9px;border-radius:999px;background:var(--tint-3);}
   .fair-bar .a{background:linear-gradient(90deg,var(--rose),var(--rose-deep));}
   .fair-bar .b{background:linear-gradient(90deg,var(--jade),#3aa892);}
-  .fair-label{font-size:0.7188rem;color:var(--faint);}
+  .fair-label{font-size:0.75rem;color:var(--faint);}
 
   /* ---- rewards ---- */
   .reward-item{
     background:linear-gradient(180deg,var(--s2),var(--s3));
     border:1px solid var(--line);border-radius:18px;padding:12px 16px;
   }
-  .reward-item .left{font-size:0.8438rem;font-weight:500;}
+  .reward-item .left{font-size:0.875rem;font-weight:500;}
 
   /* ---- misc polish ---- */
   .empty{color:var(--faint);font-size:0.8125rem;font-style:italic;}
@@ -2259,7 +2259,7 @@
   }
   .speech-turn{
     background:var(--tint-2);border:1px solid var(--line);
-    border-radius:18px;font-size:0.7812rem;color:var(--muted);
+    border-radius:18px;font-size:0.75rem;color:var(--muted);
   }
   details.sync summary{font-size:0.8125rem;font-weight:600;color:var(--faint);}
   /* Build 109: this was border-color:var(--line)!important, fighting nine <hr>s that each
@@ -2300,7 +2300,7 @@
     color:var(--text);
     margin:0 0 13px;
   }
-  .daily-q-card .q{font-size:1.1875rem;}
+  .daily-q-card .q{font-size:1.125rem;}
 
   /* ===== Calm the labels =====
      Tracked-out capitals were on every stat, name and section label. In a two-person app
@@ -2310,17 +2310,17 @@
     text-transform:none;letter-spacing:0;font-weight:600;
   }
   .stat .label{font-size:0.75rem;color:var(--faint);}
-  .health-name{font-size:0.8438rem;font-weight:700;color:var(--text);}
-  .chal-title{font-size:0.7812rem;color:var(--chal-eyebrow);}
+  .health-name{font-size:0.875rem;font-weight:700;color:var(--text);}
+  .chal-title{font-size:0.75rem;color:var(--chal-eyebrow);}
   .buy-cat-header{font-size:0.875rem;font-weight:600;color:var(--text);font-family:var(--display);}
-  .trip-banner{font-size:0.7812rem;}
-  .note .from{font-size:0.7188rem;}
+  .trip-banner{font-size:0.75rem;}
+  .note .from{font-size:0.75rem;}
   .hero-cue .cue-label,.hero-scope .cue-label{
-    font-family:var(--ui);font-size:0.7812rem;font-weight:600;
+    font-family:var(--ui);font-size:0.75rem;font-weight:600;
     letter-spacing:0;text-transform:none;margin-bottom:6px;
   }
   .diff-tag,.repeat-tag,.pending-pill,.bricked-pill,.tier-tag{
-    text-transform:none;letter-spacing:0;font-weight:700;font-size:0.6562rem;
+    text-transform:none;letter-spacing:0;font-weight:700;font-size:0.625rem;
   }
 
   /* ===== Colour means a person =====
@@ -2406,7 +2406,7 @@
     position:fixed;inset:0;pointer-events:none;z-index:var(--z-burst);overflow:hidden;
   }
   .burst-piece{
-    position:absolute;left:50%;top:50%;font-size:1.375rem;will-change:transform,opacity;
+    position:absolute;left:50%;top:50%;font-size:1.3125rem;will-change:transform,opacity;
     opacity:0;
   }
   /* Build 101: confetti can now come out of the thing you actually pressed instead of
@@ -2623,12 +2623,32 @@
 
        sel-fill is --text and sel-ink is --bg, so the pair inverts correctly in
        both palettes and the contrast is maximal by construction. */
+    /* ---- BUILD 170: ELEVATION, as three families instead of twelve numbers ----
+       Measured across the app: 12 distinct box-shadow recipes, and almost all of
+       them were the same idea at slightly different values - an inset hairline of
+       light on the top edge plus a shadow falling down. That is one material lit
+       from above, typed out twelve times.
+
+         --el-card   things resting on the page
+         --el-float  things hovering over it (the dock)
+         --el-sunk   things cut into it (the credit panel, the cabinet)
+
+       Accent glows stay separate because they are coloured, and colour is not
+       elevation. */
+    --el-card:inset 0 1px 0 rgba(255,255,255,.045), 0 12px 28px -14px rgba(0,0,0,.5);
+    --el-float:inset 0 1px 0 rgba(255,255,255,.055), 0 16px 34px -14px rgba(0,0,0,.85);
+    --el-sunk:inset 0 2px 10px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.07);
+
     --dock-bg:rgba(40,26,38,.86);
     --dock-rim:rgba(255,255,255,.07);
-    --dock-shadow:inset 0 1px 0 rgba(255,255,255,.055), 0 16px 34px -14px rgba(0,0,0,.85);
+    --dock-shadow:inset 0 1px 0 rgba(255,255,255,.26), inset 0 -1px 0 rgba(0,0,0,.30), 0 8px 10px -8px rgba(0,0,0,.55), 0 30px 44px -20px rgba(0,0,0,.80);
     --dock-ink:var(--muted);
-    --dock-sel-fill:var(--text);
+    /* BUILD 172: the selected cell carries BOTH of them. 171 argued chrome should
+       not spend one person's colour; a gradient of the pair favours neither, and it
+       is the same device as the cabinet bezel and the bar's own rim. */
+    --dock-sel-fill:linear-gradient(118deg, var(--moody), var(--rae));
     --dock-sel-ink:var(--bg);
+    --dock-glass:linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.02) 46%, rgba(0,0,0,.12)), rgba(44,28,42,.52);
     /* the two corner washes that make the ground feel lit rather than painted */
     --wash-a:rgba(255,111,88,.15);
     --wash-b:rgba(195,168,240,.14);
@@ -2659,7 +2679,7 @@
     color:var(--text);
     margin:0 0 14px;
   }
-  :root[data-skin="pe"][data-type="c"] .card h2{ font-weight:600; font-size:1.1875rem; }
+  :root[data-skin="pe"][data-type="c"] .card h2{ font-weight:600; font-size:1.125rem; }
 
   /* ---- header ---- */
   :root[data-skin="pe"] header h1{
@@ -2736,7 +2756,7 @@
     line-height:1;
   }
   :root[data-skin="pe"][data-type="b"] .stat .num{ font-weight:500; }
-  :root[data-skin="pe"][data-type="c"] .stat .num{ font-weight:700; font-size:1.9375rem; }
+  :root[data-skin="pe"][data-type="c"] .stat .num{ font-weight:700; font-size:2.125rem; }
   :root[data-skin="pe"] .stat .label{
     font-size:var(--eyebrow); letter-spacing:var(--eyebrow-track); margin-top:8px; color:var(--faint);
   }
@@ -2885,18 +2905,18 @@
     line-height:.92;
     letter-spacing:-0.035em;
   }
-  :root[data-skin="pe"][data-type="c"] .stat .num{ font-size:2.4375rem; }
+  :root[data-skin="pe"][data-type="c"] .stat .num{ font-size:2.125rem; }
   :root[data-skin="pe"] .stat .label{
     font-size:var(--eyebrow); font-weight:700; letter-spacing:var(--eyebrow-track); text-transform:uppercase;
     color:var(--faint); margin-top:10px;
   }
-  :root[data-skin="pe"] .card h2{ font-size:1.4375rem; }
-  :root[data-skin="pe"][data-type="c"] .card h2{ font-size:1.25rem; }
+  :root[data-skin="pe"] .card h2{ font-size:1.3125rem; }
+  :root[data-skin="pe"][data-type="c"] .card h2{ font-size:1.3125rem; }
   :root[data-skin="pe"] .hero-greet{
-    font-family:var(--display); font-weight:400; font-size:1.875rem; letter-spacing:-0.02em;
+    font-family:var(--display); font-weight:400; font-size:1.625rem; letter-spacing:-0.02em;
   }
   :root[data-skin="pe"] .hero-quote{
-    font-family:var(--display); font-size:1.1875rem; line-height:1.4; color:var(--text);
+    font-family:var(--display); font-size:1.125rem; line-height:1.4; color:var(--text);
   }
   :root[data-skin="pe"] .cue-label{
     font-size:var(--eyebrow); font-weight:700; letter-spacing:var(--eyebrow-track); text-transform:uppercase;
@@ -3032,10 +3052,10 @@
     color:var(--faint); margin-bottom:3px;
   }
   .us-bar .us-pts{
-    font-family:var(--display); font-weight:400; font-size:1.6875rem; line-height:1;
+    font-family:var(--display); font-weight:400; font-size:1.625rem; line-height:1;
     letter-spacing:-0.03em; font-variant-numeric:tabular-nums;
   }
-  :root[data-type="c"] .us-bar .us-pts{ font-weight:700; font-size:1.5625rem; }
+  :root[data-type="c"] .us-bar .us-pts{ font-weight:700; font-size:1.625rem; }
   .us-bar .us-end.l .us-pts{ color:var(--moody); }
   .us-bar .us-end.r .us-pts{ color:var(--rae); }
   .us-bar .us-track{
@@ -3082,13 +3102,13 @@
   /* :not(.brand-row) - the h1 IS the lockup now, and this rule ties with the
      lockup's own clamp on specificity and wins on source order, which took the
      ceiling off and let the wordmark grow until it clipped. */
-  :root[data-skin="pe"] header h1:not(.brand-row){ font-size:1.875rem; }
+  :root[data-skin="pe"] header h1:not(.brand-row){ font-size:1.625rem; }
   :root[data-skin="pe"] .ver-line{
     font-size:var(--eyebrow); letter-spacing:var(--eyebrow-track); opacity:.5;
   }
   /* The motto was two full lines of strapline above the fold. It keeps its line,
      at the size a strapline should actually be. */
-  :root[data-skin="pe"] header .sub.motto{ font-size:0.6562rem; letter-spacing:.1em; opacity:.8; }
+  :root[data-skin="pe"] header .sub.motto{ font-size:0.625rem; letter-spacing:.1em; opacity:.8; }
 
   /* ---- section labels ---- */
   :root[data-skin="pe"] .sec-label,
@@ -3136,7 +3156,7 @@
     background:var(--gold); border-color:var(--gold); color:var(--on-accent);
   }
   :root[data-skin="pe"] .buy-sub,
-  :root[data-skin="pe"] .task .for-who{ color:var(--faint); font-size:0.7188rem; }
+  :root[data-skin="pe"] .task .for-who{ color:var(--faint); font-size:0.75rem; }
 
   .due-tag .dt-i{ vertical-align:-0.16em; margin-right:1px; }
   .due-tag{ display:inline-flex; align-items:center; gap:4px; }
@@ -3272,17 +3292,17 @@
   }
   .miss-head{
     display:flex; align-items:center; gap:8px;
-    font-family:var(--display); font-size:1.1875rem; color:var(--gold); margin-bottom:8px;
+    font-family:var(--display); font-size:1.125rem; color:var(--gold); margin-bottom:8px;
   }
   .miss-head .wd-i{ flex:none; }
-  .miss-body{ font-size:0.8438rem; color:var(--muted); line-height:1.6; }
+  .miss-body{ font-size:0.875rem; color:var(--muted); line-height:1.6; }
   .miss-days{
     margin:11px 0 0; padding:0; list-style:none;
     border-top:1px solid var(--line,rgba(255,255,255,.1));
   }
   .miss-days li{
     display:flex; justify-content:space-between; align-items:center;
-    padding:8px 0; font-size:0.8438rem;
+    padding:8px 0; font-size:0.875rem;
     border-bottom:1px solid var(--line,rgba(255,255,255,.08));
   }
   .miss-days li:last-child{ border-bottom:none; }
@@ -3294,7 +3314,7 @@
   }
   .miss-total .mt-l{ font-size:var(--eyebrow); font-weight:700; letter-spacing:var(--eyebrow-track);
     text-transform:uppercase; color:var(--faint); }
-  .miss-total .mt-v{ font-family:var(--display); font-size:1.6875rem; line-height:1;
+  .miss-total .mt-v{ font-family:var(--display); font-size:1.625rem; line-height:1;
     color:var(--gold); font-variant-numeric:tabular-nums; }
   .miss-ack{
     width:100%; margin-top:14px; background:none; border:1px solid var(--line-2);
@@ -3304,7 +3324,7 @@
 
   /* The reason line under a missed day, when it needs one. */
   .miss-days .md-why{
-    display:block; font-size:0.6562rem; color:var(--faint); margin-top:2px;
+    display:block; font-size:0.625rem; color:var(--faint); margin-top:2px;
     letter-spacing:.01em;
   }
   .miss-days li > span:first-child{ display:block; }
@@ -3350,7 +3370,7 @@
     color:var(--gold); margin-bottom:9px;
   }
   .ms-num{
-    font-family:var(--display); font-size:3.125rem; line-height:.92; letter-spacing:-0.04em;
+    font-family:var(--display); font-size:2.75rem; line-height:.92; letter-spacing:-0.04em;
     font-variant-numeric:tabular-nums;
     background:linear-gradient(100deg, var(--moody), var(--gold) 55%, var(--rae));
     -webkit-background-clip:text; background-clip:text; color:transparent;
@@ -3366,7 +3386,7 @@
     color:var(--faint); margin-bottom:5px;
   }
   .ms-meta .v{
-    font-family:var(--display); font-size:1.4375rem; line-height:1; color:var(--text);
+    font-family:var(--display); font-size:1.3125rem; line-height:1; color:var(--text);
     font-variant-numeric:tabular-nums;
   }
   .ms-meta .v.record{ color:var(--jade); }
@@ -3378,7 +3398,7 @@
             margin-top:14px; display:block; background:var(--tint-2); }
   .ms-go{
     width:100%; margin-top:14px; border:none; border-radius:12px; padding:12px;
-    font-family:var(--ui); font-weight:700; font-size:0.9375rem; cursor:pointer;
+    font-family:var(--ui); font-weight:700; font-size:0.875rem; cursor:pointer;
     background:linear-gradient(145deg,var(--grad-primary-a),var(--grad-primary-b)); color:var(--on-primary);
     box-shadow:0 6px 20px var(--glow-primary), inset 0 1px 0 rgba(255,255,255,.22);
   }
@@ -3394,7 +3414,7 @@
   }
   .act-head{
     display:flex; align-items:center; gap:8px;
-    font-family:var(--display); font-size:1.1875rem; color:var(--text); margin-bottom:10px;
+    font-family:var(--display); font-size:1.125rem; color:var(--text); margin-bottom:10px;
   }
   .act-head .wd-i{ flex:none; color:var(--rae); }
 
@@ -3428,7 +3448,7 @@
     flex-direction:column;
     gap:4px;
     padding:8px 2px;
-    font-size:0.6562rem;
+    font-size:0.625rem;
     min-width:0;
   }
   /* Build 109: nowrap was right when the label could only ever be one size. Under iOS's
@@ -3464,7 +3484,7 @@
        was Instrument Sans. Found by auditing against the design references, not
        by looking - at 9px the difference is invisible until you measure it. */
     font-family:var(--ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
-    font-size:0.5625rem; font-weight:800; line-height:1;
+    font-size:0.625rem; font-weight:800; line-height:1;
     font-variant-numeric:tabular-nums; letter-spacing:0;
     box-shadow:0 0 0 2px var(--bg);
     pointer-events:none;
@@ -3476,7 +3496,7 @@
      than get cut in half. */
   @media (max-width:359px){
     .tabs button,
-    :root[data-skin="pe"] .tabs button{ font-size:0.5938rem; padding-left:0; padding-right:0; }
+    :root[data-skin="pe"] .tabs button{ font-size:0.625rem; padding-left:0; padding-right:0; }
   }
   /* The strip no longer needs to scroll sideways, and leaving overflow-x:auto on a sticky
      element that exactly fits its container causes a stray 1px jitter on iOS. */
@@ -3521,7 +3541,7 @@
     border-radius:12px;
     background:transparent;
     color:var(--muted);
-    font-size:0.7812rem;
+    font-size:0.75rem;
     font-weight:600;
     letter-spacing:.01em;
     cursor:pointer;
@@ -3646,10 +3666,10 @@
     opacity:0; animation:celSay 1.45s ease forwards;
   }
   .cel-say b{
-    font-size:2.375rem; font-weight:800; letter-spacing:-.02em; color:var(--celMark);
+    font-size:2.125rem; font-weight:800; letter-spacing:-.02em; color:var(--celMark);
     font-variant-numeric:tabular-nums;
   }
-  .cel-say i{ font-style:normal; font-size:0.9062rem; line-height:1.5; color:rgba(255,255,255,.82); }
+  .cel-say i{ font-style:normal; font-size:0.875rem; line-height:1.5; color:rgba(255,255,255,.82); }
 
   @keyframes celWash{
     0%{   transform:scale(0);   opacity:0; }
@@ -3775,7 +3795,7 @@
     -webkit-backdrop-filter:saturate(150%) blur(14px);
             backdrop-filter:saturate(150%) blur(14px);
     color:var(--muted);
-    font-size:0.7812rem; font-weight:650; white-space:nowrap;
+    font-size:0.75rem; font-weight:650; white-space:nowrap;
   }
   :root[data-skin="pe"] .ptr-box{ background:var(--blur-bg-solid); border-color:var(--line-2); }
   .ptr-i{ display:block; width:15px; height:15px; color:var(--rose); }
@@ -3898,7 +3918,7 @@
   /* Build 103: the way out of a wrong health reading. */
   .health-doubt{ margin-top:10px; }
   .health-doubt .hd-why{
-    font-size:0.7812rem; line-height:1.55; color:var(--muted);
+    font-size:0.75rem; line-height:1.55; color:var(--muted);
     padding:8px 12px; margin-bottom:8px;
     border:1px solid var(--border); border-radius:12px;
     background:rgba(232,181,75,.06);
@@ -3916,7 +3936,7 @@
   /* Build 104: the question a photo note was answering, above the answer. */
   .duo-note .dn-q{
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-    font-size:0.6562rem; line-height:1.4; font-style:normal;
+    font-size:0.625rem; line-height:1.4; font-style:normal;
     letter-spacing:.01em; color:var(--faint);
     margin-bottom:3px;
   }
@@ -3936,7 +3956,7 @@
   .won-head{
     display:flex; align-items:baseline; justify-content:space-between; gap:12px;
     margin:14px 0 7px;
-    font-size:0.6562rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase;
+    font-size:0.625rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase;
     color:var(--faint);
   }
   .won-head:first-child{ margin-top:2px; }
@@ -3958,10 +3978,10 @@
   .won-row.st-done .wr-mult{ text-decoration:none; }
   .wr-sub{ font-size:0.6875rem; line-height:1.35; color:var(--faint); }
   .wr-act{ flex:none; display:flex; align-items:center; }
-  .wr-btn{ padding:8px 16px; font-size:0.7812rem; font-weight:700; border-radius:999px; }
+  .wr-btn{ padding:8px 16px; font-size:0.75rem; font-weight:700; border-radius:999px; }
   .wr-done{
     display:inline-flex; align-items:center; gap:4px;
-    font-size:0.6562rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    font-size:0.625rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
     color:var(--jade);
   }
   /* Something cashed in and waiting on YOU is the only row here anyone is on the hook
@@ -4351,12 +4371,21 @@
 
        sel-fill is --text and sel-ink is --bg, so the pair inverts correctly in
        both palettes and the contrast is maximal by construction. */
+    --el-card:inset 0 1px 0 rgba(255,255,255,.7), 0 12px 28px -14px rgba(92,52,30,.28);
+    --el-float:0 1px 1px rgba(92,52,30,.05), 0 16px 34px -14px rgba(92,52,30,.3);
+    --el-sunk:inset 0 2px 10px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07), inset 0 0 0 1px rgba(0,0,0,.25);
+
     --dock-bg:#FFFFFF;
     --dock-rim:rgba(92,52,30,.10);
-    --dock-shadow:0 1px 1px rgba(92,52,30,.05), 0 16px 34px -14px rgba(92,52,30,.30);
+    --dock-shadow:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(92,52,30,.10), 0 8px 10px -8px rgba(92,52,30,.18), 0 30px 44px -20px rgba(92,52,30,.28);
     --dock-ink:var(--muted);
-    --dock-sel-fill:var(--text);
+    /* the coral end measured 4.49:1 against paper ink with the glyphs hidden -
+       under the 4.5 floor by a hundredth, which is still under it. Darkened 14%
+       toward the ink so the whole sweep clears. Daylight only; After Hours runs
+       the pure pair at 7.53:1 worst case. */
+    --dock-sel-fill:linear-gradient(118deg, var(--moody), color-mix(in srgb, var(--rae) 86%, #2A1F26));
     --dock-sel-ink:var(--bg);
+    --dock-glass:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.62) 46%, rgba(92,52,30,.06)), rgba(255,255,255,.55);
   }
 
 
@@ -4556,7 +4585,7 @@
   .splash-word{
     font-family:var(--ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
     font-weight:700; letter-spacing:.07em; line-height:1;
-    font-size:clamp(2rem, 11vw, 2.75rem); color:var(--text);
+    font-size:clamp(2.125rem, 11vw, 2.75rem); color:var(--text);
     display:flex;
   }
   .splash-word span{
@@ -4584,7 +4613,7 @@
 
   .splash-line{
     font-family:var(--display, Georgia, serif);
-    font-size:0.9375rem; letter-spacing:.14em; text-transform:uppercase;
+    font-size:0.875rem; letter-spacing:.14em; text-transform:uppercase;
     color:var(--faint); text-align:center;
     animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) 1.56s both;
   }
@@ -4885,7 +4914,7 @@
      fact about today, so it is set like every other fact in this app. */
   :root[data-skin="pe"] .duo-cost{
     background:none; border:0; border-radius:0; padding:0; margin-top:6px;
-    font-family:var(--mono); font-size:.6562rem; font-weight:600;
+    font-family:var(--mono); font-size:0.625rem; font-weight:600;
     letter-spacing:.07em; text-transform:uppercase; color:var(--rose);
   }
 
@@ -4899,7 +4928,7 @@
     font-family:var(--mono); font-size:.625rem; letter-spacing:.06em;
     text-transform:uppercase; font-weight:500; color:var(--faint);
   }
-  :root[data-skin="pe"] .duo-empty .plus{ font-size:1.5rem; margin-bottom:3px; }
+  :root[data-skin="pe"] .duo-empty .plus{ font-size:1.625rem; margin-bottom:3px; }
 
 
   /* ===========================================================================
@@ -5019,7 +5048,7 @@
 
   /* ---- big solid numbers (rule 11, and the widget rule: make the key number huge) ---- */
   :root[data-skin="pe"] #view-board .stat .num{
-    font-size:2.5rem; line-height:.9; letter-spacing:-.035em;
+    font-size:2.75rem; line-height:.9; letter-spacing:-.035em;
     color:var(--text);
   }
   :root[data-skin="pe"] #view-board .stat .label{
@@ -5192,7 +5221,7 @@
        of a thing somebody wrote, and it was inheriting the card's mono and reading
        like a filename. */
     font-family:var(--ui, -apple-system, sans-serif);
-    font-size:0.9375rem; font-weight:500; color:var(--text);
+    font-size:0.875rem; font-weight:500; color:var(--text);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .rr-t{
@@ -5232,7 +5261,7 @@
   .rr-n{
     /* The tier used to sit beside the name and take 90px off it. Underneath, the
        name has the row to itself and stops being truncated at any realistic length. */
-    font-size:0.9375rem; line-height:1.25;
+    font-size:0.875rem; line-height:1.25;
   }
   .reel-row .rr-t{ flex:none; align-self:flex-start; }
 
@@ -5314,7 +5343,7 @@
      under it comes down a tier, which is the same amount of screen saying less
      and showing more. */
   :root[data-skin="pe"] .duo-frame{ max-width:158px; }
-  :root[data-skin="pe"] .duo-name{ font-size:0.9375rem; margin-top:10px; }
+  :root[data-skin="pe"] .duo-name{ font-size:0.875rem; margin-top:10px; }
   :root[data-skin="pe"] .duo-when{
     font-family:var(--mono); font-size:0.625rem; letter-spacing:.1em;
     text-transform:uppercase; margin-top:2px;
@@ -5527,7 +5556,7 @@
   }
   .tm-title{
     margin:0; font-family:var(--display); font-weight:400;
-    font-size:1.75rem; line-height:1.02; letter-spacing:-.03em; color:var(--text);
+    font-size:1.625rem; line-height:1.02; letter-spacing:-.03em; color:var(--text);
     text-wrap:balance;
   }
   .tm-facts{
@@ -5536,10 +5565,10 @@
   }
   .tm-fact{ display:flex; flex-direction:column; gap:2px; min-width:0; }
   .tm-fk{
-    font-family:var(--mono); font-size:.5938rem; letter-spacing:.14em;
+    font-family:var(--mono); font-size:0.625rem; letter-spacing:.14em;
     text-transform:uppercase; color:var(--faint);
   }
-  .tm-fv{ font-size:.9375rem; color:var(--text); display:flex; align-items:center; gap:8px; }
+  .tm-fv{ font-size:0.875rem; color:var(--text); display:flex; align-items:center; gap:8px; }
   .tm-fv.late{ color:var(--rose); font-weight:600; }
   .tm-note{
     font-size:.8125rem; color:var(--muted); padding-top:var(--sp-4);
@@ -5684,7 +5713,7 @@
   .dw-marks{ display:flex; align-items:center; gap:var(--sp-4); min-height:14px; }
   .dw-mark{
     display:inline-flex; align-items:center; gap:2px;
-    font-family:var(--mono); font-size:.5938rem; color:var(--faint);
+    font-family:var(--mono); font-size:0.625rem; color:var(--faint);
   }
   .dw-mark.m-check{ color:var(--jade); }
   .dw-mark.m-spark{ color:var(--moody); }
@@ -5709,11 +5738,11 @@
   .tf-frame.is-p2{ border-color:var(--rae); }
   .tf-frame img{ width:100%; height:100%; object-fit:cover; }
   .tf-frame.empty span{
-    font-family:var(--mono); font-size:.5938rem; letter-spacing:.1em;
+    font-family:var(--mono); font-size:0.625rem; letter-spacing:.1em;
     text-transform:uppercase; color:var(--faint);
   }
   .tf-name{ font-size:.8125rem; font-weight:600; color:var(--text); }
-  .tf-q{ font-family:var(--mono); font-size:.5938rem; letter-spacing:.08em;
+  .tf-q{ font-family:var(--mono); font-size:0.625rem; letter-spacing:.08em;
          text-transform:uppercase; color:var(--faint); line-height:1.5; }
   .tf-a{ font-size:.875rem; font-style:italic; color:var(--muted); line-height:1.45; }
   .tm-did-list{ display:flex; flex-wrap:wrap; gap:var(--sp-3); }
@@ -5764,7 +5793,7 @@
   .duo-frame{
     max-width:none; width:100%; border-radius:18px;
     border:1px solid var(--line-2);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px -10px rgba(0,0,0,.55);
+    box-shadow:var(--el-card);
   }
   .duo-slot[data-side="left"] .duo-frame{ border-color:color-mix(in srgb, var(--moody) 48%, var(--line-2)); }
   .duo-slot[data-side="right"] .duo-frame{ border-color:color-mix(in srgb, var(--rae) 48%, var(--line-2)); }
@@ -5799,7 +5828,7 @@
      together instead of each picking a number. */
   :root[data-skin="pe"] .card{
     border-radius:18px; padding:16px;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.045), 0 12px 28px -14px rgba(0,0,0,.5);
+    box-shadow:var(--el-card);
   }
   :root[data-skin="pe"] .card .card,
   :root[data-skin="pe"] .card .inset{ border-radius:12px; }
@@ -5822,7 +5851,7 @@
   }
   .us-bar .us-pts,
   :root[data-type="c"] .us-bar .us-pts{
-    font-family:var(--mono); font-size:0.9375rem; font-weight:600;
+    font-family:var(--mono); font-size:0.875rem; font-weight:600;
     font-variant-numeric:tabular-nums; letter-spacing:0;
   }
   .us-caption{
@@ -5946,6 +5975,377 @@
   }
   header .sub.tagline .tl-a{ justify-self:end; }
   header .sub.tagline .tl-b{ justify-self:start; }
+
+
+  /* =====================================================================
+     BUILD 169 - TWO THINGS THE REAL DEVICE SHOWED THAT THE HARNESS DID NOT
+     ===================================================================== */
+
+  /* ---- 1. the badge had nowhere to sit ----
+     .tab-badge was positioned top:1px / left:50% + 4px, which was correct for a
+     tall tab with an icon ABOVE a label. The dock is 44px with a centred icon and
+     no label, so the badge landed on top of the glyph; and its 2px ring is --bg,
+     which on the selected tab is a dark halo on a white pill. It read as broken
+     because it was.
+
+     It now hangs off the icon's top-right corner, inside the 44px cell, with no
+     ring - the dock has no busy ground for it to need separating from.
+
+     And it does not appear on the SELECTED tab at all. You are looking at that
+     screen; a count of what is on it is a number telling you what you can already
+     see, and it is the one place the pill is white and the badge collides. */
+  /* BUILD 171: the type-scale snap moved this from 8px to 10px, because 8 is below
+     the scale's floor - which is correct for the scale and made the badge wider than
+     the glyph it sits on. 10px is the better size for a count anyway, so the badge
+     moves OUT to the cell's corner rather than shrinking the number back down. */
+  .tabs button .tab-badge{
+    top:2px; right:0; left:auto; margin-left:0;
+    min-width:15px; height:15px; padding:0 3px;
+    box-shadow:none; font-size:0.625rem; line-height:15px;
+  }
+  .tabs button.active .tab-badge{ display:none; }
+
+  /* ---- 2. the slogan took the gap with it ----
+     165 collapsed max-height AND margin to zero, so once it left there was nothing
+     between the lockup and the two photo frames - on the real device the mark sat
+     directly on top of them. The slogan's room was doing two jobs and only one of
+     them was the slogan's.
+
+     The pair now owns its own top margin, so the space survives the slogan. */
+  .duo-row{ margin-top:22px; }
+
+
+  /* =====================================================================
+     BUILD 169 - THE REEL BECOMES A MACHINE
+
+     Moody: "the spin the wheel blends with the whole screen, it should look
+     more like a slot machine with colours and mechanism and all."
+
+     The MECHANISM was never the problem - there has been a real reel since 136,
+     174px of window over a strip that travels 6,322px. What was missing is
+     rule 10 from his own notes: every object gets a named material, and this one
+     had none. It was var(--s2) with a 1px line, which is the same surface as a
+     notes card. A machine painted as a card is a card.
+
+     Named material: BLACK GLASS IN A LIT BEZEL. The window is cut INTO the card
+     rather than sitting on it - darker than anything around it, with the light
+     catching a hairline at the top edge where a real recess would catch it, and
+     the card's own shadow falling inward.
+     ===================================================================== */
+
+  /* the housing: the reel is a hole, not a tile */
+  .reel{
+    background:#0A060D;
+    border:0;
+    border-radius:14px;
+    box-shadow:
+      inset 0 2px 10px rgba(0,0,0,.9),      /* the recess */
+      inset 0 1px 0 rgba(255,255,255,.05),  /* light on the top lip */
+      inset 0 0 0 1px rgba(255,255,255,.07),/* the bezel */
+      0 1px 0 rgba(255,255,255,.04);        /* and a hairline under it */
+  }
+  :root[data-mode="light"] .reel{
+    background:#241A20;
+    box-shadow:
+      inset 0 2px 10px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.07),
+      inset 0 0 0 1px rgba(0,0,0,.25),
+      0 1px 0 rgba(255,255,255,.5);
+  }
+  /* the scrim has to match the new housing or the rows fade into the old grey */
+  :root{ --reel-0:rgba(10,6,13,0); }
+  :root[data-mode="light"]{ --reel-0:rgba(36,26,32,0); }
+  .reel::before{ background:linear-gradient(180deg,#0A060D,var(--reel-0)); }
+  .reel::after{  background:linear-gradient(0deg, #0A060D,var(--reel-0)); }
+  :root[data-mode="light"] .reel::before{ background:linear-gradient(180deg,#241A20,var(--reel-0)); }
+  :root[data-mode="light"] .reel::after{  background:linear-gradient(0deg, #241A20,var(--reel-0)); }
+  /* rows sit on black glass in both themes now, so they take the dark theme's ink */
+  :root[data-mode="light"] .reel .rr-n{ color:#F7EFF4; }
+  :root[data-mode="light"] .reel .rr-t{ color:#9B8696; }
+  :root[data-mode="light"] .reel .reel-row.rr-t-rare .rr-t{ color:#F7EFF4; }
+  :root[data-mode="light"] .reel .reel-row.is-empty{ color:#9B8696; }
+
+  /* the payline: lit, in the win colour, because that is what it is deciding */
+  .reel-win{
+    border-radius:10px;
+    box-shadow:
+      inset 0 0 0 1.5px color-mix(in srgb, var(--both) 70%, transparent),
+      0 0 18px -2px color-mix(in srgb, var(--both) 45%, transparent);
+    background:color-mix(in srgb, var(--both) 10%, transparent);
+  }
+  .reel-win::before, .reel-win::after{
+    background:var(--both);
+    width:7px; height:9px; margin-top:-4.5px;
+    filter:drop-shadow(0 0 4px color-mix(in srgb, var(--both) 70%, transparent));
+  }
+
+  /* the credits panel: the two readouts are what a machine shows you about its
+     own state, so they read as a readout and not as two headings */
+  #view-rewards .stat-row{
+    background:#0A060D; border-radius:12px; padding:14px 16px;
+    box-shadow:var(--el-sunk);
+  }
+  :root[data-mode="light"] #view-rewards .stat-row{
+    background:#241A20; box-shadow:var(--el-sunk);
+  }
+  #view-rewards .stat-row .num{ color:#F7EFF4; font-variant-numeric:tabular-nums; }
+  #view-rewards .stat-row .label{ color:#9B8696; }
+  /* spins ready is a credit count - when there are any, it lights */
+  #view-rewards .stat-row .num.has-spins{
+    color:var(--both); text-shadow:0 0 14px color-mix(in srgb, var(--both) 55%, transparent);
+  }
+  #view-rewards .sp-meter i.on{ background:var(--both); box-shadow:0 0 8px -1px var(--both); }
+
+  /* the handle */
+  #spinBtn{
+    margin-top:12px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  }
+  #spinBtn:not(:disabled){
+    box-shadow:0 6px 18px -6px color-mix(in srgb, var(--rae) 70%, transparent),
+               inset 0 1px 0 rgba(255,255,255,.28);
+  }
+  #spinBtn:not(:disabled):active{ transform:translateY(1px) scale(.99); }
+
+  @media (prefers-reduced-motion:reduce){
+    #spinBtn:not(:disabled):active{ transform:none; }
+  }
+
+
+  /* =====================================================================
+     BUILD 170 - THE CABINET
+
+     Moody sent a real slot machine. What that reference actually teaches, once
+     you stop looking at the chrome:
+
+       1. the REEL FACE IS BRIGHT and the cabinet around it is dark. 169 had this
+          exactly inverted - black glass in a plum card - which is why it still
+          read as a panel rather than a machine. A reel is a lit drum you are
+          looking at, not a window you are looking through.
+       2. a rail of LAMPS over the window, which is what says "this is a machine
+          that is switched on".
+       3. the PAYLINE is LABELLED, and the label points in from outside the glass.
+       4. the window sits in a BEZEL with piping, not on a surface.
+
+     What is not taken: the Vegas magenta-and-mint, the scrollwork, the lever, the
+     fake jackpot. Those belong to that cabinet's brand, not ours - the Parts Bin
+     rule is take the mechanism, rebrand the surface. The piping here is the two
+     of them, lilac into coral, and the payline is the win colour.
+     ===================================================================== */
+
+  .cab{
+    position:relative; margin-top:14px;
+    padding:14px 12px 12px;
+    border-radius:18px;
+    background:
+      linear-gradient(180deg, #2A1A30 0%, #1A1020 42%, #150C1B 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.10),
+      inset 0 0 0 1px rgba(255,255,255,.06),
+      0 14px 30px -14px rgba(0,0,0,.85);
+  }
+  /* the piping: the two of them running round the bezel */
+  .cab::before{
+    content:""; position:absolute; inset:5px; border-radius:14px;
+    padding:1.5px; pointer-events:none;
+    background:linear-gradient(135deg, var(--moody), var(--rae));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite:exclude;
+    opacity:.55;
+  }
+  /* the lamp rail */
+  .cab-lamps{
+    height:7px; margin:0 6px 9px; border-radius:999px;
+    background-image:radial-gradient(circle, var(--gold) 0 1.6px, transparent 1.9px);
+    background-size:14px 7px; background-position:center;
+    filter:drop-shadow(0 0 3px color-mix(in srgb, var(--gold) 70%, transparent));
+    opacity:.85;
+  }
+
+  /* ---- the drum: bright, in both themes ---- */
+  .reel{
+    border-radius:10px;
+    background:linear-gradient(180deg,#9E93A8 0%,#F4F0F7 20%,#FFFFFF 50%,#F2EDF6 78%,#A79CB1 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,.35),
+      inset 0 10px 14px -10px rgba(0,0,0,.55),
+      inset 0 -10px 14px -10px rgba(0,0,0,.55);
+  }
+  :root[data-mode="light"] .reel{
+    background:linear-gradient(180deg,#9E93A8 0%,#F4F0F7 20%,#FFFFFF 50%,#F2EDF6 78%,#A79CB1 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,.3),
+      inset 0 10px 14px -10px rgba(0,0,0,.45),
+      inset 0 -10px 14px -10px rgba(0,0,0,.45);
+  }
+  /* the scrim fades to the drum's own top and bottom, which are the shaded ends
+     of the cylinder - so the fade now reads as curvature rather than as a veil */
+  .reel::before{ background:linear-gradient(180deg,#B3A8BC,rgba(179,168,188,0)); height:26px; }
+  .reel::after{  background:linear-gradient(0deg, #B3A8BC,rgba(179,168,188,0)); height:26px; }
+  :root[data-mode="light"] .reel::before{ background:linear-gradient(180deg,#B3A8BC,rgba(179,168,188,0)); }
+  :root[data-mode="light"] .reel::after{  background:linear-gradient(0deg, #B3A8BC,rgba(179,168,188,0)); }
+
+  /* ink on a lit drum is dark, in both themes.
+     The ROW carries it, not just .rr-n: .rr-e (the emoji) inherited the card's
+     light text colour and the audit found 132 glyphs at 1.13:1 on the new drum.
+     Emoji paint their own colours so it looked fine, which is exactly why a
+     measurement caught it and a screenshot did not - and any emoji that falls
+     back to a text glyph would have been invisible. */
+  .reel .reel-row,
+  :root[data-mode="light"] .reel .reel-row{ color:#17101C; }
+  .reel .rr-n,
+  :root[data-mode="light"] .reel .rr-n{ color:#17101C; font-weight:600; }
+  .reel .rr-t,
+  :root[data-mode="light"] .reel .rr-t{ color:#6B5C74; }
+  .reel .reel-row.rr-t-rare .rr-t,
+  :root[data-mode="light"] .reel .reel-row.rr-t-rare .rr-t{ color:#17101C; font-weight:700; }
+  .reel .reel-row.is-empty,
+  :root[data-mode="light"] .reel .reel-row.is-empty{ color:#6B5C74; }
+
+  /* ---- the payline ---- */
+  .reel-win{
+    left:0; right:0; border-radius:0;
+    box-shadow:
+      inset 0 1.5px 0 var(--both),
+      inset 0 -1.5px 0 var(--both),
+      0 0 16px -3px color-mix(in srgb, var(--both) 60%, transparent);
+    background:color-mix(in srgb, var(--both) 13%, transparent);
+  }
+  .reel-win::before, .reel-win::after{ display:none; }
+  .cab-payline{
+    position:absolute; left:-2px; top:0; transform:translateY(-50%);
+    /* 14 cab padding + 9 lamp rail + 7 lamps + 58 first row + 29 half the win row */
+    margin-top:calc(14px + 7px + 9px + 58px + 29px);
+    font-family:var(--mono); font-size:0.625rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--on-jade); font-weight:700;
+    background:var(--both); padding:3px 6px 3px 7px;
+    border-radius:3px 0 0 3px;
+    box-shadow:0 0 12px -2px color-mix(in srgb, var(--both) 70%, transparent);
+  }
+  .cab-payline::after{
+    content:""; position:absolute; right:-5px; top:0; bottom:0; width:5px;
+    background:var(--both); clip-path:polygon(0 0, 100% 50%, 0 100%);
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .cab-lamps{ filter:none; }
+  }
+
+
+  /* =====================================================================
+     BUILD 171 - THE DOCK, AUDITED AGAINST THE MARK
+
+     Moody asked whether the menu had actually been run against the design
+     skills and the Parts Bin, "especially with the new logo". 156 ported P-10's
+     MECHANISM and stopped there. It was never checked against the identity.
+     Three faults, measured rather than eyeballed.
+     ===================================================================== */
+
+  /* ---- 1. the label was rendering in Arial ----
+     .tab-t inherited nothing and fell through to the UA stack. On the device that
+     is SF Pro sitting inside a bar whose every neighbour is the brand face - the
+     same fault Build 127 found in the badges and the same one the session's
+     opening audit found in 283 elements. It is the single loudest slop tell there
+     is, because it is invisible until you measure it and obvious once you do. */
+  .tabs button .tab-t,
+  :root[data-skin="pe"] .tabs button .tab-t{
+    font-family:var(--ui); letter-spacing:.01em;
+  }
+
+  /* ---- 2. the icons were half the mark's weight ----
+     Measured: icons 1.75 on a 17px box is 10.3% stroke-to-height. The mark's
+     arcs run about 13%. Thin line-drawings beside a heavy monoline logo are two
+     different drawing languages in the same 100px of screen.
+
+     2 on an 18px box is 11.1% - inside the mark's family without making the
+     icons read as bold. The caps were already round, which is the mark's own
+     terminal, so that part was already right. */
+  .tabs button .wd-i{
+    width:18px; height:18px; stroke-width:2;
+  }
+
+  /* ---- 3. the rim belonged to nothing ----
+     rgba(255,255,255,.07) is a neutral hairline - correct for a generic surface
+     and unrelated to this product. The cabinet's bezel is the two of them, lilac
+     into coral; the dock is the other object on screen that frames something, so
+     it takes the same device at a quieter strength.
+
+     A gradient border needs the mask-composite trick because border-image cannot
+     do a border-radius of 999px. */
+  .tabs, :root[data-skin="pe"] .tabs{ border-color:transparent; position:relative; }
+  .tabs::after{
+    content:""; position:absolute; inset:0; border-radius:999px;
+    padding:1px; pointer-events:none; z-index:2;
+    background:linear-gradient(135deg, var(--moody), var(--rae));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite:exclude;
+    opacity:.34;
+  }
+  :root[data-mode="light"] .tabs::after{ opacity:.26; }
+
+
+  /* =====================================================================
+     BUILD 172 - THE DOCK AS GLASS, AND THE PART I SHOULD NEVER HAVE USED
+
+     Moody: "how does it make sense to have all this empty space in the menu and
+     have these small icons and none of colors match the site and aesthetic is
+     old ai basic slop. This is a high end app with futuristic design and glass
+     feel."
+
+     The error underneath all four: the Parts Bin assigns #10 MINIMAL LUXURY TO
+     UNBOUND. WeDO's own mapping in that artifact names P-01, P-03 and P-04 and
+     no dock at all. I took another project's part and never read the mapping.
+     Minimal Luxury is restrained greyscale BY DESIGN - that is its job on a
+     different brand - which is why it arrived here as a grey pill with line
+     icons and no relationship to this app's colour.
+
+     Measured before touching it: 18px icons in 44px cells is 26px of dead air
+     per cell, and the icon is 33% of the bar's height.
+
+     What replaces it is the glass-card recipe from his own notes, at dock scale:
+     a three-stop gradient, a frosted tinted fill over heavy blur, a 1px rim
+     light at the top edge, a glare, and two shadows - one tight, one soft.
+     ===================================================================== */
+
+  /* the bar's surface is set in the injected sheet - see BUILD 172 there */
+  /* the glare: a soft sweep across the surface, above everything, because a
+     reflection is ON the glass and not under it */
+  .tabs::before{
+    content:""; position:absolute; inset:0; border-radius:999px; z-index:3;
+    pointer-events:none;
+    background:linear-gradient(104deg,
+      rgba(255,255,255,.17) 0%, rgba(255,255,255,.05) 26%,
+      rgba(255,255,255,0) 46%, rgba(255,255,255,0) 100%);
+  }
+  /* the identity rim stays, quieter now that the selected cell carries the colour */
+  .tabs::after{ opacity:.22; }
+  :root[data-mode="light"] .tabs::after{ opacity:.18; }
+
+  /* ---- 26px of dead air per cell ---- */
+  .tabs button .wd-i{ width:22px; height:22px; stroke-width:1.9; }
+  .tabs button, :root[data-skin="pe"] .tabs button{
+    color:color-mix(in srgb, var(--text) 74%, transparent);
+  }
+
+  /* ---- the selected cell carries the two of them ----
+     171 argued chrome should not spend one of their colours. Both of them, as a
+     gradient, favours neither - it is the pair, which is the whole product, and
+     it is the same device as the cabinet bezel and the bar's own rim. */
+  .tabs.w3-on .w3-ind, :root[data-skin="pe"] .tabs.w3-on .w3-ind{
+    background:linear-gradient(118deg, var(--moody), var(--rae));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.38),
+      0 3px 12px -3px color-mix(in srgb, var(--rae) 55%, transparent);
+  }
+  .tabs button.active, :root[data-skin="pe"] .tabs button.active{
+    color:var(--dock-sel-ink);
+  }
+  .tabs button.active .wd-i{ stroke-width:2.2; }
+
+  @media (prefers-reduced-motion:reduce){
+    .tabs::before{ background:none; }
+  }
 
 </style>
 </head>
@@ -6098,10 +6498,10 @@
       <div class="code-value" id="connLockMyCode">••••</div>
     </div>
     <input type="text" id="connLockInput" inputmode="numeric" maxlength="4" placeholder="Their code for yesterday"
-      style="width:100%;font-size:1.375rem;text-align:center;letter-spacing:6px;font-family:ui-monospace,monospace;">
+      style="width:100%;font-size:1.3125rem;text-align:center;letter-spacing:6px;font-family:ui-monospace,monospace;">
     <button class="primary" id="connLockBtn" style="width:100%;margin-top:12px;">Connect &amp; unlock</button>
     <div id="connLockErr" style="color:var(--pink);font-size:0.75rem;margin-top:10px;min-height:16px;"></div>
-    <button type="button" id="connLockSkip" style="width:100%;margin-top:18px;background:none;border:none;color:var(--muted);font-size:0.7188rem;text-decoration:underline;cursor:pointer;">
+    <button type="button" id="connLockSkip" style="width:100%;margin-top:18px;background:none;border:none;color:var(--muted);font-size:0.75rem;text-decoration:underline;cursor:pointer;">
       One of us is unreachable (travel, dead phone) — skip yesterday
     </button>
     <!-- BUILD 124: the way out, from inside.
@@ -6110,7 +6510,7 @@
          moved in together could not reach the switch that says so without first
          skipping a code every morning to get at it. A lock with no door is a bug,
          however well the lock works. -->
-    <button type="button" id="connLockTogether" style="width:100%;margin-top:10px;background:none;border:none;color:var(--muted);font-size:0.7188rem;text-decoration:underline;cursor:pointer;">
+    <button type="button" id="connLockTogether" style="width:100%;margin-top:10px;background:none;border:none;color:var(--muted);font-size:0.75rem;text-decoration:underline;cursor:pointer;">
       We live together now — stop asking for codes
     </button>
   </div>
@@ -6493,7 +6893,7 @@
          normal while nothing reaches the other phone. It used to say so only in 11px grey
          text inside a collapsed panel. -->
     <div class="card" id="syncFailCard" style="display:none;border-color:var(--pink);">
-      <div style="font-size:0.8438rem;line-height:1.6;color:var(--muted);">
+      <div style="font-size:0.875rem;line-height:1.6;color:var(--muted);">
         <span data-ico="warn" class="inline-warn"></span> <strong style="color:var(--pink);">Nothing has reached <span id="syncFailWho">your person</span>'s phone</strong>
         <div id="syncFailDetail" style="margin-top:6px;"></div>
       </div>
@@ -6630,9 +7030,17 @@
       </div>
       <div class="spin-expiry" id="spinExpiryNote" style="display:none;"></div>
       <!-- BUILD 136: a reel, not a pie. See drawWheel() for why. -->
-      <div class="reel" id="reel">
-        <div class="reel-win" aria-hidden="true"></div>
-        <div class="reel-strip" id="reelStrip" aria-live="polite"></div>
+      <!-- BUILD 170: the cabinet. The lamp rail and the payline tag are real
+           elements rather than pseudo-elements because the tag has to sit OUTSIDE
+           the window's overflow:hidden to point into it, and the lamps have to sit
+           above the scrim that fades the rows. -->
+      <div class="cab">
+        <div class="cab-lamps" aria-hidden="true"></div>
+        <div class="reel" id="reel">
+          <div class="reel-win" aria-hidden="true"></div>
+          <div class="reel-strip" id="reelStrip" aria-live="polite"></div>
+        </div>
+        <span class="cab-payline" aria-hidden="true">Payline</span>
       </div>
       <button class="primary" id="spinBtn" style="width:100%;margin-top:8px;">Spin!</button>
     </div>
@@ -8577,7 +8985,7 @@
     if(!el){
       el = document.createElement("div");
       el.id = "saveWarn";
-      el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:var(--z-alert);background:#7a1f33;color:#fff;font-size:0.7812rem;line-height:1.45;padding:12px 16px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.4);";
+      el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:var(--z-alert);background:#7a1f33;color:#fff;font-size:0.75rem;line-height:1.45;padding:12px 16px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.4);";
       document.body.appendChild(el);
     }
     var quota = e && (e.name === "QuotaExceededError" || /quota/i.test(String(e)));
@@ -12151,7 +12559,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 168;
+  var BUILD_NUM = 172;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -16136,6 +16544,10 @@
       }
     }
     countUp("spinsAvailable", p.spinsAvailable || 0);
+    /* BUILD 169: a credit counter with credits in it lights up. Zero stays ink,
+       so the lit state means something rather than being decoration. */
+    var sa = document.getElementById("spinsAvailable");
+    if(sa) sa.classList.toggle("has-spins", (p.spinsAvailable || 0) > 0);
     var prog = Math.max(0, Math.min(5, p.progressToSpin || 0));
     var tn = document.getElementById("tasksToNextSpin");
     if(tn) tn.textContent = prog + "/5";
@@ -22662,7 +23074,7 @@
           });
           body.appendChild(inp); body.appendChild(btn); body.appendChild(st);
           var hint = document.createElement("div");
-          hint.style.cssText = "margin-top:9px;font-size:0.7188rem;";
+          hint.style.cssText = "margin-top:9px;font-size:0.75rem;";
           hint.innerHTML = "Don't have the link? Ask your person to open <em>Sync between two phones</em> " +
             "and tap <strong>Copy setup link</strong> — opening that link fills this in for you.";
           body.appendChild(hint);
@@ -23111,8 +23523,8 @@
       /* 3 — progress line + all clear */
       ".w3-prog{margin:-2px 0 14px;}",
       ".w3-prog-txt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;color:var(--muted);margin-bottom:8px;}",
-      ".w3-prog-txt b{color:var(--text);font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}",
-      ".w3-prog-meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--faint,var(--muted));white-space:nowrap;}",
+      ".w3-prog-txt b{color:var(--text);font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;}",
+      ".w3-prog-meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--faint,var(--muted));white-space:nowrap;}",
       ".w3-bar{display:flex;gap:2px;height:6px;border-radius:6px;overflow:hidden;background:var(--line,rgba(245,237,230,.10));}",
       ".w3-bar span{display:block;height:100%;transition:flex-grow 400ms cubic-bezier(.2,.8,.2,1);}",
       /* BUILD 132 - the wash was three hard-coded dark-theme rgbas. A 14% mint over cream
@@ -23127,7 +23539,7 @@
       "  background:var(--w3-clear-wash);}",
       /* The heading took the UI face at weight 800. Every other card heading in this app
          is set in --display, which is a serif under the look he actually runs. */
-      ".w3-clear-h{font-family:var(--display,inherit);font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--text);margin-bottom:6px;}",
+      ".w3-clear-h{font-family:var(--display,inherit);font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--text);margin-bottom:6px;}",
       ".w3-clear-p{font-size:14px;line-height:1.5;color:var(--muted);}",
       ".w3-clear-p b{font-weight:700;}",
       ".w3-clear-cta{margin-top:12px;background:none;border:1px solid var(--line-2,var(--border));color:var(--text);",
@@ -23136,11 +23548,11 @@
       ".w3-qa{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:-2px 0 2px;}",
       ".w3-qa.show{display:flex;}",
       ".w3-qa-lbl{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--faint,var(--muted));margin-right:2px;}",
-      ".w3-chip{font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--s2,var(--card2));",
+      ".w3-chip{font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--s2,var(--card2));",
       "  border:1px solid var(--line-2,var(--border));color:var(--text);}",
       ".w3-chip i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px;}",
       ".w3-qa-undo{margin-left:auto;background:none;border:0;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;padding:8px 2px;min-height:32px;}",
-      ".w3-hint{font-size:11.5px;color:var(--faint,var(--muted));margin:-4px 0 2px;}",
+      ".w3-hint{font-size:11px;color:var(--faint,var(--muted));margin:-4px 0 2px;}",
       "@media (prefers-reduced-motion:reduce){.tabs .w3-ind,.w3-bar span{transition:none;}}"
     ].join("\n");
     document.head.appendChild(css);
@@ -24043,9 +24455,14 @@
       ".tabs, :root[data-skin=\"pe\"] .tabs{",
       "  width:max-content; max-width:calc(100% - 16px);",
       "  margin:0 auto 16px; padding:4px;",
-      "  background:var(--dock-bg); border:1px solid var(--dock-rim);",
+      /* BUILD 172: real glass, per the six-layer recipe - a three-stop gradient
+         over a tinted frosted fill, a rim light on the top edge, and two shadows,
+         one tight and one soft. This lives HERE rather than in the main sheet
+         because this stylesheet is appended to <head> afterwards and wins every
+         tie; an attempt to override it from the main sheet silently did nothing. */
+      "  background:var(--dock-glass); border:0;",
       "  border-radius:999px; box-shadow:var(--dock-shadow);",
-      "  -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);",
+      "  -webkit-backdrop-filter:blur(26px) saturate(1.5); backdrop-filter:blur(26px) saturate(1.5);",
       "  gap:2px; overflow:visible; justify-content:center; isolation:isolate;",
       "}",
       ".tabs button, :root[data-skin=\"pe\"] .tabs button{",
@@ -24131,7 +24548,7 @@
       "  background:transparent; border-style:dashed; opacity:.8;",
       "}",
       ":root[data-skin=\"pe\"] .list-pills button.add-list.is-plus{",
-      "  width:44px; min-width:44px; padding:0; font-size:1.25rem; line-height:1; flex:0 0 auto;",
+      "  width:44px; min-width:44px; padding:0; font-size:1.3125rem; line-height:1; flex:0 0 auto;",
       "}",
       ".pill-more{",
       "  flex:0 0 auto; display:inline-flex; align-items:center; gap:4px;",
