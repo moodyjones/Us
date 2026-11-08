@@ -2648,7 +2648,9 @@
        is the same device as the cabinet bezel and the bar's own rim. */
     --dock-sel-fill:linear-gradient(118deg, var(--moody), var(--rae));
     --dock-sel-ink:var(--bg);
-    --dock-glass:linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.02) 46%, rgba(0,0,0,.12)), rgba(44,28,42,.52);
+    /* BUILD 173: .52 tint was BELOW rule 11's own 60-80% band, which is exactly
+       the mud Moody photographed - content ghosting through the bar. */
+    --dock-glass:linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.02) 46%, rgba(0,0,0,.12)), rgba(44,28,42,.74);
     /* the two corner washes that make the ground feel lit rather than painted */
     --wash-a:rgba(255,111,88,.15);
     --wash-b:rgba(195,168,240,.14);
@@ -3552,6 +3554,27 @@
   /* Set by the coordinator only. Never written by the individual banner renderers, so a
      renderer's own display value survives being folded and comes back untouched. */
   .banner-folded{ display:none !important; }
+
+  /* BUILD 173: the six banner cards and their fold row rendered above the dock
+     on EVERY tab - the streak billboard followed you to Rewards and Notes, which
+     is most of what "the home page is so cluttered" was. Same mechanism 142 used
+     for the hero: they live on Today, which is where the day's news belongs. */
+  :root:not([data-view="today"]) #repairCard,
+  :root:not([data-view="today"]) #dryNovCard,
+  :root:not([data-view="today"]) #milestoneCard,
+  :root:not([data-view="today"]) #activityCard,
+  :root:not([data-view="today"]) #photoMissCard,
+  :root:not([data-view="today"]) #fairNudge,
+  :root:not([data-view="today"]) .banner-more{ display:none !important; }
+
+  /* and the one that stays gets a card's worth of space, not a billboard's:
+     actions side by side, copy at caption size */
+  .repair-card .repair-body{ font-size:0.8125rem; color:var(--muted); line-height:1.45; }
+  .repair-card button.primary{
+    width:auto; display:inline-flex; align-items:center; justify-content:center;
+    padding:10px 20px; margin:12px 12px 0 0;
+  }
+  .repair-card .repair-skip{ display:inline-flex; min-height:0; padding:10px 8px; margin-top:12px; }
 
 
   /* The folded tail of the penalty ledger. */
@@ -4604,12 +4627,18 @@
   .splash-lockup{ width:min(46vw,188px); height:auto; }
   .splash-lockup .wm-r1{ animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) .10s both; }
   .splash-lockup .wm-r2{ animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) .24s both; }
-  .splash-lockup .wm-a{ animation:wm-his .42s cubic-bezier(.22,.9,.3,1) .86s both; }
-  .splash-lockup .wm-b{ animation:wm-hers .42s cubic-bezier(.22,.9,.3,1) .98s both; }
+  /* BUILD 173: the colour-arrival is an OPACITY crossfade now, over ink copies
+     of the same arcs that exist only in this svg. The old way animated fill
+     between two var() endpoints, and WebKit does not interpolate those - on the
+     device the arcs snapped or sat at the from-state, which is var(--text):
+     a white heart. "The animation at the beginning needs fixing" was this.
+     Opacity has no such caveat anywhere. */
+  .splash-lockup .wm-u{ fill:var(--text); }
+  .splash-lockup .wm-a{ opacity:0; animation:wm-in .5s cubic-bezier(.22,.9,.3,1) .86s both; }
+  .splash-lockup .wm-b{ opacity:0; animation:wm-in .5s cubic-bezier(.22,.9,.3,1) .98s both; }
   /* the check stays ink throughout - it is what the two of them produce, so it
      does not need to arrive in anybody's colour */
-  @keyframes wm-his{  from{ fill:var(--text); } to{ fill:var(--moody); } }
-  @keyframes wm-hers{ from{ fill:var(--text); } to{ fill:var(--rae); } }
+  @keyframes wm-in{ to{ opacity:1; } }
 
   .splash-line{
     font-family:var(--display, Georgia, serif);
@@ -6000,8 +6029,8 @@
      moves OUT to the cell's corner rather than shrinking the number back down. */
   .tabs button .tab-badge{
     top:2px; right:0; left:auto; margin-left:0;
-    min-width:15px; height:15px; padding:0 3px;
-    box-shadow:none; font-size:0.625rem; line-height:15px;
+    min-width:14px; height:14px; padding:0 3px;
+    box-shadow:none; font-size:0.625rem; line-height:14px;
   }
   .tabs button.active .tab-badge{ display:none; }
 
@@ -6311,19 +6340,26 @@
   /* the bar's surface is set in the injected sheet - see BUILD 172 there */
   /* the glare: a soft sweep across the surface, above everything, because a
      reflection is ON the glass and not under it */
+  /* BUILD 173: the glare was z-index 3 - ABOVE the pill, the labels and the
+     badges, washing all of them toward white. That is why the selected cell
+     photographed as a pale smear. A glare on real glass does sit in front, but
+     a bar you must read is not a photograph: it goes under the content and
+     keeps to the top edge, where it reads as the lit lip. */
   .tabs::before{
-    content:""; position:absolute; inset:0; border-radius:999px; z-index:3;
+    content:""; position:absolute; left:0; right:0; top:0; height:46%;
+    border-radius:999px 999px 0 0; z-index:0;
     pointer-events:none;
-    background:linear-gradient(104deg,
-      rgba(255,255,255,.17) 0%, rgba(255,255,255,.05) 26%,
-      rgba(255,255,255,0) 46%, rgba(255,255,255,0) 100%);
+    background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0));
   }
   /* the identity rim stays, quieter now that the selected cell carries the colour */
   .tabs::after{ opacity:.22; }
   :root[data-mode="light"] .tabs::after{ opacity:.18; }
 
   /* ---- 26px of dead air per cell ---- */
-  .tabs button .wd-i{ width:22px; height:22px; stroke-width:1.9; }
+  /* 22px icons walked back into the badge 171 had just moved - the third
+     return of the same collision. 20 is the middle: present, and the corner
+     stays clear. settled.js now asserts the intersection area every build. */
+  .tabs button .wd-i{ width:20px; height:20px; stroke-width:1.9; }
   .tabs button, :root[data-skin="pe"] .tabs button{
     color:color-mix(in srgb, var(--text) 74%, transparent);
   }
@@ -6363,7 +6399,7 @@
        something: the word lands in plain ink, and THEN the O turns into the two of
        you. The old loader loop measures ".splash-mark path", finds nothing and does
        nothing - it was already wrapped in a try. -->
-  <svg class="wm wm-v splash-lockup" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.6,26.4) scale(4.2289,4.8088)"><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d="M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
+  <svg class="wm wm-v splash-lockup" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.6,26.4) scale(4.2289,4.8088)"><path class="wm-u" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-u" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d="M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
   <!-- BUILD 134, rule 2: the wait is content. What was here was the slogan, which is
        the one line on the splash that is true of every couple who ever installed this.
        These three are true of exactly these two, and they are read off their own saved
@@ -12559,7 +12595,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 172;
+  var BUILD_NUM = 173;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -18635,7 +18671,7 @@
         '. You can put it back — one repair each per month, and you can only spend it on ' +
         'each other.' +
       '</div>' +
-      '<button type="button" class="primary" id="repairBtn" style="width:100%;margin-top:12px;">' +
+      '<button type="button" class="primary" id="repairBtn">' +
         'Cover ' + escapeHtml(personName(them)) + '</button>' +
       '<button type="button" class="repair-skip" id="repairSkip">Not this time</button>';
     document.getElementById("repairBtn").addEventListener("click", function(){ grantRepair(them); });
@@ -24470,20 +24506,34 @@
       /* flex:0 0 auto, or the six buttons shrink to share the bar and the active
          label is squeezed to nothing - measured at 320px, where the grown tab came
          back as 44px wide with no room for its name. */
-      "  flex:0 0 auto; height:44px; min-height:0; min-width:44px; padding:0 11px; gap:6px;",
+      /* BUILD 173: flex-direction:row, stated at last. The strip-era rule at
+         (0,2,1) stacks icon over label and nothing in this block ever overrode
+         it - so the selected pill rendered as a cramped two-storey blob on the
+         device, and in my own screenshots, where I looked straight past it.
+         P-10's whole move is a WIDE pill: icon then name, side by side. */
+      /* gap:0, not 7 - a flex gap is paid even beside a collapsed 0-width label,
+         which quietly made every idle cell 49px and the bar 4px too wide to fit.
+         The space between icon and name is the LABEL'S margin, so it collapses
+         and grows with the label itself. Caught by settled.js, round two. */
+      "  flex:0 0 auto; flex-direction:row; height:44px; min-height:0; min-width:44px; padding:0 11px; gap:0;",
       "  color:var(--dock-ink); opacity:1; font-weight:600;",
       "  transition:color 220ms var(--ease-out), padding 220ms var(--ease-out);",
       "}",
       ".tabs button .tab-t, :root[data-skin=\"pe\"] .tabs button .tab-t{",
-      "  max-width:0; opacity:0; overflow:hidden; white-space:nowrap;",
-      "  transition:max-width 220ms var(--ease-out), opacity 120ms var(--mo-in);",
+      "  max-width:0; opacity:0; overflow:hidden; white-space:nowrap; margin-left:0;",
+      "  transition:max-width 220ms var(--ease-out), opacity 120ms var(--mo-in), margin-left 220ms var(--ease-out);",
       "}",
       ".tabs button.active, :root[data-skin=\"pe\"] .tabs button.active{",
       "  color:var(--dock-sel-ink); opacity:1; font-weight:700; padding:0 16px;",
       "  border-bottom-color:transparent;",
       "}",
       ".tabs button.active .tab-t, :root[data-skin=\"pe\"] .tabs button.active .tab-t{",
-      "  max-width:104px; opacity:1;",
+      /* BUILD 173: 104px was sized for the old column layout, where the label sat
+         on its own line. Inline beside the icon it makes the grown pill ~163px and
+         six cells no longer fit 374 - the bar scrolled. "Memories", the longest
+         name, is 58px at this size; 72 clears it with air. Caught by settled.js
+         on its first run. */
+      "  max-width:72px; opacity:1; margin-left:7px;",
       "  transition:max-width 220ms var(--ease-out), opacity 200ms var(--ease-out) 60ms;",
       "}",
       ".tabs button:active, :root[data-skin=\"pe\"] .tabs button:active{",
