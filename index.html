@@ -950,7 +950,32 @@
   .sb-row{ gap:10px; }
   .sb-link{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-decoration:none; color:inherit; }
   .sb-row .t2 b{ color:var(--jade-lift); font-weight:600; }
-  .sb-rate-btn{ border:0; background:none; padding:0; cursor:pointer; }
+  .sb-rate-btn{
+    border:1px solid var(--line-2); background:var(--s2); border-radius:12px; padding:5px 10px 4px;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:1px; min-width:56px;
+    font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; text-transform:uppercase; color:var(--jade-lift);
+  }
+  .sb-rate-btn span{ display:block; }
+  .rate-strip{
+    position:relative; margin:8px 0 2px; padding:12px 12px 10px;
+    background:var(--s2); border:1px solid var(--line-2); border-radius:16px;
+    box-shadow:var(--el-float);
+    animation:splash-rise .22s cubic-bezier(.2,.8,.2,1) both;
+  }
+  #songTicket .rate-strip, #songTicket + .rate-strip{ margin:8px 0 0; }
+  .rs-hearts{ display:flex; justify-content:space-between; gap:4px; }
+  .rs-h{ flex:1; height:48px; border:0; background:none; padding:0; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; border-radius:10px; }
+  .rs-h svg{ transition:transform .18s cubic-bezier(.34,1.56,.64,1); }
+  .rs-h:not(.on) svg > g:first-child{ --rt-a:var(--faint); --rt-b:var(--faint); }
+  .rs-h:active svg{ transform:scale(.9); }
+  .rate-strip.landed .rs-h.on svg{ animation:rs-pop .42s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes rs-pop{ 0%{ transform:scale(.7); } 60%{ transform:scale(1.18); } 100%{ transform:scale(1); } }
+  .rs-label{ text-align:center; font-family:var(--ui); font-size:.8125rem; font-weight:600; color:var(--text); margin-top:6px; }
+  .rate-strip.landed .rs-label{ color:var(--jade-lift); }
+  .rs-x{ position:absolute; top:6px; right:8px; width:28px; height:28px; border:0; background:none;
+    color:var(--faint); font-size:1.125rem; line-height:1; cursor:pointer; }
+  @media (prefers-reduced-motion:reduce){ .rate-strip, .rate-strip.landed .rs-h.on svg{ animation:none; } }
   .tk-embed{ margin-top:10px; }
   .tk-embed iframe{ width:100%; height:80px; border:0; border-radius:12px; display:block; }
   .tk-form{ display:flex; gap:8px; margin-top:10px; }
@@ -13096,7 +13121,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 196;
+  var BUILD_NUM = 197;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -22693,7 +22718,7 @@
     }
     // every rating says what it did and that it isn't final - a heart you tap
     // at thumb scale deserves a receipt and a way back
-    try{ toast("Rated " + e.rating + "/5 \u2014 tap the heart again to change it"); }catch(e6){}
+
   }
   /* the most recent past song I owe a verdict on */
   function unratedSongForMe(){
@@ -22704,13 +22729,62 @@
     }
     return best;
   }
+  /* BUILD 197, Moody: "the rating system is so bad - it says tap to rate, you
+     tap it, it opens the song, then you realise you have to tap the heart and
+     it's not obvious it's changing." Three faults, one fix: the heart is now a
+     DOOR, not a dial. Tapping it opens a strip of five big hearts with a word
+     under each level; you tap the one you mean, they fill up to it with a pop,
+     the strip says "4/5 · Loved it", and closes. No height to guess, a 44px
+     target per level, feedback you can't miss. */
+  var RATE_WORDS = ["", "Skip it", "Meh", "Good", "Loved it", "Perfect"];
+  function closeRateStrip(){
+    var s = document.getElementById("rateStrip");
+    if(s){ clearTimeout(s._t); if(s.parentNode) s.parentNode.removeChild(s); }
+  }
+  function openRateStrip(dateISO){
+    closeRateStrip();
+    var e = (state.songs || {})[dateISO]; if(!e) return;
+    // the anchor is whichever rated thing for this date is on the visible view
+    var anchors = [].slice.call(document.querySelectorAll('[data-rate-date="' + dateISO + '"]'));
+    var anchor = anchors.filter(function(a){ return a.offsetParent !== null; })[0];   // visible only - never a row on a hidden tab
+    // a verdict removes the catch-up ticket it was given on; the receipt still
+    // has to land somewhere the rater is looking, so it rides the ticket rail
+    var orphan = !anchor;
+    if(orphan){ anchor = document.getElementById("songTicket"); if(!anchor || anchor.style.display === "none") return; }
+    var strip = document.createElement("div");
+    strip.className = "rate-strip"; strip.id = "rateStrip";
+    strip.setAttribute("role", "radiogroup"); strip.setAttribute("aria-label", "Rate the song");
+    var cur = e.rating || 0;
+    strip.innerHTML = '<div class="rs-hearts">' +
+      [1,2,3,4,5].map(function(k){
+        return '<button type="button" class="rs-h' + (k <= cur ? " on" : "") + '" data-k="' + k + '" role="radio" ' +
+          'aria-checked="' + (k === cur) + '" aria-label="' + k + ' of 5, ' + RATE_WORDS[k] + '">' + heartScaleSVG(k <= cur ? 5 : 0, 36) + '</button>';
+      }).join("") + '</div>' +
+      '<div class="rs-label">' + (cur ? cur + "/5 \u00B7 " + RATE_WORDS[cur] + (orphan && e.title ? " \u2014 " + escapeHtml(e.title) : "") : "Tap a heart") + '</div>' +
+      '<button type="button" class="rs-x" aria-label="Close">\u00D7</button>';
+    [].slice.call(strip.querySelectorAll(".rs-h")).forEach(function(b){
+      b.onclick = function(ev){
+        ev.stopPropagation();
+        var k = +b.getAttribute("data-k");
+        var r = b.getBoundingClientRect();
+        rateSongOn(dateISO, k, {x: r.left + r.width / 2, y: r.top + r.height / 2});
+        // the re-render rebuilt the anchor; reopen on it, then let it settle and leave
+        openRateStrip(dateISO);
+        var s2 = document.getElementById("rateStrip");
+        if(s2){ s2.classList.add("landed"); s2._t = setTimeout(closeRateStrip, 1500); }
+      };
+    });
+    strip.querySelector(".rs-x").onclick = function(ev){ ev.stopPropagation(); closeRateStrip(); };
+    // outside the rail, not inside it: the rail's innerHTML is rebuilt on every
+    // render and would swallow the receipt before anyone read it
+    anchor.insertAdjacentElement("afterend", strip);
+  }
   function bindRateControl(btn, dateISO){
     if(!btn) return;
     btn.onclick = function(ev){
       if(ev.stopPropagation) ev.stopPropagation();
-      var r = btn.getBoundingClientRect();
-      var lv = 5 - Math.floor(((ev.clientY - r.top) / r.height) * 5);
-      rateSongOn(dateISO, Math.max(1, Math.min(5, lv)), {x: r.left + r.width / 2, y: r.top + r.height / 2});
+      if(document.getElementById("rateStrip")) { closeRateStrip(); return; }
+      openRateStrip(dateISO);
     };
     btn.onkeydown = function(ev){
       var e2 = (state.songs || {})[dateISO]; var cur = (e2 && e2.rating) || 0;
@@ -22763,7 +22837,7 @@
           (e.rating ? '<div class="tk-rate-l">' + escapeHtml(personName(e.ratedBy || otherPerson(e.picker))) + " " + e.rating + "/5</div>"
                     : '<div class="tk-rate-l">not rated yet</div>');
       }
-      h = '<div class="ticket" id="tkBody" role="button" tabindex="0" aria-expanded="' + (sgEmbedOpen ? "true" : "false") + '" ' +
+      h = '<div class="ticket" id="tkBody" data-rate-date="' + today + '" role="button" tabindex="0" aria-expanded="' + (sgEmbedOpen ? "true" : "false") + '" ' +
         'aria-label="' + (sgEmbedOpen ? "Hide" : "Show") + ' the player">' +
         '<div class="tk-art">' + art + '</div><div class="tk-main">' +
         '<div class="tk-eyebrow">Song of the day \u00B7 from ' + escapeHtml(personName(e.picker)) + '</div>' +
@@ -22781,7 +22855,7 @@
     if(owe){
       var oe = owe.e;
       var dayWord = owe.d === shiftISO(today, -1) ? "yesterday" : friendlyPhotoDate(owe.d);
-      h += '<div class="ticket catchup" id="tkCatch">' +
+      h += '<div class="ticket catchup" id="tkCatch" data-rate-date="' + owe.d + '">' +
         '<div class="tk-art">' + (oe.art ? '<img src="' + escapeHtml(oe.art) + '" alt="">' : "\u266A") + '</div>' +
         '<div class="tk-main"><div class="tk-eyebrow">' + escapeHtml(dayWord) + ' \u00B7 from ' + escapeHtml(personName(oe.picker)) + '</div>' +
         '<div class="tk-title">' + escapeHtml(oe.title || "Open in Spotify") + '</div>' +
@@ -22807,20 +22881,8 @@
     var inp0 = document.getElementById("tkUrl");
     if(inp0) inp0.onkeydown = function(ev){ if(ev.key === "Enter"){ ev.preventDefault();
       addTodaysSong(inp0.value.trim(), inp0); } };
-    var rt = document.getElementById("tkRate");
-    if(rt){
-      rt.onclick = function(ev){
-        if(ev.stopPropagation) ev.stopPropagation();   // rating is not a play/pause
-        var r = rt.getBoundingClientRect();
-        var lv = 5 - Math.floor(((ev.clientY - r.top) / r.height) * 5);
-        rateSong(Math.max(1, Math.min(5, lv)));
-      };
-      rt.onkeydown = function(ev){
-        var e2 = todaysSong(); var cur = (e2 && e2.rating) || 0;
-        if(ev.key === "ArrowUp" || ev.key === "ArrowRight"){ ev.preventDefault(); rateSong(cur + 1); }
-        if(ev.key === "ArrowDown" || ev.key === "ArrowLeft"){ ev.preventDefault(); rateSong(cur - 1 || 1); }
-      };
-    }
+    // BUILD 197: today's heart goes through the same door as every other one
+    bindRateControl(document.getElementById("tkRate"), today);
     var pl = document.getElementById("tkPlay");
     if(pl) pl.onclick = function(ev){ ev.stopPropagation(); sgEmbedOpen = !sgEmbedOpen; renderSongTicket(); };
   }
@@ -22846,17 +22908,18 @@
       var canRate = e.picker !== me;   // BUILD 196: live for the rater whether or not a verdict exists
       // BUILD 194: a row is a link to the track; an unrated one also carries a
       // live heart for its rater (a button beside the link, never inside it)
-      return '<div class="sb-row">' +
+      return '<div class="sb-row" data-rate-date="' + d + '">' +
         '<a class="sb-link" href="' + escapeHtml(e.url) + '" target="_blank" rel="noopener">' +
         '<div class="sb-art">' + art + '</div>' +
         '<div class="sb-t"><div class="t1">' + escapeHtml(e.title || "Open in Spotify") + '</div>' +
         '<div class="t2"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + who + ';margin-right:5px;"></span>' +
         escapeHtml(personName(e.picker)) + " \u00B7 " + d.slice(8) + "/" + d.slice(5, 7) +
-        (canRate ? (e.rating ? ' \u00B7 <b>' + e.rating + '/5 \u00B7 tap to change</b>' : ' \u00B7 <b>rate it</b>') : '') + '</div></div></a>' +
+        '</div></div></a>' +
         '<div class="sb-rate">' +
           (canRate
-            ? '<button type="button" class="tk-rate sb-rate-btn" data-date="' + d + '" role="slider" tabindex="0" aria-label="Rate this song" aria-valuemin="0" aria-valuemax="5" aria-valuenow="' + (e.rating || 0) + '">' + heartScaleSVG(e.rating || 0, 34) + '</button>'
-            : (e.rating ? heartScaleSVG(e.rating, 32) : "")) +
+            ? '<button type="button" class="sb-rate-btn" data-date="' + d + '" aria-label="' + (e.rating ? "Change your rating, " + e.rating + " of 5" : "Rate this song") + '">' +
+                heartScaleSVG(e.rating || 0, 30) + '<span>' + (e.rating ? e.rating + "/5" : "Rate") + '</span></button>'
+            : (e.rating ? heartScaleSVG(e.rating, 30) : "")) +
         '</div></div>';
     }).join("");
     [].slice.call(list.querySelectorAll(".sb-rate-btn")).forEach(function(bt){ bindRateControl(bt, bt.getAttribute("data-date")); });
