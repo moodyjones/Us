@@ -3098,6 +3098,16 @@
     background:var(--jade); border-color:var(--jade); transform:scale(1.04);
   }
   :root[data-skin="pe"] .task.done .check::after{ opacity:1; transform:scale(1); }
+  /* the hold between the tap and the card leaving: the box fills LIME (--both,
+     the same lime in both themes; the dark glyph needs it), the check pops in,
+     the title is struck through, and the card itself stays at full strength -
+     this is the moment, not the aftermath */
+  :root[data-skin="pe"] .task-wrap .task.ticking .check{ background:var(--both); border-color:var(--both); transform:scale(1.06); }
+  :root[data-skin="pe"] .task.ticking .check::after{ opacity:1; transform:scale(1); }
+  :root[data-skin="pe"] .task-wrap .task.ticking .title{
+    text-decoration:line-through; text-decoration-color:var(--jade); text-decoration-thickness:2px;
+    color:var(--muted); transition:color .25s ease .1s;
+  }
   :root[data-skin="pe"] .task .check:active{ transform:scale(.88); }
 
   /* ---- rows ---- */
@@ -4721,7 +4731,7 @@
       radial-gradient(118% 62% at 8% -8%,  var(--wash-a) 0%, transparent 58%),
       radial-gradient(118% 62% at 94% -4%, var(--wash-b) 0%, transparent 58%);
     padding:var(--gutter);
-    animation:splash-out .52s cubic-bezier(.4,0,.6,1) 4.25s both;
+    animation:splash-out .52s cubic-bezier(.4,0,.6,1) 4.55s both;
   }
   .splash.gone{ display:none; }
   /* a tap anywhere ends it early - the class short-circuits every delay below */
@@ -4770,7 +4780,7 @@
      geometry. The arcs start as --text so there is no flash of accent before the
      word has even landed. */
   .splash-lockup{ width:min(46vw,188px); height:auto;
-    animation:lock-thunk .32s cubic-bezier(.34,1.56,.64,1) 1.70s both; }
+    animation:lock-thunk .32s cubic-bezier(.34,1.56,.64,1) 2.30s both; }
   .splash-lockup .wm-r1{ animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) .10s both; }
   .splash-lockup .wm-r2{ animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) .24s both; }
   /* BUILD 173: the colour-arrival is an OPACITY crossfade now, over ink copies
@@ -4786,37 +4796,21 @@
      The ink underlays from the 173 crossfade stay in the DOM (the gate counts
      them) but no longer paint: nothing fades any more, things ARRIVE. */
   .splash-lockup .wm-u{ opacity:0; }
-  .splash-lockup .wm-a, .splash-lockup .wm-b{
-    opacity:0; transform-box:fill-box; transform-origin:50% 50%;
-  }
-  .splash-lockup .wm-a{ animation:fly-a .62s cubic-bezier(.3,1.25,.4,1) .98s both; }
-  .splash-lockup .wm-b{ animation:fly-b .62s cubic-bezier(.3,1.25,.4,1) 1.14s both; }
-  @keyframes fly-a{
-    0%{ opacity:0; transform:translateX(-58%) rotate(-14deg); }
-    55%{ opacity:1; }
-    78%{ transform:translateX(2.5%) rotate(1.5deg); }
-    100%{ opacity:1; transform:none; }
-  }
-  @keyframes fly-b{
-    0%{ opacity:0; transform:translateX(58%) rotate(14deg); }
-    55%{ opacity:1; }
-    78%{ transform:translateX(-2.5%) rotate(-1.5deg); }
-    100%{ opacity:1; transform:none; }
-  }
+  /* BUILD 199, Moody: "why doesn't it just make sense - a heart being drawn and
+     then a check mark through it." It does now. Each ribbon of the mark is
+     revealed by a mask that is its own centerline, stroked, drawn end to end
+     with a dash offset: a pen. The lilac heart draws from its bottom hook up
+     and over (0.50-1.20s), the coral one takes the pen at the interlock and
+     comes down to the other hook (1.15-1.90s), then the check is struck through
+     in one fast stroke (2.00-2.34s) and the lockup thunks. One continuous
+     drawing, in the order a hand draws a heart. Nothing flies in any more. */
+  .splash-lockup .wm-a, .splash-lockup .wm-b, .splash-lockup .wm-c{ opacity:1; }
+  .splash-lockup .dr{ stroke-dasharray:1; stroke-dashoffset:1; }
+  .splash-lockup .dr-a{ animation:splash-draw .70s cubic-bezier(.45,.05,.55,.95) .50s both; }
+  .splash-lockup .dr-b{ animation:splash-draw .75s cubic-bezier(.45,.05,.55,.95) 1.15s both; }
+  .splash-lockup .dr-c{ animation:splash-draw .34s cubic-bezier(.2,.8,.2,1) 2.00s both; }
   @keyframes lock-thunk{
-    0%{ transform:scale(1); } 45%{ transform:scale(1.018); } 100%{ transform:scale(1); }
-  }
-  /* BUILD 179: the check is the thing the two of you produce, so it arrives LAST
-     and it lands - a spring pop, not a fade. transform-box makes the scale happen
-     about the check itself rather than the giant lockup viewBox. */
-  .splash-lockup .wm-c{
-    opacity:0; transform-box:fill-box; transform-origin:50% 50%;
-    animation:wm-pop .5s cubic-bezier(.34,1.56,.64,1) 1.88s both;
-  }
-  @keyframes wm-pop{
-    0%{ opacity:0; transform:scale(.25); }
-    62%{ opacity:1; transform:scale(1.16); }
-    100%{ opacity:1; transform:scale(1); }
+    0%{ transform:scale(1); } 45%{ transform:scale(1.022); } 100%{ transform:scale(1); }
   }
   /* the check stays ink throughout - it is what the two of them produce, so it
      does not need to arrive in anybody's colour */
@@ -4841,7 +4835,7 @@
     .splash-mark, .splash-mark path, .splash-word span, .splash-line,
     .splash-lockup, .splash-lockup .wm-r1, .splash-lockup .wm-r2,
     .splash-lockup .wm-a, .splash-lockup .wm-b,
-    .splash-lockup .wm-c, .splash-motto span, .splash-motto2{
+    .splash-lockup .wm-c, .splash-lockup .dr, .splash-motto span, .splash-motto2{
       animation:none; stroke-dashoffset:0; opacity:1; transform:none;
     }
   }
@@ -5367,14 +5361,14 @@
      the header declutter (133) hid the sentence and the splash never picked it up.
      The rhythm lands word by word; the sentence follows whole, in the display face. */
   .splash-motto span{ opacity:0; animation:splash-rise .4s cubic-bezier(.22,.9,.3,1) both; }
-  .splash-motto span:nth-child(1){ animation-delay:2.08s; }
-  .splash-motto span:nth-child(2){ animation-delay:2.20s; }
-  .splash-motto span:nth-child(3){ animation-delay:2.32s; }
+  .splash-motto span:nth-child(1){ animation-delay:2.46s; }
+  .splash-motto span:nth-child(2){ animation-delay:2.58s; }
+  .splash-motto span:nth-child(3){ animation-delay:2.70s; }
   .splash-motto2{
     font-family:var(--display);
     font-size:0.9375rem; font-weight:600; letter-spacing:-.01em;
     color:var(--muted); text-align:center; margin-top:-8px;
-    animation:splash-rise .5s cubic-bezier(.22,.9,.3,1) 2.62s both;
+    animation:splash-rise .5s cubic-bezier(.22,.9,.3,1) 2.92s both;
   }
   /* BUILD 180, Moody: "why is Do. coral instead of the green?" Because this rule
      was written in 135, before lime existed, and nobody re-read it when the win
@@ -5390,9 +5384,9 @@
   /* The stack is one line longer than it was, so the cascade and the curtain both
      move back a quarter second - the pill was finishing with 0.38s to spare and
      would now be arriving as the curtain started. */
-  .splash-receipts{ animation-delay:3.02s; }
-  .splash-pill{ animation-delay:3.18s; }
-  .splash{ animation-delay:4.25s; }
+  .splash-receipts{ animation-delay:3.30s; }
+  .splash-pill{ animation-delay:3.46s; }
+  .splash{ animation-delay:4.55s; }
 
 
   /* ===========================================================================
@@ -5555,9 +5549,11 @@
     transition:background .18s ease, border-color .18s ease, color .18s ease;
   }
   .duo-chal.mine{ cursor:pointer; }
-  .duo-chal.on{ color:var(--on-accent); }
-  .duo-chal.on.is-p1{ background:var(--moody); border-color:var(--moody); }
-  .duo-chal.on.is-p2{ background:var(--rae); border-color:var(--rae); }
+  /* BUILD 199, Moody: "shouldn't a check, being a symbol of completing and
+     success, be the green?" Yes. The badge wore its OWNER's colour, which said
+     whose photo it was (the frame already says that) instead of what it meant.
+     One rule from here: a check is lime, ink glyph on it, like the mark. */
+  .duo-chal.on{ color:#0E0B13; background:var(--both); border-color:var(--both); }
   .duo-chal .dc-i{ display:block; }
   /* The frame clips its photo, so the mark has to sit outside that clip. */
   .duo-slot{ position:relative; }
@@ -5627,7 +5623,7 @@
   /* An empty circle reads as a blank sticker on a photograph. A pale tick reads as
      a tick that has not been filled in, which is what it is. */
   :root[data-skin="pe"] .duo-chal{ color:var(--line-2); }
-  :root[data-skin="pe"] .duo-chal.on{ color:var(--on-accent); }
+  :root[data-skin="pe"] .duo-chal.on{ color:#0E0B13; }
 
 
   /* ===========================================================================
@@ -6628,6 +6624,7 @@
   :root[data-skin="pe"] .task-wrap .task.who-p1 .check{ border-color:color-mix(in srgb, var(--moody) 72%, var(--line-2)); }
   :root[data-skin="pe"] .task-wrap .task.who-p2 .check{ border-color:color-mix(in srgb, var(--rae) 72%, var(--line-2)); }
   :root[data-skin="pe"] .task-wrap .task.who-both .check{ border-color:color-mix(in srgb, var(--moody) 50%, var(--rae)); }
+  :root[data-skin="pe"] .task-wrap .task.ticking .check{ border-color:var(--both); background:var(--both); }
   /* BUILD 192, Moody: "make the text smaller if it's longer, not the whole box
      bigger - now some tasks look more important because they're larger."
      Von Restorff: the one that differs in size is read as the one that matters.
@@ -6696,11 +6693,12 @@
   :root[data-skin="pe"] .task .meta .diff-lvl.diff-hard{ color:var(--chip-hard-fg); }
   :root[data-skin="pe"] .task .meta .meta-for.for-p1{ color:var(--moody); }
   :root[data-skin="pe"] .task .meta .meta-for.for-p2{ color:var(--rae); }
-  :root[data-skin="pe"] .task-wrap .task[data-late="1"]{
-    border-color:color-mix(in srgb, var(--rae) 28%, var(--line-2));
-  }
+  /* BUILD 199, Moody, on nine cards with the same coral rim: "why are all these
+     this colour?" Because every one was late, and a rash on every card is a skin
+     tone. The red DATE already says late; the rim now only joins it from the
+     fourth day, and the wash from the fifteenth. Differences, not a colour. */
   :root[data-skin="pe"] .task-wrap .task[data-late="2"]{
-    border-color:color-mix(in srgb, var(--rae) 48%, var(--line-2));
+    border-color:color-mix(in srgb, var(--rae) 40%, var(--line-2));
     background-image:radial-gradient(70% 120% at 0% 50%, color-mix(in srgb, var(--rae) 12%, transparent) 0%, transparent 62%),
                var(--owner-fill, linear-gradient(180deg, var(--task-fill-a) 0%, var(--task-fill-b) 100%));
   }
@@ -6746,7 +6744,7 @@
        something: the word lands in plain ink, and THEN the O turns into the two of
        you. The old loader loop measures ".splash-mark path", finds nothing and does
        nothing - it was already wrapped in a try. -->
-  <svg class="wm wm-v splash-lockup" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.1,70.5) scale(4.2117,4.2117)"><path class="wm-u" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-u" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d=" M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
+  <svg class="wm wm-v splash-lockup" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.1,70.5) scale(4.2117,4.2117)"><defs><mask id="dr-a" maskUnits="userSpaceOnUse" x="-10" y="-10" width="240" height="180"><path class="dr dr-a" d="M81.2 138.8 L80.1 141.8 L74.7 143.3 L68.2 141.3 L39.8 111.3 L24.7 93.6 L19.6 84.8 L16.7 74.9 L15.6 63.3 L17.0 52.8 L21.2 41.4 L28.8 30.8 L37.8 23.2 L49.1 18.2 L62.5 16.2 L72.5 17.2 L83.9 21.0 L94.3 28.2 L106.7 27.8" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/></mask><mask id="dr-b" maskUnits="userSpaceOnUse" x="-10" y="-10" width="240" height="180"><path class="dr dr-b" d="M107.1 41.4 L123.2 26.2 L135.4 19.2 L151.0 16.5 L166.7 18.3 L178.3 24.0 L183.9 28.5 L189.4 34.6 L195.7 46.2 L198.7 62.0 L197.2 77.4 L191.4 91.2 L170.7 115.0 L147.4 139.2 L144.1 142.1 L137.7 144.1 L129.8 142.2 L127.2 140.5 L116.1 141.0" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/></mask><mask id="dr-c" maskUnits="userSpaceOnUse" x="-10" y="-10" width="240" height="180"><path class="dr dr-c" d="M70.6 83.6 L101 115 L147.9 66.9" fill="none" stroke="#fff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/></mask></defs><path class="wm-u" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-u" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-a" mask="url(#dr-a)" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" mask="url(#dr-b)" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" mask="url(#dr-c)" fill-rule="evenodd" d=" M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
   <!-- BUILD 134, rule 2: the wait is content. What was here was the slogan, which is
        the one line on the splash that is true of every couple who ever installed this.
        These three are true of exactly these two, and they are read off their own saved
@@ -6840,7 +6838,7 @@
   el.addEventListener("animationend", function(ev){
     if(ev.target === el) end();
   });
-  setTimeout(end, 5700);
+  setTimeout(end, 6000);
 })();</script>
 <!-- BUILD 101 — pull down to sync.
 
@@ -13123,7 +13121,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 198;
+  var BUILD_NUM = 199;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14907,11 +14905,17 @@
     check.className = "check";
     check.textContent = t.status==="done" ? "✓" : "";
     check.addEventListener("click", function(){
-      if(t.status !== "open") return;
-      check.textContent = "✓";
-      wrap.classList.add("completing");
+      if(t.status !== "open" || row.classList.contains("ticking")) return;
+      /* BUILD 199, Moody: "when something is crossed off, shouldn't it check a
+         box? not be a circle in the corner and the tab just disappear." It did
+         exactly that: the tick went in at font-size 0 and the card slid out
+         260ms later. Now the box fills lime and the check pops INTO it, the
+         title strikes through, you get 700ms to see what you did, and only then
+         does the card leave for the done pile. */
+      row.classList.add("ticking");
       var from = originOf(check);
-      setTimeout(function(){ completeTask(t.id, from); }, 260);
+      setTimeout(function(){ wrap.classList.add("completing"); }, 700);
+      setTimeout(function(){ completeTask(t.id, from); }, 980);
     });
     var info = document.createElement("div");
     info.className = "info";
