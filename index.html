@@ -969,7 +969,7 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sb-t .t2{ font-size:0.6875rem; color:var(--muted); margin-top:1px; }
   .sb-rate{ flex:none; }
-  .sb-row::after{ content:"\u276F"; flex:none; font-size:0.75rem; color:var(--faint); margin-left:2px; }
+  .sb-row::after{ content:"\276F"; flex:none; font-size:0.75rem; color:var(--faint); margin-left:2px; }
   .sb-note{ font-size:0.6875rem; color:var(--faint); margin-top:8px; text-align:center; }
 
   /* ---- monthly recap ---- */
@@ -13096,7 +13096,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 195;
+  var BUILD_NUM = 196;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -22666,7 +22666,9 @@
     e.rating = Math.max(1, Math.min(5, level));
     e.ratedBy = me; e.ratedAt = new Date().toISOString();
     var paid = 0;
-    if(firstVerdict && e.rating === 5 && !e.awarded){
+    // BUILD 196: pays when the verdict BECOMES 5 and hasn't paid yet - so a
+    // mis-tap corrected to 5 still pays her. Never claws back.
+    if(e.rating === 5 && !e.awarded){
       ensurePerson(state, e.picker);
       state.points[e.picker].thoughtful += SONG_PERFECT_POINTS;
       e.awarded = SONG_PERFECT_POINTS;
@@ -22683,7 +22685,15 @@
       }catch(e2){}
       // a perfect pick is a small shared win; the rater sees it land on the heart
       if(paid){ try{ celebrate("medium", {origin: origin, headline: "+" + paid + " for " + personName(e.picker), sub: "A perfect pick"}); }catch(e3){} }
+    } else {
+      if(paid){
+        try{ announce("changed the verdict to 5/5 \u2764\uFE0F \u2014 +" + paid + " for " + personName(e.picker)); }catch(e4){}
+        try{ celebrate("medium", {origin: origin, headline: "+" + paid + " for " + personName(e.picker), sub: "A perfect pick"}); }catch(e5){}
+      }
     }
+    // every rating says what it did and that it isn't final - a heart you tap
+    // at thumb scale deserves a receipt and a way back
+    try{ toast("Rated " + e.rating + "/5 \u2014 tap the heart again to change it"); }catch(e6){}
   }
   /* the most recent past song I owe a verdict on */
   function unratedSongForMe(){
@@ -22833,7 +22843,7 @@
       var e = state.songs[d];
       var art = e.art ? '<img src="' + escapeHtml(e.art) + '" alt="">' : "\u266A";
       var who = e.picker === "p1" ? "var(--moody)" : "var(--rae)";
-      var canRate = !e.rating && e.picker !== me;
+      var canRate = e.picker !== me;   // BUILD 196: live for the rater whether or not a verdict exists
       // BUILD 194: a row is a link to the track; an unrated one also carries a
       // live heart for its rater (a button beside the link, never inside it)
       return '<div class="sb-row">' +
@@ -22842,10 +22852,11 @@
         '<div class="sb-t"><div class="t1">' + escapeHtml(e.title || "Open in Spotify") + '</div>' +
         '<div class="t2"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + who + ';margin-right:5px;"></span>' +
         escapeHtml(personName(e.picker)) + " \u00B7 " + d.slice(8) + "/" + d.slice(5, 7) +
-        (canRate ? ' \u00B7 <b>rate it</b>' : '') + '</div></div></a>' +
+        (canRate ? (e.rating ? ' \u00B7 <b>' + e.rating + '/5 \u00B7 tap to change</b>' : ' \u00B7 <b>rate it</b>') : '') + '</div></div></a>' +
         '<div class="sb-rate">' +
-          (e.rating ? heartScaleSVG(e.rating, 32)
-                    : (canRate ? '<button type="button" class="tk-rate sb-rate-btn" data-date="' + d + '" role="slider" tabindex="0" aria-label="Rate this song" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">' + heartScaleSVG(0, 34) + '</button>' : "")) +
+          (canRate
+            ? '<button type="button" class="tk-rate sb-rate-btn" data-date="' + d + '" role="slider" tabindex="0" aria-label="Rate this song" aria-valuemin="0" aria-valuemax="5" aria-valuenow="' + (e.rating || 0) + '">' + heartScaleSVG(e.rating || 0, 34) + '</button>'
+            : (e.rating ? heartScaleSVG(e.rating, 32) : "")) +
         '</div></div>';
     }).join("");
     [].slice.call(list.querySelectorAll(".sb-rate-btn")).forEach(function(bt){ bindRateControl(bt, bt.getAttribute("data-date")); });
