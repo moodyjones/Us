@@ -776,7 +776,8 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
   .modal-bg{
-    position:fixed;inset:0;background:var(--scrim);
+    position:fixed;inset:0;background:color-mix(in srgb, var(--bg) 72%, transparent);
+    -webkit-backdrop-filter:blur(5px) saturate(.85); backdrop-filter:blur(5px) saturate(.85);
     display:none;align-items:center;justify-content:center;z-index:var(--z-over);padding:24px;
   }
   .modal-bg.show{display:flex;}
@@ -962,6 +963,7 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sb-t .t2{ font-size:0.6875rem; color:var(--muted); margin-top:1px; }
   .sb-rate{ flex:none; }
+  .sb-row::after{ content:"\u276F"; flex:none; font-size:0.75rem; color:var(--faint); margin-left:2px; }
   .sb-note{ font-size:0.6875rem; color:var(--faint); margin-top:8px; text-align:center; }
 
   /* ---- monthly recap ---- */
@@ -1061,7 +1063,7 @@
     width:100%;border-radius:12px;margin-top:10px;display:block;
   }
   .trophy-count{
-    text-align:center;font-size:0.8125rem;color:var(--gold);font-weight:700;margin-bottom:12px;
+    text-align:center;font-size:0.8125rem;color:var(--muted);font-weight:700;margin-bottom:12px;
   }
   .speech-turn{
     text-align:center;font-size:0.75rem;color:var(--muted);
@@ -2051,9 +2053,9 @@
   .exp-card .exp-sub{font-size:0.6875rem;color:var(--faint);margin-top:4px;letter-spacing:.02em;}
   .trophy-card{
     background:
-      radial-gradient(120% 90% at 0% 0%, rgba(240,193,75,.16) 0%, transparent 55%),
+      radial-gradient(120% 90% at 0% 0%, rgba(240,193,75,.06) 0%, transparent 55%),
       var(--surface-lift);
-    border:1px solid rgba(201,138,31,.4);
+    border:1px solid var(--line-2);
     box-shadow:0 8px 26px rgba(38,30,45,.12);
   }
   .trophy-card .exp-title{color:var(--gold);font-size:1.125rem;}
@@ -2092,9 +2094,19 @@
     font-size:0.75rem;font-weight:600;padding:8px 12px;border-radius:12px;
     background:var(--tint-2);border:1px solid var(--line-2);color:var(--muted);
   }
+  /* BUILD 184, Moody: "why is the We did it yellow there instead of the green?"
+     Because it predated the win colour. Completing is the check's job: lime,
+     flat, dark ink - the same material as the ticket's play button. Gold stays
+     on the trophies it earns. */
+  /* ...and quietly: a LIST of solid lime pills is the same "glowing tile" crime
+     with a different hue. On a row the action is marked, not shouted - lime ink
+     and rim on the quiet ground. The solid lime moment is the celebration that
+     follows the tap. */
   .exp-actions button.go{
-    background:linear-gradient(140deg,var(--gold),var(--grad-gold-b));color:var(--on-gold);
-    border-color:transparent;box-shadow:0 4px 14px rgba(240,193,75,.26);
+    background:var(--tint-2);
+    color:var(--jade-lift);
+    border-color:color-mix(in srgb, var(--both) 45%, transparent);
+    box-shadow:none;
   }
 
   /* ---- collapsible cards ---- */
@@ -2254,8 +2266,10 @@
     border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--sh-1);
   }
   .note .from{font-size:0.625rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--rose);}
+  .note.from-p1 .from{color:var(--moody);}
+  .note.from-p2 .from{color:var(--rae);}
   .note .text{font-family:var(--display);font-size:0.875rem;line-height:1.55;margin-top:7px;}
-  .note .date{font-size:0.625rem;color:var(--faint);margin-top:9px;}
+  .note .date{font-family:var(--mono);font-size:0.625rem;letter-spacing:.06em;color:var(--faint);margin-top:9px;}
   .quote-box{
     background:linear-gradient(160deg,var(--s2),var(--s3));
     border:1px solid var(--line-2);border-radius:18px;padding:24px;
@@ -2281,10 +2295,12 @@
     font-family:var(--display);font-weight:700;font-size:0.75rem;width:26px;height:26px;
   }
   .lb-name{font-size:0.875rem;font-weight:600;}
-  .lb-pts{font-family:var(--display);font-weight:700;font-size:1rem;color:var(--gold);}
+  .lb-pts{font-family:var(--display);font-weight:700;font-size:1rem;color:var(--text);}
   .fair-bar{height:9px;border-radius:999px;background:var(--tint-3);}
-  .fair-bar .a{background:linear-gradient(90deg,var(--rose),var(--rose-deep));}
-  .fair-bar .b{background:linear-gradient(90deg,var(--jade),#3aa892);}
+  /* The split is Moody vs Rae - so it wears Moody vs Rae. The old red-to-green
+     read as good-vs-bad, which is precisely what a fairness bar must not imply. */
+  .fair-bar .a{background:var(--moody);}
+  .fair-bar .b{background:var(--rae);}
   .fair-label{font-size:0.75rem;color:var(--faint);}
 
   /* ---- rewards ---- */
@@ -2442,8 +2458,10 @@
        It is an opacity fade now. Nothing in this app needs a view to slide, the
        indicator under the tabs already says which way you moved, and opacity cannot
        create a containing block. */
-    .view.active{animation:viewIn var(--mo-150) var(--ease-out);}
-    @keyframes viewIn{from{opacity:0;}to{opacity:1;}}
+    .view.active{animation:viewIn 220ms cubic-bezier(.2,.8,.2,1);}
+    @keyframes viewIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+    .view.leaving{ animation:viewOut 160ms cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes viewOut{ to{ opacity:0; transform:translateY(-4px); } }
     .task-wrap{transition:opacity .28s ease, transform .28s ease;}
     .task-wrap.completing{opacity:0;transform:translateX(14px);}
     .task .check, .buy-card .buy-check{transition:background .15s ease, border-color .15s ease;}
@@ -5708,8 +5726,10 @@
   .tmorph[hidden]{ display:none !important; }
   .tm-veil{
     position:absolute; inset:0; opacity:0;
-    background:var(--scrim, rgba(20,16,26,.55));
-    -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+    /* BUILD 186, figure-ground law: ~70% dim, a real blur. 2px/.55 left the page
+       competing with the sheet. */
+    background:color-mix(in srgb, var(--bg) 72%, transparent);
+    -webkit-backdrop-filter:blur(5px) saturate(.85); backdrop-filter:blur(5px) saturate(.85);
     transition:opacity 320ms cubic-bezier(.4,0,.2,1);
   }
   /* BUILD 141: anchored to the row, not to the viewport. A clip-path morph can only
@@ -5778,9 +5798,14 @@
   /* ---- the entrance. 200ms ease-out at a 40ms stagger, from the card recipe.
           Twelve rows is 480ms to the last one; beyond that they arrive together
           rather than making somebody wait for row twenty. ---- */
-  #openTasks.stagger .task-wrap{
+  #openTasks.stagger .task-wrap,
+  .stagger > .note, .stagger > .note-arch, .stagger > .reward-item, .stagger > .won-head, .stagger > .sb-row{
     animation:taskIn 200ms cubic-bezier(.2,.8,.2,1) backwards;
   }
+  .stagger > :nth-child(1){ animation-delay:0ms; }   .stagger > :nth-child(2){ animation-delay:40ms; }
+  .stagger > :nth-child(3){ animation-delay:80ms; }  .stagger > :nth-child(4){ animation-delay:120ms; }
+  .stagger > :nth-child(5){ animation-delay:160ms; } .stagger > :nth-child(6){ animation-delay:200ms; }
+  .stagger > :nth-child(7){ animation-delay:240ms; } .stagger > :nth-child(8){ animation-delay:280ms; }
   @keyframes taskIn{ from{ opacity:0; transform:translateY(7px); } }
   #openTasks.stagger .task-wrap:nth-child(1){ animation-delay:0ms; }
   #openTasks.stagger .task-wrap:nth-child(2){ animation-delay:40ms; }
@@ -5986,6 +6011,14 @@
     font-family:var(--mono); font-size:0.6875rem; font-weight:600;
     letter-spacing:0; text-transform:none; margin-top:8px;
   }
+  .presence{
+    display:inline-block; width:7px; height:7px; border-radius:50%; margin-left:7px;
+    vertical-align:middle; background:var(--both);
+    box-shadow:0 0 0 2px color-mix(in srgb, var(--both) 28%, transparent);
+    animation:presence-breathe 2.4s ease-in-out infinite;
+  }
+  @keyframes presence-breathe{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
+  @media (prefers-reduced-motion:reduce){ .presence{ animation:none; } }
   .duo-when{
     font-family:var(--mono); font-size:0.625rem; letter-spacing:.06em;
     text-transform:uppercase; color:var(--faint); margin-top:2px;
@@ -6040,6 +6073,7 @@
 
   @media (prefers-reduced-motion:reduce){
     .duo-slot:active .duo-frame{ transform:none; }
+    .view.active, .view.leaving{ animation:none; }
   }
 
 
@@ -9848,8 +9882,25 @@
     btn.addEventListener("click", function(){
       document.querySelectorAll(".tabs button").forEach(function(b){b.classList.remove("active");});
       btn.classList.add("active");
-      document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active");});
-      document.getElementById("view-"+btn.dataset.tab).classList.add("active");
+      /* BUILD 186: the dock glided but the page under it hard-cut. Dock Lab's
+         panel spec: the leaving view goes 160ms (fade, 4px up), THEN the next
+         one arrives 220ms (fade, 4px settle). The swap is deferred by the exit,
+         so the two never overlap and layout never doubles. */
+      var cur = document.querySelector(".view.active");
+      var next = document.getElementById("view-"+btn.dataset.tab);
+      var swap = function(){
+        document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active", "leaving"); });
+        next.classList.add("active");
+        document.documentElement.setAttribute("data-view", btn.dataset.tab);
+        // tab hooks run AFTER the view is live: renderMemories() checks visibility
+        if(btn.dataset.tab === "memories"){ renderMemories(); if(memMonth) loadAlbumMonth(memMonth); }
+        staggerLists(btn.dataset.tab);
+      };
+      if(cur && cur !== next && !motionOff()){
+        cur.classList.add("leaving");
+        clearTimeout(viewSwapT);
+        viewSwapT = setTimeout(swap, 150);
+      } else { swap(); }
       /* BUILD 142b: the hero is a TODAY thing. Today's two rings, the wall of days and
          the swipe cue were rendering above all six tabs, so opening Tasks put ~500px of
          Today between you and the first task - on a 844px phone the list began below the
@@ -9859,7 +9910,6 @@
       document.documentElement.setAttribute("data-view", btn.dataset.tab);
       // Memories is the one tab that may need the network. Kick the fetch on the way in
       // rather than on load, so a tab nobody opens costs nothing.
-      if(btn.dataset.tab === "memories"){ renderMemories(); if(memMonth) loadAlbumMonth(memMonth); }
       // Notes too: posting a photo unseals today's note, and the inbox was still showing
       // the locked version it rendered on load.
       if(btn.dataset.tab === "notes"){ renderNotes(); renderRowEntry(); }
@@ -12898,7 +12948,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 183;
+  var BUILD_NUM = 186;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -16283,7 +16333,10 @@
       var goBtn = document.createElement("button");
       goBtn.className = "go";
       goBtn.textContent = "🥂 We did it";
-      goBtn.addEventListener("click", function(){ openExpModal(t.id); });
+      goBtn.addEventListener("click", function(ev){
+        expOrigin = ev.currentTarget.closest(".exp-card") || ev.currentTarget;
+        openExpModal(t.id);
+      });
       actions2.appendChild(goBtn);
       var delBtn = document.createElement("button");
       delBtn.textContent = "Remove";
@@ -16440,6 +16493,31 @@
     expModalBg.classList.add("show");
     // Anything taller than the phone now scrolls inside the sheet, so start it at the top.
     var box = expModalBg.querySelector(".modal"); if(box) box.scrollTop = 0;
+    /* BUILD 186: one way of opening things (rule 1). The sheet comes OUT OF the
+       card you tapped with P-03's spring and clip-path widening - the same morph
+       the task rows and day cards have had since 142 - instead of rising from
+       nowhere in the middle of the screen. */
+    try{ morphFromOrigin(box, expOrigin); }catch(e){}
+    expOrigin = null;
+  }
+  var expOrigin = null;
+  function morphFromOrigin(sheet, originEl){
+    if(!sheet || !originEl || !originEl.isConnected || motionOff()) return;
+    var from = originEl.getBoundingClientRect();
+    var to = sheet.getBoundingClientRect();
+    if(!to.width) return;
+    var sp = tmSpring(0.18, 200);
+    var frames = sp.samples.map(function(p, i){
+      var e = Math.pow(tmClamp(p, 0, 1), 2.2);
+      var b = {left: from.left + (to.left - from.left) * e, top: from.top + (to.top - from.top) * e,
+               width: from.width + (to.width - from.width) * e, height: from.height + (to.height - from.height) * e};
+      return {offset: i / Math.max(1, sp.samples.length - 1), clipPath: tmClip(b, to, 12 + 6 * e)};
+    });
+    sheet.animate(frames, {duration: sp.duration, fill: "backwards"});
+    [].slice.call(sheet.children).forEach(function(line, n){
+      line.animate([{opacity:0, transform:"translateY(9px)"}, {opacity:1, transform:"none"}],
+        {duration:480, delay:120 + Math.min(n, 8) * 40, easing:"cubic-bezier(.2,.8,.2,1)", fill:"backwards"});
+    });
   }
 
   document.getElementById("expPhoto").addEventListener("change", function(){
@@ -19363,6 +19441,20 @@
       var name = document.createElement("div");
       name.className = "duo-name";
       name.textContent = personName(p.id) + (isMe ? " (you)" : "");
+      /* BUILD 186, rule 3 (live data in the chrome): a lime dot beside their
+         name while they've had WeDO open in the last ten minutes - read off the
+         synced seenAt, so it is true, not decorative. Your own name never gets
+         one; you know where you are. */
+      if(!isMe){
+        var seen = (state.seenAt || {})[p.id] || 0;
+        if(seen && Date.now() - seen < 10 * 60000){
+          var dot = document.createElement("span");
+          dot.className = "presence";
+          dot.setAttribute("title", personName(p.id) + " is here now");
+          dot.setAttribute("aria-label", "online now");
+          name.appendChild(dot);
+        }
+      }
       slot.appendChild(name);
 
       var when = document.createElement("div");
@@ -21401,12 +21493,19 @@
       // rather than "say something".
       // A lock on the photo that the Notes tab cheerfully ignores isn't a lock.
       var sealed = n.photoDate && photoNoteLocked(n.fromId, n.photoDate);
+      /* BUILD 185: "From Rae" was coral whoever sent it - the one place in the
+         app where somebody wore the other person's colour. And the date was a
+         machine dump (11/9/2026, 12:00:00 AM) on a card full of human writing. */
+      var when = /^\d{4}-\d{2}-\d{2}$/.test(String(n.date || ""))
+        ? (n.date === todayISO() ? "today" : friendlyPhotoDate(n.date))
+        : date.toLocaleDateString(undefined, {month:"short", day:"numeric"});
+      d.classList.add("from-" + n.fromId);
       d.innerHTML = '<div class="from">From '+personName(n.fromId)+'</div>'+
         (n.q ? '<div class="note-q">'+escapeHtml(n.q)+'</div>' : '')+
         (sealed
           ? '<div class="text locked">\uD83D\uDD12 Sealed until you post today\u2019s photo</div>'
           : '<div class="text">'+escapeHtml(n.text)+'</div>')+
-        '<div class="date">'+date.toLocaleString()+'</div>';
+        '<div class="date">'+when+'</div>';
       wrap.appendChild(d);
     });
     renderNoteArchive();
@@ -24766,12 +24865,24 @@
   /* The list plays its entrance when you ARRIVE at it, not on every save. renderTasks
      runs on every tick of state; replaying a stagger there would make the list twitch
      each time the other phone synced. */
-  function tmStaggerList(){
-    var box = document.getElementById("openTasks");
+  function tmStaggerList(){ staggerBox(document.getElementById("openTasks")); }
+  function staggerBox(box){
     if(!box || motionOff()) return;
     box.classList.remove("stagger");
     void box.offsetWidth;
     box.classList.add("stagger");
+  }
+  /* BUILD 186: the card recipe's 40ms stagger belonged to one list. Every list
+     plays it now - on ARRIVAL at the tab, never on a save (renderAll runs on
+     every tick of state, and a list that twitches each sync is worse than none). */
+  var viewSwapT = null;
+  function staggerLists(tab){
+    try{
+      if(tab === "tasks"){ staggerBox(document.getElementById("openTasks")); }
+      if(tab === "notes"){ staggerBox(document.getElementById("noteArchiveList")); staggerBox(document.getElementById("notesList")); }
+      if(tab === "rewards"){ staggerBox(document.getElementById("wonList")); }
+      if(tab === "memories"){ staggerBox(document.getElementById("sbList")); }
+    }catch(e){}
   }
 
 
