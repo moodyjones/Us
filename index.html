@@ -5055,7 +5055,6 @@
      made a four-row list read as four tall coloured gates. Inset top and bottom
      it becomes a mark against the title instead of a frame around the row. */
   :root[data-skin="pe"] .task{
-    border-left-color:transparent !important;
     position:relative;
   }
   :root[data-skin="pe"] .task.who-p1::before,
@@ -6565,6 +6564,74 @@
     .tabs::before{ background:none; }
   }
 
+  /* ====== BUILD 187 - THE LIST BECOMES CARDS ======
+     "The font is so small; the whole list just blends together." Hairline rows
+     at 16px with a 3px stripe was a spreadsheet. Card recipe applied: one thing
+     speaks first (the title, 17px/600), the meta a tier below in mono, 8pt
+     spacing, nested radii, light from above. The one accent per card is WHOSE
+     it is - carried by the check ring, not a stripe. Urgency tints the rim. */
+  :root[data-skin="pe"] .task-wrap .task{
+    background:var(--s1); border:1px solid var(--line-2); border-radius:16px;
+    box-shadow:var(--sh-1, none); padding:15px 12px 15px 16px; margin-bottom:10px;
+  }
+  :root[data-skin="pe"] .task-wrap:last-child .task{ margin-bottom:0; }
+  :root[data-skin="pe"] .task.who-p1::before,
+  :root[data-skin="pe"] .task.who-p2::before,
+  :root[data-skin="pe"] .task.who-both::before{ display:none; }
+  :root[data-skin="pe"] .task-wrap .task .check{ width:26px; height:26px; border-width:2px; border-color:var(--line-2); }
+  :root[data-skin="pe"] .task-wrap .task.who-p1 .check{ border-color:color-mix(in srgb, var(--moody) 72%, var(--line-2)); }
+  :root[data-skin="pe"] .task-wrap .task.who-p2 .check{ border-color:color-mix(in srgb, var(--rae) 72%, var(--line-2)); }
+  :root[data-skin="pe"] .task-wrap .task.who-both .check{ border-color:color-mix(in srgb, var(--moody) 50%, var(--rae)); }
+  :root[data-skin="pe"] .task-wrap .task .title{ font-size:1.0625rem; font-weight:600; letter-spacing:-.014em; line-height:1.3; }
+  :root[data-skin="pe"] .task-wrap .task .meta{ margin-top:7px; gap:2px 12px; }
+  :root[data-skin="pe"] .task-wrap .task.due-overdue{ border-color:color-mix(in srgb, var(--rae) 34%, var(--line-2)); }
+  :root[data-skin="pe"] .task-wrap .task.due-today{ border-color:color-mix(in srgb, var(--both) 34%, var(--line-2)); }
+  :root[data-skin="pe"] .task-wrap .task.done{ background:transparent; border-color:var(--line); box-shadow:none; }
+
+  /* ---- BUILD 188: level, owner, rash ---- */
+  :root[data-skin="pe"] .task .meta .diff-lvl{
+    font-family:var(--mono); font-size:.6875rem; font-weight:600; letter-spacing:.07em;
+    text-transform:uppercase; display:inline-flex; align-items:baseline; gap:5px;
+    background:none; border:0; padding:0; border-radius:0;   /* the old chip ground */
+  }
+  :root[data-skin="pe"] .task .meta .meta-for{ margin-left:0; }
+  :root[data-skin="pe"] .task .meta .diff-lvl b{ font-weight:600; opacity:.75; }
+  :root[data-skin="pe"] .task .meta .diff-lvl.diff-easy{ color:var(--chip-easy-fg); }
+  :root[data-skin="pe"] .task .meta .diff-lvl.diff-medium{ color:var(--chip-med-fg); }
+  :root[data-skin="pe"] .task .meta .diff-lvl.diff-hard{ color:var(--chip-hard-fg); }
+  :root[data-skin="pe"] .task .meta .meta-for.for-p1{ color:var(--moody); }
+  :root[data-skin="pe"] .task .meta .meta-for.for-p2{ color:var(--rae); }
+  :root[data-skin="pe"] .task-wrap .task[data-late="1"]{
+    border-color:color-mix(in srgb, var(--rae) 28%, var(--line-2));
+  }
+  :root[data-skin="pe"] .task-wrap .task[data-late="2"]{
+    border-color:color-mix(in srgb, var(--rae) 48%, var(--line-2));
+    background:radial-gradient(70% 120% at 0% 50%, color-mix(in srgb, var(--rae) 10%, transparent) 0%, transparent 62%), var(--s1);
+  }
+  :root[data-skin="pe"] .task-wrap .task[data-late="3"]{
+    border-color:color-mix(in srgb, var(--rae) 70%, var(--line-2));
+    background:radial-gradient(80% 130% at 0% 50%, color-mix(in srgb, var(--rae) 18%, transparent) 0%, transparent 66%), var(--s1);
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--rae) 22%, transparent), var(--sh-1, none);
+  }
+  :root[data-skin="pe"] .task[data-late="3"] .meta .due-tag.overdue{ font-weight:700; }
+
+  /* ====== BUILD 187 - NOTES WITH ONE OBJECTIVE ====== */
+  :root[data-skin="pe"] #view-notes .daily-q-card{
+    background:var(--el-float, var(--s2)); border-color:var(--line-2); padding:20px 18px 18px;
+  }
+  :root[data-skin="pe"] #view-notes .daily-q-card h2{
+    font-family:var(--ui); font-size:.625rem; font-weight:600; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin:0 0 10px; line-height:1;
+  }
+  :root[data-skin="pe"] .daily-q-card .q{ font-size:1.375rem; line-height:1.2; letter-spacing:-.025em; }
+  :root[data-skin="pe"] .daily-q-card .hint{ margin-top:10px; }
+  :root[data-skin="pe"] #quoteCard{ display:none; }
+  :root[data-skin="pe"] .composer-card{ padding:10px; }
+  :root[data-skin="pe"] .note-composer{ display:flex; gap:8px; align-items:stretch; }
+  :root[data-skin="pe"] .note-composer textarea{ flex:1; min-width:0; min-height:46px; height:46px; resize:none; margin:0; }
+  :root[data-skin="pe"] .note-composer .primary{ width:auto; flex:none; padding:0 18px; margin:0; min-height:46px; }
+  :root[data-skin="pe"] .row-entry{ margin-top:4px; }
+
 </style>
 </head>
 <body>
@@ -7395,6 +7462,11 @@
 
   <!-- NOTES VIEW -->
   <div class="view" id="view-notes">
+    <!-- BUILD 187, Moody: "its main objective isn't clear". It had six equal
+         modules. Now it has an order: the question you answer today (the hero),
+         what she wrote you (the inbox), a one-line way to write back, and the
+         archives folded underneath. The quote module left - it already lives in
+         the Today greeting, and a duplicate is clutter wearing a serif. -->
     <div class="card daily-q-card">
       <h2>Today's Question</h2>
       <div class="q" id="dailyQuestionText"></div>
@@ -7402,33 +7474,21 @@
       <div id="qaArea" style="margin-top:12px;"></div>
     </div>
 
-    <div class="card" id="qaArchiveCard" style="display:none;">
-      <h2>Past reveals</h2>
-      <div id="qaArchive"></div>
+    <div class="card" id="inboxCard">
+      <h2>Notes to you</h2>
+      <div id="notesList"></div>
     </div>
 
-    <div class="card">
-      <h2>Quote of the moment</h2>
-      <div class="quote-box">
-        <div class="q" id="quoteText">"Loading…"</div>
-        <div class="a" id="quoteAuthor"></div>
-      </div>
-      <button class="ghost" id="newQuoteBtn" style="width:100%;margin-top:10px;">New quote</button>
-    </div>
-
-    <button type="button" class="row-entry" id="rowEntry">Had a row?</button>
-
-    <div class="card">
-      <h2>Leave a note</h2>
-      <form id="noteForm">
-        <textarea id="noteText" placeholder="Say something nice…" required style="width:100%;"></textarea>
-        <button type="submit" class="primary" style="width:100%;margin-top:8px;">Send note</button>
+    <div class="card composer-card">
+      <form id="noteForm" class="note-composer">
+        <textarea id="noteText" placeholder="Say something nice…" required rows="1" aria-label="Leave a note"></textarea>
+        <button type="submit" class="primary">Send</button>
       </form>
     </div>
 
-    <div class="card">
-      <h2>Notes to you</h2>
-      <div id="notesList"></div>
+    <div class="card" id="qaArchiveCard" style="display:none;">
+      <h2>Past reveals</h2>
+      <div id="qaArchive"></div>
     </div>
 
     <!-- Every note either of you has ever sent, both directions. "Notes to you" above is the
@@ -7447,6 +7507,18 @@
       </div>
       <div id="noteArchiveList"></div>
       <button type="button" class="ghost" id="noteArchiveMore" style="width:100%;margin-top:10px;display:none;">Show older</button>
+    </div>
+
+    <button type="button" class="row-entry" id="rowEntry">Had a row?</button>
+
+    <!-- kept for the script that fills it; the live skin hides it (see CSS) -->
+    <div class="card" id="quoteCard">
+      <h2>Quote of the moment</h2>
+      <div class="quote-box">
+        <div class="q" id="quoteText">"Loading…"</div>
+        <div class="a" id="quoteAuthor"></div>
+      </div>
+      <button class="ghost" id="newQuoteBtn" style="width:100%;margin-top:10px;">New quote</button>
     </div>
   </div>
 
@@ -12948,7 +13020,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 186;
+  var BUILD_NUM = 188;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14721,6 +14793,13 @@
        whose task it is. */
     row.className = "task" + (t.status==="done" ? " done" : "") +
       taskUrgencyClass(t) + " who-" + (t.assignedTo || "both");
+    /* BUILD 188: "something with the design the more overdue it is" - a rash
+       that spreads. Three buckets off the days late: 1-3 a tinted rim, 4-14 the
+       rim deepens and a coral wash creeps in from the left, 15+ it's inflamed. */
+    if(t.status === "open" && t.dueDate && t.dueDate < todayISO()){
+      var lateDays = Math.round((Date.parse(todayISO() + "T12:00:00") - Date.parse(t.dueDate + "T12:00:00")) / 86400000);
+      row.dataset.late = lateDays >= 15 ? "3" : (lateDays >= 4 ? "2" : "1");
+    }
     var check = document.createElement("div");
     check.className = "check";
     check.textContent = t.status==="done" ? "✓" : "";
@@ -14754,11 +14833,12 @@
        thing in this row that is genuinely ordinal - so it gets a shape that is ordinal
        too. Three rising bars, lit to the level, like signal strength. The word stays for
        anyone listening rather than looking. */
-    var diffRank = t.difficulty === "hard" ? 3 : (t.difficulty === "medium" ? 2 : 1);
-    var diffTag = '<span class="diff-pips diff-' + escapeHtml(t.difficulty) +
-      '" role="img" aria-label="' + escapeHtml(tierLabel) + '" title="' + escapeHtml(tierLabel) + '">' +
-      [1,2,3].map(function(n){ return '<i' + (n <= diffRank ? ' class="on"' : '') + '></i>'; }).join("") +
-      '</span>';
+    /* BUILD 188, Moody: "the bar diagram isn't working". Signal bars are a
+       metaphor for reception, not effort. How hard a task is, in WeDO, IS how
+       much it pays - so the level reads as its word in its level's colour
+       (neutral / warm / coral, the 174 ramp) and the number it's worth. */
+    var diffTag = '<span class="diff-lvl diff-' + escapeHtml(t.difficulty) + '" title="' + escapeHtml(tierLabel) + '">' +
+      escapeHtml(tierLabel) + '<b>+' + (DIFF_POINTS[t.difficulty] || 10) + '</b></span>';
     var repeatTag = (t.repeat && t.repeat!=="none") ? ' <span class="repeat-tag">' + icon("refresh", 10, "rt-i") + ' '+t.repeat+'</span>' : '';
     var priceTag = "";
     var totalP = taskTotal(t);
@@ -14806,7 +14886,7 @@
        "For" / "Moody", with the second word falling outside the pill row. It is one
        phrase; it wraps as one phrase now. */
     meta.innerHTML = diffTag + repeatTag + failTag + priceTag + dueDateTag(t) +
-      '<span class="meta-for">' + assignText + '</span>';
+      '<span class="meta-for for-' + escapeHtml(t.assignedTo || "both") + '">' + assignText + '</span>';
     info.appendChild(title); info.appendChild(meta);
 
     /* BUILD 101 - three buttons stacked down the right of every row used to be what set
