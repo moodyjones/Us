@@ -110,7 +110,7 @@
     --grad-primary-a:#FF8E6F; --grad-primary-b:#F2603F; --on-primary:#1A0E09;
     --wash-a:rgba(255,107,94,.14);
     --wash-b:rgba(167,139,250,.13);
-    --wash-c:rgba(79,209,181,.05);
+    --wash-c:rgba(97,224,0,.05);
     --wash-deep:#2A1B33;   /* the single lift behind the top of the Original page */
     --grain:0;             /* the film grain belongs to the PE skin */
     --sh-shadow:rgba(0,0,0,.35); /* the colour of a cast shadow, which is black on
@@ -915,6 +915,55 @@
   .task-actions{display:flex;flex-direction:column;gap:4px;}
   .act-fail{color:var(--faint);}
   .act-fail:hover,.act-fail:active{color:var(--pink);}
+  /* ---- song of the day (Build 177) ---- */
+  .ticket-wrap{ margin:14px 16px 0; }
+  .ticket{ position:relative; display:flex; align-items:center; gap:12px;
+    background:var(--card); border:1px solid var(--line-2); border-radius:14px;
+    padding:12px 20px; }
+  .ticket::before,.ticket::after{ content:""; position:absolute; top:50%; width:16px;
+    height:16px; border-radius:50%; background:var(--bg); border:1px solid var(--line-2);
+    transform:translateY(-50%); }
+  .ticket::before{ left:-9px; } .ticket::after{ right:-9px; }
+  .tk-art{ width:46px; height:46px; border-radius:9px; object-fit:cover; flex:none;
+    background:var(--s3); display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:1.25rem; overflow:hidden; }
+  .tk-art img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tk-main{ flex:1; min-width:0; }
+  .tk-eyebrow{ font-family:var(--ui); font-size:0.625rem; font-weight:600;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-bottom:3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tk-title{ font-weight:650; font-size:0.9375rem; color:var(--text);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tk-sub{ font-size:0.75rem; color:var(--muted); margin-top:2px; }
+  .tk-side{ flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .tk-play{ width:40px; height:40px; border-radius:50%; border:0; background:var(--both);
+    color:var(--on-jade); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0; }
+  .tk-play:active{ transform:scale(.94); }
+  .tk-rate{ cursor:pointer; touch-action:manipulation; border:0; background:none; padding:2px; }
+  .tk-rate svg, .sb-rate svg{ display:block; }
+  .tk-rate-l{ font-family:var(--ui); font-size:0.625rem; color:var(--muted); text-align:center; }
+  .ticket.stub .tk-title{ color:var(--muted); font-weight:550; }
+  .tk-embed{ margin-top:10px; }
+  .tk-embed iframe{ width:100%; height:80px; border:0; border-radius:12px; display:block; }
+  .tk-form{ display:flex; gap:8px; margin-top:10px; }
+  .tk-form input{ flex:1; min-width:0; }
+  .tk-form .primary{ width:auto; padding:10px 16px; }
+  .sb-sub{ font-size:0.75rem; color:var(--muted); margin-bottom:8px; }
+  .sb-row{ display:flex; align-items:center; gap:10px; padding:9px 0;
+    border-bottom:1px solid var(--line); text-decoration:none; color:inherit; }
+  .sb-row:last-of-type{ border-bottom:0; }
+  .sb-art{ width:34px; height:34px; border-radius:7px; flex:none; background:var(--s3);
+    overflow:hidden; display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:0.875rem; }
+  .sb-art img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .sb-t{ flex:1; min-width:0; }
+  .sb-t .t1{ font-size:0.8125rem; font-weight:600; color:var(--text);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sb-t .t2{ font-size:0.6875rem; color:var(--muted); margin-top:1px; }
+  .sb-rate{ flex:none; }
+  .sb-note{ font-size:0.6875rem; color:var(--faint); margin-top:8px; text-align:center; }
+
   /* ---- monthly recap ---- */
   .recap-verdict{
     text-align:center;padding:16px 12px 16px;border-radius:var(--r-object);
@@ -1852,7 +1901,7 @@
   .diff-tag,.repeat-tag,.pending-pill,.bricked-pill,.tier-tag{
     font-size:var(--eyebrow);letter-spacing:.07em;padding:4px 8px;border-radius:6px;font-weight:800;
   }
-  .diff-easy{background:rgba(79,209,181,.14);color:var(--jade);}
+  .diff-easy{background:rgba(97,224,0,.14);color:var(--jade);}
   .diff-medium{background:rgba(240,193,75,.14);color:var(--gold);}
   .diff-hard{background:rgba(255,107,138,.15);color:var(--rose);}
   .price-tag{color:var(--muted);font-weight:600;}
@@ -1942,7 +1991,7 @@
   .alt-row{border-top:1px solid var(--line);padding:12px 0;}
   .alt-info a{font-size:0.75rem;font-weight:600;text-decoration:none;border-bottom:1px solid var(--line-2);}
   .alt-price{font-family:var(--display);font-weight:600;font-size:0.875rem;color:var(--gold);margin-top:4px;}
-  .tier-common{background:rgba(79,209,181,.14);color:var(--jade);}
+  .tier-common{background:rgba(97,224,0,.14);color:var(--jade);}
   .tier-uncommon{background:rgba(166,126,224,.16);color:var(--plum);}
   .tier-rare{background:rgba(240,193,75,.15);color:var(--gold);}
 
@@ -2089,7 +2138,7 @@
   .chal-wrap{max-width:460px;margin:var(--card-gap) auto 0;padding:0 var(--gutter);}
   .chal-card{
     background:linear-gradient(165deg,var(--chal-bg-a),var(--chal-bg-b));
-    border:1px solid rgba(79,209,181,.34);border-radius:18px;padding:16px 16px;
+    border:1px solid rgba(97,224,0,.34);border-radius:18px;padding:16px 16px;
     box-shadow:0 8px 26px rgba(38,30,45,.12);
   }
   .chal-top{display:flex;align-items:center;gap:12px;}
@@ -2111,7 +2160,7 @@
     transition:background .18s ease,border-color .18s ease,transform .12s ease;
   }
   .chal-p:active{transform:scale(.975);}
-  .chal-p.on{background:rgba(79,209,181,.17);border-color:rgba(79,209,181,.5);color:var(--chal-ink-hi);}
+  .chal-p.on{background:rgba(97,224,0,.17);border-color:rgba(97,224,0,.5);color:var(--chal-ink-hi);}
   .chal-p.mine{box-shadow:inset 0 0 0 1px var(--tint-edge);}
   .chal-p .tick{
     width:20px;height:20px;flex:0 0 auto;border-radius:50%;border:1.5px solid var(--tick-ring);
@@ -2164,14 +2213,14 @@
     display:flex;align-items:center;justify-content:center;
     background:var(--tint-2);color:var(--chal-future);border:1px solid var(--tint-edge);
   }
-  .tl-row .mk.yes{background:rgba(79,209,181,.2);color:var(--chal-today);border-color:rgba(79,209,181,.4);}
+  .tl-row .mk.yes{background:rgba(97,224,0,.2);color:var(--chal-today);border-color:rgba(97,224,0,.4);}
   .tl-sum{font-size:0.75rem;color:var(--chal-dim);text-align:center;padding:8px 0 4px;line-height:1.6;}
   .tl-sum b{color:var(--chal-ink);}
 
   /* the strip that appears on the linked to-do task */
   .task-chal{
     display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;border-radius:12px;
-    background:rgba(79,209,181,.12);border:1px solid rgba(79,209,181,.3);
+    background:rgba(97,224,0,.12);border:1px solid rgba(97,224,0,.3);
     font-size:0.75rem;color:var(--chal-badge);font-weight:600;
   }
   .task-chal .mini{display:flex;gap:4px;margin-left:auto;}
@@ -2184,9 +2233,9 @@
   .task-chal .mini span.yes{background:var(--jade);color:var(--on-jade);}
 
   /* ---- check-in ---- */
-  .checkin-card{background:linear-gradient(165deg,var(--chal-bg-a),var(--chal-bg-b));border-color:rgba(79,209,181,.34);}
+  .checkin-card{background:linear-gradient(165deg,var(--chal-bg-a),var(--chal-bg-b));border-color:rgba(97,224,0,.34);}
   .checkin-card.warning{background:linear-gradient(165deg,var(--chal-bg-warn),var(--chal-bg-warn-b));border-color:rgba(240,193,75,.42);}
-  .checkin-card.locked{background:linear-gradient(165deg,var(--chal-bg-lock),var(--chal-bg-b));border-color:rgba(79,209,181,.45);}
+  .checkin-card.locked{background:linear-gradient(165deg,var(--chal-bg-lock),var(--chal-bg-b));border-color:rgba(97,224,0,.45);}
   .code-display{
     background:var(--tint-3);border:1px solid var(--line);
     border-radius:18px;padding:16px;
@@ -2212,7 +2261,7 @@
     border:1px solid var(--line-2);border-radius:18px;padding:24px;
   }
   .quote-box .q{font-family:var(--display);font-style:italic;font-size:1rem;line-height:1.5;}
-  .daily-q-card{background:linear-gradient(165deg,var(--s2),var(--s3));border-color:rgba(79,209,181,.34);}
+  .daily-q-card{background:linear-gradient(165deg,var(--s2),var(--s3));border-color:rgba(97,224,0,.34);}
   .daily-q-card .q{font-family:var(--display);font-weight:600;font-size:1rem;line-height:1.45;letter-spacing:-0.015em;}
 
   /* ---- quest ---- */
@@ -2223,7 +2272,7 @@
     border-radius:18px;font-size:0.75rem;font-weight:600;padding:12px;
     background:var(--tint-2);border:1px solid var(--line-2);color:var(--muted);
   }
-  .quest-part.checked{background:rgba(79,209,181,.14);border-color:var(--jade);color:var(--jade);}
+  .quest-part.checked{background:rgba(97,224,0,.14);border-color:var(--jade);color:var(--jade);}
 
   /* ---- leaderboard ---- */
   .lb-row{border-bottom:1px solid var(--line);padding:12px 0;}
@@ -3559,6 +3608,7 @@
      on EVERY tab - the streak billboard followed you to Rewards and Notes, which
      is most of what "the home page is so cluttered" was. Same mechanism 142 used
      for the hero: they live on Today, which is where the day's news belongs. */
+  :root:not([data-view="today"]) #songTicket,
   :root:not([data-view="today"]) #repairCard,
   :root:not([data-view="today"]) #dryNovCard,
   :root:not([data-view="today"]) #milestoneCard,
@@ -4146,40 +4196,40 @@
      --------------------------------------------------------------------------- */
   :root{
     /* chips: each is a background and the ink that has to stay legible on it */
-    --chip-easy-bg:#2c4b3c;     --chip-easy-fg:#7ee2a8;
-    --chip-med-bg:#4b3d1e;      --chip-med-fg:var(--gold);
-    --chip-hard-bg:#452430;     --chip-hard-fg:var(--pink);
-    --chip-common-bg:#2c3e4b;   --chip-common-fg:#8fc6ff;
+    --chip-easy-bg:#2E2430;     --chip-easy-fg:#CBBFD4;
+    --chip-med-bg:#3A2A2C;      --chip-med-fg:#E5B9A6;
+    --chip-hard-bg:#45222A;     --chip-hard-fg:#FF9D8D;
+    --chip-common-bg:#2E2430;   --chip-common-fg:#BBAFC6;
     --chip-uncommon-bg:#3e2c4b; --chip-uncommon-fg:#c99bff;
     --chip-rare-bg:#4b3a1e;     --chip-rare-fg:var(--gold);
-    --chip-live-bg:#2c3e28;     --chip-live-fg:#a3e08a;
-    --chip-over-bg:#4a2020;     --chip-over-fg:#ff9d9d;
+    --chip-live-bg:#263612;     --chip-live-fg:#A4E662;
+    --chip-over-bg:#4a2020;     --chip-over-fg:#FF9D8D;
 
     /* the shared challenge and the check-in card: one slate-and-teal family */
-    --chal-ink:#cfe3de;         /* body copy on the card */
-    --chal-ink-hi:#dff6f0;      /* the same copy once a row is ticked */
-    --chal-dim:#8fa5a1;         /* secondary copy and the toggle */
-    --chal-eyebrow:#93a8a4;     /* the small uppercase label */
-    --chal-rail:#2c3a3f;        /* timeline dot body and its rail */
-    --chal-ring:#223038;        /* the halo a dot punches out of the card */
-    --chal-num:#7d918d;
-    --chal-date:#a8bcb8;
-    --chal-future:#8DA5A0;      /* days that have not happened yet. Was #5b6b68,
+    --chal-ink:#E4DAE6;         /* body copy on the card */
+    --chal-ink-hi:#F2EAF2;      /* the same copy once a row is ticked */
+    --chal-dim:#A294A8;         /* secondary copy and the toggle */
+    --chal-eyebrow:#A294A8;     /* the small uppercase label */
+    --chal-rail:#352939;        /* timeline dot body and its rail */
+    --chal-ring:#2A2030;        /* the halo a dot punches out of the card */
+    --chal-num:#978AA0;
+    --chal-date:#BBAFC2;
+    --chal-future:#8E8197;      /* days that have not happened yet. Was #5b6b68,
                                    which measured 2.44:1 on the card - below the
                                    floor for text since the day it was written. */
-    --chal-bg-a:#1f3038;        /* card gradient, top */
+    --chal-bg-a:#2B2133;        /* card gradient, top */
     --chal-bg-b:#221b29;        /* card gradient, bottom */
-    --chal-bg-lock:#1c3630;     /* locked check-in, top */
-    --chal-bg-warn:#3a3020;     /* a check-in about to lapse, top */
+    --chal-bg-lock:#253318;     /* locked check-in, top */
+    --chal-bg-warn:#3A2522;     /* a check-in about to lapse, top */
     --chal-bg-warn-b:#231c29;   /* and its bottom */
-    --chal-badge:#2c6b60;
-    --chal-badge-dim:#8aa8a2;
+    --chal-badge:#3C7A14;
+    --chal-badge-dim:#9A8DA2;
 
     /* ink that has to sit ON an accent, and the far end of an accent gradient */
     --on-teal:#0c2b25;          /* pressed trip tick, and the "today" pill */
     --on-gold:#2a1f14;          /* the two gold buttons */
     --grad-gold-b:#d19a24;      /* gold gradient, far end */
-    --chal-today:#7ce0c6;       /* NOT var(--jade-lift): that is #9FE8C8 under the
+    --chal-today:#8FE84A;       /* NOT var(--jade-lift): that is #9FE8C8 under the
                                    default skin, so pointing this at it would repaint
                                    the challenge card. Same hex, different job. */
     --overlay-ink:#fdf1f0;      /* caption text over a photo or a dark wash */
@@ -4326,22 +4376,22 @@
     --sh-3:0 24px 60px rgba(92,52,30,.18);
 
     /* ---- chips: a tinted ground and ink dark enough to read on it ---- */
-    --chip-easy-bg:#DEF2E5;     --chip-easy-fg:#0A6846;
-    --chip-med-bg:#FAEBCE;      --chip-med-fg:#80590A;
+    --chip-easy-bg:#F0EAF3;     --chip-easy-fg:#5D5066;
+    --chip-med-bg:#F7E7DD;      --chip-med-fg:#8A4A2E;
     --chip-hard-bg:#FBE1DF;     --chip-hard-fg:#A93422;
-    --chip-common-bg:#E1ECF8;   --chip-common-fg:#1B568F;
+    --chip-common-bg:#EFE9F2;   --chip-common-fg:#5D5066;
     --chip-uncommon-bg:#ECE3FA; --chip-uncommon-fg:#5F36A8;
     --chip-rare-bg:#FAEBCE;     --chip-rare-fg:#80590A;
     --chip-live-bg:#E3F1DB;     --chip-live-fg:#3A7322;
     --chip-over-bg:#FBDFDC;     --chip-over-fg:#A6362A;
 
     /* ---- the shared challenge: the same mint-and-ink family, inverted ---- */
-    --chal-ink:#2B4941;     --chal-ink-hi:#12342B;  --chal-dim:#4C6B62;
-    --chal-eyebrow:#4C6B62; --chal-rail:#CDE3DA;    --chal-ring:#E9F6F0;
-    --chal-num:#53716A;     --chal-date:#3D5F57;    --chal-future:#54736B;
-    --chal-bg-a:#E8F7EF;    --chal-bg-b:#FFFFFF;    --chal-bg-lock:#DBF1E6;
+    --chal-ink:#3A2F40;     --chal-ink-hi:#2A1F30;  --chal-dim:#6B5E74;
+    --chal-eyebrow:#6B5E74; --chal-rail:#E3D7E6;    --chal-ring:#F1EAF4;
+    --chal-num:#7A6D84;     --chal-date:#6B5E74;    --chal-future:#8A7D92;
+    --chal-bg-a:#F3ECF6;    --chal-bg-b:#FFFFFF;    --chal-bg-lock:#E9F3DC;
     --chal-bg-warn:#FDF2DB; --chal-bg-warn-b:#FFFFFF;
-    --chal-badge:#0B7A5E;   --chal-badge-dim:#4C7C70; --chal-today:#096B53;
+    --chal-badge:#378000;   --chal-badge-dim:#8A7D92; --chal-today:#378000;
 
     /* ---- the rest ---- */
     --overlay-ink:#FFFFFF;   /* over a photograph, which is dark either way */
@@ -6399,7 +6449,7 @@
        something: the word lands in plain ink, and THEN the O turns into the two of
        you. The old loader loop measures ".splash-mark path", finds nothing and does
        nothing - it was already wrapped in a try. -->
-  <svg class="wm wm-v splash-lockup" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.6,26.4) scale(4.2289,4.8088)"><path class="wm-u" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-u" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d="M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
+  <svg class="wm wm-v splash-lockup" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.1,70.5) scale(4.2117,4.2117)"><path class="wm-u" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-u" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d=" M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
   <!-- BUILD 134, rule 2: the wait is content. What was here was the slogan, which is
        the one line on the splash that is true of every couple who ever installed this.
        These three are true of exactly these two, and they are read off their own saved
@@ -6733,7 +6783,7 @@
          the lobes and reads as stretched; 790 shipped in 163 and was tighter than
          he wanted. At 850 the squeeze is not legible as distortion and the heart
          still sits in a letter's worth of space - 850 against the D's 586. -->
-    <svg class="wm wm-v wm-head" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.6,26.4) scale(4.2289,4.8088)"><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d="M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
+    <svg class="wm wm-v wm-head" viewBox="7.7529296875 -681 1499.2 1443.161767578125" fill="none" aria-hidden="true" focusable="false"><g class="wm-r1"><path class="wm-i" transform="translate(0,0)" d="M624.8639526367188 0.0 450.87646484375 -580.9749755859375 420.98748779296875 -681.0H575.6301879882812L753.61767578125 -91.3338623046875L673.6419067382812 -93.679443359375L825.0985107421875 -681.0H988.86474609375L800.802978515625 0.0ZM195.814697265625 0.0 7.7529296875 -681.0H171.5191650390625L322.97576904296875 -93.679443359375L243.0 -91.3338623046875L420.98748779296875 -681.0H575.6301879882812L546.5066528320312 -580.9749755859375L371.75372314453125 0.0Z"/><path class="wm-i" transform="translate(957.0,0)" d="M155.04925537109375 -263.61688232421875V-418.0867919921875H436.938232421875V-263.61688232421875ZM152.04925537109375 -526.5300903320312 213.32135009765625 -595.2713012695312V-79.76544189453125L147.04925537109375 -154.7044677734375H491.3455810546875V0.0H51.320556640625V-681.0H491.3455810546875V-526.5300903320312Z"/></g><g class="wm-r2"><path class="wm-i" transform="translate(0,749.1)" d="M51.320556640625 0.0V-681.0H294.45660400390625Q402.4073486328125 -681.0 479.0246276855469 -640.3827209472656Q555.6419067382812 -599.7654418945312 596.5801391601562 -523.6481628417969Q637.5183715820312 -447.5308837890625 637.5183715820312 -340.5308837890625Q637.5183715820312 -233.061767578125 596.4628601074219 -156.79632568359375Q555.4073486328125 -80.5308837890625 478.4073486328125 -40.26544189453125Q401.4073486328125 0.0 293.45660400390625 0.0ZM213.32135009765625 -90.37060546875 145.814697265625 -156.7662353515625H281.567626953125Q340.14776611328125 -156.7662353515625 382.40069580078125 -175.61181640625Q424.65362548828125 -194.4573974609375 448.0856018066406 -235.06216430664062Q471.517578125 -275.66693115234375 471.517578125 -340.5308837890625Q471.517578125 -404.691162109375 448.5856018066406 -445.2650451660156Q425.65362548828125 -485.83892822265625 383.40069580078125 -505.0363464355469Q341.14776611328125 -524.2337646484375 282.567626953125 -524.2337646484375H138.814697265625L213.32135009765625 -568.6536254882812Z"/><g transform="translate(631.1,70.5) scale(4.2117,4.2117)"><path class="wm-a" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path class="wm-b" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/><path class="wm-c" fill-rule="evenodd" d=" M 126.8 101.0 C 150.7 76.7 152.0 75.2 152.0 71.6 C 152.0 66.5 148.5 63.0 143.3 63.0 C 139.8 63.0 138.5 64.1 120.3 82.3 L 100.9 101.5 L 89.7 90.3 C 79.3 79.9 78.1 79.0 74.7 79.0 C 69.6 79.0 66.0 82.5 66.0 87.5 C 66.0 90.6 67.0 92.2 72.2 97.8 C 83.0 109.4 100.4 127.0 101.0 126.9 C 101.3 126.8 112.9 115.2 126.8 101.0 Z"/></g></g></svg>
     
   </h1>
 
@@ -6782,6 +6832,14 @@
        through. Today is the first card at full width; every day behind it is a card you
        swipe back to. The gaps are real days nobody posted, and they stay visible. -->
   <div class="duo-row" id="duoRow"></div>
+  <!-- BUILD 177 - SONG OF THE DAY. One of you picks a track each day (strict
+       alternate, so nobody can hog the aux). It rides a ticket under the photos;
+       the other person rates it by filling the WeDO heart. Every ticket is kept -
+       the songbook in Memories is the playlist. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <g id="wedoRate"><path fill="var(--rt-a,#C3A8F0)" fill-rule="evenodd" d="M 81.3 152.6 C 83.1 151.9 86.5 149.2 88.9 146.7 L 93.3 142.1 L 89.0 137.3 C 82.2 129.9 82.1 129.9 78.4 132.6 C 76.7 133.9 75.0 135.0 74.7 135.0 C 74.4 135.0 64.7 124.8 53.1 112.4 C 30.0 87.6 27.0 83.2 24.9 70.5 C 21.1 48.1 38.1 26.7 60.6 25.2 C 71.7 24.5 80.7 28.0 90.1 36.7 L 94.6 40.9 L 101.1 34.4 L 107.5 27.8 L 101.2 22.0 C 83.3 5.4 58.7 2.0 36.6 13.2 C 27.3 17.9 17.2 28.5 12.2 39.0 C 7.2 49.5 5.6 57.5 6.3 68.3 C 7.0 78.9 10.3 88.8 16.0 97.2 C 22.0 106.0 63.7 150.9 67.5 152.6 C 71.4 154.3 77.3 154.3 81.3 152.6 Z"/><path fill="var(--rt-b,#FF6F58)" fill-rule="evenodd" d="M 145.3 152.6 C 149.8 150.8 194.4 103.8 199.2 95.8 C 205.6 85.3 207.2 79.9 207.8 66.8 C 208.2 56.2 208.0 54.2 205.7 46.7 C 198.2 22.8 177.1 6.8 153.0 6.8 C 142.4 6.8 136.8 8.1 127.1 12.7 C 120.6 15.9 117.8 18.2 107.3 28.9 L 95.1 41.5 L 100.7 47.2 C 103.9 50.4 106.7 53.0 107.0 53.0 C 107.3 52.9 112.2 48.4 118.0 42.9 C 125.7 35.5 130.5 32.0 135.9 29.2 C 142.9 25.7 144.0 25.5 152.5 25.5 C 160.7 25.5 162.2 25.8 168.2 28.8 C 176.6 32.9 184.0 40.8 187.1 48.8 C 191.6 60.6 190.5 75.2 184.3 85.9 C 182.2 89.6 144.2 130.7 139.2 134.8 C 136.9 136.6 135.7 136.3 130.8 132.6 L 126.3 129.1 L 120.4 135.1 L 114.6 141.0 L 119.5 145.5 C 122.3 147.9 126.3 150.8 128.5 152.0 C 133.2 154.3 140.6 154.6 145.3 152.6 Z"/></g>
+  </defs></svg>
+  <div class="ticket-wrap" id="songTicket" style="display:none;"></div>
   <!-- The history runs under today rather than beside it. One rail holding a full-height
        hero card and a row of 128px day cards takes its height from the tallest item, so
        swiping to the history left a hero-sized hole under it. Today is today; the wall is
@@ -7272,6 +7330,15 @@
       </div>
       <div class="mem-grid" id="memGrid"></div>
       <div class="mem-note" id="memNote"></div>
+    </div>
+    <!-- Every song either of you has ever picked, with its rating - the playlist
+         in waiting. Follows the month navigator above. -->
+    <div class="card" id="songbook" style="display:none;">
+      <h3 style="margin:0 0 2px;">Songbook</h3>
+      <div class="sb-sub" id="sbSub"></div>
+      <div id="sbList"></div>
+      <button type="button" class="ghost" id="sbCopy" style="width:100%;margin-top:10px;">Copy this month&rsquo;s links</button>
+      <div class="sb-note">Paste them into a Spotify playlist to keep the month.</div>
     </div>
   </div>
 
@@ -8503,6 +8570,10 @@
       // The album holds a reference to each day instead, so the bytes stay alive in the gist
       // and the Memories tab has something to show.
       album: {},            // "YYYY-MM-DD" -> {pid: {photo, at:ISO}}
+      // SONG OF THE DAY (Build 177). One slot per date, picker alternates by
+      // calendar day. The track is set once; the rating belongs to the OTHER
+      // person. Kept forever - the songbook is the playlist.
+      songs: {},            // "YYYY-MM-DD" -> {picker,url,id,title,art,at,rating,ratedBy,ratedAt}
       // Every 2,500 points, every 50/100/250/500/1000 tasks, and 30/90/180/365 days on
       // WeDO. One record per key, never removed — see the MILESTONES block for why this
       // is stored rather than derived.
@@ -9277,7 +9348,7 @@
        hold var(), so they follow the skin like everything else. The glows stay literal:
        they carry an alpha, and there is no token for a tint. */
     easy:     {pieces: 7,  bank:"solo",     buzz:[12],
-               glow:"rgba(79,209,181,.50)",  dark:"rgba(10,16,14,.975)", mark:"var(--jade)"},
+               glow:"rgba(97,224,0,.50)",  dark:"rgba(10,16,14,.975)", mark:"var(--jade)"},
     medium:   {pieces:13,  bank:"solo",     buzz:[10,40,16], flash:true,
                glow:"rgba(240,193,75,.52)",  dark:"rgba(20,16,8,.975)",  mark:"var(--gold)"},
     hard:     {pieces:20,  bank:"solo",     buzz:[14,50,24], sweep:true,
@@ -11090,6 +11161,29 @@
       if(pick && pick.gist) m.calendar = pick; else delete m.calendar;
     })();
 
+    // Song of the day: the TRACK is first-write-wins (you can't re-pick over a
+    // synced song), the RATING is the rater's latest opinion from either phone.
+    (function(){
+      var out = {};
+      [L.songs, R.songs].forEach(function(o){
+        for(var d in (o || {})){
+          var x = o[d]; if(!x) continue;
+          var cur = out[d];
+          if(!cur){ out[d] = JSON.parse(JSON.stringify(x)); continue; }
+          if(x.at && (!cur.at || String(x.at) < String(cur.at))){
+            ["picker","url","id","title","art","at"].forEach(function(k){
+              if(x[k] != null) cur[k] = x[k];
+            });
+          }
+          if(!cur.title && x.title){ cur.title = x.title; cur.art = cur.art || x.art || ""; }
+          if(x.ratedAt && (!cur.ratedAt || String(x.ratedAt) > String(cur.ratedAt))){
+            cur.rating = x.rating; cur.ratedAt = x.ratedAt; cur.ratedBy = x.ratedBy;
+          }
+        }
+      });
+      if(Object.keys(out).length) m.songs = out; else delete m.songs;
+    })();
+
     m.people = unionById(base.people, other.people, {});
     m.lists = unionById(base.lists, other.lists, {});
     m.tasks = mergeTasks(base.tasks, other.tasks, tomb);
@@ -12595,7 +12689,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 173;
+  var BUILD_NUM = 177;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14545,7 +14639,7 @@
       // he'd asked for. Discoverability beats tidiness when the thing is invisible.
       var startBtn = document.createElement("button");
       startBtn.className = "task-chal";
-      startBtn.style.cssText = "width:100%;cursor:pointer;background:rgba(79,209,181,.07);";
+      startBtn.style.cssText = "width:100%;cursor:pointer;background:rgba(97,224,0,.07);";
       startBtn.innerHTML = '<span>\uD83C\uDF31</span><span>Make this a daily challenge</span>';
       startBtn.addEventListener("click", function(){
         openChallengeModal(t.id, t.title);
@@ -18174,6 +18268,22 @@
       }
     }catch(e){}
 
+    // --- song of the day: your pick missing, or theirs waiting on your ears ---
+    try{
+      var sg = (state.songs || {})[today];
+      var sgTurn = sg ? sg.picker : songTurnFor(today);
+      if(!sg && sgTurn === me && hour >= 10){
+        out.push({kind:"save", key:"song-pick", urgency: 60,
+          title:"Your song day",
+          body: personName(otherPerson(me)) + " gets to rate whatever you pick."});
+      }
+      if(sg && sg.picker !== me && !sg.rating && hour >= 12){
+        out.push({kind:"save", key:"song-rate", urgency: 55,
+          title: personName(sg.picker) + " sent a song",
+          body:"Play the ticket and fill the heart."});
+      }
+    }catch(e){}
+
     // --- routine: one gentle one, in their own window ---
     try{
       var openTasks = (state.tasks || []).filter(function(t){ return t && t.status === "open"; }).length;
@@ -19023,6 +19133,10 @@
         var dn = challengeDayNumber(chal, today);
         if(dn >= 1 && dn <= chal.days){
           var on = challengeChecked(chal, p.id, today);
+          /* BUILD 174: "why is there a check mark on the photos" - a hollow grey
+             tick on RAE's photo answers nothing Moody can act on. Hers renders
+             only once it is filled (news); your own always does (a button). */
+          if(on || isMe){
           var mark = document.createElement("span");
           mark.className = "duo-chal is-" + p.id + (on ? " on" : "") + (isMe ? " mine" : "");
           mark.innerHTML = icon("check", 12, "dc-i", 3);
@@ -19032,6 +19146,7 @@
             " marked today on " + (chal.title || "the challenge"));
           if(isMe) mark.title = on ? "Marked today \u2014 tap to undo" : "Tap to mark today";
           frame.appendChild(mark);
+          }
         }
       }
       slot.appendChild(frame);
@@ -20345,6 +20460,33 @@
       (st.bothDays === 1 ? "day" : "days") + " you both posted a photo");
     if(ms) html += '<div class="recap-sec"><h4>Milestones</h4>' + ms + '</div>';
 
+    // songs of the month: the aux verdict
+    try{
+      var sdays = Object.keys(state.songs || {}).filter(function(d){ return d.slice(0, 7) === mk; }).sort();
+      if(sdays.length){
+        var sr = "";
+        var ratedD = sdays.filter(function(d){ return state.songs[d].rating; });
+        sr += recapLine("\uD83C\uDFB6", "<b>" + sdays.length + "</b> " +
+          (sdays.length === 1 ? "song" : "songs") + " traded" +
+          (ratedD.length ? " \u00B7 " + (ratedD.reduce(function(a, d){ return a + state.songs[d].rating; }, 0) / ratedD.length).toFixed(1) + "/5 average" : ""));
+        if(ratedD.length){
+          var best = ratedD.slice().sort(function(a, b){ return state.songs[b].rating - state.songs[a].rating; })[0];
+          var eb = state.songs[best];
+          sr += recapLine("\uD83C\uDFC6", "Best rated: <b>" + escapeHtml(eb.title || "a mystery track") +
+            "</b> \u2014 " + eb.rating + "/5, picked by <b>" + escapeHtml(personName(eb.picker)) + "</b>");
+          if(ratedD.length > 1){
+            var worst = ratedD.slice().sort(function(a, b){ return state.songs[a].rating - state.songs[b].rating; })[0];
+            var ew = state.songs[worst];
+            if(ew.rating < eb.rating){
+              sr += recapLine("\uD83D\uDE48", "Toughest crowd: <b>" + escapeHtml(ew.title || "a mystery track") +
+                "</b> \u2014 " + ew.rating + "/5 for <b>" + escapeHtml(personName(ew.picker)) + "</b>");
+            }
+          }
+        }
+        html += '<div class="recap-sec"><h4>Songs</h4>' + sr + '</div>';
+      }
+    }catch(e){}
+
     // the odd numbers
     var fun = "";
     if(st.bigDay && st.bigCount > 1){
@@ -20724,6 +20866,7 @@
     var months = albumMonths();
     if(!memMonth || months.indexOf(memMonth) < 0) memMonth = months[months.length - 1];
     document.getElementById("memMonth").textContent = monthLabel(memMonth);
+    try{ renderSongbook(memMonth); }catch(e){}
 
     var idx = months.indexOf(memMonth);
     document.getElementById("memPrev").disabled = idx <= 0;
@@ -21943,6 +22086,197 @@
     document.getElementById("view-board").classList.toggle("on-photo", !!src);
   }
 
+  /* ================= SONG OF THE DAY (Build 177) =================
+     Strict alternate by calendar day - fair without state. The ticket lives
+     under the photos on Today; the rating is the other person's, as a WeDO
+     heart that fills in fifths (tap height = how much). Nothing here awards
+     points: taste is a gift, not a chore. */
+  var SONG_EPOCH = Date.parse("2026-01-01T12:00:00");
+  function songTurnFor(dateISO){
+    var days = Math.round((Date.parse(dateISO + "T12:00:00") - SONG_EPOCH) / 86400000);
+    var ids = state.people.slice(0, 2).map(function(p){ return p.id; });
+    return ids[((days % 2) + 2) % 2] || "p1";
+  }
+  function todaysSong(){ return (state.songs || {})[todayISO()] || null; }
+  function parseSpotifyTrack(s){
+    var m = /open\.spotify\.com\/(?:[a-z-]+\/)?track\/([A-Za-z0-9]{8,})/.exec(s || "") ||
+            /spotify:track:([A-Za-z0-9]{8,})/.exec(s || "");
+    return m ? m[1] : null;
+  }
+  function heartScaleSVG(level, w){
+    // the mark's own two hearts (no check), filling bottom-up in fifths
+    w = w || 52;
+    var h = Math.round(w * 148 / 202);
+    var cid = "hr" + (sgClipSeq++);
+    var fh = (level / 5) * 150;
+    return '<svg viewBox="5 5 204 150" width="' + w + '" height="' + h + '" aria-hidden="true">' +
+      '<g style="--rt-a:var(--line-2);--rt-b:var(--line-2)"><use href="#wedoRate"/></g>' +
+      '<clipPath id="' + cid + '"><rect x="0" y="' + (155 - fh) + '" width="215" height="' + (fh + 4) + '"/></clipPath>' +
+      '<g clip-path="url(#' + cid + ')"><use href="#wedoRate"/></g></svg>';
+  }
+  var sgClipSeq = 0, sgEmbedOpen = false, sgFormOpen = false, sgMetaTried = {};
+  function songMetaFetch(e){
+    if(!e || !e.id || e.title || sgMetaTried[e.id]) return;
+    sgMetaTried[e.id] = true;
+    fetch("https://open.spotify.com/oembed?url=" + encodeURIComponent(e.url))
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.title){ e.title = j.title; e.art = j.thumbnail_url || ""; save(); renderSongTicket(); }
+      }).catch(function(){});
+  }
+  function addTodaysSong(url, input){
+    var id = parseSpotifyTrack(url);
+    if(!id){
+      if(input){ input.style.borderColor = "var(--rae)"; input.placeholder = "That isn\u2019t a Spotify song link"; input.value = ""; }
+      return;
+    }
+    state.songs = state.songs || {};
+    state.songs[todayISO()] = {
+      picker: deviceOwner() || state.currentUser,
+      url: "https://open.spotify.com/track/" + id, id: id,
+      title: "", art: "", at: new Date().toISOString()
+    };
+    sgFormOpen = false; sgEmbedOpen = false;
+    save(); renderSongTicket();
+    songMetaFetch(state.songs[todayISO()]);
+  }
+  function rateSong(level){
+    var e = todaysSong(); if(!e) return;
+    var me = deviceOwner() || state.currentUser;
+    if(me === e.picker) return;                 // your taste isn't self-graded
+    e.rating = Math.max(1, Math.min(5, level));
+    e.ratedBy = me; e.ratedAt = new Date().toISOString();
+    save(); renderSongTicket();
+  }
+  function renderSongTicket(){
+    var wrap = document.getElementById("songTicket");
+    if(!wrap) return;
+    var today = todayISO();
+    var e = todaysSong();
+    var me = deviceOwner() || state.currentUser;
+    var turn = e ? e.picker : songTurnFor(today);
+    var mine = turn === me;
+    var turnName = personName(turn);
+    wrap.style.display = "";
+    var h = "";
+    var playSvg = '<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+    if(!e){
+      if(mine){
+        h = '<div class="ticket stub" id="tkBody" role="button" tabindex="0" aria-label="Add today\u2019s song">' +
+          '<div class="tk-art">\u266A</div><div class="tk-main">' +
+          '<div class="tk-eyebrow">Song of the day \u00B7 your pick</div>' +
+          '<div class="tk-title">Add today\u2019s track</div>' +
+          '<div class="tk-sub">Share \u2192 Copy link in Spotify, paste it here.</div></div>' +
+          '<div class="tk-side"><button type="button" class="tk-play" id="tkAdd" aria-label="Add a song">+</button></div></div>';
+        if(sgFormOpen){
+          h += '<div class="tk-form"><input type="url" id="tkUrl" inputmode="url" autocomplete="off" ' +
+            'placeholder="Paste a Spotify song link\u2026" aria-label="Spotify song link">' +
+            '<button type="button" class="primary" id="tkSave">Add</button></div>';
+        }
+      } else {
+        h = '<div class="ticket stub"><div class="tk-art">\u266A</div><div class="tk-main">' +
+          '<div class="tk-eyebrow">Song of the day \u00B7 ' + escapeHtml(turnName) + '\u2019s pick</div>' +
+          '<div class="tk-title">Waiting on ' + escapeHtml(turnName) + '\u2026</div></div></div>';
+      }
+    } else {
+      var iAmRater = me !== e.picker;
+      var title = e.title || "Open in Spotify";
+      var art = e.art ? '<img src="' + escapeHtml(e.art) + '" alt="">' : "\u266A";
+      var side;
+      if(iAmRater){
+        side = '<button type="button" class="tk-rate" id="tkRate" role="slider" tabindex="0" ' +
+          'aria-label="Rate the song" aria-valuemin="0" aria-valuemax="5" aria-valuenow="' + (e.rating || 0) + '">' +
+          heartScaleSVG(e.rating || 0, 52) + '</button>' +
+          '<div class="tk-rate-l">' + (e.rating ? e.rating + "/5" : "tap to rate") + '</div>';
+      } else {
+        side = '<button type="button" class="tk-play" id="tkPlay" aria-label="Play">' + playSvg + '</button>' +
+          (e.rating ? '<div class="tk-rate-l">' + escapeHtml(personName(e.ratedBy || otherPerson(e.picker))) + " " + e.rating + "/5</div>"
+                    : '<div class="tk-rate-l">not rated yet</div>');
+      }
+      h = '<div class="ticket" id="tkBody" role="button" tabindex="0" aria-expanded="' + (sgEmbedOpen ? "true" : "false") + '" ' +
+        'aria-label="' + (sgEmbedOpen ? "Hide" : "Show") + ' the player">' +
+        '<div class="tk-art">' + art + '</div><div class="tk-main">' +
+        '<div class="tk-eyebrow">Song of the day \u00B7 from ' + escapeHtml(personName(e.picker)) + '</div>' +
+        '<div class="tk-title">' + escapeHtml(title) + '</div></div>' +
+        '<div class="tk-side">' + side + '</div></div>';
+      if(sgEmbedOpen){
+        h += '<div class="tk-embed"><iframe src="https://open.spotify.com/embed/track/' +
+          encodeURIComponent(e.id) + '" loading="lazy" allow="encrypted-media" title="Spotify player"></iframe></div>';
+      }
+      songMetaFetch(e);
+    }
+    wrap.innerHTML = h;
+    var add = document.getElementById("tkAdd");
+    if(add) add.onclick = function(ev){ ev.stopPropagation(); sgFormOpen = !sgFormOpen; renderSongTicket();
+      var inp = document.getElementById("tkUrl"); if(inp) inp.focus(); };
+    var body = document.getElementById("tkBody");
+    if(body && !e && mine) body.onclick = add ? add.onclick : null;
+    if(body && e){
+      body.onclick = function(){ sgEmbedOpen = !sgEmbedOpen; renderSongTicket(); };
+      body.onkeydown = function(ev){ if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); body.onclick(); } };
+    }
+    var sv = document.getElementById("tkSave");
+    if(sv) sv.onclick = function(){ var inp = document.getElementById("tkUrl");
+      addTodaysSong(inp ? inp.value.trim() : "", inp); };
+    var inp0 = document.getElementById("tkUrl");
+    if(inp0) inp0.onkeydown = function(ev){ if(ev.key === "Enter"){ ev.preventDefault();
+      addTodaysSong(inp0.value.trim(), inp0); } };
+    var rt = document.getElementById("tkRate");
+    if(rt){
+      rt.onclick = function(ev){
+        if(ev.stopPropagation) ev.stopPropagation();   // rating is not a play/pause
+        var r = rt.getBoundingClientRect();
+        var lv = 5 - Math.floor(((ev.clientY - r.top) / r.height) * 5);
+        rateSong(Math.max(1, Math.min(5, lv)));
+      };
+      rt.onkeydown = function(ev){
+        var e2 = todaysSong(); var cur = (e2 && e2.rating) || 0;
+        if(ev.key === "ArrowUp" || ev.key === "ArrowRight"){ ev.preventDefault(); rateSong(cur + 1); }
+        if(ev.key === "ArrowDown" || ev.key === "ArrowLeft"){ ev.preventDefault(); rateSong(cur - 1 || 1); }
+      };
+    }
+    var pl = document.getElementById("tkPlay");
+    if(pl) pl.onclick = function(ev){ ev.stopPropagation(); sgEmbedOpen = !sgEmbedOpen; renderSongTicket(); };
+  }
+  function renderSongbook(mk){
+    var card = document.getElementById("songbook");
+    if(!card) return;
+    mk = mk || memMonth;
+    var days = Object.keys(state.songs || {}).filter(function(d){
+      return mk ? d.slice(0, 7) === mk : true;
+    }).sort();
+    if(!days.length){ card.style.display = "none"; return; }
+    card.style.display = "";
+    var rated = days.filter(function(d){ return state.songs[d].rating; });
+    document.getElementById("sbSub").textContent =
+      days.length + (days.length === 1 ? " song" : " songs") +
+      (rated.length ? " \u00B7 " + (rated.reduce(function(a, d){ return a + state.songs[d].rating; }, 0) / rated.length).toFixed(1) + "/5 average" : "");
+    var list = document.getElementById("sbList");
+    list.innerHTML = days.map(function(d){
+      var e = state.songs[d];
+      var art = e.art ? '<img src="' + escapeHtml(e.art) + '" alt="">' : "\u266A";
+      var who = e.picker === "p1" ? "var(--moody)" : "var(--rae)";
+      return '<a class="sb-row" href="' + escapeHtml(e.url) + '" target="_blank" rel="noopener">' +
+        '<div class="sb-art">' + art + '</div>' +
+        '<div class="sb-t"><div class="t1">' + escapeHtml(e.title || "Open in Spotify") + '</div>' +
+        '<div class="t2"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + who + ';margin-right:5px;"></span>' +
+        escapeHtml(personName(e.picker)) + " \u00B7 " + d.slice(8) + "/" + d.slice(5, 7) + '</div></div>' +
+        '<div class="sb-rate">' + (e.rating ? heartScaleSVG(e.rating, 32) : "") + '</div></a>';
+    }).join("");
+    var cp = document.getElementById("sbCopy");
+    cp.onclick = function(){
+      var links = days.map(function(d){ return state.songs[d].url; }).join("\n");
+      try{
+        navigator.clipboard.writeText(links).then(function(){ cp.textContent = "Copied \u2713"; });
+      }catch(err){
+        var ta = document.createElement("textarea"); ta.value = links; document.body.appendChild(ta);
+        ta.select(); try{ document.execCommand("copy"); cp.textContent = "Copied \u2713"; }catch(e2){}
+        document.body.removeChild(ta);
+      }
+      setTimeout(function(){ cp.textContent = "Copy this month\u2019s links"; }, 1800);
+    };
+  }
+
   function renderAll(){
     // Cheap, and it catches a crossing that happened on the other phone and arrived by
     // sync — a milestone belongs to the pair, so either phone noticing is enough.
@@ -21970,6 +22304,7 @@
     renderNudges();
     renderSwitcher();
     renderDailyPhotos();
+    renderSongTicket();
     renderHero();
     renderCheckin();
     renderListSwitcher();
@@ -23569,7 +23904,7 @@
          values are the SAME hues from the Daylight block (jade #0B7A5E, violet #5A3BC4,
          persimmon #C9482A) and end warm rather than at transparent, because a wash that
          fades to nothing over cream turns grey on the way out. */
-      ":root{--w3-clear-wash:linear-gradient(160deg,rgba(79,209,181,.14),rgba(167,139,250,.08) 60%,transparent);}",
+      ":root{--w3-clear-wash:linear-gradient(160deg,rgba(97,224,0,.14),rgba(167,139,250,.08) 60%,transparent);}",
       ":root[data-mode=\"light\"]{--w3-clear-wash:linear-gradient(160deg,rgba(11,122,94,.10),rgba(90,59,196,.055) 55%,rgba(201,72,42,.04));}",
       ".w3-clear{text-align:left;padding:16px 16px;border-radius:18px;border:1px solid var(--line-2,var(--border));",
       "  background:var(--w3-clear-wash);}",
