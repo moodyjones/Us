@@ -4626,7 +4626,7 @@
       radial-gradient(118% 62% at 8% -8%,  var(--wash-a) 0%, transparent 58%),
       radial-gradient(118% 62% at 94% -4%, var(--wash-b) 0%, transparent 58%);
     padding:var(--gutter);
-    animation:splash-out .52s cubic-bezier(.4,0,.6,1) 2.18s both;
+    animation:splash-out .52s cubic-bezier(.4,0,.6,1) 4.25s both;
   }
   .splash.gone{ display:none; }
   /* a tap anywhere ends it early - the class short-circuits every delay below */
@@ -4674,7 +4674,8 @@
      animatable, so "the word becomes the two of you" costs two keyframes and no
      geometry. The arcs start as --text so there is no flash of accent before the
      word has even landed. */
-  .splash-lockup{ width:min(46vw,188px); height:auto; }
+  .splash-lockup{ width:min(46vw,188px); height:auto;
+    animation:lock-thunk .32s cubic-bezier(.34,1.56,.64,1) 1.70s both; }
   .splash-lockup .wm-r1{ animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) .10s both; }
   .splash-lockup .wm-r2{ animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) .24s both; }
   /* BUILD 173: the colour-arrival is an OPACITY crossfade now, over ink copies
@@ -4684,8 +4685,44 @@
      a white heart. "The animation at the beginning needs fixing" was this.
      Opacity has no such caveat anywhere. */
   .splash-lockup .wm-u{ fill:var(--text); }
-  .splash-lockup .wm-a{ opacity:0; animation:wm-in .5s cubic-bezier(.22,.9,.3,1) .86s both; }
-  .splash-lockup .wm-b{ opacity:0; animation:wm-in .5s cubic-bezier(.22,.9,.3,1) .98s both; }
+  /* BUILD 181: the crossfade becomes the STORY. His heart flies in from the
+     left, hers from the right, they interlock with a thunk the whole lockup
+     feels, and THEN the check lands - two people, linked, producing the thing.
+     The ink underlays from the 173 crossfade stay in the DOM (the gate counts
+     them) but no longer paint: nothing fades any more, things ARRIVE. */
+  .splash-lockup .wm-u{ opacity:0; }
+  .splash-lockup .wm-a, .splash-lockup .wm-b{
+    opacity:0; transform-box:fill-box; transform-origin:50% 50%;
+  }
+  .splash-lockup .wm-a{ animation:fly-a .62s cubic-bezier(.3,1.25,.4,1) .98s both; }
+  .splash-lockup .wm-b{ animation:fly-b .62s cubic-bezier(.3,1.25,.4,1) 1.14s both; }
+  @keyframes fly-a{
+    0%{ opacity:0; transform:translateX(-58%) rotate(-14deg); }
+    55%{ opacity:1; }
+    78%{ transform:translateX(2.5%) rotate(1.5deg); }
+    100%{ opacity:1; transform:none; }
+  }
+  @keyframes fly-b{
+    0%{ opacity:0; transform:translateX(58%) rotate(14deg); }
+    55%{ opacity:1; }
+    78%{ transform:translateX(-2.5%) rotate(-1.5deg); }
+    100%{ opacity:1; transform:none; }
+  }
+  @keyframes lock-thunk{
+    0%{ transform:scale(1); } 45%{ transform:scale(1.018); } 100%{ transform:scale(1); }
+  }
+  /* BUILD 179: the check is the thing the two of you produce, so it arrives LAST
+     and it lands - a spring pop, not a fade. transform-box makes the scale happen
+     about the check itself rather than the giant lockup viewBox. */
+  .splash-lockup .wm-c{
+    opacity:0; transform-box:fill-box; transform-origin:50% 50%;
+    animation:wm-pop .5s cubic-bezier(.34,1.56,.64,1) 1.88s both;
+  }
+  @keyframes wm-pop{
+    0%{ opacity:0; transform:scale(.25); }
+    62%{ opacity:1; transform:scale(1.16); }
+    100%{ opacity:1; transform:scale(1); }
+  }
   /* the check stays ink throughout - it is what the two of them produce, so it
      does not need to arrive in anybody's colour */
   @keyframes wm-in{ to{ opacity:1; } }
@@ -4707,8 +4744,9 @@
        rises - and it is off the screen in a third of the time. */
     .splash{ animation:splash-out .3s linear .5s both; }
     .splash-mark, .splash-mark path, .splash-word span, .splash-line,
-    .splash-lockup .wm-r1, .splash-lockup .wm-r2,
-    .splash-lockup .wm-a, .splash-lockup .wm-b{
+    .splash-lockup, .splash-lockup .wm-r1, .splash-lockup .wm-r2,
+    .splash-lockup .wm-a, .splash-lockup .wm-b,
+    .splash-lockup .wm-c, .splash-motto span, .splash-motto2{
       animation:none; stroke-dashoffset:0; opacity:1; transform:none;
     }
   }
@@ -5212,7 +5250,7 @@
   .splash-pill i{
     display:block; height:100%; width:100%; border-radius:2px; transform-origin:left;
     background:linear-gradient(90deg, var(--moody), var(--rae));
-    animation:splash-fill 2.1s cubic-bezier(.3,.7,.3,1) .1s both;
+    animation:splash-fill 1.4s cubic-bezier(.3,.7,.3,1) 2.6s both;
   }
   @keyframes splash-fill{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
   @media (prefers-reduced-motion: reduce){
@@ -5228,23 +5266,39 @@
     font-family:var(--ui, -apple-system, sans-serif);
     font-size:0.875rem; font-weight:600; letter-spacing:.01em;
     color:var(--text); text-align:center;
-    animation:splash-rise .46s cubic-bezier(.22,.9,.3,1) 1.42s both;
   }
   .splash-motto span{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
-  .splash-motto .sp-red{ color:var(--moody); }
-  .splash-motto .sp-purple{ color:var(--rae); }
-  .splash-motto .sp-h{ width:13px; height:13px; flex:none; }
-  /* Only the two words that name a person keep their colour; "Grow." is the one both
-     of them do, so it sits in the text tier rather than borrowing somebody's hue. */
-  .splash-motto .sp-red:last-child{ color:var(--text); }
-  .splash-motto .sp-red:last-child .sp-h{ color:var(--moody); }
+  /* BUILD 179, Moody: "the second slogan is missing". It is two lines on purpose:
+     "Plan. Do. Grow." is the rhythm, "Together, to get there." is the sentence -
+     the header declutter (133) hid the sentence and the splash never picked it up.
+     The rhythm lands word by word; the sentence follows whole, in the display face. */
+  .splash-motto span{ opacity:0; animation:splash-rise .4s cubic-bezier(.22,.9,.3,1) both; }
+  .splash-motto span:nth-child(1){ animation-delay:2.08s; }
+  .splash-motto span:nth-child(2){ animation-delay:2.20s; }
+  .splash-motto span:nth-child(3){ animation-delay:2.32s; }
+  .splash-motto2{
+    font-family:var(--display);
+    font-size:0.9375rem; font-weight:600; letter-spacing:-.01em;
+    color:var(--muted); text-align:center; margin-top:-8px;
+    animation:splash-rise .5s cubic-bezier(.22,.9,.3,1) 2.62s both;
+  }
+  /* BUILD 180, Moody: "why is Do. coral instead of the green?" Because this rule
+     was written in 135, before lime existed, and nobody re-read it when the win
+     colour arrived in 168. The motto sits DIRECTLY UNDER the mark, and the mark
+     reads left to right: lilac heart, lime check, coral heart. The words caption
+     it in the same order - Plan is hers to start or his, Do is THE CHECK (it even
+     lives inside the O of "DO"), Grow is the other one of you. --jade rather than
+     --both: jade is the text-safe lime in the light theme (4.5:1), same hex in dark. */
+  .splash-motto .w-plan{ color:var(--moody); }
+  .splash-motto .w-do{   color:var(--jade); }
+  .splash-motto .w-grow{ color:var(--rae); }
 
   /* The stack is one line longer than it was, so the cascade and the curtain both
      move back a quarter second - the pill was finishing with 0.38s to spare and
      would now be arriving as the curtain started. */
-  .splash-receipts{ animation-delay:1.64s; }
-  .splash-pill{ animation-delay:1.82s; }
-  .splash{ animation-delay:2.42s; }
+  .splash-receipts{ animation-delay:3.02s; }
+  .splash-pill{ animation-delay:3.18s; }
+  .splash{ animation-delay:4.25s; }
 
 
   /* ===========================================================================
@@ -5427,6 +5481,10 @@
     font-family:var(--mono); font-size:0.625rem; letter-spacing:.1em;
     text-transform:uppercase; margin-top:2px;
   }
+  /* "TODAY" was lime - the win colour spent on a timestamp, twice, on the one
+     screen where lime should mean exactly one thing. The photo being there is
+     the news; the word under it is metadata. */
+  :root[data-skin="pe"] .duo-when.today{ color:var(--muted); font-weight:600; }
   :root[data-skin="pe"] .duo-note{ font-size:0.8125rem; line-height:1.45; }
   :root[data-skin="pe"] .duo-q{ font-size:0.75rem; }
   :root[data-skin="pe"] .duo-health{ font-size:0.625rem; letter-spacing:.08em; }
@@ -5457,18 +5515,18 @@
   }
 
 
-  /* The mark was appended inside .duo-frame, which clips to a circle - so a 26px
-     badge at the lower right showed as a 4px crescent. The frame keeps its round
-     shape; the clipping moves onto the image itself, which is the only child that
-     needed it. */
+  /* BUILD 179, Moody: "why are our photos round but the frame squared - terrible
+     design". He is right: the frame became an 18px card in 142 and the photo kept
+     the circle it had when the frame WAS a circle. Nested radii rule: inner =
+     outer - inset, so 18 - 1 = 17. The frame stays overflow:visible for the badge. */
   :root[data-skin="pe"] .duo-frame{ overflow:visible; }
-  :root[data-skin="pe"] .duo-frame img{ border-radius:50%; }
-  /* 85.4% is where a circle's edge crosses its own 45 degree line, so the mark sits
-     ON the rim rather than floating inside or outside it. */
+  :root[data-skin="pe"] .duo-frame img{ border-radius:17px; }
+  /* The 78%/78% placement was circle-rim math. On a card the badge belongs on the
+     corner, half over the edge - the standard avatar-badge position. */
   :root[data-skin="pe"] .duo-chal{
-    right:auto; bottom:auto;
-    left:78%; top:78%;
-    transform:translate(-50%, -50%);
+    left:auto; top:auto;
+    right:-5px; bottom:-5px;
+    transform:none;
   }
 
 
@@ -5719,6 +5777,7 @@
      deliberately cut by the edge: a card cut off at the edge says swipe, and it
      is the only instruction this needs.
      =========================================================================== */
+  :root[data-skin="pe"] .daywall{ display:none; }
   .daywall{
     display:flex; align-items:flex-start; gap:var(--sp-5);
     overflow-x:auto; overflow-y:hidden;
@@ -6462,10 +6521,11 @@
        hydrated through data-ico: this markup is painted before the app's icon code has
        parsed, and a race there shows two empty gaps where the hearts should be. -->
   <div class="splash-motto" id="splashMotto">
-    <span class="sp-red">Plan.</span>
-    <span class="sp-purple">Do.</span>
-    <span class="sp-red">Grow.</span>
+    <span class="w-plan">Plan.</span>
+    <span class="w-do">Do.</span>
+    <span class="w-grow">Grow.</span>
   </div>
+  <div class="splash-motto2">Together, to get there.</div>
   <div class="splash-receipts" id="splashReceipts" hidden></div>
   <div class="splash-pill" aria-hidden="true"><i></i></div>
 </div>
@@ -6542,7 +6602,7 @@
   el.addEventListener("animationend", function(ev){
     if(ev.target === el) end();
   });
-  setTimeout(end, 3300);
+  setTimeout(end, 5700);
 })();</script>
 <!-- BUILD 101 — pull down to sync.
 
@@ -12689,7 +12749,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 177;
+  var BUILD_NUM = 181;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -22138,15 +22198,21 @@
     };
     sgFormOpen = false; sgEmbedOpen = false;
     save(); renderSongTicket();
+    // the feed line + the push, through the one pipe everything else uses.
+    // No title on purpose: the push says there IS a song, the app plays it.
+    try{ announce("picked today's song \uD83C\uDFB5"); }catch(e){}
     songMetaFetch(state.songs[todayISO()]);
   }
   function rateSong(level){
     var e = todaysSong(); if(!e) return;
     var me = deviceOwner() || state.currentUser;
     if(me === e.picker) return;                 // your taste isn't self-graded
+    var firstVerdict = !e.rating;
     e.rating = Math.max(1, Math.min(5, level));
     e.ratedBy = me; e.ratedAt = new Date().toISOString();
     save(); renderSongTicket();
+    // first verdict only - adjusting a tap from 4 to 5 is not two news items
+    if(firstVerdict){ try{ announce("rated today's song " + e.rating + "/5 \u2764\uFE0F"); }catch(e2){} }
   }
   function renderSongTicket(){
     var wrap = document.getElementById("songTicket");
@@ -23864,7 +23930,9 @@
          property forces layout on every frame of every tab change, and the six tabs are
          equal width anyway - so the animation never had anything to show. What travels
          is the transform, which is the only thing that ever moved. */
-      "  transition:transform var(--mo-200) var(--ease-out);}",
+      /* BUILD 179: "funner". The glider gets a real spring - one overshoot,
+         settled in a third of a second - and the icon it lands on pops. */
+      "  transition:transform 340ms cubic-bezier(.3,1.42,.4,1);}",
       ".tabs .w3-ind::after{content:'';position:absolute;left:50%;bottom:4px;width:14px;height:3px;margin-left:-7px;",
       "  border-radius:3px;background:var(--w3-col,var(--jade));}",
       ".tabs.w3-on button{position:relative;z-index:1;}",
@@ -23938,6 +24006,13 @@
       if(!a || !a.offsetWidth){ ind.style.width = "0px"; return; }
       ind.style.width = a.offsetWidth + "px";
       ind.style.height = a.offsetHeight + "px";
+      var nx = a.offsetLeft;
+      if(ind._px != null && ind._px !== nx){
+        ind.classList.remove("mv"); void ind.offsetWidth; ind.classList.add("mv");
+        clearTimeout(ind._mvT);
+        ind._mvT = setTimeout(function(){ ind.classList.remove("mv"); }, 400);
+      }
+      ind._px = nx;
       ind.style.transform = "translate(" + a.offsetLeft + "px," + a.offsetTop + "px)";
       tabs.style.setProperty("--w3-col", colFor(ownerId()));
     }
@@ -24597,6 +24672,11 @@
   }
 
   function renderDayWall(){
+    /* BUILD 179, Moody: "the row of photos for everyday is not useful or needed."
+       The wall came in at 142 as navigation-by-days; in practice it is a second,
+       smaller Memories grid stapled under the hero. Memories is the archive. The
+       render cost (a month of decodes on every renderAll) goes with it. */
+    return;
     var wall = document.getElementById("dayWall");
     if(!wall) return;
     // today's card is markup, not generated - everything the hero already does lives in it
@@ -24905,6 +24985,27 @@
       ".tabs.w3-on .w3-ind::after,",
       ":root[data-skin=\"pe\"] .tabs.w3-on .w3-ind::after{ display:none; }",
       ".tabs button{ position:relative; z-index:1; }",
+      /* BUILD 181: one generic pop becomes six - each icon celebrates its
+         selection in its own glyph's language. The sun spins up, the check
+         nods, the gift bounces, the trophy cheers, the mail flap opens, the
+         photo settles square. Same spring family, same 0.5s budget. */
+      ".tabs button:active .wd-i{ transform:scale(.88); transition:transform 90ms var(--ease-out); }",
+      ".tabs button[data-tab=\"today\"].active .wd-i{ animation:ico-spin .55s cubic-bezier(.3,1.3,.4,1); }",
+      "@keyframes ico-spin{ 0%{ transform:rotate(-80deg) scale(.7); } 100%{ transform:rotate(0) scale(1); } }",
+      ".tabs button[data-tab=\"tasks\"].active .wd-i{ animation:ico-nod .45s cubic-bezier(.34,1.56,.64,1); }",
+      "@keyframes ico-nod{ 0%{ transform:scale(.6) rotate(12deg); } 60%{ transform:scale(1.18) rotate(-4deg); } 100%{ transform:scale(1); } }",
+      ".tabs button[data-tab=\"rewards\"].active .wd-i{ animation:ico-bounce .5s cubic-bezier(.34,1.56,.64,1); }",
+      "@keyframes ico-bounce{ 0%{ transform:translateY(5px) scaleY(.72); } 55%{ transform:translateY(-2px) scaleY(1.12); } 100%{ transform:none; } }",
+      ".tabs button[data-tab=\"board\"].active .wd-i{ animation:ico-cheer .55s ease-out; }",
+      "@keyframes ico-cheer{ 0%{ transform:rotate(0) scale(.8); } 30%{ transform:rotate(-9deg) scale(1.1); } 60%{ transform:rotate(7deg); } 100%{ transform:rotate(0) scale(1); } }",
+      ".tabs button[data-tab=\"notes\"].active .wd-i{ animation:ico-flap .45s cubic-bezier(.3,1.3,.4,1); }",
+      "@keyframes ico-flap{ 0%{ transform:scaleY(.55) translateY(3px); } 65%{ transform:scaleY(1.12); } 100%{ transform:none; } }",
+      ".tabs button[data-tab=\"memories\"].active .wd-i{ animation:ico-tilt .5s cubic-bezier(.34,1.56,.64,1); }",
+      "@keyframes ico-tilt{ 0%{ transform:rotate(9deg) scale(.75); } 60%{ transform:rotate(-4deg) scale(1.12); } 100%{ transform:rotate(0) scale(1); } }",
+      /* the glider squashes as it travels - the independent scale property, so it
+         never fights the translate the JS writes into transform */
+      ".tabs.w3-on .w3-ind.mv{ animation:ind-squash .36s var(--ease-out); }",
+      "@keyframes ind-squash{ 0%,100%{ scale:1 1; } 45%{ scale:1.1 .92; } }",
 
       /* ---- the list rail: selected pill, and a counted fold instead of a
               pill sliced mid-word at the edge ---- */
@@ -24952,6 +25053,11 @@
          block has to carry the same weight or reduced motion silently loses. */
       "@media (prefers-reduced-motion:reduce){",
       "  .pill-ind{ transition:none; }",
+      "  .tabs .w3-ind{ transition:none; }",
+      "  .tabs.w3-on .w3-ind.mv{ animation:none; }",
+      /* the per-icon rules carry [data-tab], so the off-switch must too or it loses */
+      "  .tabs button[data-tab].active .wd-i,",
+      "  :root[data-skin=\"pe\"] .tabs button[data-tab].active .wd-i{ animation:none; transition:none; }",
       "  .tabs button, .list-pills button,",
       "  :root[data-skin=\"pe\"] .tabs button,",
       "  :root[data-skin=\"pe\"] .list-pills button{ transition:none; }",
