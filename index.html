@@ -945,6 +945,12 @@
   .tk-rate svg, .sb-rate svg{ display:block; }
   .tk-rate-l{ font-family:var(--ui); font-size:0.625rem; color:var(--muted); text-align:center; }
   .ticket.stub .tk-title{ color:var(--muted); font-weight:550; }
+  .ticket.catchup{ margin-top:10px; }
+  .ticket.catchup .tk-sub{ color:var(--moody); text-decoration:none; font-weight:600; }
+  .sb-row{ gap:10px; }
+  .sb-link{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-decoration:none; color:inherit; }
+  .sb-row .t2 b{ color:var(--jade-lift); font-weight:600; }
+  .sb-rate-btn{ border:0; background:none; padding:0; cursor:pointer; }
   .tk-embed{ margin-top:10px; }
   .tk-embed iframe{ width:100%; height:80px; border:0; border-radius:12px; display:block; }
   .tk-form{ display:flex; gap:8px; margin-top:10px; }
@@ -2714,6 +2720,9 @@
        not spend one person's colour; a gradient of the pair favours neither, and it
        is the same device as the cabinet bezel and the bar's own rim. */
     --dock-sel-fill:linear-gradient(118deg, var(--moody), var(--rae));
+    /* BUILD 190: the task-card fill. s3 was 1.2x the page - invisible on a
+       phone panel. These sit ~1.9x above it: a filled object, not an outline. */
+    --task-fill-a:#4A3346; --task-fill-b:#382534;
     --dock-sel-ink:var(--bg);
     /* BUILD 173: .52 tint was BELOW rule 11's own 60-80% band, which is exactly
        the mud Moody photographed - content ghosting through the bar. */
@@ -4312,8 +4321,10 @@
        Each person also gets their OWN sparkline, labelled with their name, so colour
        is never the only thing carrying identity.
        --------------------------------------------------------------------------- */
-    --chart-p1:#E66449;
-    --chart-p2:#9482EC;
+    /* BUILD 195: p1 is Moody, Moody is lilac. These were the other way round
+       since the chart was built - the one chart in the app that swapped you. */
+    --chart-p1:var(--moody);
+    --chart-p2:var(--rae);
 
     /* the deep ends of the decorative card gradients */
     --grad-deep-a:#221f3d;
@@ -4454,7 +4465,7 @@
     --overlay-ink:#FFFFFF;   /* over a photograph, which is dark either way */
     --quest-bg-a:#EFEAFF;    --quest-ok-bg:#E0F4EB;
     --grad-deep-a:#ECE8FB;   --grad-deep-b:#E7EDFB;  --grad-deep-c:#F3ECF6;
-    --chart-p1:#C9482A;      --chart-p2:#5A3BC4;
+    --chart-p1:var(--moody); --chart-p2:var(--rae);
     --on-accent:#FFFFFF;
     --scrim:rgba(58,30,20,.44);
     --glow-primary:rgba(150,46,22,.26);
@@ -4514,6 +4525,7 @@
        toward the ink so the whole sweep clears. Daylight only; After Hours runs
        the pure pair at 7.53:1 worst case. */
     --dock-sel-fill:linear-gradient(118deg, var(--moody), color-mix(in srgb, var(--rae) 86%, #2A1F26));
+    --task-fill-a:#FFFFFF; --task-fill-b:#FBEFE6;
     --dock-sel-ink:var(--bg);
     --dock-glass:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.62) 46%, rgba(92,52,30,.06)), rgba(255,255,255,.55);
   }
@@ -6570,9 +6582,17 @@
      speaks first (the title, 17px/600), the meta a tier below in mono, 8pt
      spacing, nested radii, light from above. The one accent per card is WHOSE
      it is - carried by the check ring, not a stripe. Urgency tints the rim. */
+  /* BUILD 189, Moody: "still hard to tell the tasks apart - would it help if the
+     cells were filled? more 3D with a shadow?" Yes: s1 on the page ground was a
+     one-step lift the phone couldn't show. The recipe in full now - a filled
+     surface lit from above (s3 at the top edge falling to s2), a 1px top light,
+     and a shadow that falls DOWN (--el-float: inset light + 16/34 drop). */
   :root[data-skin="pe"] .task-wrap .task{
-    background:var(--s1); border:1px solid var(--line-2); border-radius:16px;
-    box-shadow:var(--sh-1, none); padding:15px 12px 15px 16px; margin-bottom:10px;
+    background:linear-gradient(180deg, var(--task-fill-a) 0%, var(--task-fill-b) 100%);
+    border:1px solid color-mix(in srgb, var(--line-2) 70%, var(--task-fill-a));
+    border-radius:18px;
+    box-shadow:var(--el-float), 0 2px 6px rgba(0,0,0,.25);
+    padding:16px 12px 16px 16px; margin-bottom:12px;
   }
   :root[data-skin="pe"] .task-wrap:last-child .task{ margin-bottom:0; }
   :root[data-skin="pe"] .task.who-p1::before,
@@ -6582,10 +6602,59 @@
   :root[data-skin="pe"] .task-wrap .task.who-p1 .check{ border-color:color-mix(in srgb, var(--moody) 72%, var(--line-2)); }
   :root[data-skin="pe"] .task-wrap .task.who-p2 .check{ border-color:color-mix(in srgb, var(--rae) 72%, var(--line-2)); }
   :root[data-skin="pe"] .task-wrap .task.who-both .check{ border-color:color-mix(in srgb, var(--moody) 50%, var(--rae)); }
-  :root[data-skin="pe"] .task-wrap .task .title{ font-size:1.0625rem; font-weight:600; letter-spacing:-.014em; line-height:1.3; }
-  :root[data-skin="pe"] .task-wrap .task .meta{ margin-top:7px; gap:2px 12px; }
+  /* BUILD 192, Moody: "make the text smaller if it's longer, not the whole box
+     bigger - now some tasks look more important because they're larger."
+     Von Restorff: the one that differs in size is read as the one that matters.
+     Equal things get equal boxes. The title clamps to two lines; a long title
+     steps DOWN a size first (fit-1, then fit-2) so most still fit whole; the
+     full text is one tap away in the sheet. The meta stays on one line and
+     clips its least important item (the owner, already in the ring) first. */
+  :root[data-skin="pe"] .task-wrap .task .title{
+    font-size:1.0625rem; font-weight:600; letter-spacing:-.014em; line-height:1.3;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    min-height:calc(1.0625rem * 1.3 * 2);   /* every card the same height, one line or two */
+  }
+  :root[data-skin="pe"] .task-wrap .task .title.fit-1{ font-size:.9375rem; letter-spacing:-.01em; }
+  /* fit-2: three lines of 12px in exactly the two-line box (3 x 14.7 = 44) */
+  :root[data-skin="pe"] .task-wrap .task .title.fit-2{ font-size:.75rem; letter-spacing:0; line-height:1.22; -webkit-line-clamp:3; }
+  :root[data-skin="pe"] .task-wrap .task .meta{
+    margin-top:7px; gap:0 12px; flex-wrap:nowrap; white-space:nowrap; overflow:hidden;
+  }
+  :root[data-skin="pe"] .task-wrap .task .meta > *{ flex:none; }
+  :root[data-skin="pe"] .task-wrap .task .meta.tight .meta-for{ display:none; }
+  /* the date on the side: red when it's behind you, ink when it's today, faint ahead */
+  :root[data-skin="pe"] .task-wrap .task .meta .due-tag{ margin-left:auto; padding-left:8px; }
+  :root[data-skin="pe"] .task-wrap .task.due-today .meta .due-tag{ color:var(--text); font-weight:700; }
+  :root[data-skin="pe"] .task-wrap .task .meta .due-tag.overdue{ color:var(--rae); font-weight:700; }
+  :root[data-skin="pe"] .task-wrap .task .meta .due-tag .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   :root[data-skin="pe"] .task-wrap .task.due-overdue{ border-color:color-mix(in srgb, var(--rae) 34%, var(--line-2)); }
   :root[data-skin="pe"] .task-wrap .task.due-today{ border-color:color-mix(in srgb, var(--both) 34%, var(--line-2)); }
+  /* BUILD 191, Moody: "why can't the fill be a different colour based on the
+     actual task?" It can, and the dimension that already owns colours is WHOSE
+     it is. The fill takes 16% of the owner: lilac cards are yours, coral are
+     hers, together wears both on the dock pill's diagonal. The rash (below)
+     still layers over it, and the check ring doubles the signal. */
+  :root[data-skin="pe"] .task-wrap .task.who-p1{
+    --owner-fill:linear-gradient(180deg,
+      color-mix(in srgb, var(--task-fill-a) 84%, var(--moody)) 0%,
+      color-mix(in srgb, var(--task-fill-b) 86%, var(--moody)) 100%);
+    background-image:var(--owner-fill);
+    border-color:color-mix(in srgb, var(--moody) 32%, var(--task-fill-a));
+  }
+  :root[data-skin="pe"] .task-wrap .task.who-p2{
+    --owner-fill:linear-gradient(180deg,
+      color-mix(in srgb, var(--task-fill-a) 84%, var(--rae)) 0%,
+      color-mix(in srgb, var(--task-fill-b) 86%, var(--rae)) 100%);
+    background-image:var(--owner-fill);
+    border-color:color-mix(in srgb, var(--rae) 32%, var(--task-fill-a));
+  }
+  :root[data-skin="pe"] .task-wrap .task.who-both{
+    --owner-fill:linear-gradient(118deg,
+      color-mix(in srgb, var(--task-fill-a) 84%, var(--moody)) 0%,
+      color-mix(in srgb, var(--task-fill-b) 84%, var(--rae)) 100%);
+    background-image:var(--owner-fill);
+    border-color:color-mix(in srgb, var(--moody) 18%, color-mix(in srgb, var(--rae) 18%, var(--task-fill-a)));
+  }
   :root[data-skin="pe"] .task-wrap .task.done{ background:transparent; border-color:var(--line); box-shadow:none; }
 
   /* ---- BUILD 188: level, owner, rash ---- */
@@ -6606,22 +6675,25 @@
   }
   :root[data-skin="pe"] .task-wrap .task[data-late="2"]{
     border-color:color-mix(in srgb, var(--rae) 48%, var(--line-2));
-    background:radial-gradient(70% 120% at 0% 50%, color-mix(in srgb, var(--rae) 10%, transparent) 0%, transparent 62%), var(--s1);
+    background-image:radial-gradient(70% 120% at 0% 50%, color-mix(in srgb, var(--rae) 12%, transparent) 0%, transparent 62%),
+               var(--owner-fill, linear-gradient(180deg, var(--task-fill-a) 0%, var(--task-fill-b) 100%));
   }
   :root[data-skin="pe"] .task-wrap .task[data-late="3"]{
     border-color:color-mix(in srgb, var(--rae) 70%, var(--line-2));
-    background:radial-gradient(80% 130% at 0% 50%, color-mix(in srgb, var(--rae) 18%, transparent) 0%, transparent 66%), var(--s1);
-    box-shadow:0 0 0 1px color-mix(in srgb, var(--rae) 22%, transparent), var(--sh-1, none);
+    background-image:radial-gradient(80% 130% at 0% 50%, color-mix(in srgb, var(--rae) 22%, transparent) 0%, transparent 66%),
+               var(--owner-fill, linear-gradient(180deg, var(--task-fill-a) 0%, var(--task-fill-b) 100%));
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--rae) 22%, transparent), var(--el-float);
   }
   :root[data-skin="pe"] .task[data-late="3"] .meta .due-tag.overdue{ font-weight:700; }
 
   /* ====== BUILD 187 - NOTES WITH ONE OBJECTIVE ====== */
   :root[data-skin="pe"] #view-notes .daily-q-card{
-    background:var(--el-float, var(--s2)); border-color:var(--line-2); padding:20px 18px 18px;
+    background:linear-gradient(180deg, var(--s3) 0%, var(--s2) 100%); box-shadow:var(--el-float);
+    border-color:var(--line-2); padding:20px 18px 18px;
   }
   :root[data-skin="pe"] #view-notes .daily-q-card h2{
     font-family:var(--ui); font-size:.625rem; font-weight:600; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--faint); margin:0 0 10px; line-height:1;
+    text-transform:uppercase; color:var(--muted); margin:0 0 10px; line-height:1;   /* 4.48:1 on the lit fill as --faint; --muted clears it */
   }
   :root[data-skin="pe"] .daily-q-card .q{ font-size:1.375rem; line-height:1.2; letter-spacing:-.025em; }
   :root[data-skin="pe"] .daily-q-card .hint{ margin-top:10px; }
@@ -8654,7 +8726,11 @@
     var overdue = isOverdue(t);
     // The clock reads the same whether it's a warning or not — urgency is carried by the
     // tag's own colour, which means one icon instead of two and no emoji in a data row.
-    return ' <span class="due-tag'+(overdue?" overdue":"")+'">'+icon("clock",11,"dt-i")+(overdue?" was due ":" due ")+fmtDueDate(t.dueDate)+'</span>';
+    /* BUILD 193, Moody: "remove was due and just have the date in red, on the
+       side." The colour already carries the verb. The word stays for screen
+       readers only. */
+    return ' <span class="due-tag'+(overdue?" overdue":"")+'" title="'+(overdue?"Was due ":"Due ")+fmtDueDate(t.dueDate)+'">'+
+      '<span class="sr-only">'+(overdue?"was due ":"due ")+'</span>'+fmtDueDate(t.dueDate)+'</span>';
   }
   // ---- due-date urgency: open tasks read as calm → warm → alert as the date closes in ----
   function taskUrgencyClass(t){
@@ -13020,7 +13096,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 188;
+  var BUILD_NUM = 195;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14885,8 +14961,9 @@
        wrap - which the UNBOUND steps are - "For Moody" split across two lines as
        "For" / "Moody", with the second word falling outside the pill row. It is one
        phrase; it wraps as one phrase now. */
-    meta.innerHTML = diffTag + repeatTag + failTag + priceTag + dueDateTag(t) +
-      '<span class="meta-for for-' + escapeHtml(t.assignedTo || "both") + '">' + assignText + '</span>';
+    meta.innerHTML = diffTag + repeatTag + failTag + priceTag +
+      '<span class="meta-for for-' + escapeHtml(t.assignedTo || "both") + '">' + assignText + '</span>' +
+      dueDateTag(t);
     info.appendChild(title); info.appendChild(meta);
 
     /* BUILD 101 - three buttons stacked down the right of every row used to be what set
@@ -18649,6 +18726,12 @@
           title: personName(sg.picker) + " sent a song",
           body:"Play the ticket and fill the heart."});
       }
+      var owe = unratedSongForMe();
+      if(owe && !(sg && sg.picker !== me && !sg.rating)){
+        out.push({kind:"save", key:"song-owe-" + owe.d, urgency: 40,
+          title: personName(owe.e.picker) + "\u2019s song is still waiting",
+          body:"Your verdict on " + (owe.e.title || "it") + " \u2014 it\u2019s on the ticket."});
+      }
     }catch(e){}
 
     // --- routine: one gentle one, in their own window ---
@@ -20243,6 +20326,14 @@
         photos: photoDays.filter(function(d){ return (state.album[d] || {})[p.id]; }).length,
         fails: fails.filter(function(f){ return (f.who || []).indexOf(p.id) >= 0; }).length
       };
+      // BUILD 195: the music. Picks this month, how many got rated, the average
+      // verdict they earned, and the perfect scores.
+      var picks = Object.keys(state.songs || {}).filter(function(d){ return inMonth(d) && state.songs[d].picker === p.id; });
+      var rated = picks.filter(function(d){ return state.songs[d].rating; });
+      per[p.id].songPicks = picks.length;
+      per[p.id].songRated = rated.length;
+      per[p.id].songAvg = rated.length ? rated.reduce(function(a, d){ return a + state.songs[d].rating; }, 0) / rated.length : 0;
+      per[p.id].songFives = rated.filter(function(d){ return state.songs[d].rating === 5; }).length;
     });
 
     // the day either of you got the most done
@@ -20580,11 +20671,24 @@
       var stk = (state.streaks || {})[p.id] || {};
       if((stk.current || 0) >= 14) award("🔥", "Longest run going", p.name, stk.current + " days");
     });
+    // BUILD 195: the aux. Better DJ needs two rated picks each so one lucky
+    // song can't take it; most perfect scores needs at least one.
+    if(pa.songRated >= 2 && pb.songRated >= 2 && pa.songAvg !== pb.songAvg){
+      var dj = pa.songAvg > pb.songAvg ? A : B, djp = pa.songAvg > pb.songAvg ? pa : pb;
+      award("\uD83C\uDFA7", "Shared the better music", dj.name,
+        djp.songAvg.toFixed(1) + "/5 average across " + djp.songRated + " picks");
+    }
+    if(pa.songFives !== pb.songFives && Math.max(pa.songFives, pb.songFives) >= 1){
+      var hit = pa.songFives > pb.songFives ? A : B;
+      var nf = Math.max(pa.songFives, pb.songFives);
+      award("\uD83D\uDC9A", "Most perfect picks", hit.name,
+        nf + (nf === 1 ? " song rated 5/5" : " songs rated 5/5"));
+    }
     if(!out.length && st.done.length) {
       award("🤝", "Evenly matched", A.name + " & " + B.name,
         "nothing between you this month");
     }
-    return out.slice(0, 4);
+    return out.slice(0, 6);
   }
 
   // ---- this time last year ----
@@ -20863,6 +20967,19 @@
                 "</b> \u2014 " + ew.rating + "/5 for <b>" + escapeHtml(personName(ew.picker)) + "</b>");
             }
           }
+        }
+        var pA = st.per[A.id], pB = st.per[B.id];
+        if(pA.songRated >= 2 && pB.songRated >= 2 && pA.songAvg !== pB.songAvg){
+          var djW = pA.songAvg > pB.songAvg ? A : B, djL = pA.songAvg > pB.songAvg ? B : A;
+          var djWp = st.per[djW.id], djLp = st.per[djL.id];
+          sr += recapLine("\uD83C\uDFA7", "<b>" + escapeHtml(djW.name) + "</b> shared the better music \u2014 " +
+            djWp.songAvg.toFixed(1) + " vs " + djLp.songAvg.toFixed(1));
+        }
+        var fivesTotal = pA.songFives + pB.songFives;
+        if(fivesTotal){
+          sr += recapLine("\uD83D\uDC9A", "<b>" + fivesTotal + "</b> perfect " + (fivesTotal === 1 ? "pick" : "picks") +
+            " (" + escapeHtml(A.name) + " " + pA.songFives + " \u00B7 " + escapeHtml(B.name) + " " + pB.songFives + ")" +
+            " \u2014 +" + (fivesTotal * SONG_PERFECT_POINTS) + " pts paid out");
         }
         html += '<div class="recap-sec"><h4>Songs</h4>' + sr + '</div>';
       }
@@ -22531,16 +22648,65 @@
     try{ announce("picked today's song \uD83C\uDFB5"); }catch(e){}
     songMetaFetch(state.songs[todayISO()]);
   }
-  function rateSong(level){
-    var e = todaysSong(); if(!e) return;
+  function rateSong(level){ rateSongOn(todayISO(), level); }
+  /* BUILD 194, Moody: "I didn't get a chance to review the song yesterday" -
+     a verdict was only possible on the day. Any unrated song stays open to
+     its rater, from the catch-up ticket on Today or the Songbook. */
+  /* BUILD 195, Moody: "if someone gives a song 5/5 the person who shared
+     should get points." A perfect pick is a gift the other person felt, so it
+     pays as THOUGHTFUL points (the for-the-other column), medium-task money,
+     on the FIRST verdict only - a 4 nudged to 5 later doesn't double-dip, and
+     a 5 nudged down doesn't claw back; the moment counted when it landed. */
+  var SONG_PERFECT_POINTS = 10;
+  function rateSongOn(dateISO, level, origin){
+    var e = (state.songs || {})[dateISO]; if(!e) return;
     var me = deviceOwner() || state.currentUser;
     if(me === e.picker) return;                 // your taste isn't self-graded
     var firstVerdict = !e.rating;
     e.rating = Math.max(1, Math.min(5, level));
     e.ratedBy = me; e.ratedAt = new Date().toISOString();
+    var paid = 0;
+    if(firstVerdict && e.rating === 5 && !e.awarded){
+      ensurePerson(state, e.picker);
+      state.points[e.picker].thoughtful += SONG_PERFECT_POINTS;
+      e.awarded = SONG_PERFECT_POINTS;
+      paid = SONG_PERFECT_POINTS;
+    }
     save(); renderSongTicket();
-    // first verdict only - adjusting a tap from 4 to 5 is not two news items
-    if(firstVerdict){ try{ announce("rated today's song " + e.rating + "/5 \u2764\uFE0F"); }catch(e2){} }
+    try{ renderSongbook(memMonth); }catch(err){}
+    try{ renderStats(); renderLeaderboards(); }catch(err2){}
+    if(firstVerdict){
+      var when = dateISO === todayISO() ? "today's" : (dateISO === shiftISO(todayISO(), -1) ? "yesterday's" : friendlyPhotoDate(dateISO) + "'s");
+      try{
+        announce("rated " + when + " song " + e.rating + "/5 \u2764\uFE0F" +
+          (paid ? " \u2014 +" + paid + " for " + personName(e.picker) : ""));
+      }catch(e2){}
+      // a perfect pick is a small shared win; the rater sees it land on the heart
+      if(paid){ try{ celebrate("medium", {origin: origin, headline: "+" + paid + " for " + personName(e.picker), sub: "A perfect pick"}); }catch(e3){} }
+    }
+  }
+  /* the most recent past song I owe a verdict on */
+  function unratedSongForMe(){
+    var me = deviceOwner() || state.currentUser, today = todayISO(), best = null;
+    for(var d in (state.songs || {})){
+      var e = state.songs[d];
+      if(d < today && e && e.picker !== me && !e.rating && (!best || d > best.d)) best = {d:d, e:e};
+    }
+    return best;
+  }
+  function bindRateControl(btn, dateISO){
+    if(!btn) return;
+    btn.onclick = function(ev){
+      if(ev.stopPropagation) ev.stopPropagation();
+      var r = btn.getBoundingClientRect();
+      var lv = 5 - Math.floor(((ev.clientY - r.top) / r.height) * 5);
+      rateSongOn(dateISO, Math.max(1, Math.min(5, lv)), {x: r.left + r.width / 2, y: r.top + r.height / 2});
+    };
+    btn.onkeydown = function(ev){
+      var e2 = (state.songs || {})[dateISO]; var cur = (e2 && e2.rating) || 0;
+      if(ev.key === "ArrowUp" || ev.key === "ArrowRight"){ ev.preventDefault(); rateSongOn(dateISO, cur + 1); }
+      if(ev.key === "ArrowDown" || ev.key === "ArrowLeft"){ ev.preventDefault(); rateSongOn(dateISO, cur - 1 || 1); }
+    };
   }
   function renderSongTicket(){
     var wrap = document.getElementById("songTicket");
@@ -22599,7 +22765,23 @@
       }
       songMetaFetch(e);
     }
+    /* the catch-up: the latest past song still waiting on my verdict rides a
+       second, quieter ticket under today's - gone the moment it's rated */
+    var owe = unratedSongForMe();
+    if(owe){
+      var oe = owe.e;
+      var dayWord = owe.d === shiftISO(today, -1) ? "yesterday" : friendlyPhotoDate(owe.d);
+      h += '<div class="ticket catchup" id="tkCatch">' +
+        '<div class="tk-art">' + (oe.art ? '<img src="' + escapeHtml(oe.art) + '" alt="">' : "\u266A") + '</div>' +
+        '<div class="tk-main"><div class="tk-eyebrow">' + escapeHtml(dayWord) + ' \u00B7 from ' + escapeHtml(personName(oe.picker)) + '</div>' +
+        '<div class="tk-title">' + escapeHtml(oe.title || "Open in Spotify") + '</div>' +
+        '<a class="tk-sub" href="' + escapeHtml(oe.url) + '" target="_blank" rel="noopener">Play it in Spotify \u203A</a></div>' +
+        '<div class="tk-side"><button type="button" class="tk-rate" id="tkRateCatch" role="slider" tabindex="0" ' +
+        'aria-label="Rate ' + escapeHtml(dayWord) + '\u2019s song" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">' +
+        heartScaleSVG(0, 52) + '</button><div class="tk-rate-l">tap to rate</div></div></div>';
+    }
     wrap.innerHTML = h;
+    if(owe) bindRateControl(document.getElementById("tkRateCatch"), owe.d);
     var add = document.getElementById("tkAdd");
     if(add) add.onclick = function(ev){ ev.stopPropagation(); sgFormOpen = !sgFormOpen; renderSongTicket();
       var inp = document.getElementById("tkUrl"); if(inp) inp.focus(); };
@@ -22646,17 +22828,27 @@
       days.length + (days.length === 1 ? " song" : " songs") +
       (rated.length ? " \u00B7 " + (rated.reduce(function(a, d){ return a + state.songs[d].rating; }, 0) / rated.length).toFixed(1) + "/5 average" : "");
     var list = document.getElementById("sbList");
+    var me = deviceOwner() || state.currentUser;
     list.innerHTML = days.map(function(d){
       var e = state.songs[d];
       var art = e.art ? '<img src="' + escapeHtml(e.art) + '" alt="">' : "\u266A";
       var who = e.picker === "p1" ? "var(--moody)" : "var(--rae)";
-      return '<a class="sb-row" href="' + escapeHtml(e.url) + '" target="_blank" rel="noopener">' +
+      var canRate = !e.rating && e.picker !== me;
+      // BUILD 194: a row is a link to the track; an unrated one also carries a
+      // live heart for its rater (a button beside the link, never inside it)
+      return '<div class="sb-row">' +
+        '<a class="sb-link" href="' + escapeHtml(e.url) + '" target="_blank" rel="noopener">' +
         '<div class="sb-art">' + art + '</div>' +
         '<div class="sb-t"><div class="t1">' + escapeHtml(e.title || "Open in Spotify") + '</div>' +
         '<div class="t2"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + who + ';margin-right:5px;"></span>' +
-        escapeHtml(personName(e.picker)) + " \u00B7 " + d.slice(8) + "/" + d.slice(5, 7) + '</div></div>' +
-        '<div class="sb-rate">' + (e.rating ? heartScaleSVG(e.rating, 32) : "") + '</div></a>';
+        escapeHtml(personName(e.picker)) + " \u00B7 " + d.slice(8) + "/" + d.slice(5, 7) +
+        (canRate ? ' \u00B7 <b>rate it</b>' : '') + '</div></div></a>' +
+        '<div class="sb-rate">' +
+          (e.rating ? heartScaleSVG(e.rating, 32)
+                    : (canRate ? '<button type="button" class="tk-rate sb-rate-btn" data-date="' + d + '" role="slider" tabindex="0" aria-label="Rate this song" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">' + heartScaleSVG(0, 34) + '</button>' : "")) +
+        '</div></div>';
     }).join("");
+    [].slice.call(list.querySelectorAll(".sb-rate-btn")).forEach(function(bt){ bindRateControl(bt, bt.getAttribute("data-date")); });
     var cp = document.getElementById("sbCopy");
     cp.onclick = function(){
       var links = days.map(function(d){ return state.songs[d].url; }).join("\n");
@@ -24946,6 +25138,37 @@
      runs on every tick of state; replaying a stagger there would make the list twitch
      each time the other phone synced. */
   function tmStaggerList(){ staggerBox(document.getElementById("openTasks")); }
+  /* BUILD 192: fit long titles DOWN before they clamp. scrollHeight still reports
+     the full text under line-clamp, so "needs more than two lines" is measurable. */
+  function fitTaskTitles(){
+    var els = document.querySelectorAll(".task-wrap .task .title");
+    for(var i = 0; i < els.length; i++){
+      var el = els[i];
+      el.classList.remove("fit-1", "fit-2");
+      // line-clamp hides the overflow from scrollHeight too, so measure unclamped
+      el.style.webkitLineClamp = "unset";
+      var lines = function(){ return el.scrollHeight / (parseFloat(getComputedStyle(el).lineHeight) || 22); };
+      if(lines() > 2.15){
+        el.classList.add("fit-1");
+        if(lines() > 2.15) el.classList.add("fit-2");   // fit-2 is allowed three lines
+      }
+      el.style.webkitLineClamp = "";
+    }
+    // the meta line: when it can't fit, the owner leaves whole (the ring still says it)
+    var metas = document.querySelectorAll(".task-wrap .task .meta");
+    for(var k = 0; k < metas.length; k++){
+      var m = metas[k];
+      m.classList.remove("tight");
+      if(m.scrollWidth > m.clientWidth + 1) m.classList.add("tight");
+    }
+  }
+  (function(){
+    // #openTasks itself gets rebuilt on render, so watch the view that holds it
+    var box = document.getElementById("view-tasks"), t = null;
+    if(!box || !window.MutationObserver) return;
+    new MutationObserver(function(){ clearTimeout(t); t = setTimeout(fitTaskTitles, 16); })
+      .observe(box, {childList:true, subtree:true});
+  })();
   function staggerBox(box){
     if(!box || motionOff()) return;
     box.classList.remove("stagger");
