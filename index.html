@@ -3699,6 +3699,45 @@
     position:fixed; inset:0; z-index:var(--z-cel); pointer-events:none; overflow:hidden;
     animation:celOut 1.45s linear forwards;
   }
+  .cel-ring{
+    position:fixed; z-index:57; width:14px; height:14px; margin:-7px 0 0 -7px;
+    pointer-events:none; color:var(--jade);
+  }
+  .cel-ring i{
+    position:absolute; inset:0; border-radius:50%;
+    border:3px solid var(--jade); opacity:.9;
+    animation:ring-out .7s cubic-bezier(.2,.7,.3,1) both;
+  }
+  .cel-ring svg{
+    position:absolute; left:50%; top:50%; width:22px; height:22px;
+    margin:-11px 0 0 -11px;
+    animation:ring-check .5s cubic-bezier(.34,1.56,.64,1) .12s both;
+  }
+  .cel-ring.big i{ border-width:4px; animation-duration:.85s; }
+  .cel-ring.big svg{ width:30px; height:30px; margin:-15px 0 0 -15px; }
+  @keyframes ring-out{
+    0%{ transform:scale(.4); opacity:.95; }
+    100%{ transform:scale(8); opacity:0; }
+  }
+  @keyframes ring-check{
+    0%{ transform:scale(.2); opacity:0; }
+    62%{ transform:scale(1.25); opacity:1; }
+    100%{ transform:scale(1); opacity:0; }
+  }
+  .cel-quote{
+    display:block; max-width:300px; margin:12px auto 0;
+    font-family:var(--display); font-style:italic; font-weight:500;
+    font-size:0.8125rem; line-height:1.5; color:rgba(255,255,255,.82);
+    animation:splash-rise .5s cubic-bezier(.22,.9,.3,1) .55s both;
+  }
+  .cel-quote em{
+    display:block; font-style:normal; font-family:var(--ui);
+    font-size:0.625rem; letter-spacing:.08em; margin-top:5px;
+    color:rgba(255,255,255,.55);
+  }
+  @media (prefers-reduced-motion:reduce){
+    .cel-ring, .cel-quote{ animation:none; display:none; }
+  }
   .cel-wash{
     position:absolute; left:var(--ox); top:var(--oy);
     width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%;
@@ -9407,19 +9446,27 @@
        These are assigned straight to a CSS custom property, and a custom property can
        hold var(), so they follow the skin like everything else. The glows stay literal:
        they carry an alpha, and there is no token for a tint. */
-    easy:     {pieces: 7,  bank:"solo",     buzz:[12],
+    /* BUILD 182, Moody: "things that are successful or completed should use that
+       colour" + "easy, medium and hard each should have a different celebration,
+       greater respectively". The TICK is the WeDO check, so it is lime in every
+       tier - what escalates is the atmosphere around it: pieces, flash, sweep,
+       an encore wave for hard, and a different phrase of sound per tier (the
+       buzz patterns stay for Android; iOS never had vibration). Epic keeps gold:
+       that is the milestone/rewards material, not a daily success. */
+    easy:     {pieces: 7,  bank:"solo",     buzz:[12], sound:"tick",
                glow:"rgba(97,224,0,.50)",  dark:"rgba(10,16,14,.975)", mark:"var(--jade)"},
-    medium:   {pieces:13,  bank:"solo",     buzz:[10,40,16], flash:true,
-               glow:"rgba(240,193,75,.52)",  dark:"rgba(20,16,8,.975)",  mark:"var(--gold)"},
-    hard:     {pieces:20,  bank:"solo",     buzz:[14,50,24], sweep:true,
-               glow:"rgba(255,107,138,.54)", dark:"rgba(22,10,14,.975)", mark:"var(--rose)"},
-    together: {pieces:17,  bank:"together", buzz:[12,40,12,40,18], sweep:true,
-               glow:"rgba(165,148,255,.54)", dark:"rgba(14,11,25,.975)", mark:"var(--rae)"},
-    epic:     {pieces:26,  bank:"epic",     buzz:[16,60,16,60,28], sweep:true, fireworks:true,
+    medium:   {pieces:14,  bank:"solo",     buzz:[10,40,16], flash:true, sound:"rise",
+               glow:"rgba(97,224,0,.30)",  dark:"rgba(12,18,10,.975)", mark:"var(--jade)"},
+    hard:     {pieces:22,  bank:"solo",     buzz:[14,50,24], sweep:true, encore:true, sound:"fanfare",
+               glow:"rgba(97,224,0,.26)",  dark:"rgba(10,16,7,.975)",  mark:"var(--jade)"},
+    together: {pieces:17,  bank:"together", buzz:[12,40,12,40,18], sweep:true, sound:"together",
+               glow:"rgba(165,148,255,.54)", dark:"rgba(14,11,25,.975)", mark:"var(--jade)"},
+    epic:     {pieces:26,  bank:"epic",     buzz:[16,60,16,60,28], sweep:true, fireworks:true, sound:"epic",
                glow:"rgba(233,184,78,.56)",  dark:"rgba(18,14,8,.975)",  mark:"var(--gold)"}
   };
 
-  var CEL_BANK = {solo: BURST_EMOJI, together: TOGETHER_BURST_EMOJI, epic: EPIC_BURST_EMOJI};
+  var DRIFT_EMOJI = ["\uD83D\uDC96","\uD83D\uDC9E","\u2728","\uD83E\uDEF6"];
+  var CEL_BANK = {solo: BURST_EMOJI, together: TOGETHER_BURST_EMOJI, epic: EPIC_BURST_EMOJI, drift: DRIFT_EMOJI};
 
   function motionOff(){
     try{
@@ -9491,8 +9538,19 @@
     if(!sfxOn()) return;
     var ctx = sfxCtx();
     if(!ctx) return;
+    /* BUILD 182 - the sound fix. On iOS a context born outside the current
+       gesture starts suspended, and resume() is ASYNC: the old code scheduled
+       notes against a clock frozen at 0, resume landed a beat later, and the
+       phrase either smeared or vanished - "sound on, phone silent". Nothing is
+       scheduled until the context is actually running. */
+    if(ctx.state === "suspended"){
+      try{ ctx.resume().then(function(){ sfxPlay(ctx, name); }).catch(function(){}); }catch(e){}
+      return;
+    }
+    sfxPlay(ctx, name);
+  }
+  function sfxPlay(ctx, name){
     try{
-      if(ctx.state === "suspended") ctx.resume();
       if(name === "tick"){
         // your own task: two notes, a fifth apart, done in a tenth of a second
         sfxNote(ctx, 660, 0,     0.09, 0.040, "sine");
@@ -9511,18 +9569,40 @@
         sfxNote(ctx, 783.99, 0.18, 0.20, 0.036, "sine");
         sfxNote(ctx, 1046.5, 0.27, 0.58, 0.044, "sine");
         sfxNote(ctx, 523.25, 0.27, 0.62, 0.028, "triangle");
+      } else if(name === "rise"){
+        // medium: the tick grows a third note - a run upward, still under 0.3s
+        sfxNote(ctx, 587.33, 0,    0.09, 0.036, "sine");   // D5
+        sfxNote(ctx, 739.99, 0.07, 0.10, 0.034, "sine");   // F#5
+        sfxNote(ctx, 880.00, 0.14, 0.16, 0.040, "sine");   // A5
+      } else if(name === "fanfare"){
+        // hard: four notes, the last held with an octave under it - a small
+        // fanfare that still finishes before the together triad would
+        sfxNote(ctx, 523.25, 0,    0.10, 0.036, "sine");   // C5
+        sfxNote(ctx, 659.25, 0.08, 0.10, 0.036, "sine");   // E5
+        sfxNote(ctx, 880.00, 0.16, 0.12, 0.040, "sine");   // A5
+        sfxNote(ctx, 1046.5, 0.25, 0.34, 0.044, "sine");   // C6
+        sfxNote(ctx, 261.63, 0.25, 0.38, 0.020, "triangle"); // C4 under it
       } else if(name === "spin"){
         sfxNote(ctx, 880, 0, 0.08, 0.030, "triangle");
         sfxNote(ctx, 1320, 0.07, 0.10, 0.024, "triangle");
       }
     }catch(e){}
   }
+  /* The first tap anywhere wakes the audio engine inside a real user gesture,
+     so the first completion's phrase plays instead of being the unlock. */
+  document.addEventListener("pointerdown", function sfxWake(){
+    document.removeEventListener("pointerdown", sfxWake);
+    try{
+      var ctx = sfxOn() ? sfxCtx() : null;
+      if(ctx && ctx.state === "suspended") ctx.resume().catch(function(){});
+    }catch(e){}
+  }, {once:true, passive:true});
 
   /* The Strava-style wipe. A circle grows out of the point you touched, the tick draws
      itself at full size, a line of text holds for a beat, and the whole thing fades.
      Pointer-events are off throughout, so a mistimed tap goes to the app underneath
      rather than into a decoration. */
-  function celebrationSweep(cfg, origin, headline, sub){
+  function celebrationSweep(cfg, origin, headline, sub, quote){
     var el = document.createElement("div");
     el.className = "cel-sweep";
     el.setAttribute("aria-hidden", "true");
@@ -9541,10 +9621,16 @@
           '<path class="cel-tick" d="M20 6 9 17l-5-5"/>' +
         '</svg>' +
       '</span>' +
-      (headline || sub
+      (headline || sub || quote
         ? '<span class="cel-say">' +
             (headline ? '<b>' + escapeHtml(headline) + '</b>' : "") +
             (sub ? '<i>' + escapeHtml(sub) + '</i>' : "") +
+            (quote
+              ? '<span class="cel-quote">\u201C' + escapeHtml(quote.q) + '\u201D' +
+                  (quote.a && quote.q.length + quote.a.length <= 84
+                    ? '<em>\u2014 ' + escapeHtml(quote.a) + '</em>' : "") +
+                '</span>'
+              : "") +
           '</span>'
         : "");
     document.body.appendChild(el);
@@ -9556,10 +9642,10 @@
     setTimeout(function(){
       if(el.parentNode) el.parentNode.removeChild(el);
       document.body.classList.remove("celebrating");
-    }, 1500);
+    }, quote ? 2100 : 1500);
   }
 
-  function confettiBurst(bankName, count, origin, delay){
+  function confettiBurst(bankName, count, origin, delay, drift){
     var bank = CEL_BANK[bankName] || BURST_EMOJI;
     var layer = document.createElement("div");
     layer.className = "burst-layer";
@@ -9572,8 +9658,13 @@
       var piece = document.createElement("span");
       piece.className = "burst-piece";
       piece.textContent = bank[i % bank.length];
-      var angle = (Math.PI * 2 * i / count) + (Math.random() * 0.6 - 0.3);
-      var dist = 90 + Math.random() * 90;
+      /* drift: everything floats UP in a loose fan rather than bursting outward -
+         the second face of the small celebration, so twice in a row never looks
+         like a copy of itself */
+      var angle = drift
+        ? -Math.PI * (0.25 + 0.5 * (i / Math.max(1, count - 1))) + (Math.random() * 0.2 - 0.1)
+        : (Math.PI * 2 * i / count) + (Math.random() * 0.6 - 0.3);
+      var dist = (drift ? 120 : 90) + Math.random() * 90;
       piece.style.setProperty("--bx", (Math.cos(angle) * dist).toFixed(0) + "px");
       piece.style.setProperty("--by", (Math.sin(angle) * dist - 40).toFixed(0) + "px");
       piece.style.setProperty("--br", (Math.random() * 70 - 35).toFixed(0) + "deg");
@@ -9583,6 +9674,44 @@
     document.body.appendChild(layer);
     setTimeout(function(){ if(layer.parentNode) layer.parentNode.removeChild(layer); },
                1100 + (delay || 0) * 1000);
+  }
+
+  /* ring-pop: the third face of the small celebration. A lime ring breathes out
+     of the point you touched and a small check lands inside it - the logo's own
+     gesture, at thumb scale. Cheap: two elements, two animations, gone in .9s. */
+  function ringPop(origin, big){
+    var ox = (origin && origin.x != null) ? origin.x : (window.innerWidth / 2);
+    var oy = (origin && origin.y != null) ? origin.y : (window.innerHeight / 2);
+    var el = document.createElement("div");
+    el.className = "cel-ring" + (big ? " big" : "");
+    el.setAttribute("aria-hidden", "true");
+    el.style.left = Math.round(ox) + "px";
+    el.style.top = Math.round(oy) + "px";
+    el.innerHTML = '<i></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M20 6 9 17l-5-5"/></svg>';
+    document.body.appendChild(el);
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 950);
+  }
+  /* which face of the small celebration is next - persisted, so it alternates
+     across days rather than resetting to confetti on every open */
+  function nextCelFace(){
+    var n = 0;
+    try{ n = (parseInt(localStorage.getItem("us-cel-face-v1"), 10) || 0); }catch(e){}
+    try{ localStorage.setItem("us-cel-face-v1", String((n + 1) % 3)); }catch(e){}
+    return n % 3;
+  }
+  /* a short line for the big moments - rotates through the bank, never repeats
+     back-to-back, and only lines that fit a sweep (the long essays stay in the
+     greeting card where there is room to read them) */
+  function sweepQuote(){
+    try{
+      var pool = QUOTES.filter(function(x){ return x.q && x.q.length <= 70; });
+      if(!pool.length) return null;
+      var n = (parseInt(localStorage.getItem("us-cel-quote-v1"), 10) || 0);
+      localStorage.setItem("us-cel-quote-v1", String((n + 1) % pool.length));
+      return pool[n % pool.length];
+    }catch(e){ return null; }
   }
 
   /* The one entry point. level is a key of CELEBRATION; everything else is optional. */
@@ -9611,14 +9740,34 @@
     buzz(cfg.buzz);
     // Sound is feedback, not animation: someone who turned motion off has not asked to
     // stop being told that the thing they pressed worked. So it fires before the return.
-    sfx(level === "together" ? "together" : (level === "epic" ? "epic" : "tick"));
+    sfx(cfg.sound || "tick");
     if(motionOff()) return;
     try{
       if(cfg.sweep){
-        celBusyUntil = Date.now() + 1450;
-        celebrationSweep(cfg, opts.origin, opts.headline, opts.sub);
+        var quote = sweepQuote();
+        celBusyUntil = Date.now() + (quote ? 2050 : 1450);
+        celebrationSweep(cfg, opts.origin, opts.headline, opts.sub, quote);
+        confettiBurst(cfg.bank, cfg.pieces, null, 0);
+      } else {
+        /* BUILD 183, Moody: "keep making it alternate so it's not boring".
+           The small tiers rotate three faces: burst, ring-pop, heart-drift.
+           Medium is the same face, louder. */
+        var face = nextCelFace();
+        if(face === 1){
+          ringPop(opts.origin, cfg.flash);
+          if(cfg.flash) confettiBurst(cfg.bank, 6, opts.origin, 0.12);
+        } else if(face === 2){
+          confettiBurst("drift", cfg.flash ? 12 : 6, opts.origin, 0, true);
+        } else {
+          confettiBurst(cfg.bank, cfg.pieces, opts.origin, 0);
+        }
       }
-      confettiBurst(cfg.bank, cfg.pieces, cfg.sweep ? null : opts.origin, 0);
+      if(cfg.encore && !cfg.fireworks){
+        // hard earns a second wave - smaller, later, off-centre - without
+        // promoting it to the three-corner fireworks a perfect month gets
+        confettiBurst(cfg.bank, 10, {x: window.innerWidth * 0.30, y: window.innerHeight * 0.38}, 0.34);
+        confettiBurst(cfg.bank, 10, {x: window.innerWidth * 0.72, y: window.innerHeight * 0.42}, 0.52);
+      }
       if(cfg.fireworks){
         // Three waves from different corners rather than one bigger burst in the middle,
         // because a perfect month should not look like a slightly larger Tuesday.
@@ -12749,7 +12898,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 181;
+  var BUILD_NUM = 183;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -23932,7 +24081,7 @@
          is the transform, which is the only thing that ever moved. */
       /* BUILD 179: "funner". The glider gets a real spring - one overshoot,
          settled in a third of a second - and the icon it lands on pops. */
-      "  transition:transform 340ms cubic-bezier(.3,1.42,.4,1);}",
+      "  transition:transform 300ms cubic-bezier(.3,1.16,.4,1);}",
       ".tabs .w3-ind::after{content:'';position:absolute;left:50%;bottom:4px;width:14px;height:3px;margin-left:-7px;",
       "  border-radius:3px;background:var(--w3-col,var(--jade));}",
       ".tabs.w3-on button{position:relative;z-index:1;}",
@@ -25005,7 +25154,7 @@
       /* the glider squashes as it travels - the independent scale property, so it
          never fights the translate the JS writes into transform */
       ".tabs.w3-on .w3-ind.mv{ animation:ind-squash .36s var(--ease-out); }",
-      "@keyframes ind-squash{ 0%,100%{ scale:1 1; } 45%{ scale:1.1 .92; } }",
+      "@keyframes ind-squash{ 0%,100%{ scale:1 1; } 45%{ scale:1.05 .96; } }",
 
       /* ---- the list rail: selected pill, and a counted fold instead of a
               pill sliced mid-word at the edge ---- */
