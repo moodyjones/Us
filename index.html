@@ -1306,9 +1306,9 @@
   /* the selected list pill was still painted paper-on-paper from the light theme */
   /* the completion tick sits on a transparent circle, so it needs its own contrast */
   .task .check{color:var(--faint);border-color:var(--line-2);}
-  .task.done .check{background:var(--both);border-color:var(--both);color:var(--on-accent);}
+  .task.done .check{background:none;border-color:var(--line-2);color:var(--both);}
   .exp-actions button.go{color:var(--on-accent);}
-  .chal-p.on.is-p1 .tick,.chal-p.on.is-p2 .tick{color:var(--on-accent);}
+  .chal-p.on.is-p1 .tick,.chal-p.on.is-p2 .tick{color:var(--both);}
 
   body{
     font-family:var(--ui);
@@ -1790,7 +1790,7 @@
     background:rgba(15,10,20,.45);color:#fff;font-size:1rem;font-weight:800;
     display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);
   }
-  .trip-check:active{background:var(--teal);border-color:var(--teal);color:var(--on-teal);}
+  .trip-check:active{color:var(--both);border-color:#fff;}
   .trip-del{
     width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
     background:rgba(15,10,20,.45);color:rgba(255,255,255,.8);
@@ -1929,7 +1929,7 @@
     transition:background .16s ease, border-color .16s ease, transform .16s ease;
   }
   .task .check:hover{border-color:var(--jade);}
-  .task.done .check{background:var(--jade);border-color:var(--jade);color:var(--on-accent);font-weight:800;}
+  .task.done .check{background:none;border-color:var(--line-2);color:var(--both);font-weight:800;}
   .task .title{font-size:0.875rem;font-weight:600;letter-spacing:-0.01em;line-height:1.35;}
   .task .meta{font-size:0.6875rem;color:var(--faint);margin-top:5px;}
   .diff-tag,.repeat-tag,.pending-pill,.bricked-pill,.tier-tag{
@@ -2007,7 +2007,7 @@
     transition:background .16s ease, border-color .16s ease, color .16s ease;
   }
   .buy-check:hover{border-color:var(--jade);}
-  .buy-card.done .buy-check{background:var(--jade);border-color:var(--jade);}
+  .buy-card.done .buy-check{background:none;border-color:var(--line-2);}
   .buy-actions{display:flex;flex-direction:column;gap:8px;align-items:center;}
   .icon-btn{
     background:transparent;border:none;color:var(--faint);cursor:pointer;
@@ -2211,7 +2211,7 @@
     display:flex;align-items:center;justify-content:center;font-size:0.6875rem;color:transparent;
     transition:background .18s ease,border-color .18s ease,color .18s ease;
   }
-  .chal-p.on .tick{background:var(--jade);border-color:var(--jade);color:var(--on-jade);}
+  .chal-p.on .tick{background:none;border-color:var(--tick-ring);color:var(--both);font-size:0.875rem;font-weight:900;}
   .chal-p .nm{font-weight:700;}
   .chal-p .sub{font-size:0.6875rem;color:var(--chal-dim);}
   .chal-toggle{
@@ -2432,8 +2432,7 @@
   .health-grid .health-val.win.p1{color:var(--moody);}
   .health-grid .health-val.win.p2{color:var(--rae);}
   /* coral and purple are bright; the dark ground is their legible foreground, not white */
-  .chal-p.on.is-p1 .tick{background:var(--moody);border-color:var(--moody);color:var(--on-accent);}
-  .chal-p.on.is-p2 .tick{background:var(--rae);border-color:var(--rae);color:var(--on-accent);}
+  .chal-p.on.is-p1 .tick,.chal-p.on.is-p2 .tick{background:none;border-color:var(--tick-ring);color:var(--both);}
   .chal-p.on.is-p1{background:rgba(232,97,92,.16);border-color:rgba(232,97,92,.45);}
   .chal-p.on.is-p2{background:rgba(139,92,246,.16);border-color:rgba(139,92,246,.45);}
   .tl-row .mk.yes.is-p1{background:rgba(232,97,92,.22);color:#ff9d99;border-color:rgba(232,97,92,.4);}
@@ -2833,7 +2832,7 @@
     border:1.5px solid var(--line-2);background:none;
   }
   :root[data-skin="pe"] .task.done .check{
-    background:var(--jade);border-color:var(--jade);color:var(--on-accent);
+    background:none;border-color:var(--line-2);color:var(--both);
   }
   :root[data-skin="pe"] .task.done{ opacity:.42; }
 
@@ -3087,23 +3086,30 @@
     transition:border-color .2s ease, background .2s ease, transform .2s var(--pe-ease, cubic-bezier(.16,1,.3,1));
     font-size:0;
   }
+  /* BUILD 200: the check is painted by a MASK so it can take var(--both) - a
+     data-URI stroke can't read a token, which is how a dark tick on a lime disc
+     happened. It is drawn left to right (clip-path inset, the short arm first,
+     the way a hand ticks), slightly larger than the ring so it breaks out of it
+     like the logo's check breaks the heart. The ring never fills. */
   :root[data-skin="pe"] .task .check::after{
     content:"";
-    position:absolute; inset:0;
-    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230E0B13' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/62% no-repeat;
-    opacity:0; transform:scale(.5);
-    transition:opacity .16s ease, transform .26s cubic-bezier(.16,1,.3,1);
+    position:absolute; inset:-3px;
+    background:var(--both);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/78% no-repeat;
+            mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/78% no-repeat;
+    opacity:0; clip-path:inset(0 100% 0 0);
+    transition:opacity .08s ease, clip-path .32s cubic-bezier(.3,.7,.2,1);
   }
   :root[data-skin="pe"] .task.done .check{
-    background:var(--jade); border-color:var(--jade); transform:scale(1.04);
+    background:none; border-color:var(--line-2); transform:none;
   }
-  :root[data-skin="pe"] .task.done .check::after{ opacity:1; transform:scale(1); }
+  :root[data-skin="pe"] .task.done .check::after{ opacity:1; clip-path:inset(0 0 0 0); }
   /* the hold between the tap and the card leaving: the box fills LIME (--both,
      the same lime in both themes; the dark glyph needs it), the check pops in,
      the title is struck through, and the card itself stays at full strength -
      this is the moment, not the aftermath */
-  :root[data-skin="pe"] .task-wrap .task.ticking .check{ background:var(--both); border-color:var(--both); transform:scale(1.06); }
-  :root[data-skin="pe"] .task.ticking .check::after{ opacity:1; transform:scale(1); }
+  :root[data-skin="pe"] .task-wrap .task.ticking .check{ background:none; border-color:var(--line-2); }
+  :root[data-skin="pe"] .task.ticking .check::after{ opacity:1; clip-path:inset(0 0 0 0); }
   :root[data-skin="pe"] .task-wrap .task.ticking .title{
     text-decoration:line-through; text-decoration-color:var(--jade); text-decoration-thickness:2px;
     color:var(--muted); transition:color .25s ease .1s;
@@ -5553,7 +5559,12 @@
      success, be the green?" Yes. The badge wore its OWNER's colour, which said
      whose photo it was (the frame already says that) instead of what it meant.
      One rule from here: a check is lime, ink glyph on it, like the mark. */
-  .duo-chal.on{ color:#0E0B13; background:var(--both); border-color:var(--both); }
+  /* BUILD 200, Moody: "shouldn't just the check be green? Not the whole
+     button. The logo has a green check mark only." 199 swapped one wrong fill
+     (owner colour) for another (a lime disc). The mark's check is a green
+     STROKE on the page, nothing behind it. The badge keeps a neutral disc only
+     because a bare stroke would vanish into a photo; the green is the check. */
+  .duo-chal.on{ color:var(--both); background:var(--card); border-color:var(--line-2); }
   .duo-chal .dc-i{ display:block; }
   /* The frame clips its photo, so the mark has to sit outside that clip. */
   .duo-slot{ position:relative; }
@@ -5623,7 +5634,7 @@
   /* An empty circle reads as a blank sticker on a photograph. A pale tick reads as
      a tick that has not been filled in, which is what it is. */
   :root[data-skin="pe"] .duo-chal{ color:var(--line-2); }
-  :root[data-skin="pe"] .duo-chal.on{ color:#0E0B13; }
+  :root[data-skin="pe"] .duo-chal.on{ color:var(--both); }
 
 
   /* ===========================================================================
@@ -6624,7 +6635,7 @@
   :root[data-skin="pe"] .task-wrap .task.who-p1 .check{ border-color:color-mix(in srgb, var(--moody) 72%, var(--line-2)); }
   :root[data-skin="pe"] .task-wrap .task.who-p2 .check{ border-color:color-mix(in srgb, var(--rae) 72%, var(--line-2)); }
   :root[data-skin="pe"] .task-wrap .task.who-both .check{ border-color:color-mix(in srgb, var(--moody) 50%, var(--rae)); }
-  :root[data-skin="pe"] .task-wrap .task.ticking .check{ border-color:var(--both); background:var(--both); }
+  :root[data-skin="pe"] .task-wrap .task.ticking .check{ border-color:var(--line-2); background:none; }
   /* BUILD 192, Moody: "make the text smaller if it's longer, not the whole box
      bigger - now some tasks look more important because they're larger."
      Von Restorff: the one that differs in size is read as the one that matters.
@@ -6728,6 +6739,53 @@
   :root[data-skin="pe"] .note-composer .primary{ width:auto; flex:none; padding:0 18px; margin:0; min-height:46px; }
   :root[data-skin="pe"] .row-entry{ margin-top:4px; }
 
+
+  /* ====== BUILD 201 - THE TITLE GETS THE CARD ======
+     Moody: "why isn't the text taking up more of the box? You keep wasting so
+     much space." Measured on a 358px card: the title had 232px (65%), because a
+     46px column held a faint chevron that repeats what tapping the card already
+     does; and every card reserved a second title line, so "Call ganz" inked 4%
+     of its card above an empty 22px row. Long titles were squeezed to 12px to fit
+     the narrow column.
+     - The chevron goes (Jakob: an iOS card that opens on tap needs no arrow -
+       Reminders and Mail rows have none). The long-press tray stays, sliding in
+       OVER the card's right edge, so it costs no width on the 99% of cards that
+       aren't open. Title width 232 -> 288.
+     - No reserved line. One fixed height (Von Restorff from 192 still holds:
+       equal things, equal boxes) sized for ONE title line + the meta, content
+       centred. A title that won't fit one line takes two at 15px, then two at
+       13.5px - never 12. Cards 98 -> 80px: more of the list in one look
+       (Miller), the eye runs titles down the left, dates down the right edge. */
+  :root[data-skin="pe"] .task-wrap .task{
+    display:flex; align-items:center; gap:13px;
+    height:80px; min-height:80px; box-sizing:border-box;
+    padding:0 16px 0 15px; position:relative; overflow:hidden;
+  }
+  :root[data-skin="pe"] .task-wrap .task .check{ flex:none; }
+  :root[data-skin="pe"] .task-wrap .task .info{ flex:1 1 auto; min-width:0; }
+  :root[data-skin="pe"] .task-wrap .task .title{
+    min-height:0; -webkit-line-clamp:1; line-height:1.25;
+  }
+  :root[data-skin="pe"] .task-wrap .task .title.fit-1{
+    font-size:.9375rem; letter-spacing:-.01em; line-height:1.22; -webkit-line-clamp:2;
+  }
+  :root[data-skin="pe"] .task-wrap .task .title.fit-2{
+    font-size:.84375rem; letter-spacing:-.005em; line-height:1.22; -webkit-line-clamp:2;
+  }
+  :root[data-skin="pe"] .task-wrap .task .meta{ margin-top:5px; }
+  :root[data-skin="pe"] .task-wrap .task .meta .due-tag{ padding-left:10px; }
+  :root[data-skin="pe"] .task-wrap .task .act-more{ display:none; }
+  :root[data-skin="pe"] .task-wrap .task .task-actions{
+    position:absolute; right:0; top:0; bottom:0; padding:0 8px 0 28px;
+    display:flex; align-items:center;
+    background:linear-gradient(90deg, transparent, var(--task-fill-a) 26px);
+    opacity:0; pointer-events:none; transition:opacity .16s ease;
+  }
+  :root[data-skin="pe"] .task-wrap.acts-open .task .task-actions{ opacity:1; pointer-events:auto; }
+  /* the tray's backing is the card's own tint, so it reads as the card opening, not a panel */
+  :root[data-skin="pe"] .task-wrap .task.who-p1 .task-actions{ background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--task-fill-a) 85%, var(--moody)) 26px); }
+  :root[data-skin="pe"] .task-wrap .task.who-p2 .task-actions{ background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--task-fill-a) 85%, var(--rae)) 26px); }
+  :root[data-skin="pe"] .task-wrap .task.who-both .task-actions{ background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--task-fill-b) 84%, var(--rae)) 26px); }
 </style>
 </head>
 <body>
@@ -13121,7 +13179,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 199;
+  var BUILD_NUM = 201;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14849,11 +14907,11 @@
     rail.className = "buy-actions";
     var check = document.createElement("div");
     check.className = "buy-check";
-    if(t.status === "done") check.innerHTML = '<span style="color:var(--on-accent);width:14px;height:14px;display:block;">'+ICON.check+'</span>';
+    var buyTick = '<span style="color:var(--both);width:16px;height:16px;display:block;">'+ICON.check+'</span>';
+    if(t.status === "done") check.innerHTML = buyTick;
     check.addEventListener("click", function(){
       if(t.status !== "open") return;
-      check.style.background = "var(--jade)";
-      check.style.borderColor = "var(--jade)";
+      check.innerHTML = buyTick;
       wrap.classList.add("completing");
       // Read the position BEFORE the row starts collapsing, or the celebration comes
       // out of wherever the row happened to have slid to.
@@ -25275,9 +25333,11 @@
       // line-clamp hides the overflow from scrollHeight too, so measure unclamped
       el.style.webkitLineClamp = "unset";
       var lines = function(){ return el.scrollHeight / (parseFloat(getComputedStyle(el).lineHeight) || 22); };
-      if(lines() > 2.15){
+      // BUILD 201: one line at full size, or two lines a step down, or two a
+      // step further. The card never grows and the title never drops below 13.5px.
+      if(lines() > 1.15){
         el.classList.add("fit-1");
-        if(lines() > 2.15) el.classList.add("fit-2");   // fit-2 is allowed three lines
+        if(lines() > 2.15) el.classList.add("fit-2");
       }
       el.style.webkitLineClamp = "";
     }
