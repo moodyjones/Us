@@ -6786,6 +6786,154 @@
   :root[data-skin="pe"] .task-wrap .task.who-p1 .task-actions{ background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--task-fill-a) 85%, var(--moody)) 26px); }
   :root[data-skin="pe"] .task-wrap .task.who-p2 .task-actions{ background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--task-fill-a) 85%, var(--rae)) 26px); }
   :root[data-skin="pe"] .task-wrap .task.who-both .task-actions{ background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--task-fill-b) 84%, var(--rae)) 26px); }
+
+  /* ====== BUILD 202 - SCORES JOINS WEDO ====== */
+  /* the old race rows and the duplicate stat tiles leave; the scoreboard replaces them */
+  #monthRaceBody{ display:none; }
+  #statsCard .stat-row, #statsCard .stats-empty-hint{ display:none; }
+  /* badges are a shelf, not a headline: last on the tab, and only once there's one */
+  #statsCard:not(:has(#badgeRow > :not(.empty))){ display:none; }
+  /* legacy tokens put Moody in coral: anywhere the old race still renders, fix it */
+  .race-name.p1{ color:var(--moody); } .race-name.p2{ color:var(--rae); }
+  .race-fill.p1{ background:var(--moody); } .race-fill.p2{ background:var(--rae); }
+
+  /* the card recipe the rest of the app uses, when there's no photo behind */
+
+
+  /* the task fill is warmer and lighter than the old flat card, so in dark the
+     shared --muted grey fell to 3.37:1 on it. These cards carry their own tier:
+     #C2B0BE is 5.5:1 on the fill's top edge, 6.9:1 at the bottom. */
+
+  .sc-duo{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  .sc-p{ border-radius:14px; padding:12px 14px 12px;
+    background:color-mix(in srgb, var(--owner, var(--line-2)) 12%, transparent);
+    border:1px solid color-mix(in srgb, var(--owner, var(--line-2)) 30%, transparent); }
+  .sc-p.p1{ --owner:var(--moody); } .sc-p.p2{ --owner:var(--rae); }
+  .sc-name{ font-family:var(--mono); font-size:.6875rem; font-weight:700; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--owner); }
+  .sc-num{ font-family:var(--display); font-size:2.75rem; line-height:1; letter-spacing:-.035em;
+    color:var(--text); margin-top:6px; display:flex; align-items:center; gap:6px;
+    font-variant-numeric:tabular-nums; }
+  .sc-tick{ width:22px; height:22px; color:var(--both); flex:none; }
+  .sc-sub{ font-size:.75rem; color:var(--muted); margin-top:6px; }
+  .sc-bar{ display:flex; height:6px; border-radius:6px; overflow:hidden; margin-top:14px;
+    background:color-mix(in srgb, var(--text) 10%, transparent); }
+  .sc-bar i{ display:block; height:100%; }
+  .sc-bar i.p1{ background:var(--moody); } .sc-bar i.p2{ background:var(--rae); }
+  .sc-verdict{ margin-top:10px; font-weight:700; font-size:.9375rem; color:var(--muted); }
+  .sc-verdict.win{ color:var(--jade); }
+  .sc-all{ margin-top:4px; font-family:var(--mono); font-size:.6875rem; letter-spacing:.06em; color:var(--muted); }
+
+  .pc-track{ height:6px; border-radius:6px; margin-top:14px; overflow:hidden;
+    background:color-mix(in srgb, var(--text) 10%, transparent); }
+  .pc-track i{ display:block; height:100%; width:0; background:var(--both); border-radius:6px;
+    transition:width .6s cubic-bezier(.2,.8,.2,1); }
+  :root[data-skin="pe"] #view-board .stat.is-win .num{ color:var(--jade); }
+
+  /* over the photo the glass keeps its fill and rims, but WeDO's colours come back:
+     owner names on owner chips, lime for the win. The audit holds the contrast. */
+  :root[data-skin="pe"] #view-board.on-photo .sc-p{ background:color-mix(in srgb, var(--owner) 16%, var(--card)); }
+  :root[data-skin="pe"] #view-board.on-photo .stat.is-win .num{ color:var(--jade); }
+  @media (prefers-reduced-motion:reduce){ .pc-track i{ transition:none; } }
+
+  /* ====== BUILD 203 - ONE MATERIAL, EVERY TAB ======
+     Moody: "it's clean because all the boxes are designed properly and have
+     shadows and proper liquid design." Scores was the one tab built to the full
+     card recipe (134): a translucent material over a real ground, a rim light on
+     the top edge, a fixed glare, and two shadows - a tight one that seats it and
+     a soft one that lifts it. Every other tab had a flat fill and one shadow.
+     Liquid-glass rules followed: refractive GLASS stays on the floating dock
+     (functional layer); content cards get a MATERIAL (frosted translucency),
+     never glass-on-glass. */
+  .app-ground{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden;
+    background:
+      radial-gradient(60% 45% at 12% 8%,  color-mix(in srgb, var(--moody) 30%, transparent), transparent 70%),
+      radial-gradient(55% 45% at 92% 88%, color-mix(in srgb, var(--rae) 26%, transparent), transparent 70%),
+      radial-gradient(40% 30% at 78% 34%, color-mix(in srgb, var(--both) 10%, transparent), transparent 70%),
+      var(--bg); }
+  .app-ground i{ position:absolute; inset:-48px; opacity:0; transition:opacity .5s ease;
+    background-image:inherit; background-size:cover; background-position:50% 32%;
+    filter:blur(26px) saturate(.85) contrast(.68) brightness(.6); }
+  .app-ground.has-photo{ background-image:none; }
+  .app-ground.has-photo i{ opacity:1; background-image:inherit; }
+  :root[data-mode="light"] .app-ground i{ filter:blur(26px) saturate(.8) contrast(.68) brightness(1.06); }
+  .app-ground::after{ content:""; position:absolute; inset:0;
+    background:linear-gradient(176deg, var(--bg) 0%, var(--ground-0) 18%, var(--ground-0) 80%, var(--bg) 100%); }
+  body{ background:transparent !important; }
+  html{ background:var(--bg); }
+  .board-ground{ display:none !important; }
+
+  /* the material */
+  :root[data-skin="pe"]{
+    --mat-glare:linear-gradient(126deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 26%, rgba(255,255,255,0) 52%);
+    --mat-fill:color-mix(in srgb, var(--card) 80%, transparent);
+    --mat-rim:inset 0 1px 0 rgba(255,255,255,.28);
+    --mat-drop:0 8px 10px -6px rgba(10,6,14,.30), 0 34px 60px -24px rgba(10,6,14,.45);
+    --mat-drop-sm:0 6px 8px -5px rgba(10,6,14,.30), 0 18px 34px -18px rgba(10,6,14,.42);
+  }
+  :root[data-mode="light"][data-skin="pe"]{
+    --mat-glare:linear-gradient(126deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.15) 26%, rgba(255,255,255,0) 52%);
+    --mat-rim:inset 0 1px 0 rgba(255,255,255,.75);
+    --mat-drop:0 8px 10px -6px rgba(92,52,30,.14), 0 34px 60px -24px rgba(92,52,30,.22);
+    --mat-drop-sm:0 6px 8px -5px rgba(92,52,30,.14), 0 18px 34px -18px rgba(92,52,30,.20);
+  }
+  :root[data-skin="pe"] .view .card,
+  :root[data-skin="pe"] .view .buy-card{
+    background:var(--mat-glare), var(--mat-fill);
+    border:1px solid color-mix(in srgb, var(--line-2) 70%, transparent);
+    border-radius:18px;
+    box-shadow:var(--mat-rim), var(--mat-drop);
+    /* text tiers tuned for the material, as 134 measured them over a photo */
+    --muted:#D6CEDC; --faint:#CFC6D6;
+  }
+  :root[data-mode="light"][data-skin="pe"] .view .card,
+  :root[data-mode="light"][data-skin="pe"] .view .buy-card{ --muted:#45353E; --faint:#4C3C46; }
+
+  /* a card that only holds other cards stays clear - material on material is the
+     glass-on-glass the rules forbid, and it would box the list in a second frame */
+  :root[data-skin="pe"] .view #openTasksCard{ background:none; border:0; box-shadow:none; }
+  :root[data-skin="pe"] #openTasks > .empty{
+    background:var(--mat-glare), var(--mat-fill); border:1px solid color-mix(in srgb, var(--line-2) 70%, transparent);
+    border-radius:18px; box-shadow:var(--mat-rim), var(--mat-drop-sm); padding:18px 16px;
+    color:#D6CEDC; font-style:normal; }
+  :root[data-mode="light"][data-skin="pe"] #openTasks > .empty{ color:#45353E; }
+  /* owner INK: the same two hues pushed to text strength on their own chips
+     (7.1 / 6.3:1 light, 7.6 / 6.6:1 dark; Rae light measured 5.0 over a white-blocked photo). Plain hex, so every measurement can read it. */
+  :root{ --moody-ink:#D9C7F8; --rae-ink:#FFA393; }
+  :root[data-mode="light"]{ --moody-ink:#4A2FA8; --rae-ink:#92301A; }
+  .sc-p.p1 .sc-name{ color:var(--moody-ink) !important; }
+  .sc-p.p2 .sc-name{ color:var(--rae-ink) !important; }
+  /* controls that sit on the ground (filters, sort, the recap picker) take the
+     material too, a touch more opaque - a control on bare photo is a control you
+     can't read over the dark half of somebody's room */
+  :root[data-skin="pe"] .view select, :root[data-skin="pe"] .view input[type="text"],
+  :root[data-skin="pe"] .view input:not([type]), :root[data-skin="pe"] .view textarea{
+    background-color:color-mix(in srgb, var(--card) 92%, transparent);
+    box-shadow:var(--mat-rim);
+  }
+  :root[data-skin="pe"] .view select{ color:var(--text); }
+  .sc-verdict{ font-size:1.1875rem; }
+  /* task cards: the same material, carrying their owner's tint */
+  :root[data-skin="pe"] .task-wrap .task.who-p1{ --owner-fill:linear-gradient(color-mix(in srgb, color-mix(in srgb, var(--card) 84%, var(--moody)) 82%, transparent), color-mix(in srgb, color-mix(in srgb, var(--card) 86%, var(--moody)) 82%, transparent)); }
+  :root[data-skin="pe"] .task-wrap .task.who-p2{ --owner-fill:linear-gradient(color-mix(in srgb, color-mix(in srgb, var(--card) 84%, var(--rae)) 82%, transparent), color-mix(in srgb, color-mix(in srgb, var(--card) 86%, var(--rae)) 82%, transparent)); }
+  :root[data-skin="pe"] .task-wrap .task.who-both{ --owner-fill:linear-gradient(118deg, color-mix(in srgb, color-mix(in srgb, var(--card) 84%, var(--moody)) 82%, transparent), color-mix(in srgb, color-mix(in srgb, var(--card) 84%, var(--rae)) 82%, transparent)); }
+  :root[data-skin="pe"] .task-wrap .task{
+    background:var(--mat-glare), var(--owner-fill, var(--mat-fill));
+    box-shadow:var(--mat-rim), var(--mat-drop-sm);
+    --muted:#D6CEDC; --faint:#CFC6D6;
+  }
+  :root[data-mode="light"][data-skin="pe"] .task-wrap .task{ --muted:#45353E; --faint:#4C3C46; }
+  :root[data-skin="pe"] .task-wrap .task.done{ background:var(--mat-fill); box-shadow:none; opacity:.7; }
+  /* the long-press tray backs onto the same translucent tint */
+  :root[data-skin="pe"] .task-wrap .task .task-actions{ background:none; }
+  :root[data-skin="pe"] .task-wrap.acts-open .task .task-actions{
+    background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--card) 94%, transparent) 26px); }
+
+  /* the solid fallback, both ways it can be asked for */
+  @media (prefers-reduced-transparency: reduce){
+    .app-ground i{ display:none; }
+    :root[data-skin="pe"]{ --mat-fill:var(--card); --mat-glare:linear-gradient(transparent,transparent); }
+  }
 </style>
 </head>
 <body>
@@ -7175,6 +7323,11 @@
   <div class="hud" id="hud" aria-live="polite"></div>
 </header>
 
+<!-- BUILD 203: the ground Scores stood on, now under every tab. Their latest
+     photo, blurred ONCE here, so the cards above can be translucent without each
+     one running its own backdrop blur (thirty task cards each blurring live is a
+     scroll that stutters on a phone). No photo: a field in their three colours. -->
+<div class="app-ground" id="appGround" aria-hidden="true"><i></i></div>
 <main>
   <!-- daily photo duo: each of you posts one photo a day; you see each other first thing -->
   <!-- What the app would have pushed, shown where it can actually be read. It is here and
@@ -7545,17 +7698,6 @@
          Marked aria-hidden because it is a surface, not content - everything it is
          behind is still read in order. -->
     <div class="board-ground" id="boardGround" aria-hidden="true"><i></i></div>
-    <div class="card" id="statsCard">
-      <h2>Your stats</h2>
-      <div class="stats-empty-hint" id="statsEmptyHint"></div>
-      <div class="stat-row">
-        <div class="stat"><div class="num" id="statPersonal">0</div><div class="label">Points</div></div>
-        <div class="stat jade"><div class="num" id="statThoughtful">0</div><div class="label">Thoughtful</div></div>
-        <div class="stat gold"><div class="num" id="statStreak">0</div><div class="label">Day Streak</div></div>
-      </div>
-      <div class="badge-row" id="badgeRow"></div>
-    </div>
-
     <!-- The month, as a race. Lifetime points only ever climb, so they stopped being a
          contest years of tasks ago; this resets on the 1st and is what the recap reads. -->
     <div class="card" id="monthRaceCard">
@@ -7563,6 +7705,7 @@
         <h2 style="margin:0;">This month</h2>
         <span class="note-arch-count" id="monthRaceDays"></span>
       </div>
+      <div id="scoreDuo"></div>
       <div id="monthRaceBody"></div>
       <!-- BUILD 116: this used to be one button that only ever opened LAST month, sitting
            at the foot of a card on a tab you might not open. The recap auto-opens once and
@@ -7593,6 +7736,7 @@
         <div class="stat"><div class="num" id="monthAssigned">0</div><div class="label">Assigned</div></div>
         <div class="stat"><div class="num" id="monthPct">0%</div><div class="label">On pace</div></div>
       </div>
+      <div class="pc-track" aria-hidden="true"><i id="pcFill"></i></div>
       <div id="powerCoupleStatus"></div>
     </div>
 
@@ -7604,15 +7748,20 @@
       <div class="fair-bar" id="fairCompletedBar"></div>
     </div>
 
-    <div class="card">
-      <h2>Most Thoughtful leaderboard (this month)</h2>
-      <div id="thoughtfulBoard"></div>
+    <div class="card" id="statsCard">
+      <h2>Badges</h2>
+      <div class="stats-empty-hint" id="statsEmptyHint"></div>
+      <div class="stat-row">
+        <div class="stat"><div class="num" id="statPersonal">0</div><div class="label">Points</div></div>
+        <div class="stat jade"><div class="num" id="statThoughtful">0</div><div class="label">Thoughtful</div></div>
+        <div class="stat gold"><div class="num" id="statStreak">0</div><div class="label">Day Streak</div></div>
+      </div>
+      <div class="badge-row" id="badgeRow"></div>
     </div>
 
-    <div class="card">
-      <h2>Task points leaderboard (all time)</h2>
-      <div id="pointsBoard"></div>
-    </div>
+    <!-- BUILD 202: "Most Thoughtful (this month)" and "Task points (all time)"
+         were two more cards answering "who's ahead" - and the first was mislabelled,
+         it read all-time thoughtful points. Both now live in the scoreboard above. -->
   </div>
 
   <!-- NOTES VIEW -->
@@ -13179,7 +13328,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 201;
+  var BUILD_NUM = 203;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -17247,6 +17396,14 @@
     document.getElementById("monthAssigned").textContent = m.assigned;
     var pct = m.assigned > 0 ? Math.round((m.completed/m.assigned)*100) : 0;
     document.getElementById("monthPct").textContent = pct + "%";
+    /* BUILD 202: progress toward the badge fills in the win colour, and "on pace"
+       only wears lime when it's true: done share >= share of the month gone. */
+    var fill = document.getElementById("pcFill");
+    if(fill) fill.style.width = pct + "%";
+    var dNow = new Date(), dim = new Date(dNow.getFullYear(), dNow.getMonth() + 1, 0).getDate();
+    var onPace = m.assigned > 0 && (m.completed / m.assigned) >= (dNow.getDate() / dim);
+    var pctTile = document.getElementById("monthPct");
+    if(pctTile && pctTile.parentNode) pctTile.parentNode.classList.toggle("is-win", !!(onPace || m.earned));
     var statusEl = document.getElementById("powerCoupleStatus");
     if(m.assigned === 0){
       statusEl.textContent = "Add tasks this month to work toward the badge.";
@@ -17263,6 +17420,7 @@
   function renderLeaderboards(){
     var thoughtfulWrap = document.getElementById("thoughtfulBoard");
     var pointsWrap = document.getElementById("pointsBoard");
+    if(!thoughtfulWrap || !pointsWrap) return;   // BUILD 202: folded into the scoreboard
     thoughtfulWrap.innerHTML = ""; pointsWrap.innerHTML = "";
 
     var ranked = state.people.slice().sort(function(a,b){
@@ -20595,7 +20753,48 @@
   }
 
   // ---- the race, on the leaderboard ----
+  /* BUILD 202, Moody: "why does Scores look the cleanest but follow nothing from
+     the rest of WeDO, with no green at all?" It was clean because 134 stripped
+     it: one accent, names in ink, lime figures in ink - a rule written for that
+     tab alone. And it asked "who's ahead" three times (race, thoughtful board,
+     all-time board). Now one scoreboard: each of you in your own colour, this
+     month big, thoughtful + streak under it; the leader carries the mark's lime
+     check and the verdict line says it in lime. All-time sits on one line. */
+  function renderScoreDuo(){
+    var box = document.getElementById("scoreDuo");
+    if(!box) return;
+    var mk = monthKeyNow(), st = monthStatsFor(mk);
+    var A = st.people[0], B = st.people[1];
+    if(!A || !B){ box.innerHTML = ""; return; }
+    var a = st.per[A.id].pts, b = st.per[B.id].pts;
+    var lead = a === b ? null : (a > b ? A.id : B.id);
+    var tick = '<svg class="sc-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    function side(p, pts){
+      ensurePerson(state, p.id);
+      var pp = state.points[p.id] || {}, sk = (state.streaks[p.id] || {}).current || 0;
+      var subs = [];
+      subs.push((pp.thoughtful || 0) + " thoughtful");
+      if(sk) subs.push(sk + "-day streak");
+      return '<div class="sc-p ' + p.id + (lead === p.id ? " lead" : "") + '">' +
+        '<div class="sc-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="sc-num">' + pts + (lead === p.id ? tick : "") + '</div>' +
+        '<div class="sc-sub">' + subs.join(" \u00B7 ") + '</div></div>';
+    }
+    var tot = Math.max(1, Math.max(0, a) + Math.max(0, b));
+    var wa = (a <= 0 && b <= 0) ? 50 : Math.round(Math.max(0, a) / tot * 100);
+    var verdict = lead
+      ? '<div class="sc-verdict win">' + escapeHtml(lead === A.id ? A.name : B.name) + " leads by " + Math.abs(a - b) + '</div>'
+      : '<div class="sc-verdict">Dead level</div>';
+    var allA = Math.max(0, (state.points[A.id] || {}).personal || 0) - penaltyFor(A.id);
+    var allB = Math.max(0, (state.points[B.id] || {}).personal || 0) - penaltyFor(B.id);
+    box.innerHTML =
+      '<div class="sc-duo">' + side(A, a) + side(B, b) + '</div>' +
+      '<div class="sc-bar" aria-hidden="true"><i class="p1" style="width:' + wa + '%"></i><i class="p2" style="width:' + (100 - wa) + '%"></i></div>' +
+      verdict +
+      '<div class="sc-all">All time \u00B7 ' + escapeHtml(A.name) + " " + Math.max(0, allA) + " \u00B7 " + escapeHtml(B.name) + " " + Math.max(0, allB) + '</div>';
+  }
   function renderMonthRace(){
+    try{ renderScoreDuo(); }catch(e){}
     var wrap = document.getElementById("monthRaceBody");
     if(!wrap) return;
     var mk = monthKeyNow();
@@ -22675,9 +22874,12 @@
     var src = boardGroundPhoto();
     // No photo yet is a real state, not a broken one: the tab keeps the app's own
     // wash and the cards stay solid, so nothing reads as a failed image load.
-    el.style.backgroundImage = src ? 'url("' + src + '")' : "";
-    el.classList.toggle("has-photo", !!src);
-    document.getElementById("view-board").classList.toggle("on-photo", !!src);
+    el.style.backgroundImage = "";
+    el.classList.remove("has-photo");
+    document.getElementById("view-board").classList.remove("on-photo");
+    // BUILD 203: the photo now grounds the whole app, not one tab
+    var ag = document.getElementById("appGround");
+    if(ag){ ag.style.backgroundImage = src ? 'url("' + src + '")' : ""; ag.classList.toggle("has-photo", !!src); }
   }
 
   /* ================= SONG OF THE DAY (Build 177) =================
