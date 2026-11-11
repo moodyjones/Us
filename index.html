@@ -3892,8 +3892,8 @@
 
   /* Modals used to appear with no transition at all - display:none to display:flex.
      The add-task sheet already had a rise; everything else just blinked into being. */
-  .modal-bg.show{ animation:modalFade .18s ease forwards; }
-  .modal-bg.show > .modal{ animation:modalRise .26s cubic-bezier(.16,1,.3,1) forwards; }
+  /* BUILD 204: replaced below - the overlay now fades OUT too, which a
+     display:none toggle can never do. */
   @keyframes modalFade{ from{ opacity:0; } to{ opacity:1; } }
   @keyframes modalRise{
     from{ opacity:0; transform:translateY(14px) scale(.97); }
@@ -6934,6 +6934,324 @@
     .app-ground i{ display:none; }
     :root[data-skin="pe"]{ --mat-fill:var(--card); --mat-glare:linear-gradient(transparent,transparent); }
   }
+
+  /* ====== BUILD 204 - THE POP-UPS JOIN THE APP ======
+     A dialog is the one surface that really does float over everything, so it is
+     where real glass belongs (liquid-glass rule 1: the functional layer): the
+     page behind is blurred through it, lit on the top edge, lifted by two shadows.
+     One element at a time, so the live blur is cheap. */
+  .modal-bg{
+    display:flex; visibility:hidden; opacity:0; pointer-events:none;
+    transition:opacity .2s ease, visibility 0s linear .2s;
+    background:color-mix(in srgb, var(--bg) 62%, transparent);
+    -webkit-backdrop-filter:blur(7px) saturate(.9); backdrop-filter:blur(7px) saturate(.9);
+  }
+  .modal-bg.show{ visibility:visible; opacity:1; pointer-events:auto; transition:opacity .2s ease, visibility 0s; }
+  .modal-bg > .modal{ transform:translateY(10px) scale(.97); transition:transform .2s cubic-bezier(.4,0,.6,1); }
+  .modal-bg.show > .modal{ transform:none; animation:modalSpring .46s cubic-bezier(.2,1.25,.35,1) both; }
+  @keyframes modalSpring{ from{ opacity:0; transform:translateY(18px) scale(.93); } 60%{ opacity:1; } to{ opacity:1; transform:none; } }
+  /* the card recipe's stagger: each line arrives 45ms after the one above */
+  .modal-bg.show > .modal > *{ animation:modalLine .42s cubic-bezier(.2,.8,.2,1) both; }
+  .modal-bg.show > .modal > :nth-child(1){ animation-delay:.06s; } .modal-bg.show > .modal > :nth-child(2){ animation-delay:.105s; }
+  .modal-bg.show > .modal > :nth-child(3){ animation-delay:.15s; }  .modal-bg.show > .modal > :nth-child(4){ animation-delay:.195s; }
+  .modal-bg.show > .modal > :nth-child(5){ animation-delay:.24s; }  .modal-bg.show > .modal > :nth-child(n+6){ animation-delay:.285s; }
+  @keyframes modalLine{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+
+  :root[data-skin="pe"] .modal{
+    background:var(--mat-glare), color-mix(in srgb, var(--card) 74%, transparent);
+    -webkit-backdrop-filter:blur(28px) saturate(160%); backdrop-filter:blur(28px) saturate(160%);
+    border:1px solid color-mix(in srgb, var(--line-2) 75%, transparent);
+    border-radius:26px; padding:26px 22px 22px;
+    box-shadow:var(--mat-rim), 0 10px 14px -8px rgba(10,6,14,.4), 0 44px 80px -28px rgba(10,6,14,.6);
+    --muted:#D6CEDC; --faint:#CFC6D6;
+  }
+  :root[data-mode="light"][data-skin="pe"] .modal{
+    --muted:#45353E; --faint:#4C3C46;
+    box-shadow:var(--mat-rim), 0 10px 14px -8px rgba(92,52,30,.18), 0 44px 80px -28px rgba(92,52,30,.3);
+  }
+  /* forms want a calmer ground than news does */
+  :root[data-skin="pe"] .modal.wide{ background:var(--mat-glare), color-mix(in srgb, var(--card) 95%, transparent); }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    :root[data-skin="pe"] .modal{ background:var(--card); }
+  }
+  @media (prefers-reduced-transparency: reduce){
+    :root[data-skin="pe"] .modal, :root[data-skin="pe"] .modal.wide{ background:var(--card); -webkit-backdrop-filter:none; backdrop-filter:none; }
+  }
+
+  /* hierarchy: icon, small label, the headline, one calm line, the action */
+  .modal .emoji{ font-size:2.75rem; line-height:1; margin:0 auto 14px; width:76px; height:76px;
+    display:flex; align-items:center; justify-content:center; position:relative; border-radius:50%;
+    background:color-mix(in srgb, var(--text) 7%, transparent);
+    box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--text) 10%, transparent); }
+  .modal-eyebrow{ font-family:var(--mono); font-size:.6875rem; font-weight:700; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
+  :root[data-skin="pe"] .modal h3{ font-size:1.5rem; line-height:1.12; letter-spacing:-.025em; margin:0 0 8px; text-wrap:balance; }
+  :root[data-skin="pe"] .modal p{ font-size:.9375rem; line-height:1.45; color:var(--muted); margin:0 0 20px; }
+  #modalText{ text-align:center; }
+  .modal.long #modalText{ text-align:left; font-size:.875rem; line-height:1.55; }
+  :root[data-skin="pe"] .modal label{ text-align:left; }
+
+  /* a WIN: the mark's lime, as a halo that breathes out once and an icon that lands */
+  .modal[data-kind="win"] .emoji{
+    background:color-mix(in srgb, var(--both) 14%, transparent);
+    box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--both) 62%, transparent); }
+  .modal[data-kind="win"] .emoji::after{ content:""; position:absolute; inset:0; border-radius:50%;
+    border:2px solid var(--both); opacity:0; pointer-events:none; }
+  .modal-bg.show > .modal[data-kind="win"] .emoji{ animation:modalIcon .62s cubic-bezier(.3,1.5,.4,1) .08s both; }
+  .modal-bg.show > .modal[data-kind="win"] .emoji::after{ animation:modalHalo .9s cubic-bezier(.2,.7,.2,1) .3s both; }
+  .modal[data-kind="win"] .modal-eyebrow{ color:var(--jade); }
+  @keyframes modalIcon{ from{ opacity:0; transform:scale(.4) rotate(-12deg); } 60%{ opacity:1; transform:scale(1.12) rotate(3deg); } to{ opacity:1; transform:none; } }
+  @keyframes modalHalo{ from{ opacity:.9; transform:scale(1); } to{ opacity:0; transform:scale(1.75); } }
+  /* drawn icons: ink by default, the mark's lime when it's a win - never coral,
+     which is a person */
+  .modal .emoji .wd-i, .modal .emoji .modal-ico{ color:var(--text); }
+  .modal[data-kind="win"] .emoji .wd-i, .modal[data-kind="win"] .emoji .modal-ico{ color:var(--jade); }
+  .modal .emoji .q-mark{ font-family:var(--display); font-size:2.25rem; font-weight:600; color:var(--text); line-height:1; }
+  /* a PROBLEM is not a party: no halo, and the button doesn't shout */
+  :root[data-skin="pe"] .modal[data-kind="problem"] #modalClose{
+    background:color-mix(in srgb, var(--text) 9%, transparent); color:var(--text);
+    box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--text) 16%, transparent); }
+
+  /* THE primary action wears the two of you - the dock pill's lilac-to-coral -
+     everywhere, not just here. Coral alone is Rae's colour, not the app's. */
+  :root[data-skin="pe"] button.primary, :root[data-skin="pe"] .fab{
+    background:var(--dock-sel-fill); color:var(--dock-sel-ink);
+    box-shadow:0 8px 22px -8px color-mix(in srgb, var(--rae) 55%, transparent), 0 4px 12px -6px color-mix(in srgb, var(--moody) 50%, transparent), inset 0 1px 0 rgba(255,255,255,.28);
+  }
+  :root[data-skin="pe"] .modal button.primary, :root[data-skin="pe"] .modal button.ghost{ min-height:50px; border-radius:16px; font-size:1rem; }
+  :root[data-skin="pe"] button.primary:active{ transform:scale(.975); }
+
+  /* short dialogs: the buttons are just the last row. The sticky bar (built for
+     forms taller than the phone) was sliding up over the last line of text and
+     leaving a dead band under the buttons. */
+  .modal:not(.wide) .row2:last-child, .modal:not(.wide) .modal-actions{
+    position:static; margin:0; padding:0; background:none !important; }
+  .modal:not(.wide) .row2:last-child::before, .modal:not(.wide) .modal-actions::before{ content:none; }
+  .modal:not(.wide) .modal-actions .step-dots{ margin-bottom:14px; }
+  /* forms: the bar stays reachable, flush with the panel, no band */
+  :root[data-skin="pe"] .modal.wide .row2:last-child, :root[data-skin="pe"] .modal.wide .modal-actions{
+    margin:16px -22px -22px; padding:12px 22px 22px;
+    background:linear-gradient(to bottom, transparent, var(--card) 16px) !important;
+    border-radius:0 0 25px 25px; }
+  :root[data-skin="pe"] .modal.wide .row2:last-child::before, :root[data-skin="pe"] .modal.wide .modal-actions::before{ content:none; }
+  :root[data-skin="pe"] .modal.wide .modal-actions > .row2{ margin:0; padding:0; background:none !important; border-radius:0; }
+
+  @media (prefers-reduced-motion: reduce){
+    .modal-bg, .modal-bg.show, .modal-bg > .modal{ transition:none; }
+    .modal-bg.show > .modal, .modal-bg.show > .modal > *, .modal-bg.show > .modal[data-kind="win"] .emoji,
+    .modal-bg.show > .modal[data-kind="win"] .emoji::after{ animation:none; }
+  }
+
+  /* ====== BUILD 204b - SHEETS AND TOASTS JOIN THE POP-UPS ======
+     Captured on the add-task sheet, the task sheet and the toast: each still
+     carried the 134 flat panel and a flat scrim, while a dialog floated as glass.
+     Same material, same scrim, same rim light for every floating layer. */
+  :root[data-skin="pe"] .sheet-bg,
+  :root[data-skin="pe"] .album-bg{
+    background:color-mix(in srgb, var(--bg) 62%, transparent);
+    -webkit-backdrop-filter:blur(7px) saturate(.9); backdrop-filter:blur(7px) saturate(.9);
+  }
+  :root[data-skin="pe"] .sheet,
+  :root[data-skin="pe"] .album-sheet{
+    background:var(--mat-glare), color-mix(in srgb, var(--card) 92%, transparent);
+    -webkit-backdrop-filter:blur(28px) saturate(160%); backdrop-filter:blur(28px) saturate(160%);
+    border:1px solid color-mix(in srgb, var(--line-2) 75%, transparent);
+    box-shadow:var(--mat-rim), 0 10px 14px -8px rgba(10,6,14,.4), 0 44px 80px -28px rgba(10,6,14,.6);
+    --muted:#D6CEDC; --faint:#CFC6D6;
+  }
+  :root[data-skin="pe"] .tm-sheet{
+    background:var(--mat-glare), color-mix(in srgb, var(--card) 92%, transparent);
+    -webkit-backdrop-filter:blur(28px) saturate(160%); backdrop-filter:blur(28px) saturate(160%);
+    box-shadow:var(--mat-rim), 0 10px 14px -8px rgba(10,6,14,.4), 0 44px 80px -28px rgba(10,6,14,.6);
+  }
+  :root[data-mode="light"][data-skin="pe"] .sheet,
+  :root[data-mode="light"][data-skin="pe"] .album-sheet,
+  :root[data-mode="light"][data-skin="pe"] .tm-sheet{
+    --muted:#45353E; --faint:#4C3C46;
+    box-shadow:var(--mat-rim), 0 10px 14px -8px rgba(92,52,30,.18), 0 44px 80px -28px rgba(92,52,30,.3);
+  }
+  :root[data-skin="pe"] .toast{
+    background:var(--mat-glare), color-mix(in srgb, var(--card) 88%, transparent);
+    -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid color-mix(in srgb, var(--line-2) 75%, transparent);
+    box-shadow:var(--mat-rim), 0 10px 14px -8px rgba(10,6,14,.4), 0 30px 50px -22px rgba(10,6,14,.55);
+  }
+  /* the difficulty select was clipping "Medium · 10 pts": it gets the room */
+  :root[data-skin="pe"] #addTaskSheet .row2 > *:first-child{ flex:1 1 0; }
+  :root[data-skin="pe"] #difficultyFieldWrap{ flex:2 1 0 !important; }
+  :root[data-skin="pe"] #taskDifficulty{ text-overflow:ellipsis; white-space:nowrap; }
+  /* the song ticket is a content card like the rest: the same material, not a flat --card */
+  :root[data-skin="pe"] .ticket{
+    background:var(--mat-glare), var(--mat-fill);
+    box-shadow:var(--mat-rim), var(--mat-drop-sm);
+  }
+  /* the recap's own buttons fell back to the browser face; they take the app's */
+  :root[data-skin="pe"] .album-sheet button{ font-family:inherit; }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    :root[data-skin="pe"] .sheet, :root[data-skin="pe"] .album-sheet,
+    :root[data-skin="pe"] .tm-sheet, :root[data-skin="pe"] .toast{ background:var(--card); }
+  }
+
+  /* ====== BUILD 205 - ONE COLOUR LAW ======
+     Moody: "the colours don't match the whole design - there isn't a strict brand
+     guideline to follow." There is now, and it has four lines:
+       LILAC  is Moody.  CORAL is Rae.  Both, on the diagonal, is "together" and
+              the one selected thing (dock pill, list pill, primary button).
+       LIME   is done and winning - the check, a lead, progress toward a badge.
+       INK    is everything else: text in three tiers. Late, warnings, effort,
+              dates, icons - all ink. No gold, no rose, no amber, no blue, no
+              emoji colour in the app's own voice.
+     What broke it: late cards wore Rae's coral (so Moody's late list read as hers),
+     effort labels wore gold/peach, the health card spoke in amber, a lime headline,
+     a blue drop and three emoji. */
+
+  /* effort is a fact, not a mood: ink */
+  :root[data-skin="pe"] .task .meta .diff-lvl.diff-easy,
+  :root[data-skin="pe"] .task .meta .diff-lvl.diff-medium,
+  :root[data-skin="pe"] .task .meta .diff-lvl.diff-hard,
+  :root[data-skin="pe"] .diff-easy, :root[data-skin="pe"] .diff-medium, :root[data-skin="pe"] .diff-hard{ color:var(--muted); }
+  :root[data-skin="pe"] .task:not(.done) .diff-hard i.on,
+  :root[data-skin="pe"] .task:not(.done) .diff-medium i.on,
+  :root[data-skin="pe"] .task:not(.done) .diff-easy i.on{ background:var(--text); }
+
+  /* late: an ink label, never somebody's colour. The card keeps its owner. */
+  :root[data-skin="pe"] .task-wrap .task.who-p1[data-late]{ border-color:color-mix(in srgb, var(--moody) 32%, var(--task-fill-a)); }
+  :root[data-skin="pe"] .task-wrap .task.who-p2[data-late]{ border-color:color-mix(in srgb, var(--rae) 32%, var(--task-fill-a)); }
+  :root[data-skin="pe"] .task-wrap .task.who-both[data-late]{ border-color:color-mix(in srgb, var(--moody) 18%, color-mix(in srgb, var(--rae) 18%, var(--task-fill-a))); }
+  :root[data-skin="pe"] .task-wrap .task[data-late]:not(.done){
+    background-image:var(--mat-glare), var(--owner-fill, var(--mat-fill));
+    box-shadow:var(--mat-rim), var(--mat-drop-sm);
+  }
+  :root[data-skin="pe"] .task-wrap .task .meta .due-tag.overdue,
+  :root[data-skin="pe"] .task .meta .due-tag.overdue,
+  :root[data-skin="pe"] .due-tag.overdue{
+    color:var(--bg); background:var(--text); font-weight:700;
+    padding:2px 7px; border-radius:6px; margin-left:auto;
+  }
+  :root[data-skin="pe"] .task-wrap .task.due-today .meta .due-tag{
+    color:var(--text); background:none; box-shadow:inset 0 0 0 1.5px var(--text);
+    padding:2px 7px; border-radius:6px;
+  }
+  :root[data-skin="pe"] .tm-fv.late{ color:var(--text); font-weight:700; }
+
+  /* warnings are content in ink, not an amber ad (banner blindness) */
+  .inline-warn{ color:currentColor; }
+  :root[data-skin="pe"] .health-stale-warn,
+  :root[data-skin="pe"] .health-stale-warn.is-stuck{
+    background:color-mix(in srgb, var(--text) 6%, transparent);
+    border:1px solid var(--line-2); border-left:3px solid var(--text);
+    border-radius:12px; color:var(--muted);
+  }
+  :root[data-skin="pe"] .health-stale-warn b{ color:var(--text); }
+  :root[data-skin="pe"] .health-stale{ color:var(--muted); }
+  /* the day's leader: numbers in ink, the lead in lime - exactly as Scores says it */
+  :root[data-skin="pe"] .health-val,
+  :root[data-skin="pe"] .health-grid .health-val.win.p1,
+  :root[data-skin="pe"] .health-grid .health-val.win.p2{ color:var(--text); }
+  :root[data-skin="pe"] .health-grid .health-val.win{ position:relative; }
+  :root[data-skin="pe"] .health-grid .health-val.win::after{
+    content:""; display:inline-block; width:.8em; height:.8em; margin-left:5px; vertical-align:.02em;
+    background:var(--both);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  .hd-mark{ display:inline-flex; vertical-align:-0.14em; margin:0 2px 0 4px; }
+  .hd-mark.ok{ color:var(--both); } .hd-mark.wait, .hd-mark.bad{ color:var(--text); }
+  /* a challenge headline is a fact, in ink; its progress bar is the lime */
+  :root[data-skin="pe"] .chal-day{ color:var(--text); }
+  :root[data-skin="pe"] .chal-emoji{ color:var(--text); display:inline-flex; }
+
+  /* ====== the list rail ======
+     Moody: "a weird line at the bottom, no icons, space being wasted."
+     The line was 143's travelling underline, still running under a pill that has
+     been filled since 186 - two "selected" marks on one button. The icons were
+     hidden in 133 when the pills were bare words; pills are objects again, so
+     the drawn icon comes back at one size. Rail height 44 -> 36 visual (44 tap
+     kept by padding on the row), gap one step. */
+  :root[data-skin="pe"] .list-pills .pill-ind{ display:none !important; }
+  :root[data-skin="pe"] .list-pills{ gap:8px !important; padding:4px 0; margin-bottom:12px; }
+  :root[data-skin="pe"] .list-pills button{
+    min-height:38px !important; padding:0 14px 0 11px !important; gap:7px;
+    display:inline-flex; align-items:center; opacity:1 !important; color:var(--muted) !important;
+    background:var(--mat-glare), var(--mat-fill) !important;
+    box-shadow:var(--mat-rim) !important; border-color:color-mix(in srgb, var(--line-2) 75%, transparent) !important;
+  }
+  :root[data-skin="pe"] .list-pills button .pill-ico{ display:inline-flex !important; width:16px; height:16px; }
+  :root[data-skin="pe"] .list-pills button .pill-ico svg{ width:16px; height:16px; }
+  :root[data-skin="pe"] .list-pills button.active,
+  :root[data-skin="pe"] .list-pills.ind-on button.active{
+    background:var(--dock-sel-fill) !important; color:var(--dock-sel-ink) !important; border-color:transparent !important;
+  }
+  :root[data-skin="pe"] .list-pills button.add-list,
+  :root[data-skin="pe"] .list-pills button.add-list.is-plus{
+    border-style:solid !important; width:38px; min-width:38px; padding:0 !important; justify-content:center;
+    color:var(--muted) !important;
+  }
+
+  /* ====== Done: a quiet row, not another task ======
+     Moody: "why does the done tab look like all the other tasks and why is it
+     so large?" It was a full card with a 28px serif heading. Done things are
+     the past: one 44px row, ink metadata, a chevron. */
+  :root[data-skin="pe"] #doneCard{
+    background:none !important; border:0 !important; box-shadow:none !important;
+    padding:0 !important; margin-top:6px;
+  }
+  :root[data-skin="pe"] #doneCard .card-collapse{
+    min-height:44px; padding:0 4px; border-top:1px solid var(--line-2);
+    display:flex; align-items:center; gap:10px;
+  }
+  :root[data-skin="pe"] #doneCard .card-collapse h2{
+    font-family:var(--mono) !important; font-size:.6875rem !important; font-weight:600 !important;
+    letter-spacing:.12em !important; text-transform:uppercase; color:var(--muted) !important; line-height:1;
+  }
+  :root[data-skin="pe"] #doneCard .cc-count{ font-family:var(--mono); font-size:.6875rem; letter-spacing:.06em; color:var(--muted); }
+  :root[data-skin="pe"] #doneCard .cc-chev{ margin-left:auto; color:var(--muted); }
+  /* the sync drawer is the same kind of thing: a quiet row */
+  :root[data-skin="pe"] details.sync{ margin-top:8px; }
+  :root[data-skin="pe"] details.sync > summary{
+    list-style:none; min-height:44px; display:flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:.6875rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted); border-top:1px solid var(--line-2); padding:0 4px;
+  }
+  :root[data-skin="pe"] details.sync > summary::-webkit-details-marker{ display:none; }
+
+  /* ====== edit form: the card material, the name first ====== */
+  :root[data-skin="pe"] .edit-form{
+    background:var(--mat-glare), color-mix(in srgb, var(--card) 94%, transparent);
+    border:1px solid color-mix(in srgb, var(--line-2) 75%, transparent); border-radius:16px;
+    box-shadow:var(--mat-rim), var(--mat-drop-sm); padding:14px; margin-top:8px;
+  }
+  .edit-form .ef-lab{ font-family:var(--mono); font-size:.6875rem; font-weight:600; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
+  .edit-form .edit-title{ font-size:max(16px, 1rem); font-weight:600; }
+  /* the add button can't sit on the Save button */
+  body:has(.edit-form) .fab{ opacity:0; pointer-events:none; transform:scale(.8); }
+
+  /* focus is "you are here", not Rae: an ink ring */
+  :root[data-skin="pe"] input:focus, :root[data-skin="pe"] select:focus,
+  :root[data-skin="pe"] textarea:focus{ border-color:color-mix(in srgb, var(--text) 70%, transparent); }
+  :root[data-skin="pe"] input:focus-visible, :root[data-skin="pe"] select:focus-visible,
+  :root[data-skin="pe"] textarea:focus-visible, :root[data-skin="pe"] [tabindex]:focus-visible,
+  :root[data-skin="pe"] [role="button"]:focus-visible{ outline:2px solid color-mix(in srgb, var(--text) 70%, transparent); outline-offset:2px; }
+
+  /* light mode: the photo ground was bright enough to swallow the words that sit
+     straight on it (section heads, "done today", the Done row). A cream veil over
+     the photo, the way the dark build already dims it. */
+  :root[data-mode="light"] .app-ground.has-photo::after{
+    background:linear-gradient(176deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 62%, transparent) 16%,
+      color-mix(in srgb, var(--bg) 62%, transparent) 82%, var(--bg) 100%);
+  }
+  :root[data-skin="pe"] #doneCard .card-collapse h2{ margin:0 !important; }
+
+  /* ====== the sheets: the veil carries the blur ======
+     204 gave the task sheet its own backdrop blur. Under a clip-path morph that
+     froze iOS on the first frame. One blur per layer, on the veil. */
+  :root[data-skin="pe"] .tm-sheet,
+  :root[data-skin="pe"] .sheet,
+  :root[data-skin="pe"] .album-sheet{
+    -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
+    background:var(--mat-glare), color-mix(in srgb, var(--card) 97%, transparent);
+  }
 </style>
 </head>
 <body>
@@ -8153,9 +8471,10 @@
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <div class="emoji" id="modalEmoji">🎉</div>
+    <div class="modal-eyebrow" id="modalEyebrow"></div>
     <h3 id="modalTitle">Nice!</h3>
     <p id="modalText"></p>
-    <button class="primary" id="modalClose" style="width:100%;">Sweet</button>
+    <button class="primary" id="modalClose" style="width:100%;">Got it</button>
   </div>
 </div>
 
@@ -8365,6 +8684,7 @@
     bag:      '<rect x="3.5" y="7.6" width="17" height="12.9" rx="2"/><path d="M8.6 7.6V5.2a2 2 0 0 1 2-2h2.8a2 2 0 0 1 2 2v2.4M3.5 12h17"/>',
     up:       '<path d="M12 20.4V4.1M5.6 10.5 12 4.1l6.4 6.4"/>',
     refresh:  '<path d="M20.4 12a8.4 8.4 0 1 1-2.5-6"/><path d="M20.4 3.6v5.5h-5.5"/>',
+    drop:     '<path d="M12 3.3c3.4 4.3 6.3 7.7 6.3 11.1a6.3 6.3 0 0 1-12.6 0c0-3.4 2.9-6.8 6.3-11.1z"/>',
     plant:    '<path d="M12 21v-6.6"/><path d="M12 14.4c0-3.8 2.6-6.4 6.4-6.4 0 3.8-2.6 6.4-6.4 6.4z"/><path d="M12 16.2c0-3.2-2.2-5.4-5.4-5.4 0 3.2 2.2 5.4 5.4 5.4z"/>',
     eye:      '<path d="M2.6 12S6.1 5.6 12 5.6 21.4 12 21.4 12 17.9 18.4 12 18.4 2.6 12 2.6 12z"/><circle cx="12" cy="12" r="2.9"/>',
     down:     '<path d="M3.5 7.3 9.8 13.6l3.3-3.3 7.4 7.4"/><path d="M20.5 12.6v5.1h-5.1"/>',
@@ -8708,7 +9028,7 @@
     "☀️":"sun", "🌤️":"sun", "🌞":"sun",
     "👑":"crown", "🏅":"trophy", "🥇":"trophy",
     "💬":"chat", "🤝":"users", "🛟":"ring", "🎯":"target", "🧳":"bag",
-    "⬆️":"up", "🔁":"refresh", "🌱":"plant", "👀":"eye", "📉":"down",
+    "⬆️":"up", "🔁":"refresh", "🌱":"plant", "💧":"drop", "\uD83D\uDCA7":"drop", "👀":"eye", "📉":"down",
     "✨":"spark", "🌟":"spark", "⭐️":"spark", "⭐":"spark", "💫":"spark",
     "🎉":"spark", "🎈":"spark", "🥂":"spark"
   };
@@ -10222,7 +10542,9 @@
     // dialogs in the same app disagreed about what an icon was.
     var ce = document.getElementById("confirmEmoji");
     var csvg = iconForEmoji(emoji, 42, "modal-ico");
-    if(csvg){ ce.innerHTML = csvg; } else { ce.textContent = emoji; }
+    if(csvg){ ce.innerHTML = csvg; }
+    else if(String(emoji || "").trim() === "\u2753"){ ce.innerHTML = '<span class="q-mark">?</span>'; }   // a red emoji "?" shouted at a calm question
+    else { ce.textContent = emoji; }
     document.getElementById("confirmTitle").textContent = title;
     document.getElementById("confirmText").textContent = text;
     document.getElementById("confirmYes").textContent = yesLabel || "Yes";
@@ -10243,14 +10565,42 @@
      a label the app chose for itself, never one a person picked - so the one place worth
      changing is here rather than at thirty call sites. Anything without a drawn equivalent
      still renders as the emoji, so an unmapped one degrades to exactly what it did before. */
-  function showModal(emoji, title, text){
+  /* BUILD 204, Moody, on the prize pop-up: "another page not branded properly."
+     One dialog carried 42 different messages and treated them all the same:
+     a prize, a 30-day streak and "couldn't read that photo" each got the same
+     flat panel and the same button reading "Sweet". It now knows what it is
+     carrying - a WIN (lime halo, the icon pops, "Nice"), a PROBLEM (calm,
+     "OK"), or plain news ("Got it") - worked out from the message unless the
+     caller says. opts.eyebrow puts a small label above the headline, so a prize
+     can lead with the prize. */
+  var MODAL_WIN = {"\uD83C\uDFA1":1, "\uD83D\uDD25":1, "\uD83D\uDC51":1, "\uD83E\uDD1D":1, "\uD83D\uDCAC":1,
+                   "\uD83D\uDEDF":1, "\uD83D\uDC9E":1, "\uD83C\uDFC6":1, "\uD83C\uDF89":1};
+  var MODAL_PROBLEM = /^(couldn.?t|out of|no address|nothing to|why nothing|sync first|connect the|that didn.?t|note didn.?t|saved here, but|the numbers didn.?t)/i;
+  function showModal(emoji, title, text, opts){
+    opts = opts || {};
     var el = document.getElementById("modalEmoji");
     var svg = iconForEmoji(emoji, 42, "modal-ico");
     if(svg){ el.innerHTML = svg; } else { el.textContent = emoji; }
+    el.style.display = emoji ? "" : "none";
+    var kind = opts.kind || (MODAL_PROBLEM.test(String(title || "")) ? "problem"
+             : (MODAL_WIN[String(emoji || "").trim()] ? "win" : "info"));
+    var box = modalBg.querySelector(".modal");
+    box.setAttribute("data-kind", kind);
+    var body = String(text == null ? "" : text);
+    // short news is centred like the headline; steps and addresses read left
+    box.classList.toggle("long", body.length > 120 || body.indexOf("\n") >= 0);
+    var eb = document.getElementById("modalEyebrow");
+    eb.textContent = opts.eyebrow || ""; eb.style.display = opts.eyebrow ? "" : "none";
     document.getElementById("modalTitle").textContent = title;
-    document.getElementById("modalText").textContent = text;
+    var mt = document.getElementById("modalText");
+    mt.textContent = body; mt.style.display = body ? "" : "none";
+    document.getElementById("modalClose").textContent =
+      opts.button || (kind === "win" ? "Nice" : kind === "problem" ? "OK" : "Got it");
     modalBg.classList.add("show");
+    try{ if(kind === "win" && !motionOff()) sfx("rise"); }catch(e){}
   }
+  // gates only: lets the test harness raise real dialogs through the real function
+  try{ if(localStorage.getItem("us-test-hooks") === "1") window.__wedoTest = {showModal: showModal, showConfirm: showConfirm}; }catch(e){}
   document.getElementById("modalClose").addEventListener("click", function(){
     modalBg.classList.remove("show");
   });
@@ -13328,7 +13678,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 203;
+  var BUILD_NUM = 205;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14482,11 +14832,12 @@
     function mark(pid){
       var d = healthDiag[pid];
       if(!d) return "·";
-      if(d.reason === "ok") return "✅";
+      if(d.reason === "ok") return '<span class="hd-mark ok">' + icon("check", 13) + '</span>';
       // "nothing has arrived yet" is a waiting state, not a fault — a red cross next to a
       // phone that simply hasn't run its shortcut yet reads as something being broken
       return (d.reason === "no-message" || d.reason === "no-topic" || d.reason === "no-file" ||
-              d.reason === "offline") ? "⚠️" : "❌";
+              d.reason === "offline") ? '<span class="hd-mark wait">' + icon("warn", 13) + '</span>'
+                                : '<span class="hd-mark bad">' + icon("x", 13) + '</span>';
     }
     return '<details class="health-diag" id="healthDiag"><summary>Health pipeline ' +
       mark("p1") + " " + escapeHtml(personName("p1")) + " · " +
@@ -15344,8 +15695,11 @@
         '<button type="button" class="ghost alt-add-btn" style="width:100%;margin-top:6px;">Add option</button></div>';
     }
 
-    box.innerHTML = '<div style="margin-bottom:8px;font-size:0.6875rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);">Edit item</div>' +
-      '<select class="edit-assignee">'+assigneeOptions+'</select>' +
+    // BUILD 205, Moody: "you can't edit the name of a task." The form had who,
+    // effort and date - every field but the one people most often get wrong.
+    box.innerHTML = '<div class="ef-lab">Edit task</div>' +
+      '<input type="text" class="edit-title" aria-label="Task name" maxlength="140" value="'+escapeAttr(t.title||"")+'">' +
+      '<select class="edit-assignee" aria-label="Who">'+assigneeOptions+'</select>' +
       fieldsHtml +
       '<input type="date" class="edit-duedate" aria-label="Due date (optional)" value="'+escapeAttr(t.dueDate||"")+'" style="margin-top:8px;">' +
       '<div class="row2" style="margin-top:8px;"><button type="button" class="ghost edit-cancel">Cancel</button><button type="button" class="primary edit-save">Save</button></div>' +
@@ -15357,6 +15711,8 @@
     });
     box.querySelector(".edit-save").addEventListener("click", function(){
       touch(t);
+      var nt = box.querySelector(".edit-title").value.replace(/\s+/g, " ").trim();
+      if(nt) t.title = nt;
       t.assignedTo = box.querySelector(".edit-assignee").value;
       if(list.priceBased){
         var oldLink = t.link;
@@ -18570,8 +18926,12 @@
         newStrip.style.transition = keepTr || "";
       }
       renderStats();
-      var tierLabel = chosen.tier==="rare" ? "RARE WIN! 🌟" : (chosen.tier==="uncommon" ? "Nice pull! ✨" : "You got:");
-      showModal(chosen.emoji, tierLabel, chosen.name);
+      /* BUILD 204: the headline was "Nice pull!" and the thing you actually won
+         sat under it in 13px grey. The prize is the headline now; the tier is the
+         label above it; the line under it says where it went. */
+      var tierLabel = chosen.tier==="rare" ? "Rare win" : (chosen.tier==="uncommon" ? "Uncommon \u00B7 nice pull" : "You won");
+      showModal(chosen.emoji, chosen.name, "It\u2019s yours. Saved under Rewards won.",
+        {kind:"win", eyebrow:tierLabel, button:"Nice"});
     }, 4100);
     save();
   });
@@ -22341,7 +22701,7 @@
     var top = document.createElement("div");
     top.className = "chal-top";
     top.innerHTML =
-      '<div class="chal-emoji">' + escapeHtml(c.emoji || "\uD83C\uDF31") + '</div>' +
+      '<div class="chal-emoji">' + (iconForEmoji(c.emoji || "\uD83C\uDF31", 22) || escapeHtml(c.emoji || "\uD83C\uDF31")) + '</div>' +
       '<div class="chal-head">' +
         '<div class="chal-day">' + (idx < 0
             ? "Starts " + prettyShort(c.startDate)
@@ -25405,7 +25765,15 @@
     var edit = document.createElement("button");
     edit.className = "ghost"; edit.type = "button"; edit.textContent = "Edit";
     edit.addEventListener("click", function(){
-      tmClose(function(){ openEditIds[t.id] = true; renderAll(); });
+      tmClose(function(){
+        openEditIds[t.id] = true; renderAll();
+        // land on the form, with the name ready to type over
+        setTimeout(function(){
+          var f = document.querySelector('.edit-form .edit-title');
+          if(f){ f.closest(".edit-form").scrollIntoView({block:"center", behavior: motionOff() ? "auto" : "smooth"});
+                 try{ f.focus({preventScroll:true}); f.select(); }catch(e){} }
+        }, 60);
+      });
     });
     acts.appendChild(edit);
     if(t.status === "open"){
@@ -25484,7 +25852,12 @@
               clipPath: tmClip(box, to, 10 + (18 - 10) * e)};
     });
     try{
-      sheet.animate(frames, {duration: sp.duration, fill: "backwards"});
+      var tmAnim = sheet.animate(frames, {duration: sp.duration, fill: "backwards"});
+      // BUILD 205: on Moody's iPhone the sheet froze on its FIRST frame - clipped to
+      // the size of the row - after 204 put a backdrop blur on this clipped element.
+      // The blur is gone (below); this also drops the animation outright once it
+      // ends, so no engine is left holding a clip.
+      if(tmAnim && tmAnim.finished) tmAnim.finished.then(function(){ try{ tmAnim.cancel(); }catch(e){} sheet.style.clipPath = ""; }, function(){});
       [].slice.call(tmEl.querySelectorAll("[data-tm-line]")).forEach(function(line, n){
         if(line.hidden) return;
         line.animate([{opacity:0, transform:"translateY(9px)"}, {opacity:1, transform:"none"}],
