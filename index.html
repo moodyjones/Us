@@ -7528,6 +7528,59 @@
   .su-fine{ margin:0; font-size:.75rem; line-height:1.5; color:var(--muted); }
   .su-gh > summary{ color:var(--muted); font-weight:500; }
   .su-ghb{ display:flex; flex-direction:column; gap:8px; padding-bottom:12px; }
+
+  /* ====== BUILD 209 ======
+     Moody: "archaic icons and fonts", "so much space between the top menu and
+     the list", "past-due dates don't show red", "the glass interface where I
+     could slide left to right". */
+
+  /* 1. The display face has one weight. Asking it for 600 made the browser
+        smear a fake bold - the clumsy "old" look on every title. */
+  :root[data-skin="pe"]{ font-synthesis-weight:none; }
+  :root[data-skin="pe"] .modal h3, :root[data-skin="pe"] #tourTitle{ font-weight:400; font-size:1.75rem; letter-spacing:-.03em; line-height:1.05; }
+  .step-dots i.on, :root[data-skin="pe"] .step-dots i.on{ background:var(--text); width:18px; border-radius:4px; }
+  .step-dots i{ transition:width .3s cubic-bezier(.2,.8,.2,1), background .2s ease; }
+
+  /* 2. Space. Measured on Tasks: the first task sat 518px down a 664px
+        screen. Every gap is now 8, 12 or 16; the motto and the big lockup
+        belong to Today, the other tabs get a compact header. */
+  :root[data-skin="pe"] header{ padding:14px 20px 0; }
+  body:not(:has(#view-today.active)) header .wm-head{ height:1.75em; }
+  body:not(:has(#view-today.active)) header .sub.tagline{ display:none !important; }
+  :root[data-skin="pe"] .us-bar{ padding-top:8px !important; padding-bottom:6px !important; margin:0 !important; }
+  :root[data-skin="pe"] .us-caption{ margin:2px 0 10px !important; }
+  :root[data-skin="pe"] .tabs{ margin-bottom:12px !important; }
+  :root[data-skin="pe"] .list-pills{ margin-bottom:8px !important; }
+  :root[data-skin="pe"] .task-filter-bar{ margin-bottom:12px !important; }
+  :root[data-skin="pe"] #w3Prog{ margin-bottom:12px !important; }
+  :root[data-skin="pe"] #openTasks .task-group{ margin-top:0 !important; }
+  :root[data-skin="pe"] .task-wrap{ margin-bottom:10px !important; }
+  :root[data-skin="pe"] .task-wrap .task{ margin-bottom:0 !important; }
+
+  /* 3. Late is red. Not Rae's coral: a true red, filled, so a late date reads
+        across the room. The colour law gains one line: RED is overdue. */
+  :root{ --late-fill:#D7263D; --late-ink:#FF7A87; --late-on:#FFFFFF; }
+  :root[data-mode="light"]{ --late-fill:#C4122F; --late-ink:#B3102B; }
+  :root[data-skin="pe"] .task-wrap .task .meta .due-tag.overdue,
+  :root[data-skin="pe"] .task .meta .due-tag.overdue,
+  :root[data-skin="pe"] .due-tag.overdue{ background:var(--late-fill); color:var(--late-on); }
+  :root[data-skin="pe"] .tm-fv.late{ color:var(--late-ink); font-weight:700; }
+
+  /* 4. The dock you can slide: the selection becomes a glass lens */
+  .tabs{ touch-action:pan-y; -webkit-user-select:none; user-select:none; }
+  .tabs.w3-on.lensing .w3-ind{
+    transition:none !important; scale:1.12;
+    background:color-mix(in srgb, #fff 16%, transparent) !important;
+    -webkit-backdrop-filter:blur(3px) saturate(180%) brightness(1.15); backdrop-filter:blur(3px) saturate(180%) brightness(1.15);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(255,255,255,.12), 0 10px 24px -8px rgba(0,0,0,.45) !important;
+    border:1px solid rgba(255,255,255,.35) !important;
+  }
+  :root[data-mode="light"] .tabs.w3-on.lensing .w3-ind{ background:color-mix(in srgb, #fff 55%, transparent) !important; border-color:rgba(255,255,255,.9) !important; }
+  .tabs.w3-on .w3-ind{ transition:transform .42s cubic-bezier(.3,1.35,.5,1), width .3s cubic-bezier(.2,.8,.2,1), scale .25s ease; }
+  .tabs.lensing button.active{ color:var(--text) !important; }
+  .tabs.lensing button .wd-i{ transition:transform .18s cubic-bezier(.3,1.4,.5,1); }
+  .tabs.lensing button.lens-over .wd-i{ transform:scale(1.28); }
+  @media (prefers-reduced-motion:reduce){ .tabs.w3-on .w3-ind{ transition:none; } .tabs.lensing .w3-ind{ scale:1; } }
 </style>
 </head>
 <body>
@@ -13857,10 +13910,12 @@
   function renderTourStep(){
     var steps = tourSteps();
     var s = steps[tourIdx];
-    document.getElementById("tourEmoji").textContent = s.e;
+    // BUILD 209: drawn in the app's own line icons, not Apple's emoji
+    var te = document.getElementById("tourEmoji"), tsvg = iconForEmoji(s.e, 40, "modal-ico");
+    if(tsvg) te.innerHTML = tsvg; else te.textContent = s.e;
     document.getElementById("tourTitle").textContent = s.t;
     document.getElementById("tourText").textContent = s.x;
-    document.getElementById("tourNext").textContent = tourIdx === steps.length - 1 ? "Let's go 💞" : "Next";
+    document.getElementById("tourNext").textContent = tourIdx === steps.length - 1 ? "Let\u2019s go" : "Next";
     var dots = document.getElementById("tourDots");
     dots.innerHTML = "";
     // Build 119: the dots moved into .step-dots so the onboarding could use the same
@@ -13968,7 +14023,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 208;
+  var BUILD_NUM = 209;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -26098,6 +26153,62 @@
           if(at && at.dataset.tab === "tasks") tmStaggerList();
         }catch(e){}
       }); });
+      /* BUILD 209, Moody: "I thought we added a glass interface where I could
+         hover over and slide left to right." Now you can: press on the dock and
+         slide. The selection lifts into a glass lens that follows your finger,
+         the icon under it swells, and letting go opens that tab. A plain tap
+         still works exactly as before; vertical drags still scroll the page. */
+      (function(){
+        var drag = null;
+        function btnAt(x){
+          var bs = tabButtons(), best = null, bd = 1e9;
+          bs.forEach(function(b){ var r = b.getBoundingClientRect(), c = r.left + r.width / 2, d = Math.abs(x - c); if(d < bd){ bd = d; best = b; } });
+          return best;
+        }
+        function lens(x){
+          var tr = tabs.getBoundingClientRect(), w = ind.offsetWidth || 64, a = tabs.querySelector("button.active");
+          var nx = Math.max(4, Math.min(tr.width - w - 4, x - tr.left - w / 2));
+          ind.style.transform = "translate(" + nx + "px," + (a ? a.offsetTop : 4) + "px)";
+          var over = btnAt(x);
+          tabButtons().forEach(function(b){ b.classList.toggle("lens-over", b === over); });
+          if(over && over !== drag.over){ drag.over = over; try{ if(navigator.vibrate) navigator.vibrate(4); }catch(e){} }
+        }
+        tabs.addEventListener("pointerdown", function(e){
+          if(e.pointerType === "mouse" && e.button !== 0) return;
+          drag = {x0: e.clientX, y0: e.clientY, id: e.pointerId, moved: false, over: null};
+        });
+        tabs.addEventListener("pointermove", function(e){
+          if(!drag || e.pointerId !== drag.id) return;
+          var dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+          if(!drag.moved){
+            if(Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)){ drag = null; return; }
+            if(Math.abs(dx) < 8) return;
+            drag.moved = true;
+            try{ tabs.setPointerCapture(e.pointerId); }catch(_){}
+            tabs.classList.add("lensing");
+          }
+          e.preventDefault();
+          lens(e.clientX);
+        });
+        function end(e){
+          if(!drag) return;
+          var d = drag; drag = null;
+          if(!d.moved) return;
+          tabs.classList.remove("lensing");
+          tabButtons().forEach(function(b){ b.classList.remove("lens-over"); });
+          var b = btnAt(e.clientX);
+          // swallow the click the browser fires after a drag, then open the tab
+          // (only a real, trusted click within the next moment - never the one we send)
+          var until = Date.now() + 400;
+          tabs.addEventListener("click", function sw(ev){
+            if(ev.isTrusted && Date.now() < until){ ev.stopPropagation(); ev.preventDefault(); }
+            if(Date.now() >= until || ev.isTrusted) tabs.removeEventListener("click", sw, true);
+          }, true);
+          setTimeout(function(){ if(b && !b.classList.contains("active")) b.click(); else placeInd(); }, 0);
+        }
+        tabs.addEventListener("pointerup", end);
+        tabs.addEventListener("pointercancel", function(){ if(drag && drag.moved){ tabs.classList.remove("lensing"); placeInd(); } drag = null; });
+      })();
       tabs.addEventListener("keydown", function(e){
         var bs = tabButtons(), i = bs.indexOf(document.activeElement);
         if(i < 0) return;
