@@ -60,6 +60,118 @@
      the original is always one tap away. -->
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
 <!-- OneSignal Web Push — only activates once you paste an App ID in Sync settings; see WeDO-Notifications-Setup.md -->
+<script>
+/* BUILD 208 - PRIVATE PAIRING.
+   A couple with no GitHub account gets a "room" on WeDO's own server
+   (wedo-pair.vercel.app). The app's existing Gist sync code is untouched: this
+   wraps fetch, and only when this phone holds a room code (token "wedo1_...")
+   it sends gist reads and writes to the room instead, encrypting every file
+   with AES-GCM before it leaves the phone. The key comes from the code, which
+   lives only on the two phones and in the invite link's #fragment (never sent
+   to any server). The server stores ciphertext and a hash it checks access with. */
+(function(){
+  var SERVER = "https://wedo-pair.vercel.app", TOK = "us-gh-token-v1";
+  window.WEDO_PAIR_SERVER = SERVER;
+  function tok(){ try{ return localStorage.getItem(TOK) || ""; }catch(e){ return ""; } }
+  function isRoom(){ return /^wedo1_[A-Za-z0-9]{20,}$/.test(tok()); }
+  window.__wedoIsRoom = isRoom;
+  // an invite link: index.html#pair=<room>.<code>
+  try{
+    var h = String(location.hash || "").match(/[#&]pair=([a-f0-9]{32})\.(wedo1_[A-Za-z0-9]{20,})/i);
+    if(h){
+      window.__wedoPair = {room: h[1].toLowerCase(), code: h[2]};
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  }catch(e){}
+  // an invite opened in a tab that already had WeDO open only changes the #fragment;
+  // reload so it is read like a fresh open
+  window.addEventListener("hashchange", function(){ if(/[#&]pair=/.test(location.hash)) location.reload(); });
+  if(!window.crypto || !crypto.subtle || !window.fetch) return;
+  var enc = new TextEncoder(), dec = new TextDecoder(), cache = {};
+  function hex(buf){ return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ("0" + b.toString(16)).slice(-2); }).join(""); }
+  function b64(u8){ var s = "", i, n = 0x8000; for(i = 0; i < u8.length; i += n) s += String.fromCharCode.apply(null, u8.subarray(i, i + n)); return btoa(s); }
+  function unb64(s){ var b = atob(s), u = new Uint8Array(b.length); for(var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+  function keys(){
+    var t = tok();
+    if(cache.t === t && cache.p) return cache.p;
+    cache.t = t;
+    cache.p = crypto.subtle.importKey("raw", enc.encode(t), "HKDF", false, ["deriveBits", "deriveKey"]).then(function(base){
+      var salt = enc.encode("wedo-pair-v1");
+      return Promise.all([
+        crypto.subtle.deriveBits({name:"HKDF", hash:"SHA-256", salt:salt, info:enc.encode("auth")}, base, 256),
+        crypto.subtle.deriveKey({name:"HKDF", hash:"SHA-256", salt:salt, info:enc.encode("enc")}, base,
+                                {name:"AES-GCM", length:256}, false, ["encrypt", "decrypt"])
+      ]).then(function(r){ return {auth: hex(r[0]), key: r[1]}; });
+    });
+    return cache.p;
+  }
+  function seal(k, text){
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    return crypto.subtle.encrypt({name:"AES-GCM", iv:iv}, k.key, enc.encode(String(text))).then(function(ct){
+      var out = new Uint8Array(12 + ct.byteLength); out.set(iv, 0); out.set(new Uint8Array(ct), 12);
+      return "wedo1:" + b64(out);
+    });
+  }
+  function open(k, s){
+    s = String(s == null ? "" : s);
+    if(s.indexOf("wedo1:") !== 0) return Promise.resolve(s);
+    var u = unb64(s.slice(6));
+    return crypto.subtle.decrypt({name:"AES-GCM", iv:u.subarray(0, 12)}, k.key, u.subarray(12)).then(function(pt){ return dec.decode(pt); });
+  }
+  window.__wedoSeal = function(t){ return keys().then(function(k){ return seal(k, t); }); };
+  window.__wedoOpen = function(t){ return keys().then(function(k){ return open(k, t); }); };
+  var orig = window.fetch.bind(window);
+  function json(obj, status){ return new Response(JSON.stringify(obj), {status: status || 200, headers: {"Content-Type": "application/json"}}); }
+  window.fetch = function(input, init){
+    var url = typeof input === "string" ? input : ((input && input.url) || "");
+    if(!isRoom() || url.indexOf("https://api.github.com/gists") !== 0 && url.indexOf(SERVER + "/api/f/") !== 0){
+      return orig(input, init);
+    }
+    var m = url.match(/^https:\/\/api\.github\.com\/gists\/([a-f0-9]{32})$/i);
+    var raw = url.indexOf(SERVER + "/api/f/") === 0;
+    // the Calendar feed has to be public plain text for iOS to read; a private room can't be
+    if(!m && !raw) return Promise.resolve(json({message: "The calendar feed needs GitHub sync. Private pairing keeps everything encrypted."}, 501));
+    var method = String((init && init.method) || "GET").toUpperCase();
+    return keys().then(function(k){
+      var hdr = {Authorization: "Bearer " + k.auth, Accept: "application/json"};
+      if(raw){
+        return orig(url, {headers: hdr, cache: "no-store"}).then(function(r){
+          if(!r.ok) return r;
+          return r.text().then(function(t){ return open(k, t); }).then(function(t){ return new Response(t, {status: 200}); });
+        });
+      }
+      var target = SERVER + "/api/g/" + m[1].toLowerCase();
+      if(method === "GET"){
+        return orig(target, {headers: hdr, cache: "no-store"}).then(function(r){
+          if(!r.ok) return r;
+          return r.json().then(function(g){
+            var files = g.files || {}, jobs = [];
+            Object.keys(files).forEach(function(n){
+              var f = files[n];
+              if(f && typeof f.content === "string") jobs.push(open(k, f.content).then(function(t){ f.content = t; f.size = t.length; }));
+            });
+            return Promise.all(jobs).then(function(){ return json(g, 200); });
+          });
+        });
+      }
+      if(method === "PATCH"){
+        var body = {}; try{ body = JSON.parse((init && init.body) || "{}"); }catch(e){}
+        var files = body.files || {}, out = {}, jobs = [];
+        Object.keys(files).forEach(function(n){
+          var f = files[n];
+          if(f === null){ out[n] = null; return; }
+          jobs.push(seal(k, (f && f.content) || "").then(function(c){ out[n] = {content: c}; }));
+        });
+        return Promise.all(jobs).then(function(){
+          return orig(target, {method: "PATCH", headers: {Authorization: hdr.Authorization, Accept: "application/json", "Content-Type": "application/json"},
+                               body: JSON.stringify({files: out})});
+        });
+      }
+      return json({message: "Not supported in a private room"}, 405);
+    });
+  };
+})();
+</script>
 <script>window.OneSignalDeferred = window.OneSignalDeferred || [];</script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <style>
@@ -7148,7 +7260,7 @@
   :root[data-skin="pe"] .health-val,
   :root[data-skin="pe"] .health-grid .health-val.win.p1,
   :root[data-skin="pe"] .health-grid .health-val.win.p2{ color:var(--text); }
-  :root[data-skin="pe"] .health-grid .health-val.win{ position:relative; }
+  :root[data-skin="pe"] .health-grid .health-val.win{ position:relative; white-space:nowrap; }
   :root[data-skin="pe"] .health-grid .health-val.win::after{
     content:""; display:inline-block; width:.8em; height:.8em; margin-left:5px; vertical-align:.02em;
     background:var(--both);
@@ -7252,6 +7364,170 @@
     -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
     background:var(--mat-glare), color-mix(in srgb, var(--card) 97%, transparent);
   }
+
+  /* ====== BUILD 206 - GET SET UP, AND A HEALTH CARD WORTH READING ====== */
+  :root[data-skin="pe"] .card.setup-card{ padding:18px 16px 8px; }
+  .setup-card .setup-title{ font-family:var(--display); font-weight:500; font-size:1.375rem; letter-spacing:-.02em; }
+  .setup-card .setup-count{ font-family:var(--mono); font-size:.6875rem; letter-spacing:.08em; color:var(--muted); font-weight:600; }
+  .su-track{ height:4px; border-radius:4px; margin:12px 0 10px; overflow:hidden; background:color-mix(in srgb, var(--text) 10%, transparent); }
+  .su-track i{ display:block; height:100%; width:0; border-radius:4px; background:var(--both); transition:width .6s cubic-bezier(.2,.8,.2,1); }
+  .setup-card .setup-lead{ margin:0 0 6px; font-size:.8125rem; color:var(--muted); }
+  .su-item{ position:relative; }
+  /* connectedness: one line through every step makes it one sequence */
+  .su-item::before{ content:""; position:absolute; left:10px; top:0; bottom:0; width:1.5px; background:var(--line-2); }
+  .su-item:first-child::before{ top:22px; } .su-item:last-child::before{ bottom:calc(100% - 22px); }
+  .su-row{ position:relative; display:flex; align-items:center; gap:12px; width:100%; min-height:44px; padding:0;
+    background:none; border:0; color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+  .su-row:active{ transform:scale(.99); }
+  .su-dot{ position:relative; flex:none; width:21px; height:21px; border-radius:50%; background:var(--card);
+    border:1.5px solid color-mix(in srgb, var(--text) 45%, transparent); }
+  .su-item.done .su-dot{ border-color:var(--line-2); }
+  .su-item.done .su-dot::after{ content:""; position:absolute; inset:-2px; background:var(--both);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/70% no-repeat;
+            mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/70% no-repeat; }
+  .su-label{ flex:1 1 auto; min-width:0; font-size:.9375rem; font-weight:600; letter-spacing:-.005em; }
+  .su-item.done .su-label{ color:var(--muted); font-weight:500; }
+  .su-tag{ font-family:var(--mono); font-size:.625rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .su-chev{ flex:none; color:var(--muted); display:inline-flex; transform:rotate(-90deg); transition:transform .2s cubic-bezier(.2,.8,.2,1); }
+  .su-item.open .su-chev{ transform:none; }
+  .su-body{ padding:2px 0 14px 33px; display:flex; flex-direction:column; gap:8px; animation:suIn .28s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes suIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
+  .su-why{ margin:0; font-size:.8125rem; line-height:1.5; color:var(--muted); }
+  .su-stats{ display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:12px;
+    background:color-mix(in srgb, var(--text) 5%, transparent); border:1px solid var(--line-2); }
+  .su-stat{ display:flex; align-items:flex-start; gap:9px; font-size:.8125rem; line-height:1.4; color:var(--text); }
+  .su-stat i{ flex:none; width:14px; height:14px; margin-top:2px; border-radius:50%; border:1.5px solid color-mix(in srgb, var(--text) 45%, transparent); position:relative; }
+  .su-stat.ok{ color:var(--muted); }
+  .su-stat.ok i{ border-color:transparent; background:var(--both);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/100% no-repeat;
+            mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/100% no-repeat; }
+  .su-body input{ width:100%; margin:0; font-size:max(16px, .875rem); }
+  .su-go{ width:100%; min-height:44px; }
+  .su-status{ font-size:.8125rem; line-height:1.45; color:var(--muted); min-height:1.2em; overflow-wrap:anywhere; }
+  .su-status.bad{ color:var(--text); font-weight:600; }
+  .su-status:empty{ display:none; }
+  .su-how{ border-top:1px solid var(--line-2); }
+  .su-how > summary{ list-style:none; min-height:44px; display:flex; align-items:center; cursor:pointer;
+    font-size:.8125rem; font-weight:600; color:var(--text); }
+  .su-how > summary::-webkit-details-marker{ display:none; }
+  .su-how > summary::after{ content:"+"; margin-left:auto; font-size:1.125rem; color:var(--muted); font-weight:400; }
+  .su-how[open] > summary::after{ content:"\2212"; }
+  .su-how ol{ margin:0 0 10px; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:.8125rem; line-height:1.5; color:var(--muted); }
+  .su-how p{ margin:0 0 10px; font-size:.8125rem; line-height:1.5; color:var(--muted); }
+  .su-how b{ color:var(--text); font-weight:600; }
+  .su-recipe .su-how:last-child{ border-bottom:1px solid var(--line-2); }
+  .hx-link{ align-self:flex-start; background:none; border:0; padding:0; min-height:44px; font:inherit; font-size:.8125rem;
+    font-weight:600; color:var(--text); text-decoration:underline; text-underline-offset:3px; text-decoration-color:color-mix(in srgb, var(--text) 40%, transparent); cursor:pointer; }
+  .su-skip{ color:var(--muted); font-weight:500; }
+
+  .su-body > div:not([class]), .su-body .setup-status{ font-size:.8125rem; line-height:1.5; color:var(--muted); }
+  .su-why b{ color:var(--text); font-weight:600; }
+  /* onboarding progress dots: "you are here" is ink, not Rae's coral */
+  :root[data-skin="pe"] #obDots i.on{ background:var(--text); }
+  /* ---- the health card ---- */
+  :root[data-skin="pe"] .health-grid.hx{ display:block; }
+  .hx-names{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:2px 0 4px; }
+  .hx-names .health-name{ text-align:left; font-family:var(--mono); font-size:.6875rem; letter-spacing:.12em; font-weight:700; display:flex; align-items:baseline; gap:8px; }
+  .hx-names .who-moody{ color:var(--moody-ink, var(--moody)); } .hx-names .who-rae{ color:var(--rae-ink, var(--rae)); }
+  .hx-names .health-stale{ font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; font-weight:500; }
+  .hx-m{ padding:12px 0 2px; border-top:1px solid var(--line-2); margin-top:10px; }
+  .hx-lab{ display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:.625rem; letter-spacing:.12em;
+    text-transform:uppercase; font-weight:600; color:var(--muted); }
+  .hx-lab em{ margin-left:auto; font-style:normal; letter-spacing:.06em; font-weight:500; }
+  .hx-pair{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:6px; }
+  :root[data-skin="pe"] .hx .health-val{ font-family:var(--display); font-weight:500; font-size:1.875rem; line-height:1.05;
+    letter-spacing:-.03em; text-align:left; font-variant-numeric:tabular-nums; color:var(--text); }
+  .hx-dots{ display:flex; align-items:center; gap:3px; height:14px; margin-top:8px; }
+  .hx-dots i{ display:block; flex:none; width:3px; height:3px; border-radius:3px; background:color-mix(in srgb, var(--text) 22%, transparent);
+    transition:height .5s cubic-bezier(.2,.8,.2,1), background .3s ease; }
+  .hx-dots i.on{ background:var(--text); }
+  .hx-dots.p1 i.tip{ height:14px; background:var(--moody); } .hx-dots.p2 i.tip{ height:14px; background:var(--rae); }
+  .hx-dots.old{ opacity:.45; }
+  .hx-sleepbtn{ background:none; border:0; padding:0; margin:0; font:inherit; color:inherit; letter-spacing:inherit; cursor:pointer;
+    min-height:44px; display:inline-flex; align-items:center; margin:-6px 0; }
+  .hx-add{ font-family:var(--ui); font-size:.8125rem; font-weight:600; letter-spacing:0; padding:7px 12px; border-radius:999px;
+    border:1px solid var(--line-2); color:var(--text); background:color-mix(in srgb, var(--text) 6%, transparent); }
+  .hx-why{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding-top:4px;
+    border-top:1px solid var(--line-2); font-size:.8125rem; line-height:1.45; color:var(--muted); }
+  .hx-why .hx-link{ flex:none; }
+  .hx-empty p{ margin:0 0 12px; font-size:.875rem; color:var(--muted); line-height:1.5; }
+
+  /* ---- the sleep sheet ---- */
+  .sl-sheet{ text-align:center; }
+  .sl-kicker{ font-family:var(--mono); font-size:.625rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+  .sl-sheet h2{ margin:4px 0 0; }
+  .sl-dial{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0 6px; }
+  .sl-read{ font-family:var(--display); font-variant-numeric:tabular-nums; color:var(--text); line-height:1; }
+  .sl-read b{ font-weight:500; font-size:3.75rem; letter-spacing:-.04em; }
+  .sl-read span{ font-family:var(--mono); font-size:.875rem; color:var(--muted); margin:0 2px 0 3px; }
+  .sl-step{ flex:none; width:48px; height:48px; border-radius:50%; border:1px solid var(--line-2); background:color-mix(in srgb, var(--text) 6%, transparent);
+    color:var(--text); font-size:1.5rem; line-height:1; cursor:pointer; }
+  .sl-step:active{ transform:scale(.92); }
+  .sl-sheet input[type=range]{ width:100%; margin:14px 0 6px; accent-color:var(--text); height:44px; background:none; border:0; padding:0; }
+  .sl-quick{ display:flex; gap:8px; justify-content:center; margin:6px 0 18px; }
+  .sl-quick button{ flex:1; min-height:44px; border-radius:12px; border:1px solid var(--line-2); background:none; color:var(--text);
+    font-family:var(--mono); font-size:.8125rem; font-weight:600; cursor:pointer; }
+  .sl-quick button:active{ transform:scale(.96); }
+  .sl-clear{ align-self:center; margin:6px auto 0; display:block; color:var(--muted); }
+  @media (prefers-reduced-motion:reduce){ .su-body{ animation:none; } .su-track i, .hx-dots i, .su-chev{ transition:none; } }
+
+  /* ====== BUILD 207 - SETTINGS IN GROUPS, REWARDS UNDER THE COLOUR LAW ======
+     Settings was one drawer of ~35 full-width buttons and 14 paragraphs in the
+     order they were built (choice overload: lead with about six). Nine named
+     groups now, each a 52px row that opens in place. Nothing was removed and
+     every control keeps its id; the old Shortcut buttons and the reset moved to
+     Advanced. */
+  details.sync[open] > summary{ margin-bottom:6px; }
+  .set-g{ border-top:1px solid var(--line-2); }
+  .set-g:last-of-type{ border-bottom:1px solid var(--line-2); }
+  .set-g > summary{ list-style:none; display:flex; align-items:center; gap:12px; min-height:56px; padding:0 4px; cursor:pointer; }
+  .set-g > summary::-webkit-details-marker{ display:none; }
+  .set-g > summary:active{ transform:scale(.99); }
+  .set-ico{ flex:none; width:32px; height:32px; border-radius:10px; display:grid; place-items:center; color:var(--text);
+    background:color-mix(in srgb, var(--text) 7%, transparent); border:1px solid var(--line-2); }
+  .set-t{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .set-t b{ font-size:.9375rem; font-weight:600; letter-spacing:-.005em; color:var(--text); }
+  .set-t span{ font-size:.75rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .set-chev{ flex:none; color:var(--muted); display:inline-flex; transform:rotate(-90deg); transition:transform .2s cubic-bezier(.2,.8,.2,1); }
+  .set-g[open] .set-chev{ transform:none; }
+  .set-b{ padding:2px 4px 16px; display:flex; flex-direction:column; gap:8px; animation:suIn .28s cubic-bezier(.2,.8,.2,1) both; }
+  .set-b > *{ margin:0 !important; }
+  .set-b > p{ font-size:.8125rem !important; line-height:1.5; color:var(--muted); margin-top:8px !important; }
+  .set-b > p:first-child{ margin-top:0 !important; }
+  .set-b > p strong{ color:var(--text); }
+  .set-b > button.ghost{ width:100%; min-height:44px; }
+  .set-b input, .set-b textarea{ width:100%; }
+  .set-b .set-guide{ align-self:flex-start; }
+  @media (prefers-reduced-motion:reduce){ .set-b{ animation:none; } .set-chev{ transition:none; } }
+
+  /* ---- Rewards ---- */
+  /* the credits panel was a fixed near-black box in both themes */
+  :root[data-skin="pe"] #view-rewards .stat-row,
+  :root[data-mode="light"][data-skin="pe"] #view-rewards .stat-row{
+    background:color-mix(in srgb, var(--text) 5%, transparent); border:1px solid var(--line-2);
+    box-shadow:inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
+  }
+  :root[data-skin="pe"] #view-rewards .stat-row .num{ color:var(--text); }
+  :root[data-skin="pe"] #view-rewards .stat-row .label{ color:var(--muted); }
+  :root[data-skin="pe"] #view-rewards .stat-row .num.has-spins{ color:var(--jade); text-shadow:none; }
+  :root[data-skin="pe"] #view-rewards .sp-meter i.on{ box-shadow:none; }
+  /* rarity is a word, in ink: lime, plum and gold chips each claimed a meaning */
+  :root[data-skin="pe"] .tier-tag, :root[data-skin="pe"] .tier-common,
+  :root[data-skin="pe"] .tier-uncommon, :root[data-skin="pe"] .tier-rare{
+    background:none; color:var(--muted); border:1px solid var(--line-2);
+    font-family:var(--mono); letter-spacing:.1em; font-weight:600;
+  }
+  :root[data-skin="pe"] .tier-rare{ color:var(--text); border-color:color-mix(in srgb, var(--text) 55%, transparent); }
+  /* seven gradient buttons in a column: Spin is the one primary on this tab */
+  :root[data-skin="pe"] #view-rewards .wr-btn.primary{
+    background:color-mix(in srgb, var(--text) 7%, transparent); color:var(--text);
+    border:1px solid color-mix(in srgb, var(--text) 30%, transparent); box-shadow:none; font-weight:600;
+  }
+
+  /* ====== BUILD 208 - PRIVATE PAIRING ====== */
+  .su-fine{ margin:0; font-size:.75rem; line-height:1.5; color:var(--muted); }
+  .su-gh > summary{ color:var(--muted); font-weight:500; }
+  .su-ghb{ display:flex; flex-direction:column; gap:8px; padding-bottom:12px; }
 </style>
 </head>
 <body>
@@ -7799,9 +8075,10 @@
          ONLY the missing pieces. Fully self-service so a partner can finish setup alone. -->
     <div class="card setup-card" id="setupCard" style="display:none;">
       <div class="setup-head">
-        <div class="setup-title">Finish setting up</div>
+        <div class="setup-title">Get set up</div>
         <div class="setup-count" id="setupCount"></div>
       </div>
+      <div class="su-track" aria-hidden="true"><i id="setupFill"></i></div>
       <div class="setup-lead" id="setupLead"></div>
       <div id="setupItems"></div>
     </div>
@@ -8170,7 +8447,7 @@
   </div>
 
   <details class="sync" id="syncPanel">
-    <summary>Sync between two phones (tap to expand)</summary>
+    <summary>Settings</summary>
     <p style="font-size:0.75rem;color:var(--muted);"><strong>Do this once to pair.</strong> Tap "Copy my data", send it to your person, and have them paste it into Import on their phone. This gives you both the same secret, which is what makes your daily codes line up. After that, re-sync whenever you want to share progress.</p>
     <!-- The look lives here rather than in a settings screen because it is a thing the two
          of you decide together once, not a thing either of you changes often. Original is
@@ -9430,6 +9707,7 @@
       photoReminderDate: null, // last day an evening photo reminder was scheduled
       healthGistUrl: null,  // shared gist the iOS Shortcuts write into
       healthCache: {},      // pid -> {date, steps, calories, sleepHours, updatedAt}
+      sleepManual: {},      // BUILD 206: pid -> {date, hours, at} - last night, typed in by hand
       healthLog: {},        // pid -> [{d:"YYYY-MM-DD", s:steps}] — finished days, newest last
       healthSeen: {},       // pid -> {sig, since} — the gist file's content, and when it last changed
       trophies: [],         // [{key, mk, ico, title, who, why, at}] — awards, kept forever
@@ -12440,6 +12718,12 @@
       // evening one and steps would appear to go backwards.
       m.healthCache[pid] = String(lh.updatedAt||"") >= String(rh.updatedAt||"") ? lh : rh;
     });
+    // BUILD 206: sleep typed in by hand - newest entry per person wins
+    m.sleepManual = {};
+    ["p1","p2"].forEach(function(pid){
+      var ls = (L.sleepManual||{})[pid] || null, rs = (R.sleepManual||{})[pid] || null;
+      m.sleepManual[pid] = !ls ? rs : (!rs ? ls : (Number(ls.at||0) >= Number(rs.at||0) ? ls : rs));
+    });
     /* Whether you live together is one fact about the two of you, not one each, so
        it merges like a setting and not like a slot: the phone that changed it most
        recently wins. Without the timestamp this would be `||` or `&&`, and either
@@ -13329,7 +13613,8 @@
               panel.open = true;
               setTimeout(function(){ panel.scrollIntoView({behavior:"smooth", block:"start"}); }, 200);
             }
-            toast("Paste their code into Import \u2014 I'll take it from there");
+            try{ var sg = document.getElementById("syncBox").closest(".set-g"); if(sg) sg.open = true; }catch(e){}
+            toast("Open the invite link they sent you \u2014 or paste their code into Import");
           });
           var pick = document.getElementById("obWho");
           if(!pick) return;
@@ -13447,6 +13732,11 @@
        already in the state it just pulled down; re-asking would not merge, it would
        overwrite - see the note at the top of this section. "who" stays, because this
        phone still has to say which of the two it belongs to. */
+    /* BUILD 206: the "Notifications" step was a page of text about an account you
+       can't make from this screen. First run is now names, birthday, wishes, a
+       place, what's counted - then the Get set up card on Today carries the rest,
+       one job at a time, with its progress already started. */
+    all = all.filter(function(st){ return st.id !== "notify"; });
     return joining ? all.filter(function(st){ return !st.sharedOnly; }) : all;
   }
 
@@ -13678,7 +13968,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 205;
+  var BUILD_NUM = 208;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -14604,12 +14894,13 @@
     wireSimpleCollapse("health", true);
     var body = document.getElementById("healthBody");
     if(!body) return;
-    var a = (state.healthCache || {}).p1, b = (state.healthCache || {}).p2;
+    var a = healthEff("p1"), b = healthEff("p2");
     if(!a && !b){
-      body.innerHTML = '<div class="empty" style="font-style:normal;">Steps, calories &amp; sleep — side by side, straight from your iPhones. ' +
-        'Build the one-time <em>WeDO Health</em> shortcut (see the setup guide) and let it run once.</div>' +
+      body.innerHTML = '<div class="hx-empty"><p>Steps, calories and sleep for the two of you, side by side.</p>' +
+        '<div class="row2"><button type="button" class="primary" id="hxSetup">Set up Health</button>' +
+        '<button type="button" class="ghost" id="hxSleepAdd">Add last night\u2019s sleep</button></div></div>' +
         renderHealthDiag();
-      wireHealthDiag();
+      wireHealthDiag(); wireHealthExtras();
       return;
     }
     var ca = healthCol(a), cb = healthCol(b);
@@ -14620,14 +14911,41 @@
     function cls(side, win){
       return "health-val " + (side === "l" ? "p1" : "p2") + (win === side ? " win" : "");
     }
+    /* BUILD 206: the card was a 3x3 table of 18px numbers. Now each measure is a
+       row: its name, both numbers large, and a dotted track toward a goal (the
+       Parts Bin Steps widget's mechanism: dots fill, the tip stands tall). */
+    var meId = deviceOwner() || state.currentUser;
+    function track(v, goal, pid, fresh){
+      var N = 22, pct = v == null ? 0 : Math.min(1, v / goal), tip = v == null ? -1 : Math.min(N - 1, Math.floor(pct * N)), s = "";
+      for(var i = 0; i < N; i++) s += '<i class="' + (i === tip ? "tip" : (i / N < pct ? "on" : "")) + '"></i>';
+      return '<div class="hx-dots ' + pid + (fresh ? "" : " old") + '" aria-hidden="true">' + s + '</div>';
+    }
+    function cell(pid, side, win, shown, v, goal, d, kind){
+      var inner = shown;
+      if(kind === "sleep" && pid === meId){
+        inner = '<button type="button" class="hx-sleepbtn" id="hxSleepBtn" aria-label="' +
+          (v == null ? "Add last night\u2019s sleep" : "Change last night\u2019s sleep") + '">' +
+          (v == null ? '<span class="hx-add">+ Add</span>' : shown) + '</button>';
+      }
+      return '<div class="hx-cell"><div class="' + cls(side, win) + '">' + inner + '</div>' +
+        track(v, goal, pid, healthFresh(d)) + '</div>';
+    }
+    function row(ico, name, goalTxt, l, r){
+      return '<div class="hx-m"><div class="hx-lab">' + icon(ico, 14) + '<span>' + name + '</span><em>' + goalTxt + '</em></div>' +
+        '<div class="hx-pair">' + l + r + '</div></div>';
+    }
     body.innerHTML =
-      '<div class="health-grid">' +
-        '<div class="health-name who-moody">' + escapeHtml(personName("p1")) + ca.stale + '</div><div></div>' +
-        '<div class="health-name who-rae">' + escapeHtml(personName("p2")) + cb.stale + '</div>' +
-        '<div class="' + cls("l", winStep) + '">' + ca.steps + '</div><div class="health-ico" title="Steps">' + icon("steps", 16) + '</div><div class="' + cls("r", winStep) + '">' + cb.steps + '</div>' +
-        '<div class="' + cls("l", winCal) + '">' + ca.cal + '</div><div class="health-ico" title="Active calories">' + icon("flame", 16) + '</div><div class="' + cls("r", winCal) + '">' + cb.cal + '</div>' +
-        '<div class="' + cls("l", winSlp) + '">' + ca.sleep + '</div><div class="health-ico" title="Sleep">' + icon("moon", 16) + '</div><div class="' + cls("r", winSlp) + '">' + cb.sleep + '</div>' +
+      '<div class="health-grid hx">' +
+        '<div class="hx-names"><div class="health-name who-moody">' + escapeHtml(personName("p1")) + ca.stale + '</div>' +
+        '<div class="health-name who-rae">' + escapeHtml(personName("p2")) + cb.stale + '</div></div>' +
+        row("steps", "Steps", "goal 10,000",
+            cell("p1", "l", winStep, ca.steps, a && a.steps, 10000, a), cell("p2", "r", winStep, cb.steps, b && b.steps, 10000, b)) +
+        row("flame", "Active calories", "goal 600",
+            cell("p1", "l", winCal, ca.cal, a && a.calories, 600, a), cell("p2", "r", winCal, cb.cal, b && b.calories, 600, b)) +
+        row("moon", "Sleep", "goal 8h",
+            cell("p1", "l", winSlp, ca.sleep, a && a.sleepHours, 8, a, "sleep"), cell("p2", "r", winSlp, cb.sleep, b && b.sleepHours, 8, b, "sleep")) +
       '</div>' +
+      sleepWhyLine(meId, meId === "p1" ? a : b) +
       healthStuckWarning(a, b) +
       healthStaleWarning(a, b) +
       healthDoubtLine() +
@@ -14639,6 +14957,99 @@
     body.innerHTML += renderHealthDiag();
     wireHealthDiag();
     wireHealthClear();
+    wireHealthExtras();
+  }
+
+  /* ---- BUILD 206: sleep that always shows ----
+     Moody: "sleep is still not showing." His reading arrives with steps and
+     calories and no sleep - the Shortcut either doesn't send it or sends a total
+     the sanity gate throws out. Two answers: the card now SAYS which, with the
+     fix one tap away; and last night can be typed in by hand, which a later
+     Shortcut reading for the same day replaces. */
+  function healthEff(pid){
+    var h = (state.healthCache || {})[pid] || null;
+    var m = (state.sleepManual || {})[pid] || null;
+    if(!m || m.hours == null) return h;
+    if(!h) return {date:m.date, steps:null, calories:null, sleepHours:m.hours, updatedAt:new Date(m.at || Date.now()).toISOString(), src:"manual", sleepManual:true};
+    if(String(m.date) > String(h.date || "") || (String(m.date) === String(h.date || "") && h.sleepHours == null) ||
+       (h.sleepHours == null && String(m.date) >= String(h.date || ""))){
+      var c = {}; for(var k in h) c[k] = h[k];
+      c.sleepHours = m.hours; c.sleepManual = true;
+      return c;
+    }
+    return h;
+  }
+  function sleepWhyLine(pid, eff){
+    if(!pid) return "";
+    if(eff && eff.sleepHours != null){
+      return eff.sleepManual ? '<div class="hx-why"><span>Sleep entered by hand.</span>' +
+        '<button type="button" class="hx-link" id="hxFix">Make it automatic</button></div>' : "";
+    }
+    var d = healthDiag[pid], r = d && d.reading;
+    var bad = ((d && d.implausible) || (r && r.implausible) || []).filter(function(x){ return x.field === "sleepHours"; })[0];
+    var why = bad ? "Sleep arrived as " + (Math.round(bad.value * 10) / 10) + "h, which isn\u2019t possible, so it was left out."
+            : (d && d.ok) ? "Your Shortcut sent steps and calories but no sleep."
+            : "No sleep figure has come through yet.";
+    return '<div class="hx-why"><span>' + escapeHtml(why) + '</span>' +
+      '<button type="button" class="hx-link" id="hxFix">Fix the Shortcut</button></div>';
+  }
+  function wireHealthExtras(){
+    var s = document.getElementById("hxSleepBtn") || document.getElementById("hxSleepAdd");
+    if(s) s.addEventListener("click", function(){ openSleepSheet(); });
+    var f = document.getElementById("hxFix") || document.getElementById("hxSetup");
+    if(f) f.addEventListener("click", function(){ openSetupItem("health"); });
+  }
+  function openSleepSheet(){
+    var me = deviceOwner() || state.currentUser;
+    if(!me){ toast("Tell WeDO whose phone this is first"); return; }
+    var bg = document.getElementById("sleepSheet");
+    if(!bg){
+      bg = document.createElement("div");
+      bg.className = "sheet-bg"; bg.id = "sleepSheet";
+      bg.innerHTML = '<div class="sheet sl-sheet" role="dialog" aria-modal="true" aria-labelledby="slTitle">' +
+        '<div class="sl-kicker">Sleep</div><h2 id="slTitle">Last night</h2>' +
+        '<div class="sl-dial"><button type="button" class="sl-step" id="slMinus" aria-label="15 minutes less">\u2212</button>' +
+        '<div class="sl-read" id="slRead" aria-live="polite"></div>' +
+        '<button type="button" class="sl-step" id="slPlus" aria-label="15 minutes more">+</button></div>' +
+        '<input type="range" id="slRange" min="0" max="14" step="0.25" aria-label="Hours slept">' +
+        '<div class="sl-quick" id="slQuick">' + [5,6,7,8,9].map(function(h){ return '<button type="button" data-h="' + h + '">' + h + 'h</button>'; }).join("") + '</div>' +
+        '<div class="row2"><button type="button" class="ghost" id="slCancel">Cancel</button>' +
+        '<button type="button" class="primary" id="slSave">Save sleep</button></div>' +
+        '<button type="button" class="hx-link sl-clear" id="slClear">Remove my entry</button></div>';
+      document.body.appendChild(bg);
+      var rng = bg.querySelector("#slRange"), read = bg.querySelector("#slRead");
+      var show = function(){ var v = parseFloat(rng.value) || 0, hh = Math.floor(v), mm = Math.round((v - hh) * 60);
+        read.innerHTML = '<b>' + hh + '</b><span>h</span> <b>' + (mm < 10 ? "0" : "") + mm + '</b><span>m</span>'; };
+      bg._show = show;
+      rng.addEventListener("input", show);
+      bg.querySelector("#slMinus").addEventListener("click", function(){ rng.value = Math.max(0, (parseFloat(rng.value) || 0) - 0.25); show(); });
+      bg.querySelector("#slPlus").addEventListener("click", function(){ rng.value = Math.min(14, (parseFloat(rng.value) || 0) + 0.25); show(); });
+      bg.querySelector("#slQuick").addEventListener("click", function(ev){
+        var b = ev.target.closest ? ev.target.closest("button[data-h]") : null; if(!b) return;
+        rng.value = b.getAttribute("data-h"); show(); });
+      var close = function(){ bg.classList.remove("show"); };
+      bg.querySelector("#slCancel").addEventListener("click", close);
+      bg.addEventListener("click", function(ev){ if(ev.target === bg) close(); });
+      document.addEventListener("keydown", function(ev){ if(ev.key === "Escape" && bg.classList.contains("show")) close(); });
+      bg.querySelector("#slSave").addEventListener("click", function(){
+        var who = deviceOwner() || state.currentUser, v = parseFloat(rng.value) || 0;
+        if(v <= 0){ toast("Slide to the hours you slept"); return; }
+        state.sleepManual = state.sleepManual || {};
+        state.sleepManual[who] = {date: todayISO(), hours: Math.round(v * 100) / 100, at: Date.now()};
+        save(); close(); renderHealth();
+        toast("Sleep saved: " + fmtSleep(v).trim());
+      });
+      bg.querySelector("#slClear").addEventListener("click", function(){
+        var who = deviceOwner() || state.currentUser;
+        if(state.sleepManual && state.sleepManual[who]){ state.sleepManual[who] = {date: todayISO(), hours: null, at: Date.now()}; save(); renderHealth(); toast("Entry removed"); }
+        close();
+      });
+    }
+    var cur = (state.sleepManual || {})[me];
+    bg.querySelector("#slRange").value = (cur && cur.hours != null) ? cur.hours : 7.5;
+    bg.querySelector("#slClear").style.display = (cur && cur.hours != null) ? "" : "none";
+    bg._show();
+    bg.classList.add("show");
   }
 
   /* BUILD 103 — "that is not my step count".
@@ -24501,6 +24912,37 @@
     });
   }
 
+  /* BUILD 208: arriving from an invite link. The room code was taken off the
+     address bar by the early script before anything could log it. */
+  try{
+    var pj = window.__wedoPair;
+    if(pj){
+      window.__wedoPair = null;
+      var curTok = ghToken();
+      var same = curTok === pj.code && gistIdFromUrl() === pj.room;
+      var go = function(){
+        applyRoom(pj.room, pj.code);
+        window.__wedoJoining = true;
+        toast("Joining your private space\u2026");
+        syncNow(true, function(ok){
+          window.__wedoJoining = false;
+          if(ok === false){ showModal("\u26A0\uFE0F", "Couldn\u2019t join yet", "The invite is saved on this phone. Check your connection, then pull down to sync or tap Sync now in Settings."); return; }
+          state.paired = true; save(); renderAll();
+          if(!onboarded() || !deviceOwner()){
+            document.getElementById("obBg").classList.remove("show");
+            setTimeout(function(){ obOpen("join"); }, 300);
+          } else toast("Connected \u2014 you\u2019re both on the same page now");
+        });
+      };
+      if(same){ /* already in it */ }
+      else if(curTok && autoSyncOn()){
+        showConfirm("\u2753", "Switch this phone to the new invite?",
+          "This phone already syncs somewhere else. Joining moves it to " + "the private space in the link; its tasks come with it.",
+          "Join", go, "Keep current");
+      } else go();
+    }
+  }catch(e){}
+
   // a shared setup link like ...?gist=<id-or-url> pre-fills the gist so
   // re-pairing a wiped or new phone is one paste (the token) instead of two
   try{
@@ -24701,7 +25143,7 @@
     }catch(e){}
     return false;
   }
-  function setupChecklist(){
+  function setupChecklistOld(){
     var owner = deviceOwner();
     var hc = (state.healthCache || {})[owner || ""];
     return [
@@ -24942,7 +25384,7 @@
       }
     ];
   }
-  function renderSetupCard(){
+  function renderSetupCardOld(){
     var card = document.getElementById("setupCard");
     if(!card) return false;
     var items = setupChecklist();
@@ -25016,6 +25458,352 @@
     return true;
   }
 
+  /* ===========================================================================
+     BUILD 206 - GET SET UP.
+     Moody: "an easy onboarding for new users + setting up notifications and
+     health." The old card listed only what was missing, had TWO items both keyed
+     "push", split sync across two rows, and sent Health to "the setup guide".
+     Now: one connected list that starts already ticked (goal gradient), one job
+     per row, every row finishes inside itself, and the state of each is read
+     from the phone rather than asked. Done rows stay, ticked in lime, and can be
+     reopened - that is where "fix my Shortcut" lives.
+     =========================================================================== */
+  var suForce = false, suEditKeys = false;
+  function roomMode(){ return !!(window.__wedoIsRoom && window.__wedoIsRoom()); }
+  function rnd62(n){
+    var a = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", u = crypto.getRandomValues(new Uint8Array(n)), s = "";
+    for(var i = 0; i < n; i++) s += a[u[i] % 62];
+    return s;
+  }
+  function roomInviteLink(){
+    var id = gistIdFromUrl(), t = ghToken();
+    if(!id || !roomMode()) return "";
+    return location.origin + location.pathname + "#pair=" + id + "." + t;
+  }
+  function applyRoom(room, code){
+    setGhToken(code);
+    state.healthGistUrl = "https://gist.github.com/wedo/" + room;
+    save();
+    var f = document.getElementById("healthGistInput"); if(f) f.value = state.healthGistUrl;
+    var f2 = document.getElementById("ghTokenInput"); if(f2) f2.value = "";
+  }
+  function createRoom(say){
+    if(!window.crypto || !crypto.getRandomValues || !window.__wedoSeal){ say("This browser can\u2019t encrypt. Use GitHub instead.", true); return; }
+    var hexs = Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(16)), function(b){ return ("0" + b.toString(16)).slice(-2); }).join("");
+    var code = "wedo1_" + rnd62(26);
+    var prevTok = ghToken(), prevUrl = state.healthGistUrl;
+    applyRoom(hexs, code);
+    say("Creating your private space\u2026");
+    fetch("https://api.github.com/gists/" + hexs, {method:"PATCH", headers:{Authorization:"Bearer " + code, "Content-Type":"application/json"},
+      body: JSON.stringify({files: {"wedo-room.txt": {content: "WeDO room \u00b7 created " + new Date().toISOString()}}})})
+      .then(function(r){
+        if(!r.ok) throw new Error("server " + r.status);
+        syncNow(false, function(){ renderSetupCard(); renderBackupNag(); });
+        say("Done. Now send the invite to " + personName(otherPerson(deviceOwner() || "p1")) + ".");
+        setTimeout(renderSetupCard, 400);
+      })
+      .catch(function(e){
+        setGhToken(prevTok); state.healthGistUrl = prevUrl; save();
+        say("Couldn\u2019t reach the WeDO server (" + (e && e.message || "offline") + "). Nothing changed. Try again in a minute.", true);
+      });
+  }
+  function shareInvite(say){
+    var link = roomInviteLink(); if(!link) return;
+    var them = personName(otherPerson(deviceOwner() || "p1"));
+    var text = "Join me on WeDO \u2014 open this on your iPhone, then Share \u2192 Add to Home Screen.";
+    if(navigator.share){
+      navigator.share({title: "WeDO", text: text, url: link}).then(function(){ say("Sent. When " + them + " opens it, you\u2019re connected."); }, function(){});
+      return;
+    }
+    try{ navigator.clipboard.writeText(link); say("Invite link copied. Send it to " + them + " in Messages."); }catch(e){ say(link); }
+  }
+  function suEl(tag, cls, html){ var e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
+  function suStat(ok, text){ return '<div class="su-stat' + (ok ? " ok" : "") + '"><i></i><span>' + text + '</span></div>'; }
+  function suIsUuid(v){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v || "").trim()); }
+  function suSay(st, msg, bad){ st.textContent = msg; st.classList.toggle("bad", !!bad); }
+  function openSetupItem(key){
+    var sk = setupSkipped();
+    if(sk[key]){ delete sk[key]; try{ localStorage.setItem("us-setup-skipped-v1", JSON.stringify(sk)); }catch(e){} }
+    suForce = true; setupOpenKey = key;
+    var tab = document.querySelector('.tabs [data-tab="today"]');
+    if(tab && !document.getElementById("view-today").classList.contains("active")) tab.click();
+    renderSetupCard();
+    setTimeout(function(){
+      var el = document.querySelector('.su-item[data-key="' + key + '"]');
+      if(el) el.scrollIntoView({block:"center", behavior: motionOff() ? "auto" : "smooth"});
+    }, 80);
+  }
+
+  function suBuildSync(body){
+    var st0 = suEl("div", "su-status"); st0.setAttribute("aria-live", "polite");
+    var say0 = function(m, bad){ suSay(st0, m, bad); };
+    if(roomMode()){
+      var them = escapeHtml(personName(otherPerson(deviceOwner() || "p1")));
+      body.appendChild(suEl("div", "su-stats",
+        suStat(true, "Private space connected. Everything is encrypted on this phone first.") +
+        suStat(!!state.paired, state.paired ? them + "\u2019s phone has joined" : "Waiting for " + them + " to open the invite")));
+      var inv = suEl("button", "primary su-go", "Send the invite to " + them); inv.type = "button";
+      inv.addEventListener("click", function(){ shareInvite(say0); });
+      body.appendChild(inv); body.appendChild(st0);
+      body.appendChild(suEl("p", "su-fine", "Keep the invite between the two of you: it is the key. Lose both phones and the link, and the data can\u2019t be recovered \u2014 not even by WeDO."));
+      return;
+    }
+    if(!(gistIdFromUrl() && ghToken())){
+      body.appendChild(suEl("p", "su-why", "One tap makes a private space for the two of you. No accounts, no passwords."));
+      var mk = suEl("button", "primary su-go", "Create our private space"); mk.type = "button";
+      mk.addEventListener("click", function(){ mk.disabled = true; createRoom(function(m, bad){ say0(m, bad); if(bad) mk.disabled = false; }); });
+      body.appendChild(mk); body.appendChild(st0);
+      body.appendChild(suEl("p", "su-fine", "Already have an invite from your person? Just open their link on this phone."));
+      var gh = suEl("details", "su-how su-gh", "<summary>Use your own GitHub instead</summary>");
+      var inner = suEl("div", "su-ghb"); gh.appendChild(inner); body.appendChild(gh);
+      body = inner;
+    }
+    var hasG = !!gistIdFromUrl(), hasT = !!ghToken();
+    body.appendChild(suEl("div", "su-stats",
+      suStat(hasG, hasG ? "Shared file connected" : "Paste the link to your shared Gist") +
+      suStat(hasT, hasT ? "This phone can write to it" : "Paste the GitHub token (stays on this phone)")));
+    var g = suEl("input"); g.type = "url"; g.placeholder = "https://gist.github.com/…"; g.value = state.healthGistUrl || "";
+    g.setAttribute("aria-label", "Shared Gist link");
+    var t = suEl("input"); t.type = "password"; t.placeholder = hasT ? "Token saved — paste to replace" : "ghp_…"; t.setAttribute("aria-label", "GitHub token");
+    t.autocomplete = "off"; t.spellcheck = false;
+    var go = suEl("button", "primary su-go", "Connect"); go.type = "button";
+    var st = suEl("div", "su-status"); st.setAttribute("aria-live", "polite");
+    go.addEventListener("click", function(){
+      var gv = g.value.trim(), tv = t.value.trim();
+      if(gv && !parseGistBase(gv)){ suSay(st, "That isn’t a Gist link. It starts https://gist.github.com/", true); return; }
+      if(!gv && !hasG){ suSay(st, "Paste the Gist link first.", true); return; }
+      if(!tv && !hasT){ suSay(st, "Paste the token too. It starts ghp_ or github_pat_.", true); return; }
+      if(gv){ state.healthGistUrl = gv; var f = document.getElementById("healthGistInput"); if(f) f.value = gv; save(); }
+      if(tv){ setGhToken(tv); var f2 = document.getElementById("ghTokenInput"); if(f2) f2.value = tv; }
+      suSay(st, "Saved. Syncing…");
+      renderBackupNag(); syncNow(true);
+      setTimeout(renderSetupCard, 600);
+    });
+    body.appendChild(g); body.appendChild(t); body.appendChild(go); body.appendChild(st);
+    if(hasG){
+      var share = suEl("button", "ghost su-go", "Copy a setup link for " + escapeHtml(personName(otherPerson(deviceOwner() || "p1")))); share.type = "button";
+      share.addEventListener("click", function(){ var b = document.getElementById("copySetupLinkBtn"); if(b) b.click(); });
+      body.appendChild(share);
+    }
+    var how = suEl("details", "su-how", '<summary>First time? How to make the shared file</summary><ol>' +
+      '<li>Sign in at <b>gist.github.com</b> (a free GitHub account).</li>' +
+      '<li>Make a <b>secret</b> gist with any one file, and copy its address.</li>' +
+      '<li>At <b>github.com/settings/tokens</b>, make a classic token with only the <b>gist</b> box ticked. Copy it.</li>' +
+      '<li>Paste both above. On the second phone, open the setup link and paste the same token.</li></ol>');
+    body.appendChild(how);
+  }
+
+  function suBuildPush(body){
+    var hasId = !!state.onesignalAppId, hasKey = !!onesignalRestKey(), keys = hasId && hasKey;
+    var on = pushEnabledHere(), home = isStandaloneApp();
+    var them = escapeHtml(personName(otherPerson(deviceOwner() || "p1")));
+    body.appendChild(suEl("div", "su-stats",
+      suStat(home, home ? "Opened from the Home Screen" : "Open WeDO from its Home Screen icon. iPhone blocks notifications in a Safari tab.") +
+      suStat(keys, keys ? "Keys saved on this phone" : (hasId ? "The App ID came over from " + them + "’s phone. Paste the REST key." : "Paste your two OneSignal keys")) +
+      suStat(on, on ? "This phone is subscribed" : "Turn it on for this phone")));
+    var st = suEl("div", "su-status"); st.setAttribute("aria-live", "polite");
+    var a = null, k = null;
+    if(!keys || suEditKeys){
+      a = suEl("input"); a.type = "text"; a.placeholder = "App ID  (xxxxxxxx-xxxx-…)"; a.value = state.onesignalAppId || "";
+      a.autocapitalize = "off"; a.autocomplete = "off"; a.spellcheck = false; a.setAttribute("aria-label", "OneSignal App ID");
+      k = suEl("input"); k.type = "password"; k.placeholder = "REST API key"; k.value = onesignalRestKey();
+      k.autocomplete = "off"; k.spellcheck = false; k.setAttribute("aria-label", "OneSignal REST API key");
+      // Postel: take the key however it was copied - quotes, spaces, a "Basic " prefix
+      var clean = function(v){ return String(v || "").replace(/^\s*(basic|key)\s+/i, "").replace(/["'\s]/g, ""); };
+      var live = function(){
+        var av = clean(a.value);
+        if(av && !suIsUuid(av)) suSay(st, "An App ID is 36 characters: 8-4-4-4-12. This one isn’t yet.", true);
+        else suSay(st, av && clean(k.value) ? "Looks right. Save them." : "");
+      };
+      a.addEventListener("input", live); k.addEventListener("input", live);
+      body.appendChild(a); body.appendChild(k);
+    }
+    var go = suEl("button", "primary su-go"); go.type = "button";
+    go.textContent = (!keys || suEditKeys) ? "Save keys" : (!on ? "Turn on for this phone" : "Send me a test");
+    go.addEventListener("click", function(){
+      if(!keys || suEditKeys){
+        var av = String(a.value || "").replace(/["'\s]/g, ""), kv = String(k.value || "").replace(/^\s*(basic|key)\s+/i, "").replace(/["'\s]/g, "");
+        if(!suIsUuid(av)){ suSay(st, "That App ID isn’t the right shape. Copy it again from OneSignal → Settings → Keys & IDs.", true); return; }
+        if(kv.length < 20){ suSay(st, "That REST key looks too short. Copy the whole key.", true); return; }
+        state.onesignalAppId = av; setOnesignalRestKey(kv); save();
+        var f1 = document.getElementById("onesignalAppIdInput"); if(f1) f1.value = av;
+        var f2 = document.getElementById("onesignalRestKeyInput"); if(f2) f2.value = kv;
+        suEditKeys = false; toast("Keys saved"); renderSetupCard(); return;
+      }
+      if(!on){
+        if(!home){ suSay(st, "Open WeDO from its Home Screen icon first, then come back here.", true); return; }
+        enablePushOnThisPhone(function(msg){ suSay(st, msg); if(pushEnabledHere()) setTimeout(renderSetupCard, 500); });
+        return;
+      }
+      suMirrorTest(st, true);
+    });
+    body.appendChild(go);
+    if(keys && on){
+      var t2 = suEl("button", "ghost su-go", "Send " + them + " a test"); t2.type = "button";
+      t2.addEventListener("click", function(){ suMirrorTest(st, false); });
+      body.appendChild(t2);
+    }
+    body.appendChild(st);
+    if(keys && !suEditKeys){
+      var ch = suEl("button", "hx-link", "Change the keys"); ch.type = "button";
+      ch.addEventListener("click", function(){ suEditKeys = true; renderSetupCard(); });
+      body.appendChild(ch);
+    }
+    var site = location.origin + location.pathname.replace(/index\.html$/, "");
+    body.appendChild(suEl("details", "su-how", '<summary>Where do I get the two keys?</summary><ol>' +
+      '<li>Make a free account at <b>onesignal.com</b>.</li>' +
+      '<li>New App → name it WeDO → platform <b>Web</b> → <b>Typical Site</b>.</li>' +
+      '<li>Site URL: <b>' + escapeHtml(site) + '</b> exactly, with the last slash.</li>' +
+      '<li>Skip the code step. WeDO already has it.</li>' +
+      '<li><b>Settings → Keys & IDs</b>: copy the App ID and the REST API Key into the boxes above.</li></ol>' +
+      '<p>One set of keys covers both phones. The App ID travels to the other phone by itself; the REST key is pasted once on each.</p>'));
+  }
+  function suMirrorTest(st, toSelf){
+    runPushTest(toSelf);
+    var src = document.getElementById("onesignalStatusLabel"), n = 0;
+    var iv = setInterval(function(){
+      if(src && src.textContent) suSay(st, src.textContent);
+      if(++n > 24 || !st.isConnected) clearInterval(iv);
+    }, 300);
+  }
+
+  function suBuildHealth(body){
+    var me = deviceOwner() || state.currentUser;
+    var hc = (state.healthCache || {})[me] || {}, eff = healthEff(me) || {};
+    var when = hc.date ? new Date(hc.date + "T12:00:00").toLocaleDateString(undefined, {month:"short", day:"numeric"}) : "";
+    body.appendChild(suEl("div", "su-stats",
+      suStat(!!hc.date, hc.date ? "A reading arrived (" + when + ")" : "No reading has arrived on this phone yet") +
+      suStat(hc.steps != null, hc.steps != null ? "Steps " + Math.round(hc.steps).toLocaleString() : "Steps not sent") +
+      suStat(hc.calories != null, hc.calories != null ? "Calories " + Math.round(hc.calories).toLocaleString() : "Calories not sent") +
+      suStat(eff.sleepHours != null, eff.sleepHours != null ? "Sleep " + fmtSleep(eff.sleepHours).trim() + (eff.sleepManual ? " (by hand)" : "") : "Sleep not sent")));
+    var st = suEl("div", "su-status"); st.setAttribute("aria-live", "polite");
+    var copy = suEl("button", "primary su-go", "Copy my Health link"); copy.type = "button";
+    copy.addEventListener("click", function(){
+      if(!me){ suSay(st, "Tell WeDO whose phone this is first.", true); return; }
+      if(!ntfyHealthTopic(me) && !ntfyHealthEnsure()){ suSay(st, "Sync once first (Connect your two phones), then come back. Otherwise both phones get new addresses.", true); return; }
+      var url = ntfyHealthUrl(me), ok = false;
+      try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); ok = true; } }catch(e){}
+      suSay(st, ok ? "Copied. Paste it into the last action of the Shortcut." : url);
+    });
+    body.appendChild(copy);
+    var acc = function(t, html){ return '<details class="su-how"><summary>' + t + '</summary>' + html + '</details>'; };
+    body.appendChild(suEl("div", "su-recipe",
+      acc("1 · Start the Shortcut", '<ol><li>Open <b>Shortcuts</b> → <b>+</b> → name it <b>WeDO Health</b>.</li>' +
+        '<li>Its last action will be <b>Get Contents of URL</b> with your Health link pasted in. Method <b>GET</b>, no headers.</li></ol>') +
+      acc("2 · Steps", '<ol><li><b>Find Health Samples</b>: Type <b>Steps</b>, Start Date <b>is today</b>, Source <b>is your iPhone</b>, Limit off.</li>' +
+        '<li><b>Calculate Statistics</b>: Sum. Then <b>Set Variable</b> named <b>stepcount</b>.</li>' +
+        '<li>In the link, tap right after <b>steps=</b> and insert <b>stepcount</b> from the bar above the keyboard.</li></ol>' +
+        '<p>One source only. A phone and a watch both counting is how 13,000 becomes 26,000.</p>') +
+      acc("3 · Calories", '<ol><li>The same three actions with Type <b>Active Energy</b>, variable <b>calcount</b>.</li>' +
+        '<li>Insert it right after <b>cal=</b>.</li></ol>') +
+      acc("4 · Sleep", '<ol><li><b>Find Health Samples</b>: Type <b>Sleep</b>, Start Date <b>is in the last 1 day</b>, Source <b>is one device</b> (your watch or WHOOP), Limit off.</li>' +
+        '<li>If your iPhone offers a <b>Value</b> filter, leave out <b>In Bed</b> and <b>Awake</b>.</li>' +
+        '<li><b>Calculate Statistics</b>: Sum of <b>Duration</b>. Then <b>Set Variable</b> named <b>sleepsecs</b>.</li>' +
+        '<li>Insert it right after <b>sleepsec=</b>. Shortcuts counts a duration in seconds, which is what that key expects.</li></ol>' +
+        '<p>If sleep still comes out blank, tap <b>Check what arrived</b> below. It names the reason.</p>') +
+      acc("5 · Run it every night", '<ol><li>Shortcuts → <b>Automation</b> → <b>+</b> → <b>Time of Day</b>, 9:00 PM, Daily.</li>' +
+        '<li>Choose <b>Run Immediately</b>, then pick <b>WeDO Health</b>.</li>' +
+        '<li>Low Power Mode can hold it back. If numbers stop, run the Shortcut once by hand.</li></ol>')));
+    var row = suEl("div", "row2");
+    var chk = suEl("button", "ghost", "Check what arrived"); chk.type = "button";
+    chk.addEventListener("click", function(){
+      chk.disabled = true; chk.textContent = "Checking…";
+      fetchHealth(function(){ suForce = true; setupOpenKey = "health"; renderSetupCard();
+        var s2 = document.querySelector('.su-item[data-key="health"] .su-status');
+        if(s2) suSay(s2, sleepWhyText(me) || "Everything came through."); });
+    });
+    var hand = suEl("button", "ghost", "Add sleep by hand"); hand.type = "button";
+    hand.addEventListener("click", function(){ openSleepSheet(); });
+    row.appendChild(chk); row.appendChild(hand);
+    body.appendChild(row); body.appendChild(st);
+  }
+  function sleepWhyText(pid){
+    var eff = healthEff(pid);
+    if(eff && eff.sleepHours != null && !eff.sleepManual) return "";
+    var d = healthDiag[pid], r = d && d.reading;
+    var bad = ((d && d.implausible) || (r && r.implausible) || []).filter(function(x){ return x.field === "sleepHours"; })[0];
+    if(bad) return "Sleep arrived as " + (Math.round(bad.value * 10) / 10) + "h and was left out. Use one Source in step 4, and leave out In Bed.";
+    if(d && d.ok) return "Steps and calories arrived, but the link had nothing after sleepsec=. Redo step 4.";
+    if(d && d.error) return String(d.error);
+    return "Nothing has arrived in the last day. Run the Shortcut once by hand, then check again.";
+  }
+
+  function setupChecklist(){
+    var old = setupChecklistOld(), by = {};
+    old.forEach(function(i){ if(!by[i.key]) by[i.key] = i; });
+    var owner = deviceOwner();
+    var hc = (state.healthCache || {})[owner || ""], sm = (state.sleepManual || {})[owner || ""];
+    by.owner.label = "This phone is " + (owner ? personName(owner) + "’s" : "…");
+    by.install.label = "Add WeDO to your Home Screen";
+    by.install.why = "In Safari, tap <b>Share</b> \u2192 <b>Add to Home Screen</b> \u2192 <b>Add</b>, then open WeDO from the new icon. Notifications only work from the icon, and your data is safer there.";
+    by.install.build = null;
+    return [
+      by.owner, by.install,
+      {key:"sync", label:"Connect your two phones", done: !!(gistIdFromUrl() && ghToken()) && (!roomMode() || !!state.paired), skippable:true,
+       why: roomMode() ? "Your two phones share one private space: lists, photos, points."
+                       : "So you see each other\u2019s lists, photos and points, on both phones.",
+       build: suBuildSync},
+      {key:"push", label:"Notifications", done: pushEnabledHere(), skippable:true,
+       why:"Hear about it the moment the other one adds or finishes something.",
+       build: suBuildPush},
+      {key:"health", label:"Steps, calories and sleep", done: !!((hc && (hc.steps != null || hc.calories != null || hc.sleepHours != null)) || (sm && sm.hours != null)),
+       optional:true, skippable:true,
+       why:"An iPhone Shortcut hands your Apple Health numbers to WeDO once a day. About ten minutes, once.",
+       build: suBuildHealth},
+      by.calendar
+    ];
+  }
+  function renderSetupCard(){
+    var card = document.getElementById("setupCard");
+    if(!card) return false;
+    var items = setupChecklist(), skipped = setupSkipped();
+    var doneCount = items.filter(function(i){ return i.done; }).length;
+    var outstanding = items.filter(function(i){ return !i.done && !skipped[i.key]; });
+    if(outstanding.length === 0 && !suForce){ card.style.display = "none"; return false; }
+    card.style.display = "";
+    document.getElementById("setupCount").textContent = doneCount + " of " + items.length;
+    var fill = document.getElementById("setupFill");
+    if(fill) fill.style.width = Math.round(doneCount / items.length * 100) + "%";
+    var blocking = outstanding.filter(function(i){ return !i.optional; }).length;
+    document.getElementById("setupLead").textContent = !outstanding.length ? "All set. Tap any row to change it."
+      : blocking ? "You’re already " + doneCount + " in. Each one finishes right here."
+      : "The essentials are done. What’s left is optional.";
+    if(setupOpenKey && !items.some(function(i){ return i.key === setupOpenKey; })) setupOpenKey = null;
+    if(setupOpenKey === null && outstanding.length && !card.dataset.touched) setupOpenKey = outstanding[0].key;
+    var wrap = document.getElementById("setupItems");
+    wrap.innerHTML = "";
+    items.forEach(function(item){
+      if(!item.done && skipped[item.key] && item.key !== setupOpenKey) return;
+      var open = item.key === setupOpenKey;
+      var el = suEl("div", "su-item" + (item.done ? " done" : "") + (open ? " open" : ""));
+      el.dataset.key = item.key;
+      var row = suEl("button", "su-row"); row.type = "button"; row.setAttribute("aria-expanded", open ? "true" : "false");
+      row.innerHTML = '<span class="su-dot" aria-hidden="true"></span><span class="su-label">' + escapeHtml(item.label) + '</span>' +
+        (item.optional && !item.done ? '<span class="su-tag">optional</span>' : "") +
+        '<span class="su-chev" aria-hidden="true">' + icon("chevron", 14) + '</span>';
+      row.addEventListener("click", function(){
+        card.dataset.touched = "1"; suEditKeys = false;
+        setupOpenKey = (setupOpenKey === item.key) ? "" : item.key;
+        renderSetupCard();
+      });
+      el.appendChild(row);
+      if(open){
+        var body = suEl("div", "su-body");
+        body.appendChild(suEl("p", "su-why", item.why));
+        if(item.build) item.build(body);
+        if(item.skippable && !item.done){
+          var sk = suEl("button", "hx-link su-skip", item.optional ? "Skip, I don’t want this" : "Not now"); sk.type = "button";
+          sk.addEventListener("click", function(){ setupOpenKey = ""; skipSetupItem(item.key); });
+          body.appendChild(sk);
+        }
+        el.appendChild(body);
+      }
+      wrap.appendChild(el);
+    });
+    return true;
+  }
+
+  try{ window.__wedoOpenSetup = openSetupItem; }catch(e){}
   function renderBackupNag(){
     var card = document.getElementById("noBackupCard");
     if(!card) return;
@@ -25136,7 +25924,8 @@
   try{
     if(localStorage.getItem(TOUR_KEY)) markOnboarded();
     if(!onboarded()){
-      setTimeout(function(){ obOpen(deviceOwner() ? "join" : (state.paired ? "join" : "new")); }, 700);
+      // joining from an invite opens its own onboarding once the first sync lands
+      if(!window.__wedoJoining) setTimeout(function(){ if(window.__wedoJoining) return; obOpen(deviceOwner() ? "join" : (state.paired ? "join" : "new")); }, 700);
     }else if(!localStorage.getItem(TOUR_KEY)){
       setTimeout(openTour, 700);
     }
@@ -26580,6 +27369,65 @@
     setTimeout(function(){ placePills(false); try{ foldPills(); }catch(e){} }, 700);
   })();
 
+})();
+</script>
+
+<script>
+/* BUILD 207: the settings drawer, regrouped. Moves the existing nodes (ids and
+   listeners intact) into nine named groups. Runs once; if the drawer's shape
+   is not what it expects, anything unplaced lands in Advanced. */
+(function(){
+  try{
+    var panel = document.getElementById("syncPanel");
+    if(!panel || panel.dataset.grouped) return;
+    panel.dataset.grouped = "1";
+    var ic = function(n){ try{ return (typeof icon === "function") ? icon(n, 16) : ""; }catch(e){ return ""; } };
+    var G = [
+      ["look",   "Look and sound",       "Theme, type, completion sound",          "sun"],
+      ["pair",   "Connect two phones",   "Shared file, token, sync now",           "users"],
+      ["notif",  "Notifications",        "Keys, this phone, test pushes",          "phone"],
+      ["health", "Health and calendar",  "Health links, due dates in Calendar",    "pulse"],
+      ["data",   "Backup and storage",   "Copy, import, backup file, photos",      "save"],
+      ["us",     "The two of you",       "Living together, whose phone this is",   "heart"],
+      ["priv",   "Privacy and PIN",      "What’s counted, lock this phone",   "lock"],
+      ["help",   "Help and fixes",       "Tour, diagnostics, tell us what broke",  "ring"],
+      ["adv",    "Advanced",             "Old Shortcut method, reset this phone",  "key"]
+    ];
+    var SEG = ["look","data","pair","pair","notif","help","help","us","us","adv","priv","help","priv"];
+    var BYID = {fetchPhotosBtn:"data", freeSpaceBtn:"data", spaceLabel:"data",
+      healthLinkBtn:"health", healthLinkOtherBtn:"health", calFeedBtn:"health", calTitlesBtn:"health", calOffBtn:"health",
+      shortcutSetupBtn:"adv", shortcutTailBtn:"adv"};
+    var kids = [].slice.call(panel.children).filter(function(n){ return n.tagName !== "SUMMARY"; });
+    var bodies = {}, frag = document.createDocumentFragment();
+    G.forEach(function(g){
+      var d = document.createElement("details"); d.className = "set-g"; d.dataset.g = g[0];
+      d.innerHTML = '<summary><span class="set-ico" aria-hidden="true">' + ic(g[3]) + '</span>' +
+        '<span class="set-t"><b>' + g[1] + '</b><span>' + g[2] + '</span></span>' +
+        '<span class="set-chev" aria-hidden="true">' + ic("chevron") + '</span></summary><div class="set-b"></div>';
+      bodies[g[0]] = d.querySelector(".set-b"); frag.appendChild(d);
+    });
+    var seg = 0, first = true;
+    kids.forEach(function(n){
+      if(n.tagName === "HR"){ seg++; n.remove(); return; }
+      var key = BYID[n.id] || SEG[seg] || "adv";
+      if(first && n.tagName === "P"){ key = "data"; }   // the "do this once to pair" note belongs with Copy / Import
+      first = false;
+      bodies[key].appendChild(n);
+    });
+    panel.appendChild(frag);
+    // one group open at a time
+    panel.addEventListener("toggle", function(ev){
+      var t = ev.target;
+      if(!t.classList || !t.classList.contains("set-g") || !t.open) return;
+      [].forEach.call(panel.querySelectorAll(".set-g[open]"), function(o){ if(o !== t) o.open = false; });
+    }, true);
+    // the guided versions live on Today; point at them from here
+    [["pair","sync","Open the guided setup"],["notif","push","Open the guided setup"],["health","health","Open the guided Health setup"]].forEach(function(x){
+      var b = document.createElement("button"); b.type = "button"; b.className = "hx-link set-guide"; b.textContent = x[2];
+      b.addEventListener("click", function(){ if(window.__wedoOpenSetup) window.__wedoOpenSetup(x[1]); });
+      bodies[x[0]].insertBefore(b, bodies[x[0]].firstChild);
+    });
+  }catch(e){ try{ console.warn("settings regroup skipped", e); }catch(_){} }
 })();
 </script>
 </body>
