@@ -59,6 +59,7 @@
 <!-- The Private Edition faces. Loaded alongside Archivo so switching the look is instant and
      the original is always one tap away. -->
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Schibsted+Grotesk:wght@400..900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- OneSignal Web Push — only activates once you paste an App ID in Sync settings; see WeDO-Notifications-Setup.md -->
 <script>
 /* BUILD 208 - PRIVATE PAIRING.
@@ -7581,6 +7582,169 @@
   .tabs.lensing button .wd-i{ transition:transform .18s cubic-bezier(.3,1.4,.5,1); }
   .tabs.lensing button.lens-over .wd-i{ transform:scale(1.28); }
   @media (prefers-reduced-motion:reduce){ .tabs.w3-on .w3-ind{ transition:none; } .tabs.lensing .w3-ind{ scale:1; } }
+
+  /* ====== BUILD 211 - THE DOCK MOVES TO THE THUMB ======
+     Navigation is the product. The dock sat in the middle of the page - on
+     Today it came after the photos, the song, the score and a banner, about
+     1,100px down - and stuck to the TOP of the screen once you scrolled, the
+     one place a thumb can't reach on a tall phone. It is fixed at the bottom
+     now (serial position: the ends are what the hand finds), on every tab, and
+     never moves. The + sits just above it; toasts rise above both. */
+  .tabs, :root[data-skin="pe"] .tabs{
+    position:fixed !important; top:auto !important; left:50% !important;
+    bottom:calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    translate:-50% 0; margin:0 !important; z-index:var(--z-tabs);
+    max-width:calc(100vw - 24px) !important;
+  }
+  main{ padding-bottom:calc(112px + env(safe-area-inset-bottom, 0px)) !important; }
+  .fab{ bottom:calc(84px + env(safe-area-inset-bottom, 0px)) !important; }
+  .toast{ bottom:calc(88px + env(safe-area-inset-bottom, 0px)) !important; }
+  /* out of the way while you type, back when you're done */
+  .tabs{ transition:opacity .2s ease, translate .25s cubic-bezier(.2,.8,.2,1); }
+  body:has(input:focus, textarea:focus, select:focus) .tabs,
+  body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open) .tabs{
+    opacity:0; pointer-events:none; translate:-50% 16px; }
+  /* a soft floor under the dock so list text doesn't run through it */
+  body::after{ content:""; position:fixed; left:0; right:0; bottom:0; height:calc(96px + env(safe-area-inset-bottom, 0px));
+    pointer-events:none; z-index:calc(var(--z-tabs) - 1);
+    background:linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg) 88%, transparent) 70%); }
+  @media (prefers-reduced-motion:reduce){ .tabs{ transition:none; } }
+
+  /* ---- an empty list offers a first step ---- */
+  .starter{ padding:18px 16px 16px; border-radius:18px; text-align:left;
+    background:var(--mat-glare, none), var(--mat-fill, var(--card)); border:1px solid var(--line-2);
+    box-shadow:var(--mat-rim, none), var(--mat-drop-sm, none); }
+  .st-h{ font-family:var(--display); font-size:1.5rem; line-height:1.05; letter-spacing:-.02em; color:var(--text); }
+  .st-p{ margin:6px 0 14px; font-size:.8125rem; line-height:1.5; color:var(--muted); }
+  .st-row{ display:flex; flex-direction:column; gap:8px; }
+  .st-chip{ display:flex; align-items:center; gap:10px; min-height:48px; padding:0 14px; border-radius:14px; text-align:left;
+    background:color-mix(in srgb, var(--text) 6%, transparent); border:1px solid var(--line-2); color:var(--text);
+    font:600 .9375rem var(--ui); cursor:pointer; transition:transform .12s ease, background .2s ease; }
+  .st-chip svg{ flex:none; rotate:45deg; color:var(--muted); }
+  .st-chip:active{ transform:scale(.98); background:color-mix(in srgb, var(--text) 11%, transparent); }
+  .st-or{ margin-top:12px; font-family:var(--mono); font-size:.6875rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); text-align:center; }
+
+  /* ====== BUILD 212 - THANKS, THE STREAK, POINTS THAT TRAVEL ====== */
+  .thanks-card{ padding:16px !important; }
+  .tk-eyebrow{ font-family:var(--mono); font-size:.6875rem; letter-spacing:.12em; text-transform:uppercase; font-weight:600; color:var(--muted); margin-bottom:6px; }
+  .tk-row{ display:flex; align-items:center; gap:12px; min-height:56px; border-top:1px solid var(--line-2); }
+  .tk-row:first-of-type{ border-top:0; }
+  .tk-what{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .tk-what b{ font-size:.9375rem; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tk-what span{ font-family:var(--mono); font-size:.6875rem; letter-spacing:.04em; color:var(--muted); }
+  .tk-btn{ flex:none; display:inline-flex; align-items:center; gap:7px; min-height:40px; padding:0 14px; border-radius:999px; cursor:pointer;
+    font:600 .8125rem var(--ui); color:var(--text); background:color-mix(in srgb, var(--text) 7%, transparent);
+    border:1px solid color-mix(in srgb, var(--text) 28%, transparent); transition:transform .12s ease, background .2s ease; }
+  .tk-btn.p1 svg{ color:var(--moody); } .tk-btn.p2 svg{ color:var(--rae); }
+  .tk-btn:active{ transform:scale(.94); }
+  .tk-btn:active svg{ scale:1.3; transition:scale .15s cubic-bezier(.3,1.5,.5,1); }
+  .tk-btn:disabled{ opacity:.5; }
+  .tk-more{ padding-top:10px; border-top:1px solid var(--line-2); font-size:.75rem; color:var(--muted); }
+
+  /* the streak: live data in the chrome, top right, on every tab */
+  /* in the header, not floating: it scrolls away with the logo so it never sits on a card */
+  .cs-pill{ position:absolute; z-index:5; top:calc(14px + env(safe-area-inset-top, 0px)); right:14px;
+    display:inline-flex; align-items:center; gap:5px; min-height:36px; padding:0 12px 0 10px; border-radius:999px; cursor:pointer;
+    font-family:var(--mono); font-size:.8125rem; color:var(--muted);
+    background:var(--mat-glare, none), var(--mat-fill, var(--card)); border:1px solid var(--line-2);
+    box-shadow:var(--mat-rim, none), var(--mat-drop-sm, none); }
+  .cs-pill::before{ content:""; position:absolute; inset:-6px; }      /* 48px tap area */
+  .cs-pill b{ font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); }
+  .cs-pill svg{ color:var(--muted); transition:color .3s ease; }
+  .cs-pill.lit svg{ color:var(--both); }                               /* lime: today is won */
+  .cs-pill.lit.hot svg{ animation:csFlick 2.4s ease-in-out infinite; transform-origin:50% 90%; }
+  @keyframes csFlick{ 0%,100%{ transform:scale(1) rotate(0); } 35%{ transform:scale(1.12,1.2) rotate(-4deg); } 65%{ transform:scale(.96,1.06) rotate(3deg); } }
+  .cs-pill.grew{ animation:csGrew .7s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes csGrew{ 0%{ scale:1; } 40%{ scale:1.25; } 100%{ scale:1; } }
+  .cs-pill:active{ scale:.94; }
+  body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open) .cs-pill{ opacity:0; pointer-events:none; }
+
+  /* points in flight, and the score that catches them */
+  .fly-pts{ position:fixed; z-index:calc(var(--z-cel, 58) + 1); pointer-events:none; white-space:nowrap;
+    font-family:var(--display); font-size:1.75rem; line-height:1; letter-spacing:-.02em; color:var(--text);
+    text-shadow:0 2px 14px rgba(0,0,0,.45); will-change:transform, opacity; }
+  .fly-pts.p1{ color:var(--moody-ink, var(--moody)); } .fly-pts.p2{ color:var(--rae-ink, var(--rae)); }
+  .us-pts.bump{ animation:ptsBump .55s cubic-bezier(.3,1.6,.5,1); display:inline-block; }
+  @keyframes ptsBump{ 0%{ transform:scale(1); } 35%{ transform:scale(1.45); } 100%{ transform:scale(1); } }
+  @media (prefers-reduced-motion:reduce){ .cs-pill.lit.hot svg, .cs-pill.grew, .us-pts.bump{ animation:none; } }
+</style>
+<style id="w2-open">
+/* BUILD 213 - THREE OPENERS, TAKEN IN TURN.
+   Moody: "make the opening animation ... more high end, high energy and exciting. And have
+   them alternate to keep things fun." The old opener drew the heart over five seconds.
+   These run about two and a half and each makes one move:
+     1 MEET    lilac and coral slam together and part to show the mark
+     2 BEAT    the mark lands and pulses three times at 128 bpm, the motto on the beat
+     3 COUNT   your own numbers cut past, then the mark
+   Only transform and opacity move. Reduced motion keeps the build-101 still. */
+.sp-fx, .sp-counts{ display:none; }   /* reduced motion: the extras never exist */
+@media (prefers-reduced-motion:no-preference){
+  .splash[data-open]{ overflow:hidden; animation:splash-out .3s cubic-bezier(.7,0,.84,0) 2.35s both; }
+  .splash[data-open="2"]{ animation-delay:2.65s; }
+  .splash[data-open="3"]{ animation-delay:calc(1.55s + var(--n, 3) * .42s); }
+  .sp-fx{ display:block; position:absolute; inset:0; pointer-events:none; }
+  .sp-fx i{ position:absolute; display:block; opacity:0; }
+  .splash[data-open] > *:not(.sp-fx):not(.sp-counts){ position:relative; z-index:1; }
+  .splash[data-open] .splash-lockup .wm-r1, .splash[data-open] .splash-lockup .wm-r2{ animation:none; opacity:1; transform:none; }
+  .splash[data-open="1"] .splash-lockup .dr, .splash[data-open="3"] .splash-lockup .dr{ animation:none; stroke-dashoffset:0; }
+  .splash[data-open] .splash-lockup{ width:min(52vw,212px); transform-origin:50% 60%; }
+  .splash[data-open] .splash-motto span{ animation:sp-pop .26s cubic-bezier(.2,1.3,.3,1) both; }
+  .splash[data-open] .splash-motto2, .splash[data-open] .splash-receipts{ animation:splash-rise .3s cubic-bezier(.16,1,.3,1) both; }
+  .splash[data-open] .splash-pill{ animation:splash-rise .2s ease-out .2s both; }
+  .splash[data-open] .splash-pill i{ animation:splash-fill 1.9s cubic-bezier(.3,.7,.3,1) .2s both; }
+  .sp-ring{ left:50%; top:42%; width:150px; height:150px; margin:-75px 0 0 -75px; border-radius:50%; border:3px solid var(--both, #61E000); }
+  .sp-ring.r2{ border-color:var(--moody, #C3A8F0); } .sp-ring.r3{ border-color:var(--rae, #FF6F58); }
+
+  /* 1 MEET */
+  .splash[data-open="1"] .sp-pa{ inset:0 50% 0 0; background:#C3A8F0; animation:sp-pa 1.05s cubic-bezier(.16,1,.3,1) both; }
+  .splash[data-open="1"] .sp-pb{ inset:0 0 0 50%; background:#FF6F58; animation:sp-pb 1.05s cubic-bezier(.16,1,.3,1) both; }
+  .splash[data-open="1"] .sp-fx{ z-index:2; }
+  .splash[data-open="1"] .splash-lockup{ animation:sp-thunk .5s cubic-bezier(.2,1.25,.3,1) .44s both; }
+  .splash[data-open="1"] .sp-ring{ animation:sp-ring .8s cubic-bezier(.16,1,.3,1) .5s both; }
+  .splash[data-open="1"] .sp-ring.r2{ animation-delay:.6s; } .splash[data-open="1"] .sp-ring.r3{ animation-delay:.7s; }
+  .splash[data-open="1"] .splash-motto span:nth-child(1){ animation-delay:1.0s; }
+  .splash[data-open="1"] .splash-motto span:nth-child(2){ animation-delay:1.1s; }
+  .splash[data-open="1"] .splash-motto span:nth-child(3){ animation-delay:1.2s; }
+  .splash[data-open="1"] .splash-motto2{ animation-delay:1.36s; } .splash[data-open="1"] .splash-receipts{ animation-delay:1.46s; }
+
+  /* 2 BEAT (128 bpm: a beat every 469ms) */
+  .splash[data-open="2"] .splash-lockup{ animation:sp-thunk .34s cubic-bezier(.2,1.25,.3,1) .04s both, sp-beat .469s cubic-bezier(.3,0,.3,1) .7s 3; }
+  .splash[data-open="2"] .splash-lockup .dr-a{ animation:splash-draw .24s cubic-bezier(.3,0,.3,1) .10s both; }
+  .splash[data-open="2"] .splash-lockup .dr-b{ animation:splash-draw .24s cubic-bezier(.3,0,.3,1) .24s both; }
+  .splash[data-open="2"] .splash-lockup .dr-c{ animation:splash-draw .16s cubic-bezier(.2,.8,.2,1) .46s both; }
+  .splash[data-open="2"] .sp-ring{ animation:sp-ring .75s cubic-bezier(.16,1,.3,1) 1.638s both; }
+  .splash[data-open="2"] .sp-ring.r2{ animation-delay:.7s; } .splash[data-open="2"] .sp-ring.r3{ animation-delay:1.169s; }
+  .splash[data-open="2"] .splash-motto span:nth-child(1){ animation-delay:.7s; }
+  .splash[data-open="2"] .splash-motto span:nth-child(2){ animation-delay:1.169s; }
+  .splash[data-open="2"] .splash-motto span:nth-child(3){ animation-delay:1.638s; }
+  .splash[data-open="2"] .splash-motto2{ animation-delay:1.95s; } .splash[data-open="2"] .splash-receipts{ animation-delay:2.02s; }
+
+  /* 3 COUNT */
+  .sp-counts{ position:absolute; inset:0; z-index:3; display:grid; place-items:center; background:var(--bg); animation:sp-gone .16s linear calc(.14s + var(--n, 3) * .42s) both; }
+  .sp-counts span{ grid-area:1 / 1; align-self:stretch; justify-self:stretch; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:0 20px; text-align:center; color:#1A1220; background:#C3A8F0; opacity:0;
+    animation:sp-count .5s cubic-bezier(.2,1,.3,1) calc(.1s + var(--i) * .42s) both; }
+  .sp-counts span:nth-child(2){ background:#FF6F58; } .sp-counts span:nth-child(3){ background:#61E000; }
+  .sp-counts b{ display:block; font-variant-numeric:lining-nums; font-family:var(--display, Georgia, serif); font-weight:400; font-size:clamp(6rem, 42vw, 11rem); line-height:.86; letter-spacing:-.06em; animation:sp-num .5s cubic-bezier(.2,1.2,.3,1) calc(.1s + var(--i) * .42s) both; }
+  .sp-counts em{ display:block; font:600 1.25rem/1 var(--ui, -apple-system, sans-serif); font-style:normal; letter-spacing:-.01em; }
+  .splash[data-open="3"] .splash-lockup{ animation:sp-thunk .46s cubic-bezier(.2,1.25,.3,1) calc(.16s + var(--n, 3) * .42s) both; }
+  .splash[data-open="3"] .sp-ring{ animation:sp-ring .8s cubic-bezier(.16,1,.3,1) calc(.2s + var(--n, 3) * .42s) both; }
+  .splash[data-open="3"] .sp-ring.r2{ animation-delay:calc(.3s + var(--n, 3) * .42s); } .splash[data-open="3"] .sp-ring.r3{ animation-delay:calc(.4s + var(--n, 3) * .42s); }
+  .splash[data-open="3"] .splash-motto span:nth-child(1){ animation-delay:calc(.56s + var(--n, 3) * .42s); }
+  .splash[data-open="3"] .splash-motto span:nth-child(2){ animation-delay:calc(.66s + var(--n, 3) * .42s); }
+  .splash[data-open="3"] .splash-motto span:nth-child(3){ animation-delay:calc(.76s + var(--n, 3) * .42s); }
+  .splash[data-open="3"] .splash-motto2{ animation-delay:calc(.9s + var(--n, 3) * .42s); }
+  .splash[data-open="3"] .splash-receipts{ display:none; }
+
+  @keyframes sp-pa{ 0%{ opacity:1; transform:translateX(-101%); } 20%, 36%{ opacity:1; transform:none; } 70%, 100%{ opacity:1; transform:translateY(-101%); } }
+  @keyframes sp-pb{ 0%{ opacity:1; transform:translateX(101%); } 20%, 36%{ opacity:1; transform:none; } 70%, 100%{ opacity:1; transform:translateY(101%); } }
+  @keyframes sp-thunk{ from{ opacity:0; transform:scale(1.55); } to{ opacity:1; transform:none; } }
+  @keyframes sp-beat{ 0%{ transform:scale(1); } 22%{ transform:scale(1.075); } 100%{ transform:scale(1); } }
+  @keyframes sp-ring{ from{ opacity:.95; transform:scale(.25); } to{ opacity:0; transform:scale(5.5); } }
+  @keyframes sp-pop{ from{ opacity:0; transform:translateY(8px) scale(.8); } to{ opacity:1; transform:none; } }
+  @keyframes sp-count{ 0%{ opacity:0; } 8%, 84%{ opacity:1; } 100%{ opacity:0; } }
+  @keyframes sp-num{ from{ transform:scale(1.9); } to{ transform:none; } }
+  @keyframes sp-gone{ to{ opacity:0; visibility:hidden; } }
+}
 </style>
 </head>
 <body>
@@ -7629,6 +7793,15 @@
   try{ seen = sessionStorage.getItem("us-splash-v1") === "1"; }catch(e){}
   if(seen){ el.parentNode.removeChild(el); return; }
   try{ sessionStorage.setItem("us-splash-v1", "1"); }catch(e){}
+  /* BUILD 213: three openers, taken in turn */
+  try{
+    var oi = parseInt(localStorage.getItem("us-w2-open-v1"), 10) || 0;
+    localStorage.setItem("us-w2-open-v1", String((oi + 1) % 3));
+    el.setAttribute("data-open", String(oi % 3 + 1));
+    var fx = document.createElement("div"); fx.className = "sp-fx";
+    fx.innerHTML = '<i class="sp-pa"></i><i class="sp-pb"></i><i class="sp-ring"></i><i class="sp-ring r2"></i><i class="sp-ring r3"></i>';
+    el.insertBefore(fx, el.firstChild);
+  }catch(e){}
 
   /* Each path gets its own dash length, measured rather than guessed - the two
      arcs differ by about 15% and a shared number makes one of them finish early
@@ -7669,10 +7842,18 @@
       if(bits.length >= 2){
         var r = document.getElementById("splashReceipts");
         if(r){ r.textContent = bits.join("  \u00b7  "); r.hidden = false; }
+        try{
+          if(el.getAttribute("data-open") === "3"){
+            var cw = document.createElement("div"); cw.className = "sp-counts";
+            bits.slice(0, 3).forEach(function(b, i){ var sp = document.createElement("span"), cut = b.indexOf(" "), nb = document.createElement("b"), ne = document.createElement("em"); nb.textContent = cut > 0 ? b.slice(0, cut) : b; ne.textContent = cut > 0 ? b.slice(cut + 1) : ""; sp.appendChild(nb); sp.appendChild(ne); sp.style.setProperty("--i", i); cw.appendChild(sp); });
+            el.appendChild(cw); el.style.setProperty("--n", Math.min(3, bits.length)); el.setAttribute("data-counts", "1");
+          }
+        }catch(e){}
       }
     }
   }catch(e){}
 
+  try{ if(el.getAttribute("data-open") === "3" && !el.getAttribute("data-counts")) el.setAttribute("data-open", "2"); }catch(e){}
   function end(){
     if(!el || !el.parentNode) return;
     el.parentNode.removeChild(el);
@@ -7975,6 +8156,7 @@
      one running its own backdrop blur (thirty task cards each blurring live is a
      scroll that stutters on a phone). No photo: a field in their three colours. -->
 <div class="app-ground" id="appGround" aria-hidden="true"><i></i></div>
+<button type="button" class="cs-pill" id="coupleStreak" hidden></button>
 <main>
   <!-- daily photo duo: each of you posts one photo a day; you see each other first thing -->
   <!-- What the app would have pushed, shown where it can actually be read. It is here and
@@ -8087,6 +8269,8 @@
     </div>
 
     <!-- shared challenge: sits above everything because it's a today thing, not an archive -->
+    <!-- BUILD 212: what your person did lately, one tap from a thank-you -->
+    <div class="card thanks-card" id="thanksCard" style="display:none;"></div>
     <div class="chal-wrap" id="chalWrap" style="display:none;"></div>
 
     <div class="card checkin-card" id="checkinCard">
@@ -10806,6 +10990,7 @@
     // Sound is feedback, not animation: someone who turned motion off has not asked to
     // stop being told that the thing they pressed worked. So it fires before the return.
     sfx(cfg.sound || "tick");
+    try{ if(!motionOff() && opts.origin && /^\+\d+/.test(String(opts.headline || ""))) flyPoints(opts.origin, String(opts.headline).match(/^\+\d+/)[0], deviceOwner() || state.currentUser); }catch(e){}
     if(motionOff()) return;
     try{
       if(cfg.sweep){
@@ -10949,6 +11134,7 @@
          so the two never overlap and layout never doubles. */
       var cur = document.querySelector(".view.active");
       var next = document.getElementById("view-"+btn.dataset.tab);
+      if(cur !== next){ try{ window.scrollTo({top:0, behavior:"instant"}); }catch(e){ window.scrollTo(0, 0); } }
       var swap = function(){
         document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active", "leaving"); });
         next.classList.add("active");
@@ -11073,6 +11259,7 @@
          contradicting itself.
      ============================================================================ */
   var PHOTO_MISS_POINTS = 25;
+  var PHOTO_GRACE_DAYS = 3;
 
   /* The floor, recorded once and SYNCED so both phones charge the same days. Merged by
      taking the EARLIER of the two: whichever phone ran the new build first is when the
@@ -11094,7 +11281,14 @@
     var floor = photoRuleFrom();
     if(!floor) return null;
     var inst = state.installedAt;
-    if(typeof inst === "string" && /^\d{4}-\d{2}-\d{2}$/.test(inst) && inst > floor) floor = inst;
+    /* BUILD 211: the first thing a new couple saw was -25 each and "-25 until
+       midnight", before they had done anything. The clock now starts three days
+       after WeDO arrives - time to pair, find the photo slot and try it once.
+       installedAt is synced (earlier of the two wins), so both phones agree. */
+    if(typeof inst === "string" && /^\d{4}-\d{2}-\d{2}$/.test(inst)){
+      var start = shiftISO(inst, PHOTO_GRACE_DAYS);
+      if(start > floor) floor = start;
+    }
     return floor;
   }
 
@@ -11143,7 +11337,7 @@
   // What the leaderboard should actually show. Points earned, less what was dropped.
   function netPoints(pid){
     var p = (state.points || {})[pid] || {};
-    return (p.personal || 0) + (p.thoughtful || 0) - penaltyFor(pid);
+    return (p.personal || 0) + (p.thoughtful || 0) - penaltyFor(pid) + thanksPoints(pid);
   }
 
   /* ============================================================================
@@ -11293,7 +11487,7 @@
     });
     // Both deductions come off here and ONLY here, so the leaderboard, the home-screen race
     // bar and the monthly recap can never disagree about what somebody actually has.
-    return earned - penaltyFor(pid, mk) - photoMissPenalty(pid, mk);
+    return earned - penaltyFor(pid, mk) - photoMissPenalty(pid, mk) + thanksPoints(pid, mk);
   }
 
   // ---------- task rendering ----------
@@ -11561,7 +11755,29 @@
     syncCollapse("done", doneTasks.length, "item|items");
 
     if(openTasks.length===0){
-      open.innerHTML = '<div class="empty">Nothing here yet. Tap + to add one ' + icon("target", 13, "em-i") + '</div>';
+      /* BUILD 211: "Nothing here yet" left a new couple at a blank page. A list
+         that has never held anything now offers a few first steps - one tap adds
+         it for the two of you (goal gradient: nobody starts from zero). */
+      var starters = inList.length === 0 ? (STARTERS[listId] || null) : null;
+      if(starters){
+        open.innerHTML = '<div class="starter"><div class="st-h">Start with one</div>' +
+          '<p class="st-p">Tap to add it for the two of you. You can change who, when and how hard after.</p>' +
+          '<div class="st-row">' + starters.map(function(s, i){
+            return '<button type="button" class="st-chip" data-i="' + i + '">' + icon("up", 13) + '<span>' + escapeHtml(s) + '</span></button>';
+          }).join("") + '</div><div class="st-or">or tap + to write your own</div></div>';
+        open.querySelector(".st-row").addEventListener("click", function(ev){
+          var b = ev.target.closest ? ev.target.closest(".st-chip") : null; if(!b) return;
+          var f = document.getElementById("taskForm");
+          try{ updateAddSheetFields && 0; }catch(e){}
+          document.getElementById("taskList").value = listId;
+          try{ document.getElementById("taskList").dispatchEvent(new Event("change")); }catch(e){}
+          document.getElementById("taskTitle").value = starters[+b.dataset.i];
+          var as = document.getElementById("taskAssignee"); if(as) as.value = "both";
+          if(f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event("submit", {cancelable:true}));
+        });
+      } else {
+        open.innerHTML = '<div class="empty">Nothing here yet. Tap + to add one ' + icon("target", 13, "em-i") + '</div>';
+      }
     }
     if(listId === "list-trips"){
       /* BUILD 102 — each trip's to-dos sit under THAT trip.
@@ -12377,6 +12593,37 @@
     return order.map(function(k){ return byKey[k]; });
   }
 
+  /* BUILD 210 - TASKS FROM CHATS.
+     Claude chats change tasks through the WeDO engine, which writes ONLY to
+     wedo-inbox.json in this gist; the phones never write that file. Each sync
+     lays the inbox over the shared copy before the usual merge: per task, the
+     newer mtime wins, and an inbox tombstone deletes like one made here. The
+     next save then carries the result into wedo-state.json, and the engine
+     clears inbox entries the shared copy has caught up with. */
+  var INBOX_FILE = "wedo-inbox.json";
+  function foldInbox(remote, txt){
+    if(!remote || !txt) return remote;
+    var ib = null;
+    try{ ib = JSON.parse(txt); }catch(e){ return remote; }
+    if(!ib || typeof ib !== "object") return remote;
+    var tomb = remote.tombstones = remote.tombstones || {};
+    var it = ib.tombstones || {};
+    for(var k in it){ var v = +it[k]; if(v && v > (tomb[k] || 0)) tomb[k] = v; }
+    var add = [], tk = ib.tasks || {};
+    for(var id in tk){
+      var t = tk[id];
+      if(t && t.id === id && typeof t.title === "string" && t.title && LIST_IDS_OK(t.listId)) add.push(t);
+    }
+    if(add.length) remote.tasks = unionById(remote.tasks || [], add, tomb);
+    return remote;
+  }
+  function LIST_IDS_OK(l){ return typeof l === "string" && /^list-[a-z0-9-]+$/.test(l); }
+  var STARTERS = {
+    "list-todo":  ["Plan a date night", "Cook dinner together", "20-minute tidy, both of us", "Book that appointment"],
+    "list-exp":   ["Watch the sunrise somewhere", "Take a class together", "Cook a dish from a place we want to visit"],
+    "list-buy":   ["Something for the home"],
+    "list-trips": null
+  };
   function mergeTasks(a, b, tomb){
     var all = unionById(a, b, tomb);
     // unionById keeps whichever whole task was touched last, which is right for a title or
@@ -12680,6 +12927,9 @@
     // earliest wins — that's the true "day zero" for the missed-code lock on both phones
     var lIns = L.installedAt, rIns = R.installedAt;
     m.installedAt = (lIns && rIns) ? (lIns < rIns ? lIns : rIns) : (lIns || rIns || todayISO());
+    /* BUILD 213: the day the use-it-or-lose-it clock began. Earliest wins, so both phones count the same days. */
+    var lRx = L.rewardExpiryFrom, rRx = R.rewardExpiryFrom;
+    if(lRx || rRx) m.rewardExpiryFrom = (lRx && rRx) ? (lRx < rRx ? lRx : rRx) : (lRx || rRx);
     // Whichever phone has already rolled the month wins: expiry must not un-happen because
     // the other phone hasn't opened yet and still thinks it's last month.
     m.spinPeriod = (String(L.spinPeriod||"") > String(R.spinPeriod||"")) ? L.spinPeriod : (R.spinPeriod || L.spinPeriod || null);
@@ -13350,16 +13600,21 @@
     setSyncStatus("syncing");
     var id = gistIdFromUrl();
     var headers = {Authorization: "Bearer " + ghToken(), Accept: "application/vnd.github+json"};
-    var gistFiles = {};
+    var gistFiles = {}, inboxTxt = "";
     fetch("https://api.github.com/gists/" + id, {headers: headers})
       .then(function(r){ if(!r.ok) throw new Error("read " + r.status); return r.json(); })
       .then(function(g){
         gistFiles = g.files || {};
         noteConfirmedFiles(gistFiles);
+        // BUILD 210: what chats added, edited or completed waits in its own file
+        var fi = gistFiles[INBOX_FILE];
+        var inboxP = !fi ? Promise.resolve("")
+          : (fi.truncated && fi.raw_url ? fetch(fi.raw_url).then(function(r){ return r.ok ? r.text() : ""; }).catch(function(){ return ""; })
+                                        : Promise.resolve(fi.content || ""));
         var f = gistFiles["wedo-state.json"];
-        if(!f) return null;
-        if(f.truncated) return fetch(f.raw_url).then(function(r){ return r.text(); });
-        return f.content;
+        var stateP = !f ? Promise.resolve(null)
+          : (f.truncated ? fetch(f.raw_url).then(function(r){ return r.text(); }) : Promise.resolve(f.content));
+        return Promise.all([stateP, inboxP]).then(function(a){ inboxTxt = a[1] || ""; return a[0]; });
       })
       .then(function(txt){
         var remote = null;
@@ -13374,6 +13629,7 @@
         });
       })
       .then(function(remote){
+        remote = foldInbox(remote, inboxTxt);
         var merged = mergeStates(state, remote);
         var mergedJson = JSON.stringify(stripLocal(merged));
         var changedLocally = mergedJson !== JSON.stringify(stripLocal(state));
@@ -13903,8 +14159,8 @@
         : {e:"💞", t:"The two hearts", x:"The pair between your photos moves. Close enough to touch when you're in step, drifting apart when you're not — it counts the days you both posted and whether the doing is shared. Tap them to see the numbers."},
       {e:"🎡", t:"Spins & rewards", x:"Every 5 completed tasks earns a spin of the wheel — massages, date nights, weekend getaways. Want a new reward on there? Propose it, and the other person approves it."},
       codesOn()
-        ? {e:"💌", t:"Make it a ritual", x:"Morning: read your cue. During the day: check things off. Evening: trade codes together. Sunday: pick your one big thing for the week. Tip: set a 9pm phone reminder called “trade codes 🔗” — that one habit carries everything else. And leave a note in the Notes tab now and then. ❤️"}
-        : {e:"💌", t:"Make it a ritual", x:"Morning: read your cue and post your photo. During the day: check things off. Sunday: pick your one big thing for the week, and ask for one thing you'd actually want. And leave a note in the Notes tab now and then. ❤️"}
+        ? {e:"💌", t:"Make it a ritual", x:"Morning: read your cue. During the day: check things off. Evening: trade codes together. Sunday: pick your one big thing for the week. Tip: set a 9pm phone reminder called “trade codes 🔗” — that one habit carries everything else. And leave a note under Keep now and then. ❤️"}
+        : {e:"💌", t:"Make it a ritual", x:"Morning: read your cue and post your photo. During the day: check things off. Sunday: pick your one big thing for the week, and ask for one thing you'd actually want. And leave a note under Keep now and then. ❤️"}
     ];
   }
   function renderTourStep(){
@@ -14023,7 +14279,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 209;
+  var BUILD_NUM = 213;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -17208,10 +17464,12 @@
     if(!state.paired){
       var warn = document.createElement("div");
       warn.className = "required-note";
-      warn.innerHTML = icon("warn", 15, "inline-warn") + " <strong>Not paired yet.</strong> Your two phones need to swap data once so your codes match. " +
-        "Open <em>Sync between two phones</em> at the bottom, tap <em>Copy my data</em>, send it to " +
-        escapeHtml(personName(partner)) + ", and have them paste it into Import. Until then the codes below won't line up.";
+      warn.innerHTML = icon("warn", 15, "inline-warn") + " <strong>Not connected yet.</strong> Once " +
+        escapeHtml(personName(partner)) + "\u2019s phone has joined, your daily codes line up. " +
+        '<button type="button" class="hx-link" id="pairGo">Connect your two phones</button>';
       body.appendChild(warn);
+      var pg = warn.querySelector("#pairGo");
+      if(pg) pg.addEventListener("click", function(){ if(window.__wedoOpenSetup) window.__wedoOpenSetup("sync"); });
     }
 
     // ---- device gate: codes only render on their owner's phone ----
@@ -24076,7 +24334,163 @@
     };
   }
 
+  /* ===========================================================================
+     BUILD 212 - SAY THANKS, THE COUPLE STREAK, POINTS THAT TRAVEL.
+
+     Moody picked these for other couples: the app rewarded DOING and never
+     NOTICING, and everything it counted was one of you against the other.
+
+     THANKS. A finished task keeps a log of thank-yous (kept per completion, so a
+     daily task can be thanked each day). Worth THANKS_POINTS to the one who did
+     it. Derived from the log, never added to the stored totals - the totals
+     merge with Math.max and would lose a point written on the other phone.
+
+     STREAK. Days in a row that BOTH of you did something (finished a task or
+     posted a photo). Derived from dailyCompletions and the album, so both
+     phones count the same days. Today doesn't break it until it's over.
+     =========================================================================== */
+  var THANKS_POINTS = 2;
+  function thanksLog(t){ return (t && Array.isArray(t.thanksLog)) ? t.thanksLog : []; }
+  function thanksPoints(pid, mk){
+    var n = 0;
+    (state.tasks || []).forEach(function(t){
+      thanksLog(t).forEach(function(e){
+        if(e && e.to === pid && e.by !== pid && (!mk || String(e.at).slice(0, 7) === mk)) n++;
+      });
+    });
+    return n * THANKS_POINTS;
+  }
+  function thankable(me){
+    var them = otherPerson(me), since = Date.now() - 72 * 3600000;
+    return (state.tasks || []).filter(function(t){
+      if(!t || t.status !== "done" || t.completedBy !== them || !t.completedAt) return false;
+      if(Date.parse(t.completedAt) < since) return false;
+      return !thanksLog(t).some(function(e){ return e.by === me && e["for"] === t.completedAt; });
+    }).sort(function(a, b){ return String(b.completedAt).localeCompare(String(a.completedAt)); });
+  }
+  function sayThanks(taskId, origin){
+    var me = deviceOwner() || state.currentUser; if(!me) return;
+    var t = (state.tasks || []).find(function(x){ return x.id === taskId; });
+    if(!t || !t.completedBy || t.completedBy === me) return;
+    var log = thanksLog(t).slice(-59);
+    log.push({by: me, to: t.completedBy, at: new Date().toISOString(), "for": t.completedAt});
+    t.thanksLog = log; touch(t);
+    announce("thanked " + personName(t.completedBy) + " for \u201C" + t.title + "\u201D");
+    save();
+    try{ flyPoints(origin, "+" + THANKS_POINTS, t.completedBy); }catch(e){}
+    try{ sfx("tick"); }catch(e){}
+    toast("Thanks sent to " + personName(t.completedBy) + " \u00B7 +" + THANKS_POINTS + " for them");
+    renderAll();
+  }
+  function renderThanks(){
+    var card = document.getElementById("thanksCard"); if(!card) return;
+    var me = deviceOwner() || state.currentUser;
+    if(!me || (state.people || []).length < 2){ card.style.display = "none"; return; }
+    var them = otherPerson(me), list = thankable(me);
+    // thanks that reached ME since I last looked
+    try{
+      var seenKey = "us-thanks-seen-v1", seen = Number(localStorage.getItem(seenKey)) || 0, newest = seen, fresh = [];
+      (state.tasks || []).forEach(function(t){
+        thanksLog(t).forEach(function(e){
+          var at = Date.parse(e.at) || 0;
+          if(e.to === me && e.by !== me && at > seen){ fresh.push(t.title); if(at > newest) newest = at; }
+        });
+      });
+      if(fresh.length){
+        localStorage.setItem(seenKey, String(newest));
+        if(seen){   // not on the very first run, when old thanks would all fire at once
+          setTimeout(function(){
+            toast(personName(them) + " said thanks for \u201C" + fresh[0] + "\u201D" + (fresh.length > 1 ? " and " + (fresh.length - 1) + " more" : "") + " \u00B7 +" + (fresh.length * THANKS_POINTS));
+            try{ celebrate("easy", {origin: originOf(document.querySelector(".us-end." + (me === "p1" ? "l" : "r")))}); }catch(e){}
+          }, 600);
+        }
+      } else if(!seen){ localStorage.setItem(seenKey, String(Date.now())); }
+    }catch(e){}
+    if(!list.length){ card.style.display = "none"; card.innerHTML = ""; return; }
+    var shown = list.slice(0, 3);
+    card.style.display = "";
+    card.innerHTML = '<div class="tk-eyebrow">' + escapeHtml(personName(them)) + ' got this done</div>' +
+      shown.map(function(t){
+        return '<div class="tk-row"><div class="tk-what"><b>' + escapeHtml(t.title) + '</b><span>' + escapeHtml(agoShort(t.completedAt)) + '</span></div>' +
+          '<button type="button" class="tk-btn ' + them + '" data-id="' + escapeAttr(t.id) + '">' + icon("heart", 15) + '<span>Thanks</span></button></div>';
+      }).join("") +
+      (list.length > 3 ? '<div class="tk-more">and ' + (list.length - 3) + ' more in Tasks \u2192 Done</div>' : "");
+    card.querySelectorAll(".tk-btn").forEach(function(b){
+      b.addEventListener("click", function(){ b.disabled = true; sayThanks(b.getAttribute("data-id"), originOf(b)); });
+    });
+  }
+  function agoShort(iso){
+    var m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
+    if(m < 60) return m <= 1 ? "just now" : m + " min ago";
+    var h = Math.round(m / 60); if(h < 24) return h + "h ago";
+    var d = Math.round(h / 24); return d === 1 ? "yesterday" : d + " days ago";
+  }
+
+  function activeOn(pid, day){
+    if(((state.dailyCompletions || {})[pid] || {})[day]) return true;
+    return !!((state.album || {})[day] || {})[pid] ||
+           !!(((state.dailyPhotos || {})[pid] || {}).date === day && (state.dailyPhotos[pid] || {}).photo);
+  }
+  function coupleStreak(){
+    var ps = (state.people || []).slice(0, 2).map(function(p){ return p.id; });
+    if(ps.length < 2) return {days: 0, today: {}, bothToday: false};
+    var today = todayISO(), both = function(d){ return activeOn(ps[0], d) && activeOn(ps[1], d); };
+    var n = 0, d = today, bt = both(today);
+    if(!bt) d = shiftISO(today, -1);          // today can still be saved; it doesn't break the run yet
+    while(n < 3660 && both(d)){ n++; d = shiftISO(d, -1); }
+    var t = {}; ps.forEach(function(p){ t[p] = activeOn(p, today); });
+    return {days: n, today: t, bothToday: bt};
+  }
+  function renderCoupleStreak(){
+    var el = document.getElementById("coupleStreak"); if(!el) return;
+    var s = coupleStreak(), me = deviceOwner() || state.currentUser;
+    if(!me || (!s.days && !s.today[me])){ el.hidden = true; return; }
+    el.hidden = false;
+    el.className = "cs-pill" + (s.bothToday ? " lit" : "") + (s.days >= 7 ? " hot" : "");
+    el.innerHTML = icon("flame", 15) + '<b>' + s.days + '</b>';
+    el.setAttribute("aria-label", s.days + " day streak together");
+    if(el._n != null && s.days > el._n){ el.classList.remove("grew"); void el.offsetWidth; el.classList.add("grew"); }
+    el._n = s.days;
+    el.onclick = function(){
+      var them = otherPerson(me), line;
+      if(s.bothToday) line = "You\u2019ve both done something today. It\u2019s safe until tomorrow.";
+      else if(s.today[me]) line = "You\u2019re in for today. It counts once " + personName(them) + " finishes one thing or posts a photo.";
+      else if(s.today[them]) line = personName(them) + " is in for today. Finish one thing or post your photo to keep it going.";
+      else line = "Neither of you has done anything yet today. One task or one photo each keeps it alive.";
+      showModal("\uD83D\uDD25", s.days + (s.days === 1 ? " day together" : " days together"),
+        "Days in a row that you BOTH finished a task or posted a photo.\n\n" + line, {kind: s.bothToday ? "win" : "info", eyebrow: "Your streak", button: "Got it"});
+    };
+  }
+
+  /* The reward has to arrive somewhere. A "+10" used to burst and vanish; now it
+     lifts off the thing you tapped, arcs to that person's score and the score
+     bumps as it lands (cause, then effect). */
+  function flyPoints(origin, text, pid){
+    if(!origin || motionOff() || !document.body.animate) return;
+    var tgtEl = document.querySelector(".us-end." + (pid === "p2" ? "r" : "l") + " .us-pts");
+    var tr = tgtEl && tgtEl.getBoundingClientRect();
+    var onScreen = tr && tr.width && tr.bottom > 0 && tr.top < window.innerHeight;
+    var tx = onScreen ? tr.left + tr.width / 2 : (pid === "p2" ? window.innerWidth - 40 : 40), ty = onScreen ? tr.top + tr.height / 2 : 18;
+    var chip = document.createElement("div");
+    chip.className = "fly-pts " + (pid === "p2" ? "p2" : "p1"); chip.textContent = text;
+    chip.style.left = origin.x + "px"; chip.style.top = origin.y + "px";
+    document.body.appendChild(chip);
+    var dx = tx - origin.x, dy = ty - origin.y, lift = Math.min(-60, dy * 0.25) - 30;
+    var a = chip.animate([
+      {transform: "translate(-50%,-50%) scale(.4)", opacity: 0},
+      {transform: "translate(-50%,-50%) translate(0px," + lift + "px) scale(1.25)", opacity: 1, offset: .22},
+      {transform: "translate(-50%,-50%) translate(" + (dx * .55) + "px," + (dy * .45 + lift) + "px) scale(1.05)", opacity: 1, offset: .62},
+      {transform: "translate(-50%,-50%) translate(" + dx + "px," + dy + "px) scale(.5)", opacity: .2}
+    ], {duration: 900, easing: "cubic-bezier(.3,.1,.3,1)", fill: "forwards"});
+    var land = function(){
+      chip.remove();
+      if(onScreen && tgtEl && tgtEl.isConnected){ tgtEl.classList.remove("bump"); void tgtEl.offsetWidth; tgtEl.classList.add("bump"); }
+    };
+    if(a.finished) a.finished.then(land, land); else setTimeout(land, 920);
+  }
+
   function renderAll(){
+    try{ renderThanks(); renderCoupleStreak(); }catch(e){}
     // Cheap, and it catches a crossing that happened on the other phone and arrived by
     // sync — a milestone belongs to the pair, so either phone noticing is enough.
     try{ renderBoardGround(); }catch(e){}
@@ -27480,6 +27894,1010 @@
     setTimeout(function(){ placePills(false); try{ foldPills(); }catch(e){} }, 700);
   })();
 
+
+  /* ===========================================================================
+     BUILD 213 - WeDO 2.0, FIRST CUT.
+
+     Moody: "The line. I also love the mood and stuff for 3. The todo list
+     definitely works best with 1 but maybe the overview screen closer to 3.
+     Also rewards should expire and there be a reminder that it's going to go
+     away. Use it or lose it. And maybe adding notification like make sure to
+     add a photo it's almost midnight, or time to cross something off. Maybe
+     the memories could be more of a flip book."
+
+     Same state, same sync, same engine. This block only adds: it wraps the
+     renderers that already exist and draws its own surfaces beside them, so a
+     failure in here leaves build 212 running underneath.
+
+       DOCK      four places (Today, Tasks, Us, Keep) and + at the end. The old
+                 six buttons stay in the page, hidden, and do the switching.
+       TODAY     the day's photo with what is left on it.
+       THE LINE  open tasks split by owner; shared ones sit on the line. Hold a
+                 task and slide it across to hand it over.
+       REWARDS   a won reward lasts W2_REWARD_DAYS days. The clock for anything
+                 won before this build starts the day this build first runs
+                 (rewardExpiryFrom, synced, earlier of the two phones wins).
+       NUDGES    three more reasons in the reminder list, and the same three
+                 booked ahead as scheduled pushes so they arrive with the app
+                 closed. Booking needs the OneSignal keys; without them only
+                 the in-app strip shows.
+       FLIP BOOK the month as pages you turn, a day a page.
+     =========================================================================== */
+  (function(){
+    var R = document.documentElement;
+    R.setAttribute("data-w2", "1");
+    var W2_REWARD_DAYS = 14;
+    function $(id){ return document.getElementById(id); }
+    function mk(tag, cls, html){ var e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
+    function me(){ return deviceOwner() || state.currentUser || "p1"; }
+    function pid(i){ return ((state.people || [])[i] || {}).id || ("p" + (i + 1)); }
+    function warn(where, e){ try{ console.warn("w2 " + where, e); }catch(_){} }
+    var CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.3l2.3 2.3 4.7-5"/></svg>';
+    var PLUS = '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg>';
+    var CHEV = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5"/></svg>';
+    var NOTE = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 13.5V4l8-1.5V12"/><circle cx="4.8" cy="13.5" r="2.2"/><circle cx="12.8" cy="12" r="2.2"/></svg>';
+    var WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+    function dayOf(iso, opts){
+      var d = new Date(iso + "T12:00:00");
+      return isFinite(d.getTime()) ? d.toLocaleDateString(undefined, opts) : iso;
+    }
+    function plainList(listId){
+      var l = listById(listId);
+      return !!l && !l.priceBased && !l.experienceBased && listId !== "list-trips";
+    }
+    /* "today", "tomorrow", a weekday inside the week, a date after it; late in days */
+    function dueLabel(t){
+      if(!t.dueDate) return {text: "", late: false};
+      var d = daysBetweenISO(todayISO(), t.dueDate);
+      if(d < 0) return {text: (-d) + (d === -1 ? " day late" : " days late"), late: true};
+      if(d === 0) return {text: "today", late: false};
+      if(d === 1) return {text: "tomorrow", late: false};
+      if(d < 7) return {text: dayOf(t.dueDate, {weekday: "short"}), late: false};
+      return {text: dayOf(t.dueDate, {day: "numeric", month: "short"}), late: false};
+    }
+    function ptsLabel(t){
+      var p = DIFF_POINTS[t.difficulty] || 10;
+      return "+" + p + (t.assignedTo === "both" ? " each" : "");
+    }
+    function ringFor(t, cls){
+      var b = mk("button", "w2-ring " + (cls || ""), "<i>" + CHECK + "</i>");
+      b.type = "button";
+      b.setAttribute("aria-label", "Mark done: " + t.title);
+      b.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        if(b.classList.contains("tick")) return;
+        b.classList.add("tick");
+        var from = null; try{ from = originOf(b); }catch(e){}
+        setTimeout(function(){ completeTask(t.id, from); }, 380);
+      });
+      return b;
+    }
+
+    /* ------------------------------ DOCK ------------------------------ */
+    var PLACES = [
+      {k: "today", label: "Today", tabs: ["today"]},
+      {k: "tasks", label: "Tasks", tabs: ["tasks"]},
+      {k: "us",    label: "Us",    tabs: ["rewards", "board"], names: ["Rewards", "Scores"]},
+      {k: "keep",  label: "Keep",  tabs: ["notes", "memories"], names: ["Notes", "Memories"]}
+    ];
+    var lastSub = {};
+    function curTab(){ return R.getAttribute("data-view") || "today"; }
+    function goTab(t){
+      var b = document.querySelector('.tabs button[data-tab="' + t + '"]');
+      if(b) b.click();
+    }
+    function placeOf(tab){
+      for(var i = 0; i < PLACES.length; i++){ if(PLACES[i].tabs.indexOf(tab) >= 0) return PLACES[i]; }
+      return PLACES[0];
+    }
+    /* The dock and the two-way switches run on HorizonX's Animated Sliding Tabs and
+       Animated Segmented Control, as ported in the Parts Bin (dock-lab.html, P-09 and
+       P-10). Mechanism kept: one shared indicator that travels to the selected item
+       (220ms on the dock, 200ms on a switch, ease-out), roving tabindex, arrows that
+       wrap, Home and End. The surface is WeDO's. */
+    function place(ind, item, animate){
+      if(!ind || !item || !item.offsetWidth) return;
+      var still = !animate || motionOff();
+      if(still) ind.style.transition = "none";
+      ind.style.width = item.offsetWidth + "px";
+      ind.style.transform = "translateX(" + item.offsetLeft + "px)";
+      if(still){ void ind.offsetWidth; ind.style.transition = ""; }
+    }
+    var dock = mk("nav"); dock.id = "w2Dock"; dock.setAttribute("aria-label", "Main");
+    var bar = mk("div", "w2-bar"); bar.setAttribute("role", "tablist"); bar.setAttribute("aria-label", "Places");
+    var dockInd = mk("span", "w2-ind"); dockInd.setAttribute("aria-hidden", "true"); bar.appendChild(dockInd);
+    var dockTabs = [];
+    function openPlace(p){
+      if(placeOf(curTab()).k === p.k){ try{ window.scrollTo({top: 0, behavior: motionOff() ? "auto" : "smooth"}); }catch(e){ window.scrollTo(0, 0); } return; }
+      goTab(lastSub[p.k] || p.tabs[0]);
+    }
+    PLACES.forEach(function(p, i){
+      var b = mk("button", "", '<span class="w2-l">' + p.label + '</span>');
+      b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("data-place", p.k);
+      b.addEventListener("click", function(){ openPlace(p); });
+      b.addEventListener("keydown", function(ev){
+        var n = PLACES.length, to = {ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1}[ev.key];
+        if(to === undefined) return;
+        ev.preventDefault(); openPlace(PLACES[to]); dockTabs[to].focus();
+      });
+      dockTabs.push(b); bar.appendChild(b);
+    });
+    var addBtn = mk("button", "w2-add", PLUS);
+    addBtn.type = "button"; addBtn.setAttribute("aria-label", "Add a task");
+    addBtn.addEventListener("click", function(){
+      var from = curTab();
+      try{ openAddSheet(); }catch(e){ var f = $("fabAdd"); if(f) f.click(); }
+      /* Parkinson's law: what is already known is filled in. It is yours, and from
+         Today it is due today; both can be changed in one tap. */
+      try{
+        var as = $("taskAssignee"); if(as && me()) as.value = me();
+        var dd = $("taskDueDate"); if(dd && from === "today" && !dd.value) dd.value = todayISO();
+      }catch(e){}
+    });
+    dock.appendChild(bar); dock.appendChild(addBtn);
+    document.body.appendChild(dock);
+
+    var subs = [];
+    PLACES.forEach(function(p){
+      if(p.tabs.length < 2) return;
+      p.tabs.forEach(function(tab){
+        var view = $("view-" + tab); if(!view) return;
+        var sub = mk("div", "w2-sub"); sub.setAttribute("role", "radiogroup"); sub.setAttribute("aria-label", p.label);
+        var ind = mk("span", "w2-ind"); ind.setAttribute("aria-hidden", "true"); sub.appendChild(ind);
+        var radios = [];
+        function check(r, focus){
+          radios.forEach(function(x){ var on = x === r; x.setAttribute("aria-checked", String(on)); x.tabIndex = on ? 0 : -1; });
+          place(ind, r, true);
+          var t2 = r.getAttribute("data-go");
+          if(curTab() !== t2) goTab(t2);
+          if(focus){ var twin = document.querySelector('#view-' + t2 + ' .w2-sub [data-go="' + t2 + '"]'); setTimeout(function(){ try{ (twin || r).focus(); }catch(e){} }, 260); }
+        }
+        p.tabs.forEach(function(t2, i){
+          var b = mk("button", "", p.names[i]); b.type = "button"; b.setAttribute("role", "radio"); b.setAttribute("data-go", t2);
+          b.setAttribute("aria-checked", String(t2 === tab)); b.tabIndex = t2 === tab ? 0 : -1;
+          b.addEventListener("click", function(){ check(b); });
+          b.addEventListener("keydown", function(ev){
+            var n = radios.length, to = {ArrowRight: (i + 1) % n, ArrowDown: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, ArrowUp: (i - 1 + n) % n}[ev.key];
+            if(to === undefined) return;
+            ev.preventDefault(); check(radios[to], true);
+          });
+          radios.push(b); sub.appendChild(b);
+        });
+        subs.push({tab: tab, ind: ind, radios: radios});
+        view.insertBefore(sub, view.firstChild);
+      });
+    });
+    var dockReady = false;
+    function syncDock(){
+      var tab = curTab(), p = placeOf(tab), sel = null;
+      if(p.tabs.length > 1) lastSub[p.k] = tab;
+      dockTabs.forEach(function(b){
+        var on = b.getAttribute("data-place") === p.k;
+        b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1;
+        if(on) sel = b;
+      });
+      place(dockInd, sel, dockReady);
+      /* the switch in the view that is arriving shows where it already is */
+      subs.forEach(function(su){
+        su.radios.forEach(function(r){ var on = r.getAttribute("data-go") === su.tab; r.setAttribute("aria-checked", String(on)); r.tabIndex = on ? 0 : -1; });
+        if(su.tab === tab){
+          var r0 = su.radios.filter(function(r){ return r.getAttribute("data-go") === tab; })[0];
+          place(su.ind, r0, false);
+          requestAnimationFrame(function(){ place(su.ind, r0, false); });
+          setTimeout(function(){ place(su.ind, r0, false); }, 240);
+        }
+      });
+    }
+    try{ new MutationObserver(syncDock).observe(R, {attributes: true, attributeFilter: ["data-view"]}); }catch(e){}
+    syncDock();
+    requestAnimationFrame(function(){ syncDock(); dockReady = true; });
+    setTimeout(syncDock, 400);
+    window.addEventListener("resize", function(){ var was = dockReady; dockReady = false; syncDock(); dockReady = was; });
+    function mirrorBadge(fromId, place){
+      var src = $(fromId), btn = bar.querySelector('button[data-place="' + place + '"]');
+      if(!src || !btn) return;
+      var dst = btn.querySelector(".w2-n");
+      var n = src.hidden ? "" : (src.textContent || "").trim();
+      if(!n){ if(dst) dst.remove(); return; }       // no count, no element
+      if(!dst){ dst = mk("span", "w2-n"); btn.appendChild(dst); }
+      dst.textContent = n;
+      var lab = src.getAttribute("aria-label") || src.getAttribute("title") || "";
+      if(lab) dst.setAttribute("aria-label", lab);
+    }
+    var _rtb213 = renderTabBadges;
+    renderTabBadges = function(){
+      var r = _rtb213.apply(this, arguments);
+      try{ mirrorBadge("badgeTasks", "tasks"); mirrorBadge("badgeRewards", "us"); }catch(e){ warn("badges", e); }
+      return r;
+    };
+
+    /* ------------------------------ TODAY ------------------------------ */
+    var over = mk("section"); over.id = "w2Over"; over.setAttribute("aria-label", "Today");
+    (function(){
+      var anchor = $("duoRow");
+      if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(over, anchor);
+      else { var v = $("view-today"); if(v) v.insertBefore(over, v.firstChild); }
+    })();
+    function heroPhoto(){
+      var today = todayISO(), best = null;
+      (state.people || []).slice(0, 2).forEach(function(p){
+        var d = (state.dailyPhotos || {})[p.id];
+        if(!d || d.date !== today) return;
+        var s = photoSrc(d.photo);
+        if(s && (!best || String(d.at || "") > String(best.at || ""))) best = {src: s, who: p.id, at: d.at};
+      });
+      if(best){
+        var tm = "";
+        try{ if(best.at){ tm = ", " + new Date(best.at).toLocaleTimeString(undefined, {hour: "numeric", minute: "2-digit"}); } }catch(e){}
+        return {src: best.src, cap: personName(best.who) + "’s photo" + tm};
+      }
+      var al = state.album || {}, days = Object.keys(al).sort().reverse();
+      for(var i = 0; i < days.length && i < 14; i++){
+        var slots = al[days[i]] || {};
+        for(var k in slots){
+          if(!slots.hasOwnProperty(k) || !slots[k]) continue;
+          var src = photoSrc(slots[k].photo);
+          if(src) return {src: src, cap: "From " + dayOf(days[i], {weekday: "short", day: "numeric", month: "short"})};
+        }
+      }
+      return null;
+    }
+    function todays(){
+      var today = todayISO(), m = me();
+      var open = (state.tasks || []).filter(function(t){ return t && t.status === "open" && !t.trip && plainList(t.listId); });
+      var due = open.filter(function(t){ return t.dueDate && t.dueDate <= today; })
+                    .sort(function(a, b){ return String(a.dueDate).localeCompare(String(b.dueDate)); });
+      return {
+        open: open,
+        mine: due.filter(function(t){ return t.assignedTo === m; }),
+        both: due.filter(function(t){ return t.assignedTo === "both"; }),
+        theirs: due.filter(function(t){ return t.assignedTo !== m && t.assignedTo !== "both"; })
+      };
+    }
+    function overRender(){
+      if(!over.parentNode) return;
+      var d = todays(), m = me(), today = todayISO();
+      var dayName = dayOf(today, {weekday: "long"});
+      var n = d.mine.length + d.both.length;
+      var doneToday = (((state.dailyCompletions || {})[m]) || {})[today] || 0;
+      var line;
+      if(n > 0) line = (n < 10 ? WORDS[n] : String(n)) + (n === 1 ? " thing" : " things") + " left, then " + dayName + " is yours.";
+      else if(doneToday > 0) line = "All crossed off. " + dayName + " is yours.";
+      else line = "Nothing due today. " + dayName + " is yours.";
+      var ph = heroPhoto();
+      var st = ((state.streaks || {})[m] || {}).current || 0;
+      over.className = ph ? "" : "nophoto";
+      over.innerHTML = "";
+      var shot = mk("div", "w2-shot"); if(ph) shot.style.backgroundImage = 'url("' + ph.src + '")';
+      over.appendChild(shot); over.appendChild(mk("div", "w2-scrim"));
+      var top = mk("div", "w2-otop");
+      top.appendChild(mk("span", "", escapeHtml(dayOf(today, {weekday: "short", day: "numeric", month: "short"}))));
+      var capText = ph ? ph.cap : (st >= 2 ? st + "-day streak" : "");
+      if(capText) top.appendChild(mk("span", "", escapeHtml(capText)));
+      over.appendChild(top);
+      over.appendChild(mk("h2", "w2-hello", escapeHtml(line)));
+      if(!ph){
+        var add = mk("button", "w2-addshot", "Add today’s photo"); add.type = "button";
+        add.addEventListener("click", function(){
+          var slot = document.querySelector("#duoRow .duo-slot.p" + (m === pid(1) ? "2" : "1")) || document.querySelector("#duoRow .duo-slot");
+          if(slot) slot.click();
+        });
+        over.appendChild(add);
+      }
+      var glass = mk("div", "w2-glass");
+      if(doneToday > 0 && n > 0){
+        var tot = doneToday + n;
+        glass.appendChild(mk("div", "w2-prog", '<span>' + doneToday + ' of ' + tot + ' crossed off</span><i><b style="transform:scaleX(' + (doneToday / tot).toFixed(3) + ')"></b></i>'));
+      }
+      var rows = d.mine.concat(d.both, d.theirs).slice(0, 4);
+      rows.forEach(function(t){
+        var cls = t.assignedTo === "both" ? "ab" : (t.assignedTo === pid(0) ? "a" : "b");
+        var row = mk("div", "w2-row");
+        row.appendChild(ringFor(t, cls));
+        var dl = dueLabel(t);
+        var right = dl.late ? dl.text : (t.assignedTo !== m && t.assignedTo !== "both" ? personName(t.assignedTo) : ptsLabel(t));
+        var b = mk("button", "w2-rt", '<span class="t">' + escapeHtml(t.title) + '</span><span class="m' + (dl.late ? " late" : "") + '">' + escapeHtml(right) + '</span>' + CHEV);
+        b.type = "button";
+        b.addEventListener("click", function(){ try{ tmOpen(t, row); }catch(e){ goTab("tasks"); } });
+        row.appendChild(b);
+        glass.appendChild(row);
+      });
+      if(!rows.length){
+        glass.appendChild(mk("div", "w2-none", escapeHtml(d.open.length
+          ? "Nothing has to happen today. " + d.open.length + (d.open.length === 1 ? " task is" : " tasks are") + " open with no rush."
+          : "Nothing on the list. Add the first thing with +.")));
+      }
+      if(d.open.length){
+        var all = mk("button", "w2-all", "<span>" + (d.open.length === 1 ? "The 1 open task" : "All " + d.open.length + " open tasks") + "</span>" + CHEV);
+        all.type = "button"; all.addEventListener("click", function(){ goTab("tasks"); });
+        glass.appendChild(all);
+      }
+      over.appendChild(glass);
+    }
+
+    /* ------------------------------ THE LINE ------------------------------ */
+    var HAND_KEY = "us-w2-handed-v1";
+    function handOver(id, who){
+      var t = (state.tasks || []).filter(function(x){ return x.id === id; })[0];
+      if(!t || t.status !== "open" || t.assignedTo === who) return;
+      var prev = t.assignedTo, prevM = t.mtime;
+      touch(t); t.assignedTo = who;
+      if(save() === false){ t.assignedTo = prev; t.mtime = prevM; return; }
+      try{ scheduleSync(); }catch(e){}
+      try{ announce(who === "both" ? 'put "' + t.title + '" on the line' : 'handed "' + t.title + '" to ' + personName(who)); }catch(e){}
+      try{ localStorage.setItem(HAND_KEY, "1"); }catch(e){}
+      renderAll();
+      toast(who === "both" ? "On the line. It’s both of yours now." : (who === me() ? "Yours now." : "Handed to " + personName(who) + "."));
+    }
+    function chipFor(t){
+      var chip = mk("div", "w2-chip"); chip.setAttribute("data-id", t.id); chip.setAttribute("data-who", t.assignedTo || "both");
+      chip.appendChild(ringFor(t));
+      var dl = dueLabel(t);
+      var b = mk("button", "w2-chip-b",
+        '<span class="t">' + escapeHtml(t.title) + '</span>' +
+        '<span class="m">' + (dl.text ? '<span' + (dl.late ? ' class="late"' : '') + '>' + escapeHtml(dl.text) + '</span>' : '') +
+        '<span class="p">' + escapeHtml(ptsLabel(t)) + '</span></span>' + CHEV);
+      b.type = "button";
+      b.addEventListener("click", function(){ if(Date.now() < noClickUntil) return; try{ tmOpen(t, chip); }catch(e){ warn("open", e); } });
+      chip.appendChild(b);
+      return chip;
+    }
+    var noClickUntil = 0;
+    function lineRender(){
+      var open = $("openTasks"); if(!open) return;
+      var listId = state.currentList;
+      var items = plainList(listId)
+        ? sortTasksBy((state.tasks || []).filter(function(t){ return t.listId === listId && t.status === "open"; }), viewFilter().sort)
+        : [];
+      if(!items.length){ R.removeAttribute("data-w2-line"); return; }   // the list's own empty state, or a special list
+      R.setAttribute("data-w2-line", "1");
+      open.innerHTML = "";
+      var a = pid(0), b = pid(1);
+      var editing = items.filter(function(t){ return openEditIds[t.id]; });
+      if(editing.length){
+        var ed = mk("div", "w2-editing");
+        editing.forEach(function(t){ ed.appendChild(taskRow(t)); });
+        open.appendChild(ed);
+      }
+      var rest = items.filter(function(t){ return !openEditIds[t.id]; });
+      var L = rest.filter(function(t){ return t.assignedTo === a; });
+      var Rr = rest.filter(function(t){ return t.assignedTo === b; });
+      var B = rest.filter(function(t){ return t.assignedTo !== a && t.assignedTo !== b; });
+      var line = mk("div", "w2-line");
+      var heads = mk("div", "w2-heads");
+      [[a, L], [b, Rr]].forEach(function(x){
+        heads.appendChild(mk("div", "", '<div class="nm">' + escapeHtml(personName(x[0])) + '</div><div class="ct">' + x[1].length + ' open</div>'));
+      });
+      line.appendChild(heads);
+      var cols = mk("div", "w2-cols");
+      [[a, L, "l"], [b, Rr, "r"]].forEach(function(x){
+        var col = mk("div", "w2-col " + x[2]); col.setAttribute("data-zone", x[0]);
+        x[1].forEach(function(t){ col.appendChild(chipFor(t)); });
+        if(!x[1].length) col.appendChild(mk("div", "w2-empty", "Nothing for " + escapeHtml(personName(x[0]))));
+        cols.appendChild(col);
+      });
+      line.appendChild(cols);
+      var both = mk("div", "w2-both"); both.setAttribute("data-zone", "both");
+      both.appendChild(mk("span", "w2-lbl", "on the line"));
+      B.forEach(function(t){ both.appendChild(chipFor(t)); });
+      if(!B.length) both.appendChild(mk("div", "w2-empty", "Nothing shared yet"));
+      line.appendChild(both);
+      var handed = false; try{ handed = !!localStorage.getItem(HAND_KEY); }catch(e){}
+      if(!handed) line.appendChild(mk("p", "w2-hint", "Hold a task and slide it across the line to hand it over."));
+      open.appendChild(line);
+      dragInit(line);
+    }
+    /* Hold, then slide. A quick swipe still scrolls the page: the chip only lifts
+       after the finger has rested on it, and from then on the move is ours. */
+    function dragInit(line){
+      var s = null;
+      function zoneAt(x){
+        var r = line.getBoundingClientRect(), rel = (x - r.left) / r.width;
+        if(rel > 0.36 && rel < 0.64) return "both";
+        return rel < 0.5 ? pid(0) : pid(1);
+      }
+      function mark(z){
+        [].forEach.call(line.querySelectorAll("[data-zone]"), function(el){ el.classList.toggle("over", el.getAttribute("data-zone") === z && z !== s.from); });
+      }
+      function lift(){
+        if(!s || s.lifted) return;
+        var r = s.chip.getBoundingClientRect();
+        var g = s.chip.cloneNode(true);
+        g.classList.add("w2-lift"); g.style.width = r.width + "px";
+        try{ var ring = g.querySelector(".w2-ring"); if(ring) ring.style.color = getComputedStyle(s.chip.querySelector(".w2-ring")).color; }catch(e){}
+        s.dx = s.x - r.left; s.dy = s.y - r.top; s.ghost = g; s.lifted = true;
+        g.style.transform = "translate(" + r.left + "px," + r.top + "px)";
+        document.body.appendChild(g);
+        s.chip.classList.add("gone"); line.classList.add("dragging");
+        mark(zoneAt(s.x));
+      }
+      function move(x, y){
+        s.x = x; s.y = y;
+        if(!s.lifted) return;
+        s.ghost.style.transform = "translate(" + (x - s.dx) + "px," + (y - s.dy) + "px)";
+        mark(zoneAt(x));
+      }
+      function end(cancel){
+        if(!s) return;
+        clearTimeout(s.timer);
+        var was = s; s = null;
+        if(!was.lifted) return;
+        noClickUntil = Date.now() + 450;
+        if(was.ghost && was.ghost.parentNode) was.ghost.parentNode.removeChild(was.ghost);
+        was.chip.classList.remove("gone"); line.classList.remove("dragging");
+        [].forEach.call(line.querySelectorAll(".over"), function(el){ el.classList.remove("over"); });
+        if(cancel) return;
+        var z = zoneAt(was.x);
+        if(z !== was.from) handOver(was.id, z);
+      }
+      function begin(chip, x, y){
+        s = {chip: chip, id: chip.getAttribute("data-id"), from: chip.getAttribute("data-who"), x: x, y: y, x0: x, y0: y, lifted: false};
+        if(s.from !== pid(0) && s.from !== pid(1)) s.from = "both";
+      }
+      function chipOf(ev){ var c = ev.target && ev.target.closest ? ev.target.closest(".w2-chip") : null; return (c && line.contains(c) && !(ev.target.closest(".w2-ring"))) ? c : null; }
+      line.addEventListener("touchstart", function(ev){
+        var c = chipOf(ev); if(!c || ev.touches.length !== 1) return;
+        var t = ev.touches[0]; begin(c, t.clientX, t.clientY);
+        s.timer = setTimeout(lift, 230);
+      }, {passive: true});
+      line.addEventListener("touchmove", function(ev){
+        if(!s) return;
+        var t = ev.touches[0];
+        if(s.lifted){ ev.preventDefault(); move(t.clientX, t.clientY); return; }
+        if(Math.abs(t.clientX - s.x0) > 9 || Math.abs(t.clientY - s.y0) > 9){ clearTimeout(s.timer); s = null; }
+      }, {passive: false});
+      line.addEventListener("touchend", function(){ end(false); });
+      line.addEventListener("touchcancel", function(){ end(true); });
+      line.addEventListener("contextmenu", function(ev){ if(s) ev.preventDefault(); });
+      line.addEventListener("mousedown", function(ev){
+        if(ev.button !== 0) return;
+        var c = chipOf(ev); if(!c) return;
+        begin(c, ev.clientX, ev.clientY);
+        function mm(e){
+          if(!s) return;
+          if(!s.lifted && (Math.abs(e.clientX - s.x0) > 6 || Math.abs(e.clientY - s.y0) > 6)) lift();
+          if(s.lifted){ e.preventDefault(); move(e.clientX, e.clientY); }
+        }
+        function mu(){ document.removeEventListener("mousemove", mm); document.removeEventListener("mouseup", mu); end(false); }
+        document.addEventListener("mousemove", mm); document.addEventListener("mouseup", mu);
+      });
+    }
+    var _rt213 = renderTasks;
+    renderTasks = function(){
+      /* the line shows all three owners at once, so the owner filter has nothing left
+         to do on a plain list - and a hidden filter must never keep filtering */
+      try{ if(plainList(state.currentList) && viewFilter().assignee !== "all") viewFilter().assignee = "all"; }catch(e){}
+      var r = _rt213.apply(this, arguments);
+      try{ lineRender(); }catch(e){ warn("line", e); R.removeAttribute("data-w2-line"); try{ _rt213.apply(this, arguments); }catch(_){} }
+      return r;
+    };
+
+    /* ------------------------------ REWARDS ------------------------------ */
+    if(!state.rewardExpiryFrom){ state.rewardExpiryFrom = todayISO(); try{ save(); }catch(e){} }
+    function winExpiry(w){
+      var d = String((w && w.date) || "").slice(0, 10);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+      var from = String(state.rewardExpiryFrom || todayISO()).slice(0, 10);
+      if(d < from) d = from;
+      return shiftISO(d, W2_REWARD_DAYS);
+    }
+    function winDaysLeft(w){ var e = winExpiry(w); return e ? daysBetweenISO(todayISO(), e) : null; }
+    var _rs213 = rewardState;
+    rewardState = function(w){
+      var s = _rs213(w);
+      if(s === "yours"){ var l = winDaysLeft(w); if(l != null && l < 0) return "expired"; }
+      return s;
+    };
+    function expText(l, e){
+      if(l <= 0) return "Last day";
+      return l + (l === 1 ? " day left" : " days left");
+    }
+    var _wr213 = wonRow;
+    wonRow = function(w, mine, stack){
+      var row = _wr213.apply(this, arguments);
+      try{
+        var st = rewardState(w), host = row.querySelector(".wr-text");
+        if(host && (st === "yours" || st === "expired")){
+          var soon = w;
+          (stack || []).forEach(function(x){ var a = winDaysLeft(x), b = winDaysLeft(soon); if(a != null && (b == null || a < b)) soon = x; });
+          var l = winDaysLeft(soon), e = winExpiry(soon);
+          if(l != null){
+            var tag = mk("span", "w2-exp" + (st === "yours" && l <= 3 ? " soon" : ""));
+            tag.textContent = st === "expired" ? "Ran out " + dayOf(e, {day: "numeric", month: "short"}) + ", unused" : expText(l, e);
+            host.appendChild(tag);
+          }
+        }
+      }catch(e){ warn("wonRow", e); }
+      return row;
+    };
+    var _rwl213 = renderWonList;
+    renderWonList = function(){
+      var r = _rwl213.apply(this, arguments);
+      try{
+        var won = $("wonList"); if(!won) return r;
+        var all = state.rewardsWon || [];
+        if(all.length){
+          var rule = mk("p", "w2-rule", "A reward lasts " + W2_REWARD_DAYS + " days from the day it is won. Use it or lose it.");
+          won.insertBefore(rule, won.firstChild);
+        }
+        var gone = all.filter(function(w){ return rewardState(w) === "expired"; })
+                      .sort(function(x, y){ return String(winExpiry(y)).localeCompare(String(winExpiry(x))); });
+        if(gone.length){
+          won.appendChild(mk("div", "won-head", '<span>Ran out</span><span class="won-count">' + gone.length + '</span>'));
+          gone.slice(0, 5).forEach(function(w){ won.appendChild(wonRow(w, me(), [w])); });
+        }
+      }catch(e){ warn("wonList", e); }
+      return r;
+    };
+    var _rr213 = redeemReward;
+    redeemReward = function(id){
+      try{ var w = findWin(id); if(w && rewardState(w) === "expired"){ toast("That one ran out."); renderAll(); return false; } }catch(e){}
+      return _rr213.apply(this, arguments);
+    };
+    function myLiveWins(){
+      var m = me();
+      return (state.rewardsWon || []).filter(function(w){ return w && w.personId === m && rewardState(w) === "yours"; })
+        .sort(function(x, y){ return (winDaysLeft(x) || 0) - (winDaysLeft(y) || 0); });
+    }
+
+    /* ------------------------------ NUDGES ------------------------------ */
+    function myDue(){ var d = todays(); return d.mine.concat(d.both); }
+    function dueBody(due){
+      var first = due[0], dl = dueLabel(first);
+      return "“" + first.title + "” is " + (dl.late ? dl.text : "due today") +
+        (due.length > 1 ? ", and " + (due.length - 1) + " more." : ".");
+    }
+    function photoMissing(){ var p = (state.dailyPhotos || {})[me()]; return !(p && p.date === todayISO()); }
+    var _cr213 = candidateReminders;
+    candidateReminders = function(){
+      var out = _cr213.apply(this, arguments) || [];
+      try{
+        if(!(deviceOwner() || state.currentUser)) return out;
+        var hour = new Date().getHours();
+        var wins = myLiveWins();
+        if(wins.length){
+          var l = winDaysLeft(wins[0]);
+          if(l != null && l <= 3){
+            out.push({kind: "save", key: "reward-exp-" + rewardWinKey(wins[0]), urgency: 86 - l,
+              title: "“" + wins[0].name + "” runs out " + (l <= 0 ? "today" : l === 1 ? "tomorrow" : "in " + l + " days"),
+              body: "Use it or lose it. Cash it in under Us."});
+          }
+        }
+        if(hour >= 21 && photoMissing()){
+          out.push({kind: "save", key: "photo-late", urgency: 88, title: "Today’s photo",
+            body: "It’s almost midnight. Add a photo before the day closes."});
+        }
+        var due = myDue();
+        if(hour >= 17 && due.length){
+          out.push({kind: "save", key: "cross-off", urgency: 75, title: "Time to cross something off", body: dueBody(due)});
+        }
+        out.sort(function(a, b){ return b.urgency - a.urgency; });
+      }catch(e){ warn("reminders", e); }
+      return out;
+    };
+    /* Booked ahead, so they land with the app closed. One list per phone, for this
+       phone's owner only. A booking is claimed before the request goes out and
+       dropped if the request fails; when the reason goes away (photo posted, task
+       done, reward used) the push is cancelled. */
+    var BOOK_KEY = "us-w2-booked-v1";
+    function bookLoad(){ try{ return JSON.parse(localStorage.getItem(BOOK_KEY) || "{}") || {}; }catch(e){ return {}; } }
+    function bookSave(b){ try{ localStorage.setItem(BOOK_KEY, JSON.stringify(b)); }catch(e){} }
+    function wanted(){
+      var out = {}, today = todayISO(), now = Date.now();
+      function at(h, mi){ var d = new Date(); d.setHours(h, mi, 0, 0); return d; }
+      function ok(d){ return d.getTime() - now > 5 * 60000; }
+      if(photoMissing()){
+        var a = at(22, 0);
+        if(ok(a)) out["photo-" + today] = {at: a, sig: "", title: "Today’s photo", body: "It’s almost midnight. Add a photo before the day closes."};
+      }
+      var due = myDue();
+      if(due.length){
+        var b = at(18, 0);
+        if(ok(b)) out["tasks-" + today] = {at: b, sig: due.length + "|" + due[0].id, title: "Time to cross something off", body: dueBody(due)};
+      }
+      myLiveWins().slice(0, 6).forEach(function(w){
+        var e = winExpiry(w); if(!e) return;
+        [3, 0].forEach(function(off){
+          var d = new Date(shiftISO(e, -off) + "T10:00:00");
+          if(!ok(d) || d.getTime() - now > 10 * 86400000) return;
+          out["reward-" + rewardWinKey(w) + "-" + off] = {at: d, sig: "",
+            title: "“" + w.name + "” runs out " + (off ? "in " + off + " days" : "today"),
+            body: "Use it or lose it. Cash it in under Us."};
+        });
+      });
+      return out;
+    }
+    function bookSync(){
+      if(!pushConfigured()) return;
+      var m = me(), b = bookLoad(), want = wanted(), now = Date.now(), changed = false;
+      function auth(){ return {"Authorization": "Key " + onesignalRestKey(), "Content-Type": "application/json"}; }
+      Object.keys(b).forEach(function(k){
+        if(b[k].at < now){ delete b[k]; changed = true; return; }
+        var w = want[k];
+        if(!w || (w.sig || "") !== (b[k].sig || "") || b[k].who !== m){
+          if(b[k].id){
+            try{ fetch("https://api.onesignal.com/notifications/" + encodeURIComponent(b[k].id) + "?app_id=" + encodeURIComponent(state.onesignalAppId),
+                       {method: "DELETE", headers: auth()}).catch(function(){}); }catch(e){}
+          }
+          delete b[k]; changed = true;
+        }
+      });
+      Object.keys(want).forEach(function(k){
+        if(b[k]) return;
+        var w = want[k];
+        b[k] = {at: w.at.getTime(), sig: w.sig || "", who: m, id: null}; changed = true;
+        function drop(){ var bb = bookLoad(); if(bb[k] && !bb[k].id){ delete bb[k]; bookSave(bb); } }
+        try{
+          fetch("https://api.onesignal.com/notifications?c=push", {method: "POST", headers: auth(), body: JSON.stringify({
+            app_id: state.onesignalAppId, include_aliases: {external_id: [m]}, target_channel: "push",
+            headings: {en: w.title}, contents: {en: w.body}, send_after: w.at.toISOString()
+          })}).then(function(r){ return r.json(); })
+            .then(function(j){ if(j && j.id){ var bb = bookLoad(); if(bb[k]){ bb[k].id = j.id; bookSave(bb); } } else drop(); })
+            .catch(drop);
+        }catch(e){ drop(); }
+      });
+      if(changed) bookSave(b);
+    }
+    var bookTimer = null;
+    function bookSoon(){ clearTimeout(bookTimer); bookTimer = setTimeout(function(){ try{ bookSync(); }catch(e){ warn("book", e); } }, 2500); }
+
+    /* ------------------------------ FLIP BOOK ------------------------------ */
+    var book = mk("div", "w2-book"); book.id = "w2Book";
+    book.setAttribute("role", "dialog"); book.setAttribute("aria-modal", "true"); book.setAttribute("aria-label", "Flip book");
+    book.innerHTML =
+      '<div class="bk-top"><div><div class="mm" id="w2BkMonth"></div><div class="ct" id="w2BkCount" aria-live="polite"></div></div>' +
+      '<button type="button" class="bk-x" id="w2BkClose" aria-label="Close the flip book"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>' +
+      '<div class="bk-stage" id="w2BkStage"><button type="button" class="bk-tap p" id="w2BkPrev" aria-label="Previous day"></button><button type="button" class="bk-tap n" id="w2BkNext" aria-label="Next day"></button></div>' +
+      '<div class="bk-ctl"><button type="button" class="bk-play" id="w2BkPlay"></button><div class="bk-bar" aria-hidden="true"><i id="w2BkBar"></i></div></div>';
+    document.body.appendChild(book);
+    var bk = {days: [], i: 0, timer: null, mk: null, from: null};
+    function bookDays(mkey){
+      var out = [], total = daysInMonth(mkey);
+      for(var n = 1; n <= total; n++){
+        var ds = mkey + "-" + (n < 10 ? "0" + n : String(n));
+        if(memDayHasAnything(ds)) out.push(ds);
+      }
+      return out;
+    }
+    function printsFor(ds){
+      var data = memDayData(ds), out = [];
+      if(data.trips.length){
+        data.trips.slice(0, 2).forEach(function(t){ out.push({src: memSrc(t.photo.photo), cap: tripHalfLabel(t.half), dot: "linear-gradient(118deg,#C3A8F0 50%,#FF6F58 50%)", has: true}); });
+        return out;
+      }
+      var any = false;
+      (state.people || []).slice(0, 2).forEach(function(p){ if(data.day[p.id] && data.day[p.id].photo) any = true; });
+      if(any){
+        (state.people || []).slice(0, 2).forEach(function(p, i){
+          var slot = data.day[p.id];
+          out.push({src: slot ? memSrc(slot.photo) : null, cap: personName(p.id), dot: i === 0 ? "#C3A8F0" : "#FF6F58",
+                    has: !!(slot && slot.photo), none: "No photo from " + personName(p.id)});
+        });
+        return out;
+      }
+      data.trophies.slice(0, 2).forEach(function(x){ out.push({src: memSrc(x.task.photo), cap: x.task.title, dot: "#61E000", has: true}); });
+      return out;
+    }
+    function pageFor(ds){
+      var pg = mk("article", "w2-pg");
+      pg.appendChild(mk("div", "day", escapeHtml(dayOf(ds, {weekday: "long"}))));
+      pg.appendChild(mk("div", "dt", escapeHtml(dayOf(ds, {day: "numeric", month: "long", year: "numeric"}))));
+      var prints = printsFor(ds);
+      var wrap = mk("div", "prints" + (prints.length === 1 ? " one" : ""));
+      prints.forEach(function(p){
+        var f = mk("figure");
+        var im = mk("div", "im");
+        if(p.src) im.style.backgroundImage = 'url("' + p.src + '")';
+        else im.textContent = p.has ? "Still coming from the other phone" : (p.none || "");
+        f.appendChild(im);
+        f.appendChild(mk("figcaption", "", '<b style="background:' + p.dot + '"></b><span>' + escapeHtml(p.cap || "") + '</span>'));
+        wrap.appendChild(f);
+      });
+      pg.appendChild(wrap);
+      var note = (state.notes || []).filter(function(nt){ return nt && nt.text && (nt.photoDate === ds || String(nt.date || "").slice(0, 10) === ds); })[0];
+      var foot = mk("div", "foot");
+      if(note){
+        foot.appendChild(mk("div", "said", "“" + escapeHtml(note.text) + "”"));
+        foot.appendChild(mk("div", "by", escapeHtml(personName(note.fromId) + " to " + personName(note.toId))));
+      }
+      var sg = (state.songs || {})[ds];
+      if(sg && (sg.title || sg.name)){
+        foot.appendChild(mk("div", "song", NOTE + "<span>" + escapeHtml((sg.title || sg.name) + (sg.artist ? ", " + sg.artist : "")) + "</span>"));
+      }
+      if(foot.firstChild) pg.appendChild(foot);
+      return pg;
+    }
+    function bkShow(i, dir){
+      var stage = $("w2BkStage"), tap = $("w2BkPrev");
+      var old = stage.querySelector(".w2-pg.cur");
+      bk.i = i;
+      var atEnd = i >= bk.days.length;
+      var pg = atEnd ? endPage() : pageFor(bk.days[i]); pg.classList.add("cur");
+      if(!old || !dir){
+        [].forEach.call(stage.querySelectorAll(".w2-pg"), function(x){ x.remove(); });
+        stage.insertBefore(pg, tap);
+      } else if(dir > 0){
+        stage.insertBefore(pg, old); old.classList.remove("cur");
+        void old.offsetWidth; old.classList.add("turn");
+        setTimeout(function(){ if(old.parentNode) old.remove(); }, 600);
+      } else {
+        pg.classList.add("back"); stage.insertBefore(pg, tap); old.classList.remove("cur");
+        void pg.offsetWidth; pg.classList.add("settle");
+        setTimeout(function(){ if(old.parentNode) old.remove(); pg.classList.remove("back"); pg.classList.remove("settle"); }, 600);
+      }
+      $("w2BkCount").textContent = atEnd ? "The end" : "Day " + (i + 1) + " of " + bk.days.length;
+      $("w2BkBar").style.width = (bk.days.length ? (Math.min(i + 1, bk.days.length) / bk.days.length * 100) : 0) + "%";
+      $("w2BkPrev").disabled = i <= 0;
+      $("w2BkNext").setAttribute("aria-label", atEnd ? "Start again" : "Next day");
+    }
+    /* Peak-end: a book that just stops on its last photo ends on nothing. The last
+       turn lands on a closing page that says what the month added up to. */
+    function endPage(){
+      var pg = mk("article", "w2-pg end"), photos = 0, both = 0;
+      bk.days.forEach(function(ds){
+        var n = printsFor(ds).filter(function(x){ return x.has; }).length;
+        photos += n; if(n >= 2) both++;
+      });
+      var name = monthLabel(bk.mk).replace(/\s+\d{4}$/, "");
+      pg.appendChild(mk("div", "day", "That was " + escapeHtml(name) + "."));
+      pg.appendChild(mk("div", "facts",
+        '<span><b>' + bk.days.length + '</b>' + (bk.days.length === 1 ? "day" : "days") + '</span>' +
+        '<span><b>' + photos + '</b>' + (photos === 1 ? "photo" : "photos") + '</span>' +
+        (both ? '<span><b>' + both + '</b>with both of you</span>' : "")));
+      pg.appendChild(mk("div", "foot", '<div class="by">Tap the right side to start again.</div>'));
+      return pg;
+    }
+    function bkStep(d){
+      var j = bk.i + d, end = bk.days.length;
+      if(j < 0){ bkPlay(false); return false; }
+      if(j > end){ bkPlay(false); bkShow(0, 0); return false; }
+      bkShow(j, d);
+      if(j === end){ bkPlay(false); return false; }
+      return true;
+    }
+    function bkPlay(on){
+      clearInterval(bk.timer); bk.timer = null;
+      if(on){
+        if(bk.i >= bk.days.length - 1) bkShow(0, 0);
+        bk.timer = setInterval(function(){ if(!bkStep(1)) bkPlay(false); }, 1250);
+      }
+      var b = $("w2BkPlay");
+      b.innerHTML = on
+        ? '<svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="2" y="1.5" width="3.6" height="11" rx="1"/><rect x="8.4" y="1.5" width="3.6" height="11" rx="1"/></svg>Pause'
+        : '<svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.6v10.8a.6.6 0 00.9.5l8.6-5.4a.6.6 0 000-1L3.9 1.1a.6.6 0 00-.9.5z"/></svg>Play';
+      b.setAttribute("aria-pressed", String(!!on));
+    }
+    function bkOpen(mkey, from){
+      var days = bookDays(mkey); if(!days.length) return;
+      bk.days = days; bk.mk = mkey; bk.from = from || null;
+      $("w2BkMonth").textContent = monthLabel(mkey);
+      book.classList.add("show");
+      bkShow(0, 0); bkPlay(false);
+      try{ $("w2BkClose").focus(); }catch(e){}
+    }
+    function bkClose(){
+      bkPlay(false); book.classList.remove("show");
+      try{ if(bk.from) bk.from.focus(); }catch(e){}
+    }
+    $("w2BkClose").addEventListener("click", bkClose);
+    $("w2BkPrev").addEventListener("click", function(){ bkPlay(false); bkStep(-1); });
+    $("w2BkNext").addEventListener("click", function(){ bkPlay(false); bkStep(1); });
+    $("w2BkPlay").addEventListener("click", function(){ bkPlay(!bk.timer); });
+    document.addEventListener("keydown", function(ev){
+      if(!book.classList.contains("show")) return;
+      if(ev.key === "Tab"){
+        var f = [$("w2BkClose"), $("w2BkPrev"), $("w2BkNext"), $("w2BkPlay")].filter(function(x){ return x && !x.disabled; });
+        var at = f.indexOf(document.activeElement), to = ev.shiftKey ? (at <= 0 ? f.length - 1 : at - 1) : (at === f.length - 1 ? 0 : at + 1);
+        ev.preventDefault(); f[to < 0 ? 0 : to].focus(); return;
+      }
+      if(ev.key === "Escape") bkClose();
+      else if(ev.key === "ArrowRight"){ bkPlay(false); bkStep(1); }
+      else if(ev.key === "ArrowLeft"){ bkPlay(false); bkStep(-1); }
+    });
+    (function(){
+      var x0 = null, stage = $("w2BkStage");
+      stage.addEventListener("touchstart", function(ev){ x0 = ev.touches[0].clientX; }, {passive: true});
+      stage.addEventListener("touchend", function(ev){
+        if(x0 == null) return;
+        var dx = (ev.changedTouches[0] || {}).clientX - x0; x0 = null;
+        if(Math.abs(dx) < 44) return;
+        ev.preventDefault(); bkPlay(false); bkStep(dx < 0 ? 1 : -1);
+      });
+    })();
+    var cover = mk("button", "w2-cover"); cover.type = "button"; cover.id = "w2Cover";
+    cover.addEventListener("click", function(){ if(typeof memMonth === "string") bkOpen(memMonth, cover); });
+    (function(){
+      var grid = $("memGrid"), view = $("view-memories");
+      var card = grid ? grid.closest(".card") : null;
+      if(card && card.parentNode) card.parentNode.insertBefore(cover, card);
+      else if(view) view.appendChild(cover);
+    })();
+    function coverRender(){
+      if(typeof memMonth !== "string" || !memMonth) return;
+      var days = bookDays(memMonth), srcs = [];
+      for(var i = days.length - 1; i >= 0 && srcs.length < 3; i--){
+        printsFor(days[i]).forEach(function(p){ if(p.src && srcs.length < 3) srcs.push(p.src); });
+      }
+      var stack = "";
+      for(var k = 2; k >= 0; k--){ stack += '<i' + (srcs[k] ? ' style="background-image:url(&quot;' + srcs[k] + '&quot;)"' : '') + '></i>'; }
+      var name = monthLabel(memMonth).replace(/\s+\d{4}$/, "");
+      cover.innerHTML = '<span class="stack" aria-hidden="true">' + stack + '</span><span class="tx"><span class="tt">' +
+        escapeHtml(days.length ? "Flip through " + name : name + " has no pages yet") + '</span><span class="ss">' +
+        escapeHtml(days.length ? days.length + (days.length === 1 ? " day" : " days") + ", a page each" : "Post a photo and the day becomes a page") +
+        '</span></span>' + (days.length ? CHEV : "");
+      cover.disabled = !days.length;
+    }
+    var _rm213 = renderMemories;
+    renderMemories = function(){
+      var r = _rm213.apply(this, arguments);
+      try{ coverRender(); }catch(e){ warn("cover", e); }
+      return r;
+    };
+
+    /* ------------------------------ MOMENTS ------------------------------
+       Moody: celebrations and milestones "more high end, high energy and exciting.
+       And have them alternate to keep things fun."
+       The big finish is one of four takeovers, taken in turn (slam, rays, stack,
+       meet). A shared task always gets a two-colour one. Confetti is brand shapes in
+       lilac, coral and lime instead of emoji, thrown on an arc and left to fall.
+       Milestone pop-ups arrive with one of three firework patterns. Only transform
+       and opacity move; reduced motion gets none of it, as before. */
+    var BR = {lilac: "#C3A8F0", coral: "#FF6F58", lime: "#61E000", paper: "#FFF8F3"};
+    function turn(key, n){
+      var i = 0;
+      try{ i = parseInt(localStorage.getItem(key), 10) || 0; localStorage.setItem(key, String((i + 1) % n)); }catch(e){}
+      return i % n;
+    }
+    function bankColours(bank){
+      var mine = me() === pid(1) ? BR.coral : BR.lilac;
+      if(bank === "together") return [BR.lilac, BR.coral, BR.lilac, BR.coral, BR.lime];
+      if(bank === "epic") return [BR.lilac, BR.coral, BR.lime, BR.paper];
+      return [mine, mine, BR.lime, BR.paper];
+    }
+    var SHAPES = ["disc", "bar", "bar", "ring", "tick", "half"];
+    var _cb213 = confettiBurst;
+    confettiBurst = function(bankName, count, origin, delay, drift){
+      try{
+        if(motionOff()) return;
+        if(!document.body.animate) return _cb213.apply(this, arguments);
+        var W = window.innerWidth, H = window.innerHeight;
+        var ox = (origin && origin.x != null) ? origin.x : W / 2;
+        var oy = (origin && origin.y != null) ? origin.y : H * 0.42;
+        var n = Math.min(60, Math.round((count || 8) * 2.2) + 6), cols = bankColours(bankName);
+        /* a phone can only throw so much at once: later bursts thin out while earlier ones are still falling */
+        var live = document.querySelectorAll(".w2-cf").length;
+        n = Math.max(6, Math.min(n, 170 - live));
+        /* on the lilac-and-coral takeover, lilac and coral pieces would vanish into it */
+        if(document.querySelector(".w2m.v-meet")) cols = ["#1A1220", BR.paper, BR.lime, "#1A1220"];
+        var layer = mk("div", "w2-conf"); layer.setAttribute("aria-hidden", "true");
+        var longest = 0;
+        for(var i = 0; i < n; i++){
+          var p = mk("i", "w2-cf " + SHAPES[i % SHAPES.length]);
+          var size = 6 + Math.random() * 9;
+          p.style.setProperty("--s", size.toFixed(1) + "px");
+          p.style.color = cols[i % cols.length];
+          p.style.left = Math.round(ox) + "px"; p.style.top = Math.round(oy) + "px";
+          var ang = drift ? -Math.PI * (0.15 + 0.7 * Math.random())
+                          : (Math.PI * 2 * i / n) + (Math.random() * 0.5 - 0.25);
+          var sp = 130 + Math.random() * 300;
+          var ax = Math.cos(ang) * sp, ay = Math.sin(ang) * sp * 0.9 - 70;
+          var ex = ax * 1.3, ey = ay + 260 + Math.random() * 260;
+          var rot = (Math.random() < 0.5 ? -1 : 1) * (300 + Math.random() * 700);
+          var dur = 1050 + Math.random() * 550, dl = (delay || 0) * 1000 + Math.random() * 70;
+          longest = Math.max(longest, dur + dl);
+          p.animate([
+            {transform: "translate(0px,0px) rotate(0deg) scale(.4)", opacity: 1, offset: 0, easing: "cubic-bezier(.12,.8,.3,1)"},
+            {transform: "translate(" + ax.toFixed(0) + "px," + ay.toFixed(0) + "px) rotate(" + (rot * 0.45).toFixed(0) + "deg) scale(1)", opacity: 1, offset: 0.36, easing: "cubic-bezier(.45,0,.85,.6)"},
+            {transform: "translate(" + ex.toFixed(0) + "px," + ey.toFixed(0) + "px) rotate(" + rot.toFixed(0) + "deg) scale(.9)", opacity: 0, offset: 1}
+          ], {duration: dur, delay: dl, fill: "both"});
+          layer.appendChild(p);
+        }
+        document.body.appendChild(layer);
+        setTimeout(function(){ if(layer.parentNode) layer.parentNode.removeChild(layer); }, longest + 120);
+      }catch(e){ warn("confetti", e); }
+    };
+    var TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    var MOMENTS = ["slam", "rays", "stack", "meet"];
+    function moment(o){
+      var v = o.variant || (o.together ? (turn("us-w2-moment2-v1", 2) ? "rays" : "meet") : MOMENTS[turn("us-w2-moment-v1", MOMENTS.length)]);
+      var head = String(o.headline || ""), long = head.length > 4;
+      var el = mk("div", "w2m v-" + v); el.setAttribute("aria-hidden", "true");
+      var W = window.innerWidth, H = window.innerHeight;
+      el.style.setProperty("--ox", Math.round((o.origin && o.origin.x != null) ? o.origin.x : W / 2) + "px");
+      el.style.setProperty("--oy", Math.round((o.origin && o.origin.y != null) ? o.origin.y : H / 2) + "px");
+      el.style.setProperty("--life", (o.life || 1500) + "ms");
+      var say = '<span class="say">' +
+        (v === "rays" ? '<span class="disc">' + TICK + '</span>' : "") +
+        (head ? '<b class="num' + (long ? " long" : "") + '">' + escapeHtml(head) + '</b>' : "") +
+        (v === "slam" ? '<span class="bar"></span>' : "") +
+        (o.sub ? '<span class="sub">' + escapeHtml(o.sub) + '</span>' : "") +
+        (o.quote ? '<span class="q">“' + escapeHtml(o.quote.q) + '”' +
+          (o.quote.a && o.quote.q.length + o.quote.a.length <= 84 ? '<em>' + escapeHtml(o.quote.a) + '</em>' : "") + '</span>' : "") +
+        '</span>';
+      var deco = "";
+      if(v === "slam") deco = '<i class="ring"></i><i class="ring r2"></i><i class="ring r3"></i>';
+      else if(v === "rays") deco = '<i class="rays"></i>';
+      else if(v === "meet") deco = '<i class="pa"></i><i class="pb"></i><i class="seam"></i>';
+      else if(v === "stack"){
+        var word = head || "Done", line = (word + " ").repeat(long ? 3 : 6).trim(), rows = "";
+        for(var r = 0; r < 5; r++){ rows += '<span class="row' + (r === 2 ? " mid" : "") + '" style="--i:' + r + '">' + escapeHtml(r === 2 ? word : line) + '</span>'; }
+        deco = '<span class="rows">' + rows + '</span>';
+      }
+      el.innerHTML = '<span class="bg"></span>' + deco + say;
+      document.body.appendChild(el);
+      document.body.classList.add("celebrating");
+      setTimeout(function(){
+        if(el.parentNode) el.parentNode.removeChild(el);
+        if(!document.querySelector(".w2m")) document.body.classList.remove("celebrating");
+      }, (o.life || 1500) + 40);
+      return v;
+    }
+    var _sw213 = celebrationSweep;
+    celebrationSweep = function(cfg, origin, headline, sub, quote){
+      try{
+        moment({origin: origin, headline: headline, sub: sub, quote: quote, together: cfg === CELEBRATION.together, life: quote ? 2100 : 1500});
+      }catch(e){ warn("moment", e); return _sw213.apply(this, arguments); }
+    };
+    /* three ways to light the sky; a milestone takes the next one */
+    function fireworks(bank){
+      if(motionOff()) return;
+      var W = window.innerWidth, H = window.innerHeight, k = turn("us-w2-fire-v1", 3), b = bank || "epic";
+      if(k === 0){        // cannons: both bottom corners, then the top
+        confettiBurst(b, 16, {x: W * 0.08, y: H * 0.86}, 0, true);
+        confettiBurst(b, 16, {x: W * 0.92, y: H * 0.86}, 0.12, true);
+        confettiBurst(b, 18, {x: W * 0.5, y: H * 0.3}, 0.46);
+      } else if(k === 1){ // ladder: five bursts climbing the screen
+        for(var i = 0; i < 5; i++) confettiBurst(b, 9, {x: W * (i % 2 ? 0.74 : 0.26), y: H * (0.82 - i * 0.15)}, i * 0.14);
+      } else {            // ring: six bursts round a circle
+        for(var j = 0; j < 6; j++){
+          var a = Math.PI * 2 * j / 6 - Math.PI / 2;
+          confettiBurst(b, 8, {x: W / 2 + Math.cos(a) * W * 0.3, y: H * 0.42 + Math.sin(a) * W * 0.3}, j * 0.1);
+        }
+      }
+    }
+    var PARTY = /🎡|🔥|🏆|🎉|🥇|👑|⭐|🌟|💎|🎁|💞|🏅|🚀|✨/;
+    var _sm213 = showModal;
+    showModal = function(emoji){
+      var r = _sm213.apply(this, arguments);
+      try{ if(PARTY.test(String(emoji || ""))) fireworks("epic"); }catch(e){ warn("fireworks", e); }
+      return r;
+    };
+    /* a milestone you just hit gets its takeover once, the first time Today shows it */
+    var MS_KEY = "us-w2-ms-played-v1";
+    var _mb213 = renderMilestoneBanner;
+    renderMilestoneBanner = function(){
+      var r = _mb213.apply(this, arguments);
+      try{
+        var card = $("milestoneCard");
+        if(!card || card.style.display === "none" || !card.querySelector("#msGo") || motionOff()) return r;
+        var label = (card.querySelector(".ms-num") || {}).textContent || "";
+        if(!label) return r;
+        var played = []; try{ played = JSON.parse(localStorage.getItem(MS_KEY) || "[]"); }catch(e){}
+        if(played.indexOf(label) >= 0) return r;
+        played.push(label); try{ localStorage.setItem(MS_KEY, JSON.stringify(played.slice(-40))); }catch(e){}
+        var go = function(){
+          if($("splash") || document.querySelector(".modal-bg.show, .sheet-bg.show")){ setTimeout(go, 500); return; }
+          if(curTab() !== "today") return;
+          moment({headline: label, sub: "You just hit it. The two of you.", life: 2300, variant: turn("us-w2-ms-v1", 2) ? "rays" : "stack"});
+          fireworks("together");
+        };
+        setTimeout(go, 700);
+      }catch(e){ warn("milestone", e); }
+      return r;
+    };
+
+    /* ------------------------------ wiring ------------------------------ */
+    var _ra213 = renderAll;
+    renderAll = function(){
+      var r = _ra213.apply(this, arguments);
+      try{ overRender(); }catch(e){ warn("today", e); }
+      bookSoon();
+      return r;
+    };
+    try{ renderAll(); }catch(e){ warn("first render", e); }
+    try{ renderMemories(); }catch(e){}
+  })();
+
 })();
 </script>
 
@@ -27541,5 +28959,458 @@
   }catch(e){ try{ console.warn("settings regroup skipped", e); }catch(_){} }
 })();
 </script>
+
+<script>
+/* BUILD 211: Today leads with the game. The week's quest and the spin come before
+   Health; a couple in their first two weeks sees Get set up right under the greeting. */
+(function(){
+  try{
+    var v = document.getElementById("view-today"); if(!v) return;
+    var health = document.getElementById("healthCard"), nudge = document.getElementById("nudgeCard"),
+        setup = document.getElementById("setupCard"), hero = v.querySelector(".hero");
+    if(health && nudge && nudge.parentNode === v) v.insertBefore(health, nudge.nextSibling);
+    var isNew = true;
+    try{
+      var st = JSON.parse(localStorage.getItem("us-tasks-rewards-v1") || "{}");
+      if(st.installedAt) isNew = (Date.now() - Date.parse(st.installedAt + "T12:00:00")) < 14 * 864e5;
+    }catch(e){}
+    if(isNew && setup && hero && hero.parentNode === v) v.insertBefore(setup, hero.nextSibling);
+  }catch(e){}
+})();
+</script>
+<style id="w2-css">
+/* ============================================================================
+   BUILD 213 - WeDO 2.0, FIRST CUT.
+
+   Moody picked The Line for the list and the mood of Your Photo for the
+   overview. This layer sits on the same data and the same engine as 212:
+     - one type system: Young Serif says it, Schibsted Grotesk runs it, DM Mono
+       states the facts
+     - four places instead of six tabs, with + at the end of the dock
+     - Today opens on the day's photo with what is left
+     - Tasks is split down the middle: one side each, shared ones on the line
+     - won rewards run out, memories flip like a book
+   The colour law from 205 holds everywhere. Everything here is scoped to
+   :root[data-w2] and to w2- names so it cannot reach an older rule by accident.
+   ============================================================================ */
+html:root[data-w2][data-w2][data-w2][data-w2]{
+  --display:"Young Serif","Iowan Old Style",Georgia,serif;
+  --ui:"Schibsted Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"DM Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --w2-blend:linear-gradient(118deg, var(--moody), var(--rae));
+  --w2-ink:#1A1220; --w2-tl:15%; --w2-tr:13%;
+  --w2-red:#FF5A4F;
+  --w2-lilac:#C3A8F0; --w2-coral:#FF6F58; --w2-lime:#61E000;
+  font-synthesis-weight:none;
+}
+/* ONE PALETTE. Moody, on seeing 213 in cream: "the layout colours don't match the logo...
+   we need a clear brand direction and the colours make sense throughout."
+   He was right twice over. Cream mode had been running on a second set (violet, brick,
+   dark green) since build 168, darkened so they could be read as words; and this build
+   added a fourth colour, a lilac-coral mix, that is not in the logo at all.
+   The rule now, in both modes:
+     lilac #C3A8F0 is Moody, coral #FF6F58 is Rae, lime #61E000 is done. Same hex everywhere.
+     Together is lilac BESIDE coral (the logo's heart), never the two mixed into a third.
+     Brand colours are fills, strokes and tints. Words are ink. Red is overdue and alerts. */
+html:root[data-w2][data-w2][data-w2][data-w2][data-mode="light"]{
+  --moody:#C3A8F0; --pink:#C3A8F0; --pink-dim:#A98BE0;
+  --rae:#FF6F58; --plum:#FF6F58; --purple:#FF6F58;
+  --jade:#61E000; --teal:#61E000; --both:#61E000; --jade-lift:#6CFA00; --on-jade:#140C13;
+  --rose:#B3261E; --rose-deep:#8F1D17;
+  --w2-red:#B3261E; --w2-tl:42%; --w2-tr:26%;
+}
+
+/* cream mode: ink on the blend, as dark mode already does; and the same for anything
+   that was given a brand colour for its words inline or by a rule the sweep could not read */
+html:root[data-w2][data-mode="light"] .primary,
+html:root[data-w2][data-mode="light"] .primary svg,
+html:root[data-w2][data-mode="light"] #listSwitcher button.active,
+html:root[data-w2][data-mode="light"] .list-pills button.active{ color:#1A1220 !important; -webkit-text-fill-color:#1A1220; }
+html:root[data-w2][data-mode="light"] [style*="color:var(--pink)"],
+html:root[data-w2][data-mode="light"] [style*="color:var(--moody)"],
+html:root[data-w2][data-mode="light"] [style*="color:var(--rae)"],
+html:root[data-w2][data-mode="light"] [style*="color:var(--jade)"],
+html:root[data-w2][data-mode="light"] [style*="color:var(--both)"],
+html:root[data-w2][data-mode="light"] [style*="color:var(--teal)"],
+html:root[data-w2][data-mode="light"] [style*="color:var(--plum)"],
+html:root[data-w2][data-mode="light"] [style*="color:var(--purple)"],
+html:root[data-w2][data-mode="light"] [style*="color:var(--pink-dim)"]{ color:var(--text) !important; }
+html:root[data-w2][data-mode="light"] .meta-for{ color:var(--muted) !important; }
+
+/* ---------- the dock: four places, the action at the end ---------- */
+:root[data-w2] .tabs{ display:none !important; }
+:root[data-w2] .fab{ display:none !important; }
+#w2Dock{
+  position:fixed; left:50%; translate:-50% 0; z-index:var(--z-tabs, 40);
+  bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+  width:min(calc(100vw - 24px), 430px);
+  display:flex; align-items:center; gap:8px;
+  transition:opacity .2s ease, translate .25s cubic-bezier(.2,.8,.2,1);
+}
+body:has(input:focus, textarea:focus, select:focus) #w2Dock,
+body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.show) #w2Dock{
+  opacity:0; pointer-events:none; translate:-50% 16px;
+}
+#w2Dock .w2-bar{
+  position:relative; isolation:isolate; flex:1; display:flex; padding:5px; border-radius:999px; min-width:0;
+  background:color-mix(in srgb, var(--card) 78%, transparent);
+  -webkit-backdrop-filter:blur(24px) saturate(1.3); backdrop-filter:blur(24px) saturate(1.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(255,255,255,.08), 0 14px 30px -14px rgba(0,0,0,.7);
+}
+:root[data-mode="light"] #w2Dock .w2-bar{ background:var(--text); box-shadow:0 14px 30px -14px rgba(42,31,38,.55); -webkit-backdrop-filter:none; backdrop-filter:none; }
+#w2Dock .w2-bar button{
+  position:relative; z-index:1; flex:1; min-width:0; min-height:44px; border:0; border-radius:999px; background:none; cursor:pointer;
+  font:600 .875rem/1 var(--ui); letter-spacing:-.01em; color:var(--muted);
+  -webkit-tap-highlight-color:transparent; transition:color 220ms cubic-bezier(.22,1,.36,1), transform .12s ease;
+}
+#w2Dock .w2-ind{ position:absolute; z-index:0; top:5px; left:0; width:0; height:44px; border-radius:999px; pointer-events:none; background:var(--text);
+  transition:transform 220ms cubic-bezier(.22,1,.36,1), width 220ms cubic-bezier(.22,1,.36,1); }
+:root[data-mode="light"] #w2Dock .w2-ind{ background:var(--bg); }
+:root[data-mode="light"] #w2Dock .w2-bar button{ color:color-mix(in srgb, var(--bg) 72%, transparent); }
+#w2Dock .w2-bar button:active{ transform:scale(.96); }
+#w2Dock .w2-bar button[aria-selected="true"]{ color:var(--bg); }
+:root[data-mode="light"] #w2Dock .w2-bar button[aria-selected="true"]{ color:var(--text); }
+#w2Dock .w2-bar button:focus-visible, #w2Dock .w2-add:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+#w2Dock .w2-n{
+  position:absolute; top:-6px; right:0; min-width:18px; height:18px; padding:0 5px; box-shadow:0 0 0 2px var(--bg); border-radius:999px;
+  background:var(--w2-blend); color:var(--w2-ink); font:500 .75rem/18px var(--mono); text-align:center;
+}
+#w2Dock .w2-add{
+  flex:none; width:54px; height:54px; border-radius:50%; border:0; cursor:pointer; display:grid; place-items:center;
+  background:var(--w2-blend); color:var(--w2-ink); box-shadow:0 14px 26px -12px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.35);
+  -webkit-tap-highlight-color:transparent; transition:transform .12s ease;
+}
+#w2Dock .w2-add:active{ transform:scale(.94); }
+#w2Dock .w2-add svg{ width:22px; height:22px; }
+
+/* ---------- the two-way switch inside Us and Keep ---------- */
+.w2-sub{ position:relative; isolation:isolate; display:flex; gap:4px; padding:4px; margin:0 0 16px; border-radius:999px; background:color-mix(in srgb, var(--text) 9%, var(--bg)); }
+.w2-sub button{ position:relative; z-index:1; flex:1; min-height:40px; border:0; border-radius:999px; background:none; cursor:pointer; color:var(--muted); font:600 .875rem/1 var(--ui); -webkit-tap-highlight-color:transparent; transition:color 120ms cubic-bezier(.4,0,1,1); }
+.w2-sub button[aria-checked="true"]{ color:var(--text); transition:color 200ms cubic-bezier(.22,1,.36,1); }
+.w2-sub .w2-ind{ position:absolute; z-index:0; top:4px; left:0; width:0; height:40px; border-radius:999px; pointer-events:none; background:var(--card); box-shadow:0 1px 0 rgba(0,0,0,.06), 0 6px 14px -10px rgba(0,0,0,.5);
+  transition:transform 200ms cubic-bezier(.22,1,.36,1), width 200ms cubic-bezier(.22,1,.36,1); }
+.w2-sub button:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+
+/* ---------- Today: the day's photo, and what is left ---------- */
+#w2Over{ display:none; }
+:root[data-w2][data-view="today"] #w2Over{
+  display:flex; flex-direction:column; position:relative; isolation:isolate; overflow:hidden;
+  min-height:548px; margin:8px 0 16px; border-radius:32px; color:#fff;
+  box-shadow:0 30px 50px -30px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.1);
+}
+#w2Over .w2-shot{ position:absolute; inset:0; z-index:-2; background-size:cover; background-position:center; background-color:#2B2233; }
+:root[data-w2][data-view="today"] #w2Over.nophoto{ min-height:420px; }
+#w2Over.nophoto .w2-shot{ background-image:linear-gradient(155deg, #C3A8F0, #FF6F58); }
+#w2Over.nophoto .w2-scrim{ display:none; }
+#w2Over.nophoto .w2-otop, #w2Over.nophoto .w2-hello{ color:#1A1220; text-shadow:none; }
+#w2Over.nophoto .w2-addshot{ background:#1A1220; color:#fff; }
+#w2Over .w2-scrim{ position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(180deg, rgba(12,10,20,.62) 0%, rgba(12,10,20,.2) 36%, rgba(12,10,20,.04) 52%, rgba(8,8,14,.5) 100%); }
+#w2Over .w2-otop{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 16px 0; font:500 .75rem/1.2 var(--mono); color:rgba(255,255,255,.88); }
+#w2Over .w2-otop span:last-child{ text-align:right; }
+#w2Over .w2-hello{ font-family:var(--display); font-weight:400; font-size:2.375rem; line-height:1; letter-spacing:-.03em; margin:24px 16px 0; text-wrap:balance; text-shadow:0 2px 24px rgba(8,8,20,.5); color:#fff; }
+#w2Over .w2-addshot{
+  align-self:flex-start; margin:16px 16px 0; min-height:44px; padding:0 16px; border-radius:999px; border:0; cursor:pointer;
+  background:rgba(255,255,255,.94); color:#17141C; font:600 .875rem/1 var(--ui);
+}
+#w2Over .w2-glass{
+  margin:auto 8px 8px; border-radius:24px; padding:8px 16px;
+  background:rgba(18,18,30,.74); -webkit-backdrop-filter:blur(28px) saturate(1.3); backdrop-filter:blur(28px) saturate(1.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.09), 0 8px 10px -6px rgba(4,8,14,.4), 0 30px 50px -24px rgba(4,8,14,.6);
+}
+@media (prefers-reduced-transparency:reduce){ #w2Over .w2-glass{ background:#17151F; -webkit-backdrop-filter:none; backdrop-filter:none; } }
+#w2Over .w2-row{ display:flex; align-items:center; gap:4px; border-bottom:1px solid rgba(255,255,255,.12); }
+#w2Over .w2-row:last-of-type{ border-bottom:0; }
+#w2Over .w2-rt{ flex:1; min-width:0; display:flex; align-items:center; gap:10px; min-height:52px; padding:8px 0; border:0; background:none; color:#fff; text-align:left; cursor:pointer; font:500 1rem/1.25 var(--ui); -webkit-tap-highlight-color:transparent; }
+#w2Over .w2-rt .t{ flex:1; min-width:0; }
+#w2Over .w2-rt > svg{ flex:none; width:14px; height:14px; color:rgba(255,255,255,.6); }
+#w2Over .w2-prog{ display:flex; align-items:center; gap:12px; padding:8px 0 12px; border-bottom:1px solid rgba(255,255,255,.12); font:500 .75rem/1 var(--mono); color:rgba(255,255,255,.86); }
+#w2Over .w2-prog i{ position:relative; flex:1; height:4px; border-radius:4px; background:rgba(255,255,255,.18); overflow:hidden; }
+#w2Over .w2-prog b{ position:absolute; inset:0; border-radius:4px; background:var(--w2-lime); transform-origin:left; }
+#w2Over .w2-rt .m{ flex:none; font:500 .75rem/1.2 var(--mono); color:rgba(255,255,255,.82); text-align:right; }
+#w2Over .w2-rt .m.late{ color:#FFB4AD; }
+#w2Over .w2-none{ padding:16px 0 12px; font:500 1rem/1.35 var(--ui); color:rgba(255,255,255,.92); }
+#w2Over .w2-all{ display:flex; width:100%; align-items:center; justify-content:space-between; min-height:46px; margin-top:2px; padding:0; border:0; border-top:1px solid rgba(255,255,255,.12); background:none; cursor:pointer; color:rgba(255,255,255,.9); font:600 .875rem/1 var(--ui); -webkit-tap-highlight-color:transparent; }
+#w2Over .w2-all svg{ width:16px; height:16px; }
+#w2Over button:focus-visible{ outline:2px solid #fff; outline-offset:2px; border-radius:10px; }
+
+/* the ring: one control, three owners */
+.w2-ring{ flex:none; width:44px; height:44px; margin:0 0 0 -11px; padding:0; border:0; background:none; display:grid; place-items:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.w2-ring i{ width:22px; height:22px; border-radius:50%; border:2px solid currentColor; display:grid; place-items:center; transition:background .18s ease, border-color .18s ease, transform .18s cubic-bezier(.34,1.56,.64,1); }
+.w2-ring svg{ width:12px; height:12px; opacity:0; color:#123400; }
+.w2-ring.tick i{ background:var(--w2-lime); border-color:var(--w2-lime); transform:scale(1.12); }
+.w2-ring.tick svg{ opacity:1; }
+.w2-ring:focus-visible{ outline:2px solid var(--text); outline-offset:-6px; border-radius:50%; }
+#w2Over .w2-ring.a{ color:var(--w2-lilac); } #w2Over .w2-ring.b{ color:var(--w2-coral); }
+#w2Over .w2-ring.ab i{ border-color:transparent; background:linear-gradient(135deg, var(--w2-lilac), var(--w2-coral)); -webkit-mask:radial-gradient(circle, transparent 7.5px, #000 8px); mask:radial-gradient(circle, transparent 7.5px, #000 8px); }
+#w2Over .w2-ring.ab.tick i{ -webkit-mask:none; mask:none; background:var(--w2-lime); }
+
+/* the old greeting says what the photo now says */
+:root[data-w2][data-view="today"] .hero-greet{ display:none; }
+
+/* ---------- Tasks: The Line ---------- */
+:root[data-w2-line] #filterAssignee{ display:none !important; }
+:root[data-w2-line] #taskFilterBar > *:has(#filterAssignee){ display:none !important; }
+.w2-line{ position:relative; isolation:isolate; margin:8px 0; padding:16px 0 24px; border-radius:24px; overflow:hidden;
+  background:linear-gradient(90deg, color-mix(in srgb, var(--moody) var(--w2-tl), transparent) 0 50%, color-mix(in srgb, var(--rae) var(--w2-tr), transparent) 50% 100%), var(--bg);
+  box-shadow:inset 0 0 0 1px var(--line, rgba(255,255,255,.08));
+  -webkit-user-select:none; user-select:none; }
+.w2-line::before{ content:""; position:absolute; top:0; bottom:0; left:50%; width:4px; margin-left:-2px; background:linear-gradient(90deg, var(--moody) 50%, var(--rae) 50%); z-index:0; }
+.w2-heads{ position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; }
+.w2-heads > div{ padding:0 16px; min-width:0; }
+.w2-heads > div + div{ text-align:right; }
+.w2-heads .nm{ display:inline-block; max-width:100%; padding:3px 12px 6px; border-radius:999px; color:var(--w2-ink); font-family:var(--display); font-weight:400; font-size:1.375rem; line-height:1.1; letter-spacing:-.02em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:top; }
+.w2-heads > div:first-child .nm{ background:var(--moody); } .w2-heads > div + div .nm{ background:var(--rae); }
+.w2-heads .ct{ margin-top:7px; padding:0 2px; font:500 .75rem/1.2 var(--mono); color:var(--muted); }
+.w2-cols{ position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; margin-top:16px; }
+.w2-col{ padding:0 8px; display:grid; gap:8px; align-content:start; min-width:0; min-height:64px; }
+.w2-chip{ position:relative; display:flex; align-items:flex-start; background:var(--card); border-radius:16px; padding:2px 10px 2px 11px; min-width:0;
+  box-shadow:0 1px 0 rgba(0,0,0,.05), 0 12px 22px -16px rgba(0,0,0,.55), inset 0 0 0 1px var(--line, rgba(255,255,255,.06));
+  touch-action:pan-y; -webkit-touch-callout:none; }
+.w2-chip .w2-ring{ margin-top:0; }
+.w2-col.l .w2-ring{ color:var(--moody); } .w2-col.r .w2-ring{ color:var(--rae); }
+.w2-chip .w2-ring i{ background:color-mix(in srgb, currentColor 30%, transparent); }
+:root[data-mode="light"] .w2-chip .w2-ring i{ box-shadow:0 0 0 1px color-mix(in srgb, var(--text) 34%, transparent); }
+.w2-both .w2-ring i{ border-color:transparent; background:linear-gradient(118deg, var(--moody) 50%, var(--rae) 50%); -webkit-mask:radial-gradient(circle, transparent 6.5px, #000 7px); mask:radial-gradient(circle, transparent 6.5px, #000 7px); }
+:root[data-mode="light"] .w2-both .w2-ring i{ box-shadow:none; }
+.w2-chip .w2-ring.tick i{ -webkit-mask:none; mask:none; background:var(--w2-lime); border-color:var(--w2-lime); }
+.w2-chip-b{ position:relative; flex:1; min-width:0; display:block; padding:12px 14px 12px 0; border:0; background:none; text-align:left; cursor:pointer; color:var(--text); -webkit-tap-highlight-color:transparent; }
+.w2-chip-b > svg{ position:absolute; right:-3px; top:14px; width:12px; height:12px; color:var(--muted); }
+.w2-chip-b .t{ display:block; font:600 .875rem/1.25 var(--ui); letter-spacing:-.01em; overflow-wrap:anywhere; }
+.w2-chip-b .m{ display:flex; justify-content:space-between; gap:8px; margin-top:8px; font:500 .75rem/1.2 var(--mono); color:var(--muted); }
+.w2-chip-b .m .late{ color:var(--w2-red); }
+.w2-chip-b .m .p{ margin-left:auto; }
+.w2-chip-b:focus-visible{ outline:2px solid var(--text); outline-offset:2px; border-radius:8px; }
+.w2-empty{ border:1.5px dashed color-mix(in srgb, var(--muted) 55%, transparent); border-radius:16px; min-height:62px; display:grid; place-items:center; padding:8px 10px; text-align:center; font:500 .75rem/1.35 var(--mono); color:var(--muted); }
+.w2-both{ position:relative; z-index:1; width:78%; margin:24px auto 0; display:grid; gap:8px; }
+.w2-both .w2-lbl{ justify-self:center; background:var(--w2-blend); color:var(--w2-ink); font:500 .75rem/1 var(--mono); padding:6px 10px; border-radius:999px; }
+.w2-both .w2-chip{ border:2px solid transparent; padding:0 8px 0 9px; background:linear-gradient(var(--card), var(--card)) padding-box, var(--w2-blend) border-box; box-shadow:0 12px 22px -16px rgba(0,0,0,.55); }
+.w2-both .w2-empty{ background:color-mix(in srgb, var(--card) 70%, transparent); }
+.w2-hint{ position:relative; z-index:1; width:78%; margin:16px auto 0; padding:8px 12px; border-radius:12px; background:var(--card); text-align:center; font:500 .75rem/1.4 var(--mono); color:var(--muted); }
+.w2-editing{ margin-bottom:12px; }
+
+/* handing over */
+.w2-chip.gone{ opacity:.25; }
+.w2-lift{ position:fixed; z-index:var(--z-alert, 300); left:0; top:0; pointer-events:none; rotate:-3deg; margin:0;
+  box-shadow:0 28px 44px -14px rgba(0,0,0,.55), 0 0 0 2px var(--text) !important; }
+.w2-line.dragging .w2-col, .w2-line.dragging .w2-both{ transition:background .15s ease; }
+.w2-line.dragging [data-zone].over{ outline:2px dashed var(--text); outline-offset:-4px; border-radius:18px; background:color-mix(in srgb, var(--text) 7%, transparent); }
+@media (prefers-reduced-motion:reduce){ .w2-lift{ rotate:none; } .w2-ring i{ transition:none; } }
+
+/* ---------- rewards: use it or lose it ---------- */
+.w2-exp{ display:block; margin-top:4px; font:500 .75rem/1.3 var(--mono); color:var(--muted); }
+.w2-exp.soon{ color:var(--text); }   /* a warning is ink, by the colour law; red stays for overdue */
+.won-row.st-expired{ opacity:.62; }
+.won-row.st-expired .wr-name{ text-decoration:line-through; }
+.w2-rule{ margin:10px 0 2px; font:500 .75rem/1.45 var(--ui); color:var(--muted); }
+
+/* ---------- Memories: the flip book ---------- */
+.w2-cover{ display:flex; align-items:center; gap:16px; width:100%; margin:0 0 16px; padding:16px; border-radius:24px; border:0; cursor:pointer; text-align:left;
+  background:var(--card); color:var(--text); box-shadow:inset 0 0 0 1px var(--line, rgba(255,255,255,.08)), 0 16px 30px -22px rgba(0,0,0,.6); -webkit-tap-highlight-color:transparent; }
+.w2-cover:disabled{ cursor:default; opacity:.7; }
+.w2-cover .stack{ position:relative; flex:none; width:74px; height:92px; }
+.w2-cover .stack i{ position:absolute; inset:0; border-radius:8px; background:color-mix(in srgb, var(--text) 14%, var(--card)); background-size:cover; background-position:center; box-shadow:0 0 0 3px var(--card), 0 6px 12px -6px rgba(0,0,0,.5); }
+.w2-cover .stack i:nth-child(1){ rotate:-7deg; translate:-4px 2px; } .w2-cover .stack i:nth-child(2){ rotate:5deg; translate:5px 0; } .w2-cover .stack i:nth-child(3){ rotate:-1deg; }
+.w2-cover .tx{ flex:1; min-width:0; }
+.w2-cover .tt{ display:block; font-family:var(--display); font-weight:400; font-size:1.375rem; line-height:1.1; letter-spacing:-.02em; }
+.w2-cover .ss{ display:block; margin-top:6px; font:500 .75rem/1.3 var(--mono); color:var(--muted); }
+.w2-cover svg{ flex:none; width:18px; height:18px; color:var(--muted); }
+.w2-cover:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+
+.w2-book{ position:fixed; inset:0; z-index:var(--z-album, 130); display:none; flex-direction:column; background:#0E0B12; color:#fff;
+  padding:calc(10px + env(safe-area-inset-top, 0px)) 14px calc(14px + env(safe-area-inset-bottom, 0px)); }
+.w2-book.show{ display:flex; }
+.w2-book .bk-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:48px; }
+.w2-book .bk-top .mm{ font-family:var(--display); font-size:1.25rem; letter-spacing:-.02em; }
+.w2-book .bk-top .ct{ font:500 .75rem/1 var(--mono); color:rgba(255,255,255,.75); }
+.w2-book .bk-x{ width:44px; height:44px; margin-right:-10px; border:0; background:none; color:#fff; cursor:pointer; display:grid; place-items:center; }
+.w2-book .bk-x svg{ width:20px; height:20px; }
+.w2-book .bk-stage{ position:relative; flex:1; min-height:0; margin:8px 12px 0 0; perspective:1400px; }
+.w2-book .bk-stage::before, .w2-book .bk-stage::after{ content:""; position:absolute; inset:6px -6px 6px 6px; border-radius:8px 20px 20px 8px; background:#E4DCD5; }
+.w2-book .bk-stage::after{ inset:12px -12px 12px 12px; background:#CFC6BE; z-index:-1; }
+.w2-book .bk-stage::before{ z-index:0; }
+.w2-pg.end{ justify-content:center; }
+.w2-pg.end .day{ font-size:2.25rem; text-wrap:balance; }
+.w2-pg.end .facts{ display:flex; gap:24px; flex-wrap:wrap; margin-top:24px; font:500 .75rem/1.3 var(--mono); color:#4A3D46; }
+.w2-pg.end .facts b{ display:block; margin-bottom:4px; font-family:var(--display); font-weight:400; font-size:2.25rem; line-height:1; letter-spacing:-.03em; font-variant-numeric:lining-nums; color:#231B22; }
+.w2-pg{ position:absolute; inset:0; display:flex; flex-direction:column; border-radius:8px 20px 20px 8px; padding:18px 16px 16px; overflow:hidden;
+  background:#F6F1EC; color:#231B22; transform-origin:left center; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  box-shadow:inset 10px 0 18px -12px rgba(35,27,34,.45), 0 30px 50px -26px #000; }
+.w2-pg.turn{ transition:transform .56s cubic-bezier(.5,.05,.3,1), box-shadow .56s ease; transform:rotateY(-118deg); box-shadow:inset 10px 0 18px -12px rgba(35,27,34,.45), 40px 30px 50px -26px #000; }
+.w2-pg.back{ transform:rotateY(-118deg); }
+.w2-pg.back.settle{ transition:transform .56s cubic-bezier(.3,.6,.3,1); transform:none; }
+.w2-pg .day{ font-family:var(--display); font-size:1.75rem; line-height:1.02; letter-spacing:-.03em; }
+.w2-pg .dt{ margin-top:6px; font:500 .75rem/1 var(--mono); color:#6A5C66; }
+.w2-pg .prints{ position:relative; flex:1; min-height:250px; margin-top:20px; }
+.w2-pg .foot{ margin-top:auto; padding-top:16px; }
+.w2-pg .prints.one{ display:grid; place-items:center; }
+.w2-pg figure{ position:absolute; width:61%; max-height:100%; margin:0; padding:7px 7px 0; background:#fff; border-radius:4px; box-shadow:0 10px 18px -10px rgba(35,27,34,.5), 0 0 0 1px rgba(35,27,34,.06); }
+.w2-pg figure:nth-child(1){ left:0; top:0; rotate:-2deg; } .w2-pg figure:nth-child(2){ right:0; bottom:0; rotate:1.6deg; }
+.w2-pg .prints.one figure{ position:static; width:80%; rotate:-1deg; }
+.w2-pg figure .im{ aspect-ratio:4/5; background:#E7DFD8 center/cover no-repeat; border-radius:2px; display:grid; place-items:center; padding:8px; text-align:center; font:500 .75rem/1.35 var(--mono); color:#6A5C66; }
+.w2-pg figcaption{ display:flex; align-items:center; gap:6px; padding:8px 1px 9px; font:500 .75rem/1 var(--mono); color:#4A3D46; }
+.w2-pg figcaption b{ width:9px; height:9px; border-radius:50%; flex:none; box-shadow:0 0 0 1px rgba(35,27,34,.38); }
+.w2-pg .said{ font-family:var(--display); font-size:1.0625rem; line-height:1.3; letter-spacing:-.01em; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.w2-pg .by{ margin-top:6px; font:500 .75rem/1.3 var(--mono); color:#6A5C66; }
+.w2-pg .song{ display:flex; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid rgba(35,27,34,.12); font:500 .8125rem/1.3 var(--ui); min-width:0; }
+.w2-pg .song svg{ width:16px; height:16px; flex:none; }
+.w2-pg .song span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.w2-book .bk-tap{ position:absolute; top:0; bottom:0; width:50%; border:0; background:none; cursor:pointer; z-index:5; -webkit-tap-highlight-color:transparent; }
+.w2-book .bk-tap.p{ left:0; } .w2-book .bk-tap.n{ right:0; }
+.w2-book .bk-tap:focus-visible{ outline:2px solid #fff; outline-offset:-4px; border-radius:16px; }
+.w2-book .bk-ctl{ display:flex; align-items:center; gap:12px; margin-top:14px; }
+.w2-book .bk-play{ min-height:48px; padding:0 18px; border-radius:999px; border:0; cursor:pointer; background:#fff; color:#17141C; font:600 .9375rem/1 var(--ui); display:flex; align-items:center; gap:8px; }
+.w2-book .bk-play svg{ width:14px; height:14px; }
+.w2-book .bk-bar{ flex:1; height:4px; border-radius:4px; background:rgba(255,255,255,.2); overflow:hidden; }
+.w2-book .bk-bar i{ display:block; height:100%; width:0; background:#fff; border-radius:4px; transition:width .3s ease; }
+.w2-book button:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+@media (prefers-reduced-motion:reduce){
+  .w2-pg.turn{ transition:opacity .2s ease; transform:none; opacity:0; }
+  .w2-pg.back{ transform:none; opacity:0; } .w2-pg.back.settle{ transition:opacity .2s ease; opacity:1; }
+}
+
+/* ---------- moments: four takeovers and brand confetti, taken in turn ---------- */
+.w2-conf{ position:fixed; inset:0; z-index:var(--z-alert, 300); pointer-events:none; overflow:hidden; }
+.w2-cf{ position:absolute; display:block; width:var(--s); height:var(--s); margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2); background:currentColor; will-change:transform, opacity; }
+.w2-cf.disc{ border-radius:50%; }
+.w2-cf.bar{ width:calc(var(--s) * .42); height:calc(var(--s) * 1.6); border-radius:3px; }
+.w2-cf.ring{ background:none; border:2.5px solid currentColor; border-radius:50%; }
+.w2-cf.tick{ background:none; width:calc(var(--s) * .55); height:var(--s); border-right:3px solid currentColor; border-bottom:3px solid currentColor; }
+.w2-cf.half{ border-radius:var(--s) 0 0 var(--s); width:calc(var(--s) * .6); height:calc(var(--s) * 1.2); }
+
+.w2m{ position:fixed; inset:0; z-index:var(--z-cel, 58); pointer-events:none; overflow:hidden; display:grid; place-items:center; --life:1500ms;
+  animation:w2m-out .26s cubic-bezier(.7,0,.84,0) calc(var(--life) - 280ms) both; }
+.w2m .bg{ position:absolute; inset:0; background:#120E14; animation:w2m-bg .14s ease-out both; }
+.w2m .say{ position:relative; z-index:3; max-width:100%; padding:0 22px; text-align:center; color:#fff; }
+.w2m .num{ display:block; font-variant-numeric:lining-nums; font-family:var(--display); font-weight:400; font-style:normal; font-size:clamp(6rem, 34vw, 9.5rem); line-height:.9; letter-spacing:-.05em; }
+.w2m .num.long{ font-size:clamp(3rem, 15vw, 4.75rem); letter-spacing:-.04em; line-height:1; text-wrap:balance; }
+.w2m .sub{ display:block; margin-top:16px; font:600 1.0625rem/1.3 var(--ui); font-style:normal; animation:w2m-up .3s cubic-bezier(.16,1,.3,1) .34s both; }
+.w2m .q{ display:block; margin:18px auto 0; max-width:19rem; font:400 1rem/1.35 var(--display); color:rgba(255,255,255,.88); animation:w2m-up .3s cubic-bezier(.16,1,.3,1) .62s both; }
+.w2m .q em{ display:block; margin-top:6px; font:500 .75rem/1.3 var(--mono); font-style:normal; }
+.w2m i{ position:absolute; display:block; }
+
+/* 1 SLAM */
+.w2m.v-slam .num{ animation:w2m-slam .5s cubic-bezier(.2,1.25,.3,1) .04s both; }
+.w2m.v-slam .say{ animation:w2m-shake .3s linear .2s both; }
+.w2m.v-slam .ring{ left:var(--ox); top:var(--oy); width:120px; height:120px; margin:-60px 0 0 -60px; border-radius:50%; border:3px solid #61E000; z-index:1; animation:w2m-ring .8s cubic-bezier(.16,1,.3,1) both; }
+.w2m.v-slam .ring.r2{ border-color:#C3A8F0; animation-delay:.09s; } .w2m.v-slam .ring.r3{ border-color:#FF6F58; animation-delay:.18s; }
+.w2m.v-slam .bar{ position:relative; display:block; height:6px; margin:14px auto 0; width:min(9rem, 46vw); border-radius:6px; background:#61E000; transform-origin:left; animation:w2m-grow .34s cubic-bezier(.16,1,.3,1) .26s both; }
+
+/* 2 RAYS */
+.w2m.v-rays .rays{ left:50%; top:50%; width:116vmax; height:116vmax; margin:-58vmax 0 0 -58vmax; z-index:1;
+  background:repeating-conic-gradient(from 0deg, rgba(195,168,240,.26) 0 7.5deg, transparent 7.5deg 15deg, rgba(255,111,88,.26) 15deg 22.5deg, transparent 22.5deg 30deg);
+  animation:w2m-spin var(--life) linear both; }
+.w2m.v-rays .disc{ position:relative; display:grid; place-items:center; width:92px; height:92px; margin:0 auto 18px; border-radius:50%; background:#61E000; color:#123400; animation:w2m-pop .44s cubic-bezier(.2,1.4,.3,1) .06s both; }
+.w2m.v-rays .disc svg{ width:46px; height:46px; }
+.w2m.v-rays .num{ font-size:clamp(4.5rem, 26vw, 7rem); animation:w2m-slam .46s cubic-bezier(.2,1.2,.3,1) .16s both; }
+
+/* 3 STACK */
+.w2m.v-stack .rows{ position:absolute; inset:0; z-index:1; display:flex; flex-direction:column; justify-content:center; gap:2px; overflow:hidden; }
+.w2m.v-stack .row{ display:block; white-space:nowrap; text-align:center; font-family:var(--display); font-size:clamp(3.75rem, 21vw, 6rem); line-height:.98; letter-spacing:-.04em; color:transparent; -webkit-text-stroke:1.5px rgba(255,255,255,.42);
+  animation:w2m-rowl .5s cubic-bezier(.16,1,.3,1) calc(var(--i) * 45ms) both; }
+.w2m.v-stack .row:nth-child(even){ animation-name:w2m-rowr; }
+.w2m.v-stack .row.mid{ color:#61E000; -webkit-text-stroke:0; }
+.w2m.v-stack .say{ align-self:end; padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
+.w2m.v-stack .num{ display:none; }
+.w2m.v-stack .sub, .w2m.v-stack .q{ display:inline-block; padding:6px 12px; border-radius:12px; background:#120E14; }
+
+/* 4 MEET */
+.w2m.v-meet .pa{ inset:0 50% 0 0; background:#C3A8F0; z-index:1; animation:w2m-pa .3s cubic-bezier(.16,1,.3,1) both; }
+.w2m.v-meet .pb{ inset:0 0 0 50%; background:#FF6F58; z-index:1; animation:w2m-pb .3s cubic-bezier(.16,1,.3,1) both; }
+.w2m.v-meet .seam{ left:50%; top:0; bottom:0; width:6px; margin-left:-3px; background:#fff; z-index:2; transform-origin:50% 50%; animation:w2m-seam .5s cubic-bezier(.16,1,.3,1) .22s both; }
+.w2m.v-meet .say{ color:#1A1220; }
+.w2m.v-meet .q{ color:#1A1220; }
+.w2m.v-meet .num{ animation:w2m-slam .46s cubic-bezier(.2,1.25,.3,1) .26s both; }
+
+@keyframes w2m-out{ to{ opacity:0; visibility:hidden; } }
+@keyframes w2m-bg{ from{ opacity:0; } to{ opacity:.95; } }
+@keyframes w2m-up{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
+@keyframes w2m-slam{ 0%{ opacity:0; transform:scale(2.8); } 55%{ opacity:1; transform:scale(.95); } 100%{ opacity:1; transform:none; } }
+@keyframes w2m-shake{ 0%, 100%{ transform:none; } 20%{ transform:translate(-5px, 3px); } 40%{ transform:translate(4px, -3px); } 60%{ transform:translate(-3px, 2px); } 80%{ transform:translate(2px, -1px); } }
+@keyframes w2m-ring{ from{ opacity:1; transform:scale(.2); } to{ opacity:0; transform:scale(8); } }
+@keyframes w2m-grow{ from{ transform:scaleX(0); } to{ transform:none; } }
+@keyframes w2m-spin{ from{ opacity:0; transform:rotate(0deg) scale(.86); } 12%{ opacity:1; } to{ opacity:1; transform:rotate(52deg) scale(1.08); } }
+@keyframes w2m-pop{ from{ opacity:0; transform:scale(0); } to{ opacity:1; transform:none; } }
+@keyframes w2m-rowl{ from{ opacity:0; transform:translateX(-46%); } to{ opacity:1; transform:none; } }
+@keyframes w2m-rowr{ from{ opacity:0; transform:translateX(46%); } to{ opacity:1; transform:none; } }
+@keyframes w2m-pa{ from{ transform:translateX(-101%); } to{ transform:none; } }
+@keyframes w2m-pb{ from{ transform:translateX(101%); } to{ transform:none; } }
+@keyframes w2m-seam{ 0%{ opacity:1; transform:scaleY(0); } 40%{ opacity:1; transform:none; } 100%{ opacity:0; transform:scaleX(5); } }
+@media (prefers-reduced-motion:reduce){ .w2m, .w2-conf{ display:none !important; } }
+
+/* cream mode: every rule that set words in a brand colour, set in ink instead */
+html:root[data-w2][data-mode="light"] .brand-word .bw-red{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .brand-word .bw-purple{ color:var(--text); }
+html:root[data-w2][data-mode="light"] header .sub .m-red{ color:var(--text); }
+html:root[data-w2][data-mode="light"] header .sub .m-purple{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .scope-more{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .setup-body code{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .setup-done-note{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .duo-when.today{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .td-err{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .badge-pill.at-risk{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .lb-pts{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .note .from{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .ob-test.ok{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .quest-part.checked{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .tier-preview{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .act-fail:hover, html:root[data-w2][data-mode="light"] .act-fail:active{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .ticket.catchup .tk-sub{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .sb-row .t2 b{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .sb-rate-btn{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .rate-strip.landed .rs-label{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .race-name.p2{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .race-lost{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .fail-tag{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .speech-turn strong{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .hero-cue .cue-label, html:root[data-w2][data-mode="light"] .hero-scope .cue-label{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .countdown strong{ color:var(--text); }
+html:root[data-w2][data-mode="light"] header .sub.tagline .dash{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .task.done .check{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .chal-p.on.is-p1 .tick, html:root[data-w2][data-mode="light"] .chal-p.on.is-p2 .tick{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .qa-who{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .push-diag .pd-bad{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .push-diag .pd-ok{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .trend-who.is-p1{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .trend-who.is-p2{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .health-val.win{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .trip-check:active{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .hero-scope .cue-label{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .stat.jade .num{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .diff-easy{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .tier-common{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .tier-uncommon{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .photo-missing.lost{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .exp-actions button.go{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .chal-p.on .tick{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .note.from-p1 .from{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .note.from-p2 .from{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .who-moody{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .who-rae{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .duo-slot.p1 .duo-name{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .duo-slot.p2 .duo-name{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .health-grid .health-val.win.p1{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .health-grid .health-val.win.p2{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .us-bar .us-end.l .us-pts{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .us-bar .us-end.r .us-pts{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .ms-meta .v.record{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .act-head .wd-i{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .hold-btn.holding .hb-ico{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .ptr.done .ptr-i{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .ptr.failed .ptr-i{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .code-display.tearoff .to-stamp{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .wr-done{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .duo-chal.on{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .dw-mark.m-check{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .dw-mark.m-spark{ color:var(--text); }
+html:root[data-w2][data-mode="light"] #view-rewards .stat-row .num.has-spins{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .race-name.p1{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .sc-tick{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .sc-verdict.win{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .hd-mark.ok{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .tk-btn.p1 svg{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .tk-btn.p2 svg{ color:var(--text); }
+html:root[data-w2][data-mode="light"] .cs-pill.lit svg{ color:var(--text); }
+</style>
 </body>
 </html>
