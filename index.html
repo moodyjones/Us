@@ -27974,6 +27974,8 @@
         ev.stopPropagation();
         if(b.classList.contains("tick")) return;
         b.classList.add("tick");
+        /* iPhone only lets sound start inside a tap; the tone itself plays a beat later */
+        try{ var ac = sfxCtx(); if(ac && ac.state === "suspended") ac.resume(); }catch(e){}
         var from = null; try{ from = originOf(b); }catch(e){}
         setTimeout(function(){ completeTask(t.id, from); }, 380);
       });
