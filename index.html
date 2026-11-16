@@ -12930,6 +12930,13 @@
     /* BUILD 213: the day the use-it-or-lose-it clock began. Earliest wins, so both phones count the same days. */
     var lRx = L.rewardExpiryFrom, rRx = R.rewardExpiryFrom;
     if(lRx || rRx) m.rewardExpiryFrom = (lRx && rRx) ? (lRx < rRx ? lRx : rRx) : (lRx || rRx);
+    /* BUILD 213: date night. Each person's picks are their own (newest wins); the chosen date is whichever was set first. */
+    (function(){ var a = L.dateNight || {}, b = R.dateNight || {}, out = {}, k, who; var ks = {}; for(k in a) ks[k] = 1; for(k in b) ks[k] = 1;
+      for(k in ks){ var x = a[k] || {}, y = b[k] || {}, e = {};
+        ['p1','p2'].forEach(function(who){ var p = x[who], q = y[who]; if(p || q) e[who] = (p && q) ? (String(p.at || '') >= String(q.at || '') ? p : q) : (p || q); });
+        var pa = x.pick, pb = y.pick; if(pa || pb){ var first = (pa && pb) ? (String(pa.at || '') <= String(pb.at || '') ? x : y) : (pa ? x : y); e.pick = first.pick; e.taskId = first.taskId; }
+        out[k] = e; }
+      if(Object.keys(out).length) m.dateNight = out; })();
     // Whichever phone has already rolled the month wins: expiry must not un-happen because
     // the other phone hasn't opened yet and still thinks it's last month.
     m.spinPeriod = (String(L.spinPeriod||"") > String(R.spinPeriod||"")) ? L.spinPeriod : (R.spinPeriod || L.spinPeriod || null);
@@ -27933,7 +27940,7 @@
     function pid(i){ return ((state.people || [])[i] || {}).id || ("p" + (i + 1)); }
     function warn(where, e){ try{ console.warn("w2 " + where, e); }catch(_){} }
     var CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.3l2.3 2.3 4.7-5"/></svg>';
-    var PLUS = '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg>';
+    var PLUS = '<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M11 4v14M4 11h14"/></svg>';
     var CHEV = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5"/></svg>';
     var NOTE = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 13.5V4l8-1.5V12"/><circle cx="4.8" cy="13.5" r="2.2"/><circle cx="12.8" cy="12" r="2.2"/></svg>';
     var WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
@@ -28160,13 +28167,23 @@
       var dayName = dayOf(today, {weekday: "long"});
       var n = d.mine.length + d.both.length;
       var doneToday = (((state.dailyCompletions || {})[m]) || {})[today] || 0;
+      /* Moody: "make sure the daily photo is still a major highlight when you open the
+         app as it's the first thing each of us usually does." The two photo slots (the
+         app's own #duoRow, with every behaviour it already had) now sit at the top of
+         this card at full width, and until yours is in, the headline asks for it first. */
+      var duo = $("duoRow");
+      var mineP = (state.dailyPhotos || {})[m], needPhoto = !(mineP && mineP.date === today);
       var line;
-      if(n > 0) line = (n < 10 ? WORDS[n] : String(n)) + (n === 1 ? " thing" : " things") + " left, then " + dayName + " is yours.";
+      if(needPhoto) line = n > 0 ? "Today’s photo first, then " + (n < 10 ? WORDS[n].toLowerCase() : String(n)) + (n === 1 ? " thing." : " things.")
+                                 : "Today’s photo first. Nothing else is due.";
+      else if(n > 0) line = (n < 10 ? WORDS[n] : String(n)) + (n === 1 ? " thing" : " things") + " left, then " + dayName + " is yours.";
       else if(doneToday > 0) line = "All crossed off. " + dayName + " is yours.";
       else line = "Nothing due today. " + dayName + " is yours.";
       var ph = heroPhoto();
       var st = ((state.streaks || {})[m] || {}).current || 0;
-      over.className = ph ? "" : "nophoto";
+      over.className = (ph ? "" : "nophoto") + (needPhoto ? " needphoto" : "");
+      over.setAttribute("data-me", m);
+      if(duo && duo.parentNode === over) over.removeChild(duo);
       over.innerHTML = "";
       var shot = mk("div", "w2-shot"); if(ph) shot.style.backgroundImage = 'url("' + ph.src + '")';
       over.appendChild(shot); over.appendChild(mk("div", "w2-scrim"));
@@ -28175,8 +28192,9 @@
       var capText = ph ? ph.cap : (st >= 2 ? st + "-day streak" : "");
       if(capText) top.appendChild(mk("span", "", escapeHtml(capText)));
       over.appendChild(top);
+      if(duo) over.appendChild(duo);
       over.appendChild(mk("h2", "w2-hello", escapeHtml(line)));
-      if(!ph){
+      if(!ph && !duo){
         var add = mk("button", "w2-addshot", "Add today’s photo"); add.type = "button";
         add.addEventListener("click", function(){
           var slot = document.querySelector("#duoRow .duo-slot.p" + (m === pid(1) ? "2" : "1")) || document.querySelector("#duoRow .duo-slot");
@@ -28266,7 +28284,7 @@
       var line = mk("div", "w2-line");
       var heads = mk("div", "w2-heads");
       [[a, L], [b, Rr]].forEach(function(x){
-        heads.appendChild(mk("div", "", '<div class="nm">' + escapeHtml(personName(x[0])) + '</div><div class="ct">' + x[1].length + ' open</div>'));
+        heads.appendChild(mk("div", "", '<div class="nm"><span>' + escapeHtml(personName(x[0])) + '</span><b class="ct" aria-label="' + x[1].length + ' open">' + x[1].length + '</b></div>'));
       });
       line.appendChild(heads);
       var cols = mk("div", "w2-cols");
@@ -28807,7 +28825,7 @@
       el.style.setProperty("--oy", Math.round((o.origin && o.origin.y != null) ? o.origin.y : H / 2) + "px");
       el.style.setProperty("--life", (o.life || 1500) + "ms");
       var say = '<span class="say">' +
-        (v === "rays" ? '<span class="disc">' + TICK + '</span>' : "") +
+        '<span class="disc">' + TICK + '</span>' +
         (head ? '<b class="num' + (long ? " long" : "") + '">' + escapeHtml(head) + '</b>' : "") +
         (v === "slam" ? '<span class="bar"></span>' : "") +
         (o.sub ? '<span class="sub">' + escapeHtml(o.sub) + '</span>' : "") +
@@ -28826,16 +28844,23 @@
       el.innerHTML = '<span class="bg"></span>' + deco + say;
       document.body.appendChild(el);
       document.body.classList.add("celebrating");
-      setTimeout(function(){
+      var gone = false;
+      function done(){
+        if(gone) return; gone = true;
         if(el.parentNode) el.parentNode.removeChild(el);
         if(!document.querySelector(".w2m")) document.body.classList.remove("celebrating");
-      }, (o.life || 1500) + 40);
+      }
+      /* a quote stays long enough to read; a tap sends it away sooner */
+      if(o.quote){ el.classList.add("tap"); el.addEventListener("click", function(){ try{ celBusyUntil = Date.now() + 150; }catch(e){} done(); }); }
+      setTimeout(done, (o.life || 1700) + 40);
       return v;
     }
     var _sw213 = celebrationSweep;
     celebrationSweep = function(cfg, origin, headline, sub, quote){
       try{
-        moment({origin: origin, headline: headline, sub: sub, quote: quote, together: cfg === CELEBRATION.together, life: quote ? 2100 : 1500});
+        var life = quote ? 5200 : 1900;
+        try{ celBusyUntil = Date.now() + life - 50; }catch(e){}
+        moment({origin: origin, headline: headline, sub: sub, quote: quote, together: cfg === CELEBRATION.together, life: life});
       }catch(e){ warn("moment", e); return _sw213.apply(this, arguments); }
     };
     /* three ways to light the sky; a milestone takes the next one */
@@ -28886,11 +28911,219 @@
       return r;
     };
 
+    /* ------------------------------ DATE NIGHT ------------------------------
+       Moody: "This week barely gets used. Let's remove it and instead build something
+       on Sunday to help build date night with like museum with no phone, or a dancing
+       class, or a day of reading and laying in the park - but it relies on both our
+       inputs."
+       From Sunday, each of you picks up to three ideas and the evenings you are free,
+       without seeing the other's. When both are in, the card shows where you overlap
+       and puts the date on the list as a shared task. No overlap: you each see the
+       other's picks and either of you can say yes to one.
+       state.dateNight[<that Sunday>] = {p1:{picks,own,days,at}, p2:{...}, pick:{id,by,at}, taskId} */
+    var DN_IDEAS = [
+      ["museum", "A museum, phones away"], ["dance", "A dancing class"], ["park", "Reading and lying in the park"],
+      ["cook", "Cook something neither of you has made"], ["music", "Live music, somewhere small"], ["walk", "A long walk to somewhere new"],
+      ["film", "A film at the cinema"], ["games", "Board games, no screens"], ["class", "Make something: pottery, paint, bake"],
+      ["picnic", "A picnic at sunset"], ["dress", "Dress up, one good dinner"], ["slow", "A slow morning, breakfast out"]
+    ];
+    var DN_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    function dnWeek(){ var t = todayISO(), d = new Date(t + "T12:00:00"); return shiftISO(t, -d.getDay()); }
+    function dnEntry(make){
+      if(!state.dateNight || typeof state.dateNight !== "object"){ if(!make) return {}; state.dateNight = {}; }
+      var k = dnWeek();
+      if(!state.dateNight[k]){ if(!make) return {}; state.dateNight[k] = {}; }
+      return state.dateNight[k];
+    }
+    function dnLabel(id, e){
+      if(String(id).indexOf("own:") === 0){ var who = id.slice(4); return ((e[who] || {}).own) || "Their own idea"; }
+      for(var i = 0; i < DN_IDEAS.length; i++){ if(DN_IDEAS[i][0] === id) return DN_IDEAS[i][1]; }
+      return id;
+    }
+    function dnPicks(e, who){ var a = e[who] || {}; return (a.picks || []).concat(a.own ? ["own:" + who] : []); }
+    var dnDraft = null;
+    var dnCard = mk("div", "card w2-date"); dnCard.id = "w2Date";
+    (function(){
+      var wk = $("weekCard");
+      if(wk && wk.parentNode) wk.parentNode.insertBefore(dnCard, wk);
+      else { var v = $("view-today"); if(v) v.appendChild(dnCard); }
+    })();
+    function dnSave(){ try{ if(save() === false) return false; scheduleSync(); }catch(e){} return true; }
+    function dnRender(){
+      if(!dnCard.parentNode) return;
+      var m = me(), o = otherPerson(m), e = dnEntry(false), mine = e[m], theirs = e[o];
+      var html = '<h2>Date night</h2>';
+      dnCard.innerHTML = "";
+      function chips(cls, items, on, onTap){
+        var w = mk("div", cls);
+        items.forEach(function(it){
+          var b = mk("button", "", escapeHtml(it[1])); b.type = "button"; b.setAttribute("aria-pressed", String(on(it[0])));
+          b.addEventListener("click", function(){ onTap(it[0], b); });
+          w.appendChild(b);
+        });
+        return w;
+      }
+      if(e.pick){
+        var t = (state.tasks || []).filter(function(x){ return x.id === e.taskId; })[0];
+        dnCard.appendChild(mk("div", "", html + '<p class="dn-lead">It’s a date.</p><p class="dn-big">' + escapeHtml(dnLabel(e.pick.id, e)) + '</p>' +
+          '<p class="dn-sub">' + escapeHtml(t && t.dueDate ? dayOf(t.dueDate, {weekday: "long", day: "numeric", month: "short"}) + ". It is on the line as a shared task." : "It is on the list as a shared task.") + '</p>'));
+        return;
+      }
+      if(!mine || dnDraft){
+        var d = dnDraft || (dnDraft = {picks: (mine && mine.picks || []).slice(), own: (mine && mine.own) || "", days: (mine && mine.days || []).slice()});
+        dnCard.appendChild(mk("div", "", html + '<p class="dn-sub">Pick up to three you would actually enjoy. ' + escapeHtml(personName(o)) + ' picks too, and neither of you sees the other’s until both are in.</p>'));
+        dnCard.appendChild(chips("dn-chips", DN_IDEAS, function(id){ return d.picks.indexOf(id) >= 0; }, function(id, b){
+          var i = d.picks.indexOf(id);
+          if(i >= 0) d.picks.splice(i, 1); else { if(d.picks.length + (d.own ? 1 : 0) >= 3){ toast("Three is the limit. Drop one first."); return; } d.picks.push(id); }
+          b.setAttribute("aria-pressed", String(i < 0)); lock.disabled = !(d.picks.length || d.own);
+        }));
+        var own = mk("input", "dn-own"); own.type = "text"; own.maxLength = 60; own.value = d.own; own.placeholder = "Or your own idea";
+        own.setAttribute("aria-label", "Your own date idea");
+        own.addEventListener("input", function(){
+          if(own.value.trim() && !d.own && d.picks.length >= 3){ own.value = ""; toast("Three is the limit. Drop one first."); return; }
+          d.own = own.value.replace(/\s+/g, " ").trim(); lock.disabled = !(d.picks.length || d.own);
+        });
+        dnCard.appendChild(own);
+        dnCard.appendChild(mk("p", "dn-q", "Which evenings are you free?"));
+        dnCard.appendChild(chips("dn-days", DN_DAYS.map(function(x, i){ return [i, x]; }), function(i){ return d.days.indexOf(i) >= 0; }, function(i, b){
+          var at = d.days.indexOf(i); if(at >= 0) d.days.splice(at, 1); else d.days.push(i);
+          b.setAttribute("aria-pressed", String(at < 0));
+        }));
+        var lock = mk("button", "primary dn-go", "Lock in my picks"); lock.type = "button"; lock.disabled = !(d.picks.length || d.own);
+        lock.addEventListener("click", function(){
+          var en = dnEntry(true);
+          en[m] = {picks: d.picks.slice(0, 3), own: d.own, days: d.days.slice().sort(), at: new Date().toISOString()};
+          dnDraft = null;
+          if(!dnSave()){ toast("Couldn’t save that. Try again."); return; }
+          try{ announce("picked date night ideas"); }catch(x){}
+          renderAll();
+          toast(en[o] ? "Both in. Have a look." : "Locked in. Waiting on " + personName(o) + ".");
+        });
+        dnCard.appendChild(lock);
+        return;
+      }
+      if(!theirs){
+        dnCard.appendChild(mk("div", "", html + '<p class="dn-lead">Your picks are in.</p><p class="dn-sub">Waiting on ' + escapeHtml(personName(o)) + '. You will both see the overlap the moment theirs land.</p>'));
+        var ch = mk("button", "ghost dn-go", "Change my picks"); ch.type = "button";
+        ch.addEventListener("click", function(){ dnDraft = {picks: (mine.picks || []).slice(), own: mine.own || "", days: (mine.days || []).slice()}; dnRender(); });
+        dnCard.appendChild(ch);
+        return;
+      }
+      /* both in */
+      var mp = dnPicks(e, m), tp = dnPicks(e, o);
+      var both = mp.filter(function(id){ return id.indexOf("own:") !== 0 && tp.indexOf(id) >= 0; });
+      var days = (mine.days || []).filter(function(x){ return (theirs.days || []).indexOf(x) >= 0; });
+      function setDate(id){
+        var en = dnEntry(true); if(en.pick) return;
+        var wk = dnWeek(), today = todayISO(), due = null;
+        days.slice().sort().forEach(function(dw){ var ds = shiftISO(wk, dw); if(!due && ds >= today) due = ds; });
+        var task = {id: uid(), mtime: Date.now(), createdAt: Date.now(), title: "Date night: " + dnLabel(id, en), assignedTo: "both", difficulty: "medium", status: "open",
+          createdMonth: monthKey(), completedBy: null, completedAt: null, repeat: "none", lastCompletedAt: null, listId: "list-todo",
+          link: null, unitPrice: 0, currency: "USD", quantity: 1, alternatives: []};
+        if(due) task.dueDate = due;
+        state.tasks.push(task);
+        try{ var mk2 = monthKey(); if(!state.monthly[mk2]) state.monthly[mk2] = {assigned: 0, completed: 0, badgeAwarded: false}; state.monthly[mk2].assigned++; }catch(x){}
+        en.pick = {id: id, by: m, at: new Date().toISOString()}; en.taskId = task.id;
+        if(!dnSave()){ toast("Couldn’t save that. Try again."); return; }
+        try{ announce('set date night: "' + dnLabel(id, en) + '"'); }catch(x){}
+        renderAll();
+        try{ fireworks("together"); }catch(x){}
+        toast("It’s a date. On the line for both of you.");
+      }
+      var dayLine = days.length ? "You are both free " + days.map(function(x){ return DN_DAYS[x]; }).join(", ") + "." : "No evening in common yet, so it goes on the list without a day.";
+      if(both.length){
+        dnCard.appendChild(mk("div", "", html + '<p class="dn-lead">You both picked</p>'));
+        both.forEach(function(id){
+          var b = mk("button", "dn-match", '<span>' + escapeHtml(dnLabel(id, e)) + '</span>' + CHEV); b.type = "button";
+          b.addEventListener("click", function(){ setDate(id); });
+          dnCard.appendChild(b);
+        });
+        dnCard.appendChild(mk("p", "dn-sub", escapeHtml(dayLine + " Tap one to make it the date.")));
+      } else {
+        dnCard.appendChild(mk("div", "", html + '<p class="dn-lead">No overlap this week.</p><p class="dn-sub">Here is what ' + escapeHtml(personName(o)) + ' picked. Say yes to one and it is the date. ' + escapeHtml(personName(o)) + ' sees yours the same way.</p>'));
+        tp.forEach(function(id){
+          var b = mk("button", "dn-match", '<span>' + escapeHtml(dnLabel(id, e)) + '</span>' + CHEV); b.type = "button";
+          b.addEventListener("click", function(){ setDate(id); });
+          dnCard.appendChild(b);
+        });
+        dnCard.appendChild(mk("p", "dn-sub", escapeHtml(dayLine)));
+      }
+    }
+    var _cr213b = candidateReminders;
+    candidateReminders = function(){
+      var out = _cr213b.apply(this, arguments) || [];
+      try{
+        var m = me(), e = dnEntry(false), now = new Date();
+        if(!e.pick && !e[m] && now.getDay() === 0 && now.getHours() >= 10){
+          out.push({kind: "save", key: "date-night-" + dnWeek(), urgency: 72, title: "Date night",
+            body: e[otherPerson(m)] ? personName(otherPerson(m)) + " has picked. Your three, and you both see the overlap." : "Pick three ideas for this week. " + personName(otherPerson(m)) + " picks too."});
+          out.sort(function(a, b){ return b.urgency - a.urgency; });
+        }
+      }catch(x){ warn("date reminder", x); }
+      return out;
+    };
+
+    /* ------------------------------ SUNDAY REWARD + POINTS ------------------------------
+       Moody: "Every week on Sunday too, it should say what's one reward you want this
+       week and the other person can approve and there should be some suggestions for
+       the rewards. Also hard tasks should have higher points and experiences should
+       have the highest."
+       The ask is the app's own (buildRewardAsk: it goes to the other person to approve,
+       three a month), given its own card under Date night with ideas to tap. It shows
+       from Sunday until you have asked or passed for the week.
+       Points: hard goes from 20 to 30. Experiences were already the highest at 100. */
+    try{ DIFF_POINTS.hard = 30; }catch(e){}
+    var RW_IDEAS = ["Breakfast in bed", "A night off cooking", "A 20-minute back rub", "You pick the film, no vetoes", "A lie-in, no alarms",
+                    "Dinner out, my choice", "One chore taken off me this week", "A phone-free evening together"];
+    var RW_SKIP = "us-w2-reward-skip-v1";
+    var rwCard = mk("div", "card w2-rw"); rwCard.id = "w2Reward";
+    if(dnCard.parentNode) dnCard.parentNode.insertBefore(rwCard, dnCard.nextSibling);
+    function rwRender(){
+      if(!rwCard.parentNode) return;
+      var m = me(), o = otherPerson(m), wk = dnWeek();
+      var asked = (state.rewardRequests || []).filter(function(r){ return r && r.proposedBy === m && String(r.date || "").slice(0, 10) >= wk; });
+      var theirs = (state.rewardRequests || []).filter(function(r){ return r && r.proposedBy === o; });
+      var skipped = false; try{ skipped = localStorage.getItem(RW_SKIP) === wk + "|" + m; }catch(e){}
+      var typing = rwCard.contains(document.activeElement) && document.activeElement.tagName === "INPUT";
+      if(typing) return;                       // never redraw under someone's thumbs
+      rwCard.innerHTML = ""; rwCard.style.display = "";
+      if(theirs.length){
+        var go = mk("button", "dn-match", '<span>' + escapeHtml(personName(o) + " asked for “" + theirs[theirs.length - 1].name + "”. Approve it under Us.") + '</span>' + CHEV);
+        go.type = "button"; go.addEventListener("click", function(){ goTab("rewards"); var rq = $("rewardRequestsCard"); if(rq) setTimeout(function(){ rq.scrollIntoView({block: "center"}); }, 450); });
+        rwCard.appendChild(mk("h2", "", "One reward this week")); rwCard.appendChild(go);
+      }
+      if(asked.length){
+        if(!theirs.length) rwCard.appendChild(mk("h2", "", "One reward this week"));
+        rwCard.appendChild(mk("p", "dn-sub", escapeHtml("You asked for “" + asked[asked.length - 1].name + "”. It goes on the wheel when " + personName(o) + " approves it.")));
+        return;
+      }
+      if(skipped || proposalsLeft(m) <= 0){ if(!theirs.length) rwCard.style.display = "none"; return; }
+      if(!theirs.length) rwCard.appendChild(mk("h2", "", "One reward this week"));
+      var host = mk("div", "rw-ask"); rwCard.appendChild(host);
+      buildRewardAsk(host, m, false);
+      var t = host.querySelector(".nudge-title"); if(t) t.textContent = "What’s one reward you want this week?";
+      var inp = host.querySelector('input[type="text"]');
+      var chips = mk("div", "dn-chips");
+      RW_IDEAS.forEach(function(idea){
+        var b = mk("button", "", escapeHtml(idea)); b.type = "button";
+        b.addEventListener("click", function(){ if(inp){ inp.value = idea; [].forEach.call(chips.children, function(c){ c.setAttribute("aria-pressed", String(c === b)); }); } });
+        chips.appendChild(b);
+      });
+      if(inp) inp.parentNode.insertBefore(chips, inp);
+      var btns = host.querySelectorAll("button.ghost");
+      [].forEach.call(btns, function(b){
+        if(/Not this week/.test(b.textContent)) b.addEventListener("click", function(){ try{ localStorage.setItem(RW_SKIP, wk + "|" + m); }catch(e){} setTimeout(rwRender, 50); });
+        if(/Propose it/.test(b.textContent)){ b.textContent = "Ask for it"; b.addEventListener("click", function(){ setTimeout(function(){ try{ save(); scheduleSync(); }catch(e){} rwRender(); }, 60); }); }
+      });
+    }
+
     /* ------------------------------ wiring ------------------------------ */
     var _ra213 = renderAll;
     renderAll = function(){
       var r = _ra213.apply(this, arguments);
       try{ overRender(); }catch(e){ warn("today", e); }
+      try{ dnRender(); }catch(e){ warn("date night", e); }
+      try{ rwRender(); }catch(e){ warn("reward ask", e); }
       bookSoon();
       return r;
     };
@@ -29158,10 +29391,11 @@ body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.
 .w2-line::before{ content:""; position:absolute; top:0; bottom:0; left:50%; width:4px; margin-left:-2px; background:linear-gradient(90deg, var(--moody) 50%, var(--rae) 50%); z-index:0; }
 .w2-heads{ position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; }
 .w2-heads > div{ padding:0 16px; min-width:0; }
-.w2-heads > div + div{ text-align:right; }
-.w2-heads .nm{ display:inline-block; max-width:100%; padding:3px 12px 6px; border-radius:999px; color:var(--w2-ink); font-family:var(--display); font-weight:400; font-size:1.375rem; line-height:1.1; letter-spacing:-.02em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:top; }
+.w2-heads > div{ text-align:center; }
+.w2-heads .nm{ display:inline-flex; align-items:center; gap:8px; max-width:100%; padding:4px 6px 6px 16px; border-radius:999px; color:var(--w2-ink); font-family:var(--display); font-weight:400; font-size:1.375rem; line-height:1.1; letter-spacing:-.02em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:top; }
 .w2-heads > div:first-child .nm{ background:var(--moody); } .w2-heads > div + div .nm{ background:var(--rae); }
-.w2-heads .ct{ margin-top:7px; padding:0 2px; font:500 .75rem/1.2 var(--mono); color:var(--muted); }
+.w2-heads .nm span{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.w2-heads .ct{ flex:none; min-width:28px; height:28px; padding:0 8px; border-radius:999px; display:grid; place-items:center; margin-top:2px; background:var(--w2-ink); color:#fff; font:500 .8125rem/1 var(--mono); }
 .w2-cols{ position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; margin-top:16px; }
 .w2-col{ padding:0 8px; display:grid; gap:8px; align-content:start; min-width:0; min-height:64px; }
 .w2-chip{ position:relative; display:flex; align-items:flex-start; background:var(--card); border-radius:16px; padding:2px 10px 2px 11px; min-width:0;
@@ -29202,7 +29436,7 @@ body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.
 .w2-exp.soon{ color:var(--text); }   /* a warning is ink, by the colour law; red stays for overdue */
 .won-row.st-expired{ opacity:.62; }
 .won-row.st-expired .wr-name{ text-decoration:line-through; }
-.w2-rule{ margin:10px 0 2px; font:500 .75rem/1.45 var(--ui); color:var(--muted); }
+.w2-rule{ margin:8px 0; font:400 .875rem/1.5 var(--ui); color:var(--muted); }
 
 /* ---------- Memories: the flip book ---------- */
 .w2-cover{ display:flex; align-items:center; gap:16px; width:100%; margin:0 0 16px; padding:16px; border-radius:24px; border:0; cursor:pointer; text-align:left;
@@ -29285,8 +29519,8 @@ body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.
 .w2m .num{ display:block; font-variant-numeric:lining-nums; font-family:var(--display); font-weight:400; font-style:normal; font-size:clamp(6rem, 34vw, 9.5rem); line-height:.9; letter-spacing:-.05em; }
 .w2m .num.long{ font-size:clamp(3rem, 15vw, 4.75rem); letter-spacing:-.04em; line-height:1; text-wrap:balance; }
 .w2m .sub{ display:block; margin-top:16px; font:600 1.0625rem/1.3 var(--ui); font-style:normal; animation:w2m-up .3s cubic-bezier(.16,1,.3,1) .34s both; }
-.w2m .q{ display:block; margin:18px auto 0; max-width:19rem; font:400 1rem/1.35 var(--display); color:rgba(255,255,255,.88); animation:w2m-up .3s cubic-bezier(.16,1,.3,1) .62s both; }
-.w2m .q em{ display:block; margin-top:6px; font:500 .75rem/1.3 var(--mono); font-style:normal; }
+.w2m .q{ display:block; margin:24px auto 0; max-width:20rem; font:400 1.375rem/1.25 var(--display); letter-spacing:-.01em; color:rgba(255,255,255,.88); animation:w2m-up .3s cubic-bezier(.16,1,.3,1) .62s both; }
+.w2m .q em{ display:block; margin-top:10px; font:500 .75rem/1.3 var(--mono); font-style:normal; }
 .w2m i{ position:absolute; display:block; }
 
 /* 1 SLAM */
@@ -29300,8 +29534,9 @@ body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.
 .w2m.v-rays .rays{ left:50%; top:50%; width:116vmax; height:116vmax; margin:-58vmax 0 0 -58vmax; z-index:1;
   background:repeating-conic-gradient(from 0deg, rgba(195,168,240,.26) 0 7.5deg, transparent 7.5deg 15deg, rgba(255,111,88,.26) 15deg 22.5deg, transparent 22.5deg 30deg);
   animation:w2m-spin var(--life) linear both; }
-.w2m.v-rays .disc{ position:relative; display:grid; place-items:center; width:92px; height:92px; margin:0 auto 18px; border-radius:50%; background:#61E000; color:#123400; animation:w2m-pop .44s cubic-bezier(.2,1.4,.3,1) .06s both; }
-.w2m.v-rays .disc svg{ width:46px; height:46px; }
+.w2m .disc{ position:relative; display:grid; place-items:center; width:84px; height:84px; margin:0 auto 16px; border-radius:50%; background:#61E000; color:#123400; box-shadow:0 0 0 6px rgba(97,224,0,.22); animation:w2m-pop .44s cubic-bezier(.2,1.4,.3,1) .06s both; }
+.w2m .disc svg{ width:44px; height:44px; }
+.w2m.tap{ pointer-events:auto; cursor:pointer; }
 .w2m.v-rays .num{ font-size:clamp(4.5rem, 26vw, 7rem); animation:w2m-slam .46s cubic-bezier(.2,1.2,.3,1) .16s both; }
 
 /* 3 STACK */
@@ -29312,6 +29547,8 @@ body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.
 .w2m.v-stack .row.mid{ color:#61E000; -webkit-text-stroke:0; }
 .w2m.v-stack .say{ align-self:end; padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
 .w2m.v-stack .num{ display:none; }
+.w2m.v-stack .disc{ display:none; }
+.w2m.v-stack .row.mid::before{ content:""; display:inline-block; width:.62em; height:.62em; margin-right:.14em; border-radius:50%; background:#61E000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23123400' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 7 10 16l-5-5'/%3E%3C/svg%3E") center/64% no-repeat; vertical-align:-.04em; -webkit-text-stroke:0; }
 .w2m.v-stack .sub, .w2m.v-stack .q{ display:inline-block; padding:6px 12px; border-radius:12px; background:#120E14; }
 
 /* 4 MEET */
@@ -29330,13 +29567,83 @@ body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.
 @keyframes w2m-ring{ from{ opacity:1; transform:scale(.2); } to{ opacity:0; transform:scale(8); } }
 @keyframes w2m-grow{ from{ transform:scaleX(0); } to{ transform:none; } }
 @keyframes w2m-spin{ from{ opacity:0; transform:rotate(0deg) scale(.86); } 12%{ opacity:1; } to{ opacity:1; transform:rotate(52deg) scale(1.08); } }
-@keyframes w2m-pop{ from{ opacity:0; transform:scale(0); } to{ opacity:1; transform:none; } }
+@keyframes w2m-pop{ from{ opacity:0; transform:scale(.6); } to{ opacity:1; transform:none; } }
 @keyframes w2m-rowl{ from{ opacity:0; transform:translateX(-46%); } to{ opacity:1; transform:none; } }
 @keyframes w2m-rowr{ from{ opacity:0; transform:translateX(46%); } to{ opacity:1; transform:none; } }
 @keyframes w2m-pa{ from{ transform:translateX(-101%); } to{ transform:none; } }
 @keyframes w2m-pb{ from{ transform:translateX(101%); } to{ transform:none; } }
 @keyframes w2m-seam{ 0%{ opacity:1; transform:scaleY(0); } 40%{ opacity:1; transform:none; } 100%{ opacity:0; transform:scaleX(5); } }
 @media (prefers-reduced-motion:reduce){ .w2m, .w2-conf{ display:none !important; } }
+
+/* ---------- the daily photo leads Today ----------
+   The ring on "Add today's photo" is HorizonX's Halo Button (exported through the
+   connector; ported there from uiverse.io/zaby_4213/tough-lionfish-7, MIT License).
+   Mechanism kept: a conic gradient turned by a registered angle, covered by the face
+   so only a hairline shows. Surface: the logo's three colours. */
+@property --hlb-angle{ syntax:'<angle>'; initial-value:0deg; inherits:false; }
+@keyframes hlb-turn{ to{ --hlb-angle:360deg; } }
+#w2Over .w2-shot{ filter:blur(16px) saturate(1.15); transform:scale(1.18); }
+#w2Over.nophoto .w2-shot{ filter:none; transform:none; }
+#w2Over .w2-hello{ font-size:1.75rem; line-height:1.05; margin:16px 16px 0; }
+#w2Over #duoRow{ position:relative; display:flex !important; align-items:flex-start; justify-content:center; gap:8px !important; margin:16px 16px 0 !important; padding:0 !important; width:auto !important; }
+#w2Over #duoRow .duo-slot{ flex:1 1 0; min-width:0; width:auto !important; max-width:none !important; height:auto !important; display:flex; flex-direction:column; align-items:stretch; padding:0 !important; margin:0 !important; border:0 !important; background:none !important; box-shadow:none !important; color:#fff; text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent; transform:none !important; }
+#w2Over #duoRow .duo-frame{ position:relative; width:100% !important; height:auto !important; aspect-ratio:4 / 5; border-radius:16px !important; overflow:hidden; display:grid; place-items:center; background:rgba(18,18,30,.55) !important; border:2px solid #C3A8F0 !important; box-shadow:0 16px 24px -16px rgba(0,0,0,.6) !important; }
+#w2Over #duoRow .duo-slot.p2 .duo-frame{ border-color:#FF6F58 !important; }
+#w2Over #duoRow .duo-frame img{ width:100% !important; height:100% !important; object-fit:cover; display:block; border-radius:0 !important; }
+#w2Over #duoRow .duo-empty{ display:block; padding:8px; text-align:center; font:600 .8125rem/1.25 var(--ui) !important; letter-spacing:0 !important; text-transform:none !important; color:rgba(255,255,255,.86) !important; }
+#w2Over #duoRow .duo-empty .plus{ display:none; }
+#w2Over #duoRow .duo-name{ margin:8px 0 0 !important; font:600 .875rem/1.2 var(--ui) !important; letter-spacing:0 !important; text-transform:none !important; color:#fff !important; text-align:left; }
+#w2Over #duoRow .duo-when{ margin:4px 0 0 !important; font:500 .75rem/1.2 var(--mono) !important; letter-spacing:0 !important; text-transform:none !important; color:rgba(255,255,255,.82) !important; text-align:left; }
+#w2Over #duoRow .duo-heart{ position:absolute !important; left:50%; top:calc((100% - 44px) * .42); translate:-50% -50%; z-index:2; width:44px !important; height:44px !important; margin:0 !important; padding:0 !important; border:0 !important; border-radius:50% !important; background:rgba(18,18,30,.78) !important; display:grid; place-items:center; }
+#w2Over[data-me="p1"].needphoto #duoRow .duo-slot.p1 .duo-empty,
+#w2Over[data-me="p2"].needphoto #duoRow .duo-slot.p2 .duo-empty{
+  position:relative; isolation:isolate; display:inline-flex; align-items:center; justify-content:center; min-height:48px; max-width:calc(100% - 16px); padding:8px 14px; border-radius:24px; color:#1A1220 !important; }
+#w2Over[data-me="p1"].needphoto #duoRow .duo-slot.p1 .duo-empty::before,
+#w2Over[data-me="p2"].needphoto #duoRow .duo-slot.p2 .duo-empty::before{ content:""; position:absolute; z-index:-2; inset:-3px; border-radius:27px;
+  background:conic-gradient(from var(--hlb-angle), #C3A8F0 0deg, #FF6F58 110deg, #61E000 200deg, #C3A8F0 280deg, #FF6F58 360deg); animation:hlb-turn 4s linear infinite; }
+#w2Over[data-me="p1"].needphoto #duoRow .duo-slot.p1 .duo-empty::after,
+#w2Over[data-me="p2"].needphoto #duoRow .duo-slot.p2 .duo-empty::after{ content:""; position:absolute; z-index:-1; inset:0; border-radius:24px; background:#fff; }
+#w2Over #duoRow .duo-slot:focus-visible .duo-frame{ outline:2px solid #fff; outline-offset:2px; }
+@media (prefers-reduced-motion:reduce){ #w2Over #duoRow .duo-empty::before{ animation:none !important; } }
+
+/* ---------- text under the two photos: on the dark card, so it can be read ---------- */
+#w2Over #duoRow .duo-slot *{ opacity:1 !important; }
+#w2Over #duoRow .duo-slot > *:not(.duo-frame), #w2Over #duoRow .duo-slot > *:not(.duo-frame) *{ color:rgba(255,255,255,.9) !important; text-align:left !important; }
+#w2Over #duoRow .duo-slot > *:not(.duo-frame):not(.duo-name):not(.duo-when){ margin-top:6px !important; font-size:.8125rem !important; line-height:1.35 !important; letter-spacing:0 !important; text-transform:none !important; }
+#w2Over #duoRow .duo-slot > .duo-name{ color:#fff !important; }
+
+/* ---------- date night replaces This week ---------- */
+:root[data-w2] #weekCard{ display:none !important; }
+.w2-date h2{ margin:0 0 8px; }
+.w2-date .dn-lead{ margin:0; font:600 1rem/1.3 var(--ui); color:var(--text); }
+.w2-date .dn-big{ margin:8px 0 0; font-family:var(--display); font-size:1.75rem; line-height:1.05; letter-spacing:-.02em; color:var(--text); text-wrap:balance; }
+.w2-date .dn-sub{ margin:8px 0 0; font:400 1rem/1.5 var(--ui); color:var(--muted); }
+.w2-date .dn-q{ margin:16px 0 0; font:600 .875rem/1.3 var(--ui); color:var(--text); }
+.w2-date .dn-chips, .w2-date .dn-days{ display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.w2-date .dn-days{ margin-top:8px; }
+.w2-date .dn-chips button, .w2-date .dn-days button{ min-height:44px; padding:8px 14px; border-radius:999px; border:1.5px solid var(--line-2, var(--line)); background:none; color:var(--text); font:500 .875rem/1.2 var(--ui); text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background 150ms ease-out, transform 100ms ease-out; }
+.w2-date .dn-days button{ min-width:44px; padding:8px 0; flex:1; text-align:center; }
+.w2-date .dn-chips button:active, .w2-date .dn-days button:active{ transform:scale(.97); }
+.w2-date button[aria-pressed="true"]{ border-color:transparent; background:var(--w2-blend); color:var(--w2-ink); font-weight:600; }
+.w2-date .dn-own{ display:block; width:100%; margin-top:8px; min-height:48px; padding:0 16px; border-radius:16px; border:1.5px solid var(--line-2, var(--line)); background:var(--card); color:var(--text); font:500 1rem/1 var(--ui); }
+.w2-date .dn-go{ display:block; width:100%; min-height:48px; margin-top:16px; }
+.w2-date .dn-go:disabled{ opacity:.45; }
+.w2-date .dn-match{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:56px; margin-top:8px; padding:8px 16px; border-radius:16px; border:2px solid transparent; background:linear-gradient(var(--card), var(--card)) padding-box, var(--w2-blend) border-box; color:var(--text); font:600 1rem/1.25 var(--ui); text-align:left; cursor:pointer; }
+.w2-date .dn-match svg{ flex:none; width:16px; height:16px; color:var(--muted); }
+.w2-date button:focus-visible, .w2-date input:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+
+/* ---------- one reward this week ---------- */
+.w2-rw h2{ margin:0 0 8px; }
+.w2-rw .nudge-blk{ padding:0; margin:0; border:0; }
+.w2-rw .nudge-title{ font:600 1rem/1.3 var(--ui); color:var(--text); }
+.w2-rw .nudge-title svg{ display:none; }
+.w2-rw .nudge-sub{ margin-top:8px; font:400 1rem/1.5 var(--ui); color:var(--muted); }
+.w2-rw .dn-chips{ margin:16px 0 8px; }
+.w2-rw .dn-chips button{ min-height:44px; padding:8px 14px; border-radius:999px; border:1.5px solid var(--line-2, var(--line)); background:none; color:var(--text); font:500 .875rem/1.2 var(--ui); cursor:pointer; }
+.w2-rw .dn-chips button[aria-pressed="true"]{ border-color:transparent; background:var(--w2-blend); color:var(--w2-ink); font-weight:600; }
+.w2-rw .dn-match{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:56px; margin:0 0 16px; padding:8px 16px; border-radius:16px; border:2px solid transparent; background:linear-gradient(var(--card), var(--card)) padding-box, var(--w2-blend) border-box; color:var(--text); font:600 .9375rem/1.3 var(--ui); text-align:left; cursor:pointer; }
+.w2-rw .dn-match svg{ flex:none; width:16px; height:16px; color:var(--muted); }
+.w2-rw .dn-sub{ margin:0; font:400 1rem/1.5 var(--ui); color:var(--muted); }
 
 /* cream mode: every rule that set words in a brand colour, set in ink instead */
 html:root[data-w2][data-mode="light"] .brand-word .bw-red{ color:var(--text); }
