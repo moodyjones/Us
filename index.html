@@ -12937,6 +12937,12 @@
         var pa = x.pick, pb = y.pick; if(pa || pb){ var first = (pa && pb) ? (String(pa.at || '') <= String(pb.at || '') ? x : y) : (pa ? x : y); e.pick = first.pick; e.taskId = first.taskId; }
         out[k] = e; }
       if(Object.keys(out).length) m.dateNight = out; })();
+    /* BUILD 213: monthly records. The plaque is kept from whichever phone pressed it; who has been paid is the union, so nobody is paid twice. */
+    (function(){ var a = L.plaques || {}, b = R.plaques || {}, out = {}, k, ks = {}; for(k in a) ks[k] = 1; for(k in b) ks[k] = 1;
+      for(k in ks){ var x = a[k], y = b[k], e = {tier: (x || y).tier, done: (x || y).done, paid: {}}, w;
+        for(w in ((x || {}).paid || {})) e.paid[w] = x.paid[w]; for(w in ((y || {}).paid || {})) if(!e.paid[w]) e.paid[w] = y.paid[w];
+        out[k] = e; }
+      if(Object.keys(out).length) m.plaques = out; })();
     // Whichever phone has already rolled the month wins: expiry must not un-happen because
     // the other phone hasn't opened yet and still thinks it's last month.
     m.spinPeriod = (String(L.spinPeriod||"") > String(R.spinPeriod||"")) ? L.spinPeriod : (R.spinPeriod || L.spinPeriod || null);
@@ -28183,7 +28189,11 @@
       else line = "Nothing due today. " + dayName + " is yours.";
       var ph = heroPhoto();
       var st = ((state.streaks || {})[m] || {}).current || 0;
-      over.className = (ph ? "" : "nophoto") + (needPhoto ? " needphoto" : "");
+      /* Moody: the photo filling the card "looked good... but I don't want it like this
+         every day, maybe every 2 days so it keeps things interesting." Odd days: the
+         photo fills the card and the two slots sit below it. Even days: the slots lead. */
+      var full = !!ph && (Math.floor(Date.parse(today + "T12:00:00") / 86400000) % 2 === 1);
+      over.className = (ph ? "" : "nophoto") + (needPhoto ? " needphoto" : "") + (full ? " full" : "");
       over.setAttribute("data-me", m);
       if(duo && duo.parentNode === over) over.removeChild(duo);
       over.innerHTML = "";
@@ -28194,9 +28204,12 @@
       var capText = ph ? ph.cap : (st >= 2 ? st + "-day streak" : "");
       if(capText) top.appendChild(mk("span", "", escapeHtml(capText)));
       over.appendChild(top);
-      if(duo) over.appendChild(duo);
+      if(duo){
+        if(full){ if(over.nextSibling !== duo) over.parentNode.insertBefore(duo, over.nextSibling); }
+        else over.appendChild(duo);
+      }
       over.appendChild(mk("h2", "w2-hello", escapeHtml(line)));
-      if(!ph && !duo){
+      if((full && needPhoto) || (!ph && !duo)){
         var add = mk("button", "w2-addshot", "Add today’s photo"); add.type = "button";
         add.addEventListener("click", function(){
           var slot = document.querySelector("#duoRow .duo-slot.p" + (m === pid(1) ? "2" : "1")) || document.querySelector("#duoRow .duo-slot");
@@ -28207,7 +28220,7 @@
       var glass = mk("div", "w2-glass");
       if(doneToday > 0 && n > 0){
         var tot = doneToday + n;
-        glass.appendChild(mk("div", "w2-prog", '<span>' + doneToday + ' of ' + tot + ' crossed off</span><i><b style="transform:scaleX(' + (doneToday / tot).toFixed(3) + ')"></b></i>'));
+        glass.appendChild(mk("div", "w2-prog", '<span><i class="w2-tick" aria-hidden="true"></i>' + doneToday + ' of ' + tot + ' crossed off</span><i><b style="transform:scaleX(' + (doneToday / tot).toFixed(3) + ')"></b></i>'));
       }
       var rows = d.mine.concat(d.both, d.theirs).slice(0, 4);
       rows.forEach(function(t){
@@ -28232,6 +28245,8 @@
         all.type = "button"; all.addEventListener("click", function(){ goTab("tasks"); });
         glass.appendChild(all);
       }
+      /* photo days: the headline sits on the glass so nothing is printed over the photo */
+      if(full){ var hh = over.querySelector(".w2-hello"); if(hh) glass.insertBefore(hh, glass.firstChild); }
       over.appendChild(glass);
     }
 
@@ -28624,6 +28639,10 @@
       if(sg && (sg.title || sg.name)){
         foot.appendChild(mk("div", "song", NOTE + "<span>" + escapeHtml((sg.title || sg.name) + (sg.artist ? ", " + sg.artist : "")) + "</span>"));
       }
+      try{
+        expsOn(ds).forEach(function(t){ foot.appendChild(mk("div", "got", '<i class="w2-tick" aria-hidden="true"></i>' + escapeHtml("You did: " + t.title))); });
+        milestonesList().forEach(function(ms){ if(String(ms.at || "").slice(0, 10) === ds) foot.appendChild(mk("div", "got", '<i class="w2-tick" aria-hidden="true"></i>' + escapeHtml("Milestone: " + ms.label))); });
+      }catch(e){}
       if(foot.firstChild) pg.appendChild(foot);
       return pg;
     }
@@ -28664,6 +28683,48 @@
         '<span><b>' + bk.days.length + '</b>' + (bk.days.length === 1 ? "day" : "days") + '</span>' +
         '<span><b>' + photos + '</b>' + (photos === 1 ? "photo" : "photos") + '</span>' +
         (both ? '<span><b>' + both + '</b>with both of you</span>' : "")));
+      /* everything you did and hit this month, including days with no photo page */
+      try{
+        var did = expsOn(bk.mk).map(function(t){ return t.title; })
+          .concat(milestonesList().filter(function(ms){ return String(ms.at || "").slice(0, 7) === bk.mk; }).map(function(ms){ return ms.label; }));
+        if(did.length){
+          var dl = mk("div", "did", '<p>This month you did</p>');
+          did.slice(0, 6).forEach(function(x){ dl.appendChild(mk("div", "got", '<i class="w2-tick" aria-hidden="true"></i>' + escapeHtml(x))); });
+          pg.appendChild(dl);
+        }
+      }catch(e){ warn("did", e); }
+      /* Moody: "end of month, we can add any missing photos to complete the book."
+         In the last three days of a month, and for any month already over, the closing
+         page lists the days you have no photo for; a tap adds one to that day. */
+      try{
+        var m = me(), isPast = bk.mk < monthKeyNow(), last = isPast ? daysInMonth(bk.mk) : parseInt(todayISO().slice(8, 10), 10);
+        if(isPast || daysLeftInMonth() <= 3){
+          var gaps = [];
+          for(var dn = 1; dn <= last; dn++){
+            var ds = bk.mk + "-" + (dn < 10 ? "0" + dn : String(dn));
+            if(!(((state.album || {})[ds] || {})[m] || {}).photo) gaps.push(ds);
+          }
+          if(gaps.length){
+            var box = mk("div", "gaps", '<p>' + gaps.length + (gaps.length === 1 ? " day has" : " days have") + ' no photo from you. Add one to complete the book.</p>');
+            gaps.slice(0, 8).forEach(function(ds){
+              var b = mk("button", "", escapeHtml(dayOf(ds, {day: "numeric", month: "short"}))); b.type = "button";
+              b.addEventListener("click", function(ev){
+                ev.stopPropagation();
+                openFilePicker("image/*", function(f){
+                  readAndCompress(f, function(dataUrl){
+                    albumRecord(m, dataUrl, ds);
+                    try{ save(); scheduleSync(); }catch(e){}
+                    renderAll(); bk.days = bookDays(bk.mk); bkShow(Math.max(0, bk.days.indexOf(ds)), 0);
+                    toast("Added to " + dayOf(ds, {day: "numeric", month: "long"}) + ".");
+                  });
+                });
+              });
+              box.appendChild(b);
+            });
+            pg.appendChild(box);
+          }
+        }
+      }catch(e){ warn("gaps", e); }
       pg.appendChild(mk("div", "foot", '<div class="by">Tap the right side to start again.</div>'));
       return pg;
     }
@@ -28967,7 +29028,7 @@
       }
       if(e.pick){
         var t = (state.tasks || []).filter(function(x){ return x.id === e.taskId; })[0];
-        dnCard.appendChild(mk("div", "", html + '<p class="dn-lead">It’s a date.</p><p class="dn-big">' + escapeHtml(dnLabel(e.pick.id, e)) + '</p>' +
+        dnCard.appendChild(mk("div", "", html + '<p class="dn-lead"><i class="w2-tick" aria-hidden="true"></i>It’s a date.</p><p class="dn-big">' + escapeHtml(dnLabel(e.pick.id, e)) + '</p>' +
           '<p class="dn-sub">' + escapeHtml(t && t.dueDate ? dayOf(t.dueDate, {weekday: "long", day: "numeric", month: "short"}) + ". It is on the line as a shared task." : "It is on the list as a shared task.") + '</p>'));
         return;
       }
@@ -29005,7 +29066,7 @@
         return;
       }
       if(!theirs){
-        dnCard.appendChild(mk("div", "", html + '<p class="dn-lead">Your picks are in.</p><p class="dn-sub">Waiting on ' + escapeHtml(personName(o)) + '. You will both see the overlap the moment theirs land.</p>'));
+        dnCard.appendChild(mk("div", "", html + '<p class="dn-lead"><i class="w2-tick" aria-hidden="true"></i>Your picks are in.</p><p class="dn-sub">Waiting on ' + escapeHtml(personName(o)) + '. You will both see the overlap the moment theirs land.</p>'));
         var ch = mk("button", "ghost dn-go", "Change my picks"); ch.type = "button";
         ch.addEventListener("click", function(){ dnDraft = {picks: (mine.picks || []).slice(), own: mine.own || "", days: (mine.days || []).slice()}; dnRender(); });
         dnCard.appendChild(ch);
@@ -29096,7 +29157,7 @@
       }
       if(asked.length){
         if(!theirs.length) rwCard.appendChild(mk("h2", "", "One reward this week"));
-        rwCard.appendChild(mk("p", "dn-sub", escapeHtml("You asked for “" + asked[asked.length - 1].name + "”. It goes on the wheel when " + personName(o) + " approves it.")));
+        rwCard.appendChild(mk("p", "dn-sub", '<i class="w2-tick" aria-hidden="true"></i>' + escapeHtml("You asked for “" + asked[asked.length - 1].name + "”. It goes on the wheel when " + personName(o) + " approves it.")));
         return;
       }
       if(skipped || proposalsLeft(m) <= 0){ if(!theirs.length) rwCard.style.display = "none"; return; }
@@ -29120,6 +29181,155 @@
     }
 
     /* ------------------------------ wiring ------------------------------ */
+
+    /* =====================================================================
+       THE DRAW  (the wheel, without the casino)
+       Moody: "why does it say payline... the whole design feels corporate and less
+       fun". The mechanic is unchanged; the stage is the two of you side by side and
+       the prize lands on a cream ticket. The stage moves while it spins and pops
+       when it lands.
+       ===================================================================== */
+    (function(){
+      var btn = document.getElementById("spinBtn"), cab = document.querySelector(".cab");
+      if(!btn || !cab) return;
+      btn.addEventListener("click", function(){
+        var strip = document.getElementById("reelStrip");
+        if(!strip || !/4s/.test(strip.style.transition || "")) return;   /* the app did not start a spin */
+        cab.classList.remove("w2-landed"); cab.classList.add("w2-going");
+        setTimeout(function(){ cab.classList.remove("w2-going"); cab.classList.add("w2-landed"); }, 4000);
+        setTimeout(function(){ cab.classList.remove("w2-landed"); }, 6500);
+      });
+    })();
+
+    /* =====================================================================
+       THE RECORD  (monthly recap, second pass)
+       Every month is pressed as a record. It is certified against your own
+       history, not a fixed bar: Gold for a real month, Platinum for beating your
+       usual, Diamond for your best yet. Platinum and Diamond pay spins. The
+       tracklist is read out of data the app already holds.
+       ===================================================================== */
+    var CERT = {
+      diamond:  {name: "Diamond",  spins: 2, why: "your best month yet"},
+      platinum: {name: "Platinum", spins: 1, why: "more than your usual month"},
+      gold:     {name: "Gold",     spins: 0, why: "a real month of getting things done"},
+      demo:     {name: "Demo",     spins: 0, why: "a quiet one"}
+    };
+    function certFor(mkey, st){
+      var n = st.done.length, prior = recapMonthKeys().filter(function(k){ return k < mkey; })
+        .map(function(k){ return monthStatsFor(k).done.length; }).filter(function(x){ return x > 0; });
+      var best = prior.length ? Math.max.apply(null, prior) : 0;
+      var usual = prior.length ? prior.reduce(function(a, b){ return a + b; }, 0) / prior.length : 0;
+      if(prior.length >= 2 && n > best && n >= 10) return "diamond";
+      if(prior.length ? (n > usual && n >= 10) : n >= 20) return "platinum";
+      if(n >= 10) return "gold";
+      return "demo";
+    }
+    /* experiences finished on a day ("2026-11-27") or in a month ("2026-11") */
+    function expsOn(prefix){
+      return (state.tasks || []).filter(function(t){
+        return t.status === "done" && String(t.completedAt || "").slice(0, prefix.length) === prefix && (listById(t.listId) || {}).experienceBased;
+      });
+    }
+    function recTracks(mkey, st){
+      var A = st.people[0], B = st.people[1], pa = st.per[A.id], pb = st.per[B.id], out = [];
+      function add(title, fact){ out.push({t: title, f: fact}); }
+      var n = st.done.length, WD = ["Sundays","Mondays","Tuesdays","Wednesdays","Thursdays","Fridays","Saturdays"];
+      /* the weekday things get done on */
+      var wd = [0,0,0,0,0,0,0], byDay = {}, who = {}, hours = {};
+      st.done.forEach(function(t){
+        var d = new Date(t.completedAt); if(isNaN(d)) return;
+        wd[d.getDay()]++;
+        var iso = String(t.completedAt).slice(0, 10); byDay[iso] = 1;
+        var by = t.completedBy; if(by){ (who[iso] = who[iso] || {})[by] = 1; (hours[by] = hours[by] || []).push(d.getHours()); }
+      });
+      var top = wd.indexOf(Math.max.apply(null, wd));
+      if(n >= 6 && wd[top] >= 3) add("Your day", WD[top] + ". " + wd[top] + " of " + n + " things happened on one.");
+      /* days you both crossed something off */
+      var step = Object.keys(who).filter(function(d){ return who[d][A.id] && who[d][B.id]; }).length;
+      if(step >= 2) add("In step", step + " days you both crossed something off.");
+      /* longest run of days with something done */
+      var run = 0, bestRun = 0;
+      for(var dn = 1; dn <= st.days; dn++){
+        if(byDay[mkey + "-" + (dn < 10 ? "0" + dn : dn)]){ run++; if(run > bestRun) bestRun = run; } else run = 0;
+      }
+      if(bestRun >= 3) add("The long run", bestRun + " days in a row with something done.");
+      var fo = pa.forOther + pb.forOther;
+      if(fo) add("For each other", fo + (fo === 1 ? " thing" : " things") + " done off the other’s list.");
+      var dates = Object.keys(state.dateNight || {}).filter(function(k){ var e = state.dateNight[k]; return e && e.pick && k.slice(0, 7) === mkey; }).length;
+      if(st.exps.length || dates) add("Out of the house", [st.exps.length ? st.exps.length + (st.exps.length === 1 ? " experience" : " experiences") : "", dates ? dates + (dates === 1 ? " date night set" : " date nights set") : ""].filter(Boolean).join(", ") + ".");
+      if(st.bothDays >= 2) add("Both in frame", st.bothDays + " of " + st.days + " days with a photo from each of you.");
+      var hard = st.done.filter(function(t){ return t.difficulty === "hard"; }).length;
+      if(hard) add("Hard mode", hard + (hard === 1 ? " hard one" : " hard ones") + " crossed off.");
+      /* when each of you gets things done */
+      function clock(h){ return (h % 12 || 12) + (h < 12 ? " am" : " pm"); }
+      function median(a){ a = a.slice().sort(function(x, y){ return x - y; }); return a[Math.floor(a.length / 2)]; }
+      var ha = hours[A.id] || [], hb = hours[B.id] || [];
+      if(ha.length >= 3 && hb.length >= 3) add("Body clocks", A.name + " crosses things off around " + clock(median(ha)) + ", " + B.name + " around " + clock(median(hb)) + ".");
+      if(st.worst) add("The one that got away", st.worst.task.title + ", " + st.worst.n + " times.");
+      return out.slice(0, 8);
+    }
+    function recDare(st){
+      var miss = st.days - st.bothDays;
+      if(st.photoDays && miss > 5) return "Next month’s dare: " + Math.min(st.days, st.bothDays + 5) + " days with both of you in frame. This month was " + st.bothDays + ".";
+      if(!st.exps.length) return "Next month’s dare: one experience, out of the house, phones away.";
+      return "Next month’s dare: beat " + st.done.length + " things.";
+    }
+    function recordRender(mkey){
+      var body = document.getElementById("recapBody"); if(!body) return;
+      var old = body.querySelector(".w2-rec"); if(old) old.remove();
+      var st = monthStatsFor(mkey); if(!st.done.length && !st.photoDays) return;
+      var over = mkey < monthKeyNow(), tier = certFor(mkey, st), c = CERT[tier], month = monthName(mkey).split(" ")[0];
+      var box = mk("section", "w2-rec is-" + tier);
+      var head = tier === "demo" ? month + " stayed a demo." : month + " went " + c.name + ".";
+      if(!over) head = month + " so far: " + (tier === "demo" ? "still a demo." : "heading for " + c.name + ".");
+      var html = '<div class="disc" aria-hidden="true"><i></i></div>' +
+        '<p class="eyebrow">The record</p><h3>' + escapeHtml(head) + '</h3>' +
+        '<p class="why">' + st.done.length + (st.done.length === 1 ? " thing" : " things") + " done between you — " + c.why + ".</p>";
+      /* the payout: once, for the month that just ended, to each person on their own phone */
+      if(over && c.spins){
+        state.plaques = state.plaques || {};
+        var pl = state.plaques[mkey] = state.plaques[mkey] || {tier: tier, done: st.done.length, paid: {}};
+        pl.paid = pl.paid || {};
+        var m = me();
+        if(mkey === prevMonthKey(monthKeyNow()) && !pl.paid[m] && state.points && state.points[m]){
+          state.points[m].spinsAvailable = (state.points[m].spinsAvailable || 0) + c.spins;
+          pl.paid[m] = todayISO();
+          try{ save(); scheduleSync(); }catch(e){}
+        }
+        html += '<p class="pay">' + (pl.paid[m] ? '<i class="w2-tick" aria-hidden="true"></i>' : "") + escapeHtml(c.name + " pays " + c.spins + (c.spins === 1 ? " spin" : " spins") + " each" + (pl.paid[m] ? ". Yours is on the wheel." : ".")) + '</p>';
+      } else if(over && tier !== "demo"){
+        state.plaques = state.plaques || {};
+        if(!state.plaques[mkey]){ state.plaques[mkey] = {tier: tier, done: st.done.length, paid: {}}; try{ save(); scheduleSync(); }catch(e){} }
+      }
+      var tr = recTracks(mkey, st);
+      if(tr.length){
+        html += '<ol class="tracks">' + tr.map(function(x, i){
+          return '<li><span class="no">' + (i < 9 ? "0" : "") + (i + 1) + '</span><span><b>' + escapeHtml(x.t) + '</b><em>' + escapeHtml(x.f) + '</em></span></li>';
+        }).join("") + '</ol>';
+      }
+      if(over) html += '<p class="dare">' + escapeHtml(recDare(st)) + '</p>';
+      /* the shelf: every month you have pressed, to come back to */
+      var shelf = recapMonthKeys().filter(function(k){ return k < monthKeyNow(); }).slice(-12);
+      if(shelf.length > 1){
+        html += '<div class="shelf" role="group" aria-label="Your records">' + shelf.map(function(k){
+          var t = (state.plaques && state.plaques[k] && state.plaques[k].tier) || certFor(k, monthStatsFor(k));
+          return '<button type="button" data-mk="' + k + '" class="is-' + t + (k === mkey ? " on" : "") + '"' + (k === mkey ? ' aria-current="true"' : "") + '><span class="disc" aria-hidden="true"><i></i></span>' + escapeHtml(monthName(k).slice(0, 3)) + '<small>' + CERT[t].name + '</small></button>';
+        }).join("") + '</div>';
+      }
+      box.innerHTML = html;
+      box.addEventListener("click", function(ev){
+        var b = ev.target.closest && ev.target.closest(".shelf button"); if(!b) return;
+        renderRecap(b.getAttribute("data-mk"));
+      });
+      body.insertBefore(box, body.firstChild);
+    }
+    var _rr213 = renderRecap;
+    renderRecap = function(mkey){
+      var r = _rr213.apply(this, arguments);
+      try{ recordRender(mkey); }catch(e){ warn("record", e); }
+      return r;
+    };
+
     var _ra213 = renderAll;
     renderAll = function(){
       var r = _ra213.apply(this, arguments);
@@ -29646,6 +29856,91 @@ body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.
 .w2-rw .dn-match{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:56px; margin:0 0 16px; padding:8px 16px; border-radius:16px; border:2px solid transparent; background:linear-gradient(var(--card), var(--card)) padding-box, var(--w2-blend) border-box; color:var(--text); font:600 .9375rem/1.3 var(--ui); text-align:left; cursor:pointer; }
 .w2-rw .dn-match svg{ flex:none; width:16px; height:16px; color:var(--muted); }
 .w2-rw .dn-sub{ margin:0; font:400 1rem/1.5 var(--ui); color:var(--muted); }
+
+/* ---------- alternate days: the photo fills the card, the slots sit below ---------- */
+#w2Over.full .w2-shot{ filter:none; transform:none; }
+#w2Over.full .w2-glass .w2-hello{ font-size:1.5rem; line-height:1.08; margin:4px 4px 12px; text-shadow:none; }
+#w2Over.full{ min-height:600px; }
+#w2Over.full .w2-glass{ margin-top:auto; }
+#w2Over.full .w2-addshot{ margin:16px 16px 0; }
+/* below the card the captions sit on the page: ink, not pale grey */
+:root[data-w2] #duoRow .duo-slot *{ opacity:1 !important; }
+:root[data-w2] main > #duoRow .duo-slot > *:not(.duo-frame), :root[data-w2] main > #duoRow .duo-slot > *:not(.duo-frame) *{ color:var(--text) !important; }
+:root[data-w2] main > #duoRow .duo-slot > *:not(.duo-frame):not(.duo-name):not(.duo-when){ font-size:.8125rem !important; line-height:1.35 !important; }
+
+/* ---------- the logo's green tick, wherever something is done ---------- */
+.w2-tick{ display:inline-block; flex:none; width:1.25em; height:1.25em; margin-right:.4em; border-radius:50%; vertical-align:-.26em;
+  background:#61E000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23123400' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 7 10 16l-5-5'/%3E%3C/svg%3E") center/62% no-repeat; }
+:root[data-w2] .duo-chal.on, :root[data-w2] .task.done .check{ background:#61E000 !important; border-color:#61E000 !important; color:#123400 !important; }
+:root[data-w2] #duoRow .duo-frame{ position:relative; }
+:root[data-w2] #duoRow .duo-frame:has(img)::after{ content:""; position:absolute; left:8px; top:8px; width:24px; height:24px; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,.35);
+  background:#61E000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23123400' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 7 10 16l-5-5'/%3E%3C/svg%3E") center/62% no-repeat; }
+/* the wheel does not need a label that says "Payline" */
+:root[data-w2] .cab-payline{ display:none !important; }
+/* flip book: what you crossed off and hit; gaps to fill */
+.w2-pg .got{ display:flex; align-items:flex-start; margin-top:8px; font:500 .8125rem/1.35 var(--ui); color:#231B22; }
+.w2-pg.end .gaps{ position:relative; z-index:6; margin-top:24px; display:flex; flex-wrap:wrap; gap:8px; }
+.w2-pg.end .gaps p{ flex:1 0 100%; margin:0 0 4px; font:500 .875rem/1.4 var(--ui); color:#231B22; }
+.w2-pg.end .gaps button{ min-height:44px; padding:0 14px; border-radius:999px; border:1.5px solid #231B22; background:none; color:#231B22; font:600 .875rem/1 var(--ui); cursor:pointer; }
+
+/* the challenge mark sat on the photo and read as a stray dot; it is marked on the challenge card */
+:root[data-w2] #duoRow .duo-chal{ display:none !important; }
+
+/* ---------- THE DRAW: the wheel, without the casino ---------- */
+:root[data-w2] .cab{ margin-top:16px; padding:16px; border-radius:28px; box-shadow:none;
+  background:linear-gradient(90deg, #C3A8F0 0 50%, #FF6F58 50% 100%); }
+:root[data-w2] .cab::before, :root[data-w2] .cab-lamps, :root[data-w2] .reel::before, :root[data-w2] .reel::after{ display:none !important; }
+:root[data-w2] .reel{ background:none !important; box-shadow:none !important; border:0 !important; border-radius:0; }
+:root[data-w2] .reel-strip{ position:relative; z-index:1; }
+:root[data-w2] .reel-win{ z-index:0; left:0; right:0; border-radius:16px; background:#FFF8EC !important; border:2px solid #1A1220; box-shadow:0 5px 0 #1A1220 !important; }
+:root[data-w2] .reel-row, :root[data-w2] .reel-row *{ color:#1A1220 !important; }
+:root[data-w2] .reel-row .rr-n{ font:400 1rem/1.12 var(--display); white-space:normal !important; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; text-overflow:clip; }
+:root[data-w2] .reel-row .rr-t{ font:500 .75rem/1 var(--mono); letter-spacing:.06em; }
+:root[data-w2] .reel-row .rr-e{ font-size:1.375rem; width:28px; }
+:root[data-w2] #spinBtn{ min-height:60px; margin-top:16px; border-radius:999px; text-transform:none; letter-spacing:0;
+  font:400 1.25rem/1 var(--display); background:var(--text) !important; color:var(--bg) !important; border:0 !important; box-shadow:none !important; }
+:root[data-w2] #spinBtn:disabled{ background:none !important; color:var(--text) !important; border:1.5px dashed var(--text) !important; font:500 .9375rem/1 var(--ui); opacity:1 !important; }
+@media (prefers-reduced-motion:no-preference){
+  :root[data-w2] .cab.w2-going{ animation:w2cab .5s ease-in-out infinite; }
+  :root[data-w2] .cab.w2-going .reel-win{ animation:w2win .16s linear infinite alternate; }
+  :root[data-w2] .cab.w2-landed .reel-win{ animation:w2land .7s cubic-bezier(.2,1.6,.3,1); }
+  @keyframes w2cab{ 50%{ background-position:0 0; transform:scale(1.012); } }
+  @keyframes w2win{ from{ transform:rotate(-.8deg); } to{ transform:rotate(.8deg); } }
+  @keyframes w2land{ 0%{ transform:scale(1.09); box-shadow:0 0 0 6px #61E000, 0 5px 0 #1A1220; } 100%{ transform:scale(1); } }
+}
+
+/* ---------- THE RECORD: monthly recap ---------- */
+.w2-rec{ position:relative; margin:0 0 24px; padding:24px 20px; border-radius:24px; background:#1A1220; color:#FFF8EC; overflow:hidden; }
+.w2-rec .eyebrow{ margin:0 0 8px; font:500 .75rem/1 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:#FFF8EC; }
+.w2-rec h3{ margin:0 104px 0 0; font:400 2rem/1.02 var(--display); color:#FFF8EC; }
+.w2-rec .why{ margin:12px 0 0; max-width:30ch; font:400 .9375rem/1.45 var(--ui); color:#FFF8EC; }
+.w2-rec .pay{ display:flex; align-items:center; margin:16px 0 0; font:600 .9375rem/1.3 var(--ui); color:#FFF8EC; }
+.w2-rec .disc{ position:absolute; right:-40px; top:-40px; width:140px; height:140px; border-radius:50%;
+  background:repeating-radial-gradient(circle, #2B2032 0 2px, #1A1220 2px 5px); box-shadow:0 0 0 1.5px #453650; }
+.w2-rec .disc i{ position:absolute; inset:34%; border-radius:50%; background:linear-gradient(90deg, #C3A8F0 0 50%, #FF6F58 50% 100%); }
+.w2-rec .disc i::after{ content:""; position:absolute; inset:42%; border-radius:50%; background:#1A1220; }
+.w2-rec.is-gold .disc, .w2-rec .shelf .is-gold .disc{ background:repeating-radial-gradient(circle, #FF6F58 0 2px, #E85A44 2px 5px); }
+.w2-rec.is-platinum .disc, .w2-rec .shelf .is-platinum .disc{ background:repeating-radial-gradient(circle, #C3A8F0 0 2px, #A98BE0 2px 5px); }
+.w2-rec.is-diamond .disc, .w2-rec .shelf .is-diamond .disc{ background:repeating-radial-gradient(circle, #61E000 0 2px, #4FBF00 2px 5px); }
+.w2-rec.is-gold .disc i, .w2-rec.is-platinum .disc i, .w2-rec.is-diamond .disc i,
+.w2-rec .shelf .is-gold .disc i, .w2-rec .shelf .is-platinum .disc i, .w2-rec .shelf .is-diamond .disc i{ background:#FFF8EC; }
+@media (prefers-reduced-motion:no-preference){ .w2-rec > .disc{ animation:w2disc 9s linear infinite; } @keyframes w2disc{ to{ transform:rotate(360deg); } } }
+.w2-rec .tracks{ list-style:none; margin:24px 0 0; padding:0; border-top:1px solid #453650; }
+.w2-rec .tracks li{ display:flex; gap:16px; padding:12px 0; border-bottom:1px solid #453650; }
+.w2-rec .tracks .no{ flex:none; font:500 .75rem/1.5 var(--mono); color:#C3A8F0; }
+.w2-rec .tracks b{ display:block; font:400 1.125rem/1.2 var(--display); color:#FFF8EC; }
+.w2-rec .tracks em{ display:block; margin-top:4px; font:400 .875rem/1.4 var(--ui); font-style:normal; color:#E4D9E8; }
+.w2-rec .dare{ margin:16px 0 0; font:600 .9375rem/1.4 var(--ui); color:#FFF8EC; }
+.w2-rec .shelf{ display:flex; gap:8px; margin:24px -20px -8px; padding:0 20px 8px; overflow-x:auto; scrollbar-width:none; }
+.w2-rec .shelf button{ flex:none; min-width:64px; min-height:44px; padding:8px 4px; border:0; border-radius:12px; background:none; color:#FFF8EC; font:600 .8125rem/1.2 var(--ui); text-align:center; cursor:pointer; }
+.w2-rec .shelf button.on{ background:#2B2032; }
+.w2-rec .shelf small{ display:block; font:500 .75rem/1.3 var(--mono); color:#E4D9E8; }
+.w2-rec .shelf .disc{ position:relative; display:block; right:auto; top:auto; width:40px; height:40px; margin:0 auto 8px; box-shadow:none; }
+.w2-pg.end .did{ position:relative; z-index:6; margin-top:24px; }
+.w2-pg.end .did p{ margin:0; font:500 .75rem/1 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:#231B22; }
+.w2-pg.end .did .got{ font:400 1.0625rem/1.25 var(--display); }
+/* slots-lead days: the photo is a blurred ground, so the whole of it carries the scrim the headline needs */
+#w2Over:not(.full) .w2-scrim{ background:rgba(12,10,20,.58); }
 
 /* cream mode: every rule that set words in a brand colour, set in ink instead */
 html:root[data-w2][data-mode="light"] .brand-word .bw-red{ color:var(--text); }
