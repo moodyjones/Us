@@ -14292,7 +14292,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 213;
+  var BUILD_NUM = 215;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -20952,7 +20952,9 @@
          name while they've had WeDO open in the last ten minutes - read off the
          synced seenAt, so it is true, not decorative. Your own name never gets
          one; you know where you are. */
-      if(!isMe){
+      /* BUILD 214: Moody, "the green dot confuses". Off. The fading photo below does
+         the job it was reaching for: it says who has not been here today. */
+      if(false && !isMe){
         var seen = (state.seenAt || {})[p.id] || 0;
         if(seen && Date.now() - seen < 10 * 60000){
           var dot = document.createElement("span");
@@ -21022,8 +21024,10 @@
       }
 
       // today's Health numbers right under this person's photo (only if there are any)
+      /* BUILD 214: Moody, "remove the old health data, it's pointless if it's dated".
+         Yesterday's steps under today's photo are wrong, dimmed or not. Today's only. */
       var hc = (state.healthCache || {})[p.id];
-      if(hc && (hc.steps != null || hc.sleepHours != null)){
+      if(hc && hc.date === today && (hc.steps != null || hc.sleepHours != null)){
         var hrow = document.createElement("div");
         hrow.className = "duo-health" + (hc.date === today ? "" : " stale-health");
         var bits = [];
@@ -24381,6 +24385,11 @@
       return !thanksLog(t).some(function(e){ return e.by === me && e["for"] === t.completedAt; });
     }).sort(function(a, b){ return String(b.completedAt).localeCompare(String(a.completedAt)); });
   }
+  /* BUILD 215: Moody, "thanks should only apply if she did a task for me, or we
+     completed a task together. If she did her own task I should just give props."
+     Thanks: the task was yours or shared. Props: it was theirs all along. Same
+     points either way; only the word and what it says change. */
+  function isProps(t, me){ return !!t && t.assignedTo !== me && t.assignedTo !== "both" && t.completedBy !== "both"; }
   function sayThanks(taskId, origin){
     var me = deviceOwner() || state.currentUser; if(!me) return;
     var t = (state.tasks || []).find(function(x){ return x.id === taskId; });
@@ -24388,11 +24397,12 @@
     var log = thanksLog(t).slice(-59);
     log.push({by: me, to: t.completedBy, at: new Date().toISOString(), "for": t.completedAt});
     t.thanksLog = log; touch(t);
-    announce("thanked " + personName(t.completedBy) + " for \u201C" + t.title + "\u201D");
+    var props = isProps(t, me);
+    announce((props ? "gave " + personName(t.completedBy) + " props for \u201C" : "thanked " + personName(t.completedBy) + " for \u201C") + t.title + "\u201D");
     save();
     try{ flyPoints(origin, "+" + THANKS_POINTS, t.completedBy); }catch(e){}
     try{ sfx("tick"); }catch(e){}
-    toast("Thanks sent to " + personName(t.completedBy) + " \u00B7 +" + THANKS_POINTS + " for them");
+    toast((props ? "Props sent to " : "Thanks sent to ") + personName(t.completedBy) + " \u00B7 +" + THANKS_POINTS + " for them");
     renderAll();
   }
   function renderThanks(){
@@ -24425,7 +24435,9 @@
     card.innerHTML = '<div class="tk-eyebrow">' + escapeHtml(personName(them)) + ' got this done</div>' +
       shown.map(function(t){
         return '<div class="tk-row"><div class="tk-what"><b>' + escapeHtml(t.title) + '</b><span>' + escapeHtml(agoShort(t.completedAt)) + '</span></div>' +
-          '<button type="button" class="tk-btn ' + them + '" data-id="' + escapeAttr(t.id) + '">' + icon("heart", 15) + '<span>Thanks</span></button></div>';
+          (isProps(t, me)
+            ? '<button type="button" class="tk-btn ' + them + '" data-id="' + escapeAttr(t.id) + '" aria-label="Give props for ' + escapeAttr(t.title) + '">' + icon("spark", 15) + '<span>Props</span></button></div>'
+            : '<button type="button" class="tk-btn ' + them + '" data-id="' + escapeAttr(t.id) + '" aria-label="Say thanks for ' + escapeAttr(t.title) + '">' + icon("heart", 15) + '<span>Thanks</span></button></div>');
       }).join("") +
       (list.length > 3 ? '<div class="tk-more">and ' + (list.length - 3) + ' more in Tasks \u2192 Done</div>' : "");
     card.querySelectorAll(".tk-btn").forEach(function(b){
@@ -24582,6 +24594,8 @@
     var me = deviceOwner() || state.currentUser;
     if(!me) return;
     if(!state.seenAt) state.seenAt = {};
+    /* BUILD 214: the welcome-back card needs the last open, so keep it before it goes */
+    try{ window.__w2PrevSeen = state.seenAt[me] || 0; }catch(e){}
     state.seenAt[me] = Date.now();
     save();
   })();
@@ -28152,7 +28166,7 @@
         for(var k in slots){
           if(!slots.hasOwnProperty(k) || !slots[k]) continue;
           var src = photoSrc(slots[k].photo);
-          if(src) return {src: src, cap: "From " + dayOf(days[i], {weekday: "short", day: "numeric", month: "short"})};
+          if(src) return {src: src, old: true, cap: "From " + dayOf(days[i], {weekday: "short", day: "numeric", month: "short"})};
         }
       }
       return null;
@@ -28181,9 +28195,14 @@
          this card at full width, and until yours is in, the headline asks for it first. */
       var duo = $("duoRow");
       var mineP = (state.dailyPhotos || {})[m], needPhoto = !(mineP && mineP.date === today);
+      /* BUILD 214, the funnel: photo first, then today's question, then the list.
+         Either question counts: the one asked as the photo goes in, or the one in Notes. */
+      var qa = ((state.qa || {})[today] || {}).answers || {};
+      var needQ = !needPhoto && !qa[m] && !(function(){ try{ return photoNoteFrom(m, today); }catch(e){ return null; } })();
       var line;
       if(needPhoto) line = n > 0 ? "Today’s photo first, then " + (n < 10 ? WORDS[n].toLowerCase() : String(n)) + (n === 1 ? " thing." : " things.")
                                  : "Today’s photo first. Nothing else is due.";
+      else if(needQ) line = "Photo’s in. Today’s question next" + (n > 0 ? ", then " + (n < 10 ? WORDS[n].toLowerCase() : String(n)) + (n === 1 ? " thing." : " things.") : ".");
       else if(n > 0) line = (n < 10 ? WORDS[n] : String(n)) + (n === 1 ? " thing" : " things") + " left, then " + dayName + " is yours.";
       else if(doneToday > 0) line = "All crossed off. " + dayName + " is yours.";
       else line = "Nothing due today. " + dayName + " is yours.";
@@ -28197,7 +28216,7 @@
       over.setAttribute("data-me", m);
       if(duo && duo.parentNode === over) over.removeChild(duo);
       over.innerHTML = "";
-      var shot = mk("div", "w2-shot"); if(ph) shot.style.backgroundImage = 'url("' + ph.src + '")';
+      var shot = mk("div", "w2-shot" + (ph && ph.old ? " stale" : "")); if(ph) shot.style.backgroundImage = 'url("' + ph.src + '")';
       over.appendChild(shot); over.appendChild(mk("div", "w2-scrim"));
       var top = mk("div", "w2-otop");
       top.appendChild(mk("span", "", escapeHtml(dayOf(today, {weekday: "short", day: "numeric", month: "short"}))));
@@ -28222,7 +28241,23 @@
         var tot = doneToday + n;
         glass.appendChild(mk("div", "w2-prog", '<span><i class="w2-tick" aria-hidden="true"></i>' + doneToday + ' of ' + tot + ' crossed off</span><i><b style="transform:scaleX(' + (doneToday / tot).toFixed(3) + ')"></b></i>'));
       }
-      var rows = d.mine.concat(d.both, d.theirs).slice(0, 4);
+      if(needQ){
+        var qrow = mk("div", "w2-row w2-qrow");
+        qrow.appendChild(mk("span", "w2-qi", '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.5h12v8H9l-3.5 3v-3H4z"/></svg>'));
+        var theirsIn = !!qa[otherPerson(m)];
+        var qb = mk("button", "w2-rt", '<span class="t"><span class="w2-qk">Today’s question</span>' + escapeHtml(todaysQuestion()) + '</span><span class="m">' + (theirsIn ? escapeHtml(personName(otherPerson(m))) + " answered" : "+5") + '</span>' + CHEV);
+        qb.type = "button";
+        qb.addEventListener("click", function(){
+          goTab("notes");
+          setTimeout(function(){
+            var inp = $("qaInput") || $("dailyQuestionText");
+            if(inp){ try{ inp.scrollIntoView({block: "center", behavior: "smooth"}); }catch(e){} if(inp.focus) try{ inp.focus({preventScroll: true}); }catch(e){} }
+          }, 260);
+        });
+        qrow.appendChild(qb);
+        glass.appendChild(qrow);
+      }
+      var rows = d.mine.concat(d.both, d.theirs).slice(0, needQ ? 3 : 4);
       rows.forEach(function(t){
         var cls = t.assignedTo === "both" ? "ab" : (t.assignedTo === pid(0) ? "a" : "b");
         var row = mk("div", "w2-row");
@@ -29330,6 +29365,15 @@
       return r;
     };
 
+    /* BUILD 215: posting a photo redraws only the two photo slots, not the whole
+       app, so the card around them still said "Today's photo first" with yours
+       already in. Redraw the card whenever the slots redraw. */
+    var _rdp215 = renderDailyPhotos, inOver215 = false;
+    renderDailyPhotos = function(){
+      var r = _rdp215.apply(this, arguments);
+      if(!inOver215){ inOver215 = true; try{ overRender(); }catch(e){ warn("today after photo", e); } inOver215 = false; }
+      return r;
+    };
     var _ra213 = renderAll;
     renderAll = function(){
       var r = _ra213.apply(this, arguments);
@@ -29341,6 +29385,154 @@
     };
     try{ renderAll(); }catch(e){ warn("first render", e); }
     try{ renderMemories(); }catch(e){}
+  })();
+
+  /* ===========================================================================
+     BUILD 214 - the day starts with the photo, and nobody keeps score in a bad week.
+
+     Moody: "the pics should fade as the day goes by, to remind someone to post...
+     so it's the first thing you do with the app. It starts the funnel of adding
+     photo answering question and then going through the todo list." And, of the
+     ideas offered: 1 (a big-picture welcome back after two days away, no score)
+     and 4 (one shared total while things are rough, back to the race after a few
+     calm days).
+
+       FADE      a photo that is not today's loses colour and light from 7am to
+                 10pm. Posting today's brings yours back at once.
+       FUNNEL    the Today card asks for the photo, then the question, then the list.
+       WELCOME   two or more days away: what the other one did while you were gone,
+                 the month between you, how long you have been doing this. No race.
+       TOGETHER  either of you away two days, or a row open or just closed: the
+                 scoreboard shows one number. Three calm days and the race is back.
+     =========================================================================== */
+  (function(){
+    var R = document.documentElement;
+    var DAY = 864e5;
+    var LAST_KEY = "us-w2-lastopen-v1", BACK_KEY = "us-w2-back-v1", CALM_KEY = "us-w2-friction-v1", WB_KEY = "us-w2-welcomed-v1";
+    function ls(k, v){ try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){} return null; }
+    function me(){ return deviceOwner() || state.currentUser || "p1"; }
+    function isoOf(ms){ var d = new Date(ms); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    function warn(where, e){ try{ console.warn("w214 " + where, e); }catch(_){} }
+
+    /* ---------------- FADE ---------------- */
+    function fade(){
+      var n = new Date(), h = n.getHours() + n.getMinutes() / 60;
+      var f = Math.max(0, Math.min(1, (h - 7) / 15));
+      R.style.setProperty("--w2-ff", f.toFixed(3));
+      R.style.setProperty("--w2-fo", (0.92 - 0.62 * f).toFixed(3));
+      R.style.setProperty("--w2-fb", (1 - 0.42 * f).toFixed(3));
+    }
+    fade(); setInterval(fade, 5 * 60000);
+
+    /* ---------------- TOGETHER ---------------- */
+    function signal(){
+      var m = me(), o = otherPerson(m), now = Date.now();
+      var seen = ((state.seenAt || {})[o]) || 0;
+      if(seen && now - seen > 2 * DAY) return true;
+      var back = ls(BACK_KEY);
+      if(back && daysBetweenISO(back, todayISO()) < 3) return true;
+      if(state.row) return true;
+      var rc = Date.parse(state.rowClosedAt || "");
+      if(isFinite(rc) && now - rc < 3 * DAY) return true;
+      return false;
+    }
+    function together(){
+      var today = todayISO();
+      if(signal()){ ls(CALM_KEY, today); return true; }
+      var last = ls(CALM_KEY);
+      return !!last && daysBetweenISO(last, today) < 3;
+    }
+    function monthTotal(){
+      var mk = monthKeyNow(), t = 0;
+      (state.people || []).slice(0, 2).forEach(function(p){ t += monthPointsFor(p.id, mk) || 0; });
+      return t;
+    }
+    var _ub214 = renderUsBar;
+    renderUsBar = function(){
+      var r = _ub214.apply(this, arguments);
+      try{
+        var bar = document.getElementById("usBar"), cap = document.getElementById("usCaption");
+        if(bar && cap && together()){
+          bar.innerHTML =
+            '<div class="us-end l w2-tog"><div class="us-who">Together</div><div class="us-pts">' + monthTotal() + '</div></div>' +
+            '<div class="us-track w2-togtrack"><div class="us-fill" style="width:100%"></div></div>';
+          bar.style.display = "flex";
+          cap.innerHTML = "<b>One number for a few days.</b> No race, just the two of you.";
+          cap.style.display = "block";
+          R.setAttribute("data-w2-tog", "1");
+        } else R.removeAttribute("data-w2-tog");
+      }catch(e){ warn("together bar", e); }
+      return r;
+    };
+    var _sd214 = renderScoreDuo;
+    renderScoreDuo = function(){
+      var r = _sd214.apply(this, arguments);
+      try{
+        var box = document.getElementById("scoreDuo");
+        if(box && together()){
+          box.innerHTML =
+            '<div class="sc-duo w2-tog1"><div class="sc-p"><div class="sc-name">Together this month</div>' +
+            '<div class="sc-num">' + monthTotal() + '</div>' +
+            '<div class="sc-sub">One number for a few days. The race is back after three calm ones.</div></div></div>' +
+            '<div class="sc-bar w2-togtrack" aria-hidden="true"><i style="width:100%"></i></div>';
+        }
+      }catch(e){ warn("together duo", e); }
+      return r;
+    };
+
+    /* ---------------- WELCOME BACK ---------------- */
+    function plural(n, one, many){ return n + " " + (n === 1 ? one : many); }
+    function whileAway(since){
+      var o = otherPerson(me()), sinceISO = isoOf(since), bits = [];
+      var al = state.album || {}, photos = 0;
+      Object.keys(al).forEach(function(d){ if(d > sinceISO && al[d] && al[d][o]) photos++; });
+      var done = (state.tasks || []).filter(function(t){
+        var at = Date.parse(t.completedAt || "");
+        return t.status === "done" && isFinite(at) && at > since && (t.completedBy === o || t.completedBy === "both");
+      }).length;
+      var notes = (state.notes || []).filter(function(n){ var at = Date.parse(n.date || ""); return n.fromId === o && isFinite(at) && at > since; }).length;
+      if(photos) bits.push("posted " + plural(photos, "photo", "photos"));
+      if(done) bits.push("crossed off " + plural(done, "thing", "things"));
+      if(notes) bits.push("left you " + plural(notes, "note", "notes"));
+      var who = personName(o);
+      if(!bits.length) return "Nothing moved while you were gone. Today is a good place to pick it back up.";
+      var list = bits.length > 1 ? bits.slice(0, -1).join(", ") + " and " + bits[bits.length - 1] : bits[0];
+      return "While you were away, " + who + " " + list + ".";
+    }
+    function welcome(since){
+      var today = todayISO();
+      if(!since || ls(WB_KEY) === today) return;
+      var gap = daysBetweenISO(isoOf(since), today);
+      if(gap < 2) return;
+      if(state.installedAt && String(state.installedAt).slice(0, 10) >= isoOf(since)) return;
+      ls(WB_KEY, today); ls(BACK_KEY, today);
+      try{ renderUsBar(); renderScoreDuo(); }catch(e){}
+      var tot = monthTotal();
+      var text = whileAway(since) +
+        (tot > 0 ? "\n\nTogether this month: " + tot + " points." : "\n") +
+        (daysOnWedo() > 0 ? "\nDay " + daysOnWedo() + " of WeDO." : "");
+      var tries = 0;
+      (function show(){
+        var busy = document.getElementById("splash") || document.querySelector(".modal-bg.show");
+        if(busy && tries++ < 60){ setTimeout(show, 500); return; }
+        showModal("💞", "Good to have you back", text, {kind: "info", eyebrow: plural(gap, "day", "days") + " away", button: (function(){ var d = (state.dailyPhotos || {})[me()]; return d && d.date === today ? "Pick it back up" : "Today’s photo first"; })()});
+      })();
+    }
+    function checkGap(prev){ try{ welcome(prev); }catch(e){ warn("welcome", e); } }
+    var prev = Math.max(Number(ls(LAST_KEY)) || 0, window.__w2PrevSeen || 0);
+    ls(LAST_KEY, String(Date.now()));
+    setTimeout(function(){ checkGap(prev); }, 400);
+    document.addEventListener("visibilitychange", function(){
+      if(document.visibilityState === "hidden"){ ls(LAST_KEY, String(Date.now())); return; }
+      var p = Number(ls(LAST_KEY)) || 0;
+      ls(LAST_KEY, String(Date.now()));
+      fade();
+      checkGap(p);
+      try{ renderAll(); }catch(e){}
+    });
+
+    try{ renderUsBar(); }catch(e){}
+    try{ renderScoreDuo(); }catch(e){}
   })();
 
 })();
@@ -29873,7 +30065,7 @@ body:has(.sheet-bg.show, .modal-bg.show, .album-bg.show, .tmorph.open, .w2-book.
   background:#61E000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23123400' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 7 10 16l-5-5'/%3E%3C/svg%3E") center/62% no-repeat; }
 :root[data-w2] .duo-chal.on, :root[data-w2] .task.done .check{ background:#61E000 !important; border-color:#61E000 !important; color:#123400 !important; }
 :root[data-w2] #duoRow .duo-frame{ position:relative; }
-:root[data-w2] #duoRow .duo-frame:has(img)::after{ content:""; position:absolute; left:8px; top:8px; width:24px; height:24px; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,.35);
+:root[data-w2] #duoRow .duo-frame:not(.stale):has(img)::after{ content:""; position:absolute; left:8px; top:8px; width:24px; height:24px; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,.35);
   background:#61E000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23123400' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 7 10 16l-5-5'/%3E%3C/svg%3E") center/62% no-repeat; }
 /* the wheel does not need a label that says "Payline" */
 :root[data-w2] .cab-payline{ display:none !important; }
@@ -30015,6 +30207,20 @@ html:root[data-w2][data-mode="light"] .hd-mark.ok{ color:var(--text); }
 html:root[data-w2][data-mode="light"] .tk-btn.p1 svg{ color:var(--text); }
 html:root[data-w2][data-mode="light"] .tk-btn.p2 svg{ color:var(--text); }
 html:root[data-w2][data-mode="light"] .cs-pill.lit svg{ color:var(--text); }
+
+/* ---------- BUILD 214: fading photos, the question in the funnel, together ---------- */
+#w2Over #duoRow .duo-slot .duo-frame.stale img, :root[data-w2] #duoRow .duo-slot .duo-frame.stale img{ opacity:var(--w2-fo,.82) !important; filter:grayscale(var(--w2-ff,0)) brightness(.97); transition:opacity 1.2s ease, filter 1.2s ease; }
+#w2Over .w2-shot.stale{ filter:grayscale(var(--w2-ff,0)) brightness(var(--w2-fb,1)); transition:filter 1.2s ease; }
+#w2Over .w2-qrow .w2-qi{ flex:none; width:44px; height:44px; margin:0 0 0 -11px; display:grid; place-items:center; color:#fff; }
+#w2Over .w2-qrow .w2-qi svg{ width:20px; height:20px; }
+#w2Over .w2-qrow .w2-rt .t{ display:flex; flex-direction:column; gap:2px; }
+#w2Over .w2-qrow .w2-qk{ font:500 .6875rem/1.2 var(--mono); letter-spacing:.04em; text-transform:uppercase; color:rgba(255,255,255,.72); }
+.us-bar .us-end.w2-tog .us-pts{ color:var(--text) !important; }
+.w2-togtrack .us-fill, .sc-bar.w2-togtrack i{ background:linear-gradient(90deg, var(--moody), var(--rae)) !important; }
+.sc-duo.w2-tog1{ grid-template-columns:1fr !important; display:block; text-align:center; }
+.sc-duo.w2-tog1 .sc-num{ color:var(--text) !important; }
+#w2Over > .w2-hello{ margin-bottom:16px; }
+@media (prefers-reduced-motion:reduce){ :root[data-w2] #duoRow .duo-frame.stale img, #w2Over .w2-shot.stale{ transition:none; } }
 </style>
 </body>
 </html>
