@@ -14292,7 +14292,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 215;
+  var BUILD_NUM = 216;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -27180,7 +27180,27 @@
       sheet.focus({preventScroll:true});
       return;
     }
+    /* BUILD 216: Moody, "editing a task or saying it didn't happen freezes the app".
+       The clip-path morph froze iPhone Safari again, mid-shape, with the veil up and
+       every tap swallowed (205 took one blur away; it was not enough). The sheet now
+       arrives and leaves on opacity and transform only, which the phone composites on
+       its own, and closing finishes on a timer whether or not the animation reports. */
+    sheet.style.clipPath = "";
     tmBusy = true;
+    try{
+      var tmIn = sheet.animate([
+        {opacity: 0, transform: "translateX(-50%) translateY(10px) scale(.97)"},
+        {opacity: 1, transform: "translateX(-50%)"}
+      ], {duration: 240, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards"});
+      [].slice.call(tmEl.querySelectorAll("[data-tm-line]")).forEach(function(line, n){
+        if(line.hidden) return;
+        line.animate([{opacity:0, transform:"translateY(9px)"}, {opacity:1, transform:"none"}],
+          {duration:420, delay:80 + n * 40, easing:"cubic-bezier(.2,.8,.2,1)", fill:"backwards"});
+      });
+    }catch(e){}
+    setTimeout(function(){ tmBusy = false; }, 260);
+    sheet.focus({preventScroll:true});
+    return;
     var frames = sp.samples.map(function(p, i){
       var e = Math.pow(tmClamp(p, 0, 1), 2.2);
       var box = {
@@ -27213,7 +27233,10 @@
     if(!tmEl || tmEl.hidden) return;
     var sheet = tmEl.querySelector('[data-tm="sheet"]');
     var back = tmReturnTo;
+    var finished = false;
     var finish = function(){
+      if(finished) return; finished = true;
+      sheet.style.clipPath = ""; sheet.style.opacity = "";
       tmEl.hidden = true;
       tmEl.classList.remove("open");
       tmOpenFor = null; tmReturnTo = null; tmBusy = false;
@@ -27224,14 +27247,13 @@
     };
     tmEl.querySelector('[data-tm="veil"]').style.opacity = "0";
     if(motionOff() || !back || !back.isConnected){ finish(); return; }
-    var to = sheet.getBoundingClientRect();
-    var from = back.getBoundingClientRect();
     tmBusy = true;
+    setTimeout(finish, 240);   // never left waiting on the animation to report back
     try{
-      var a = sheet.animate(
-        [{clipPath: tmClip(to, to, 18)}, {clipPath: tmClip(from, to, 10)}],
-        {duration: 260, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards"});
-      a.finished.then(finish).catch(finish);
+      sheet.animate([
+        {opacity: 1, transform: "translateX(-50%)"},
+        {opacity: 0, transform: "translateX(-50%) translateY(6px) scale(.98)"}
+      ], {duration: 180, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards"});
     }catch(e){ finish(); }
   }
 
@@ -30221,6 +30243,22 @@ html:root[data-w2][data-mode="light"] .cs-pill.lit svg{ color:var(--text); }
 .sc-duo.w2-tog1 .sc-num{ color:var(--text) !important; }
 #w2Over > .w2-hello{ margin-bottom:16px; }
 @media (prefers-reduced-motion:reduce){ :root[data-w2] #duoRow .duo-frame.stale img, #w2Over .w2-shot.stale{ transition:none; } }
+
+/* ---------- BUILD 216: the two hearts between the photos ----------
+   Moody: "why are the hearts in the middle kind of broken and off center". 213 put
+   them on a 44px disc but left the hearts on their old absolute spots (pinned to the
+   disc's top-left, the second one sliding right as you drift apart), and placed the
+   disc by the height of the whole row, captions included. Now: the hearts sit side by
+   side in a pill that grows with the gap, and the pill sits on the seam between the
+   two photos, at their middle (frames are 4:5, so half a frame is .625 of its width). */
+#w2Over #duoRow{ container-type:inline-size; }
+#w2Over #duoRow .duo-heart{
+  top:calc((100cqw - 8px) * .3125) !important; translate:-50% -50% !important;
+  display:flex !important; align-items:center; justify-content:center;
+  gap:calc(var(--duo-split, 0) * 12px - 5px);
+  width:auto !important; min-width:44px; height:36px !important; padding:0 9px !important; border-radius:999px !important;
+}
+#w2Over #duoRow .duo-heart .wd-i{ position:static !important; left:auto !important; top:auto !important; flex:none; }
 </style>
 </body>
 </html>
