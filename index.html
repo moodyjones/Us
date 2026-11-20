@@ -14305,7 +14305,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 217;
+  var BUILD_NUM = 218;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -25294,6 +25294,7 @@
           });
         }
         await oneSignalInitPromise;
+        window.__osReady = true;
         await fn(OneSignal);
       }catch(e){
         setOnesignalStatus("Couldn't reach push service: " + e.message);
@@ -25329,14 +25330,40 @@
     var owner = deviceOwner();
     if(!owner){ toast("Tell WeDO whose phone this is first"); return; }
     if(!state.onesignalAppId){ toast("Paste + save the OneSignal App ID first"); return; }
+    /* BUILD 218: OneSignal listed every iPhone sign-up as "never subscribed": permission
+       granted, no push token. iPhone only lets a page register for push in the moment
+       right after a tap, and this used to spend that moment waiting on OneSignal to load
+       and log in first. Now the tap goes straight to the permission/registration call;
+       logging in as p1/p2 happens after. OneSignal is started on launch, so it is normally
+       ready before anyone reaches this button. */
+    var OS = window.OneSignal;
+    if(!(window.__osReady && OS && OS.Notifications && OS.User)){
+      say("Getting push ready… tap Enable again in a few seconds.");
+      withOneSignal(async function(){ say("Ready. Tap Enable on this phone again."); });
+      return;
+    }
     say("requesting permission…");
-    withOneSignal(async function(OneSignal){
-      await OneSignal.login(owner); // tags this subscription "p1"/"p2" so pushes can target it later
-      await OneSignal.Notifications.requestPermission();
-      var granted = OneSignal.Notifications.permission;
+    var ask;
+    try{
+      ask = OS.Notifications.permission ? OS.User.PushSubscription.optIn() : OS.Notifications.requestPermission();
+    }catch(e){ ask = Promise.reject(e); }
+    Promise.resolve(ask).then(async function(){
+      var granted = !!OS.Notifications.permission;
       try{ localStorage.setItem("us-push-enabled-v1", granted ? "1" : "0"); }catch(e){}
-      say(granted ? ("Enabled for " + personName(owner) + " ✅") : "Permission not granted — check Settings > Notifications for WeDO");
+      if(!granted){ say("Permission not granted — check Settings > Notifications for WeDO"); renderSetupCard(); return; }
+      if(!OS.User.PushSubscription.optedIn){ try{ await OS.User.PushSubscription.optIn(); }catch(e){} }
+      try{ await OS.login(owner); }catch(e){}   // tags this phone "p1"/"p2" so pushes can find it
+      // the token arrives a moment after permission; wait for it before saying it worked
+      var token = null;
+      for(var i = 0; i < 16 && !token; i++){
+        try{ token = OS.User.PushSubscription.token; }catch(e){}
+        if(!token) await new Promise(function(r){ setTimeout(r, 500); });
+      }
+      say(token ? ("Enabled for " + personName(owner) + " ✅ — registered, try Test → this phone")
+                : "Permission is on, but iPhone hasn’t given WeDO a push token yet. Close WeDO fully, open it from the Home Screen icon, and tap Enable once more.");
       renderSetupCard();
+    }).catch(function(e){
+      say("Couldn’t turn on push: " + (e && e.message || e));
     });
   }
   function renderPushDiag(){
