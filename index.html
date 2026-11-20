@@ -12221,7 +12221,10 @@
   }
   function osCall(op, payload, id){
     var room = pushRoom();
-    if(!room) return osDirect(op, payload, id);
+    /* BUILD 220: Moody, "notifications were working for me for the last 2 weeks, you
+       just broke mine". A phone that has its own REST key sends exactly as it did before
+       217. Only a phone without one uses the relay. */
+    if(onesignalRestKey() || !room) return osDirect(op, payload, id);
     return fetch(OS_RELAY, {method: "POST", headers: {"Content-Type": "application/json"},
       body: JSON.stringify({room: room, appId: state.onesignalAppId, op: op, payload: payload, id: id})})
       .then(function(r){
@@ -12682,6 +12685,7 @@
     return out;
   }
 
+  function isPlaceholderName(n){ return !n || /^Partner( [12])?$/.test(String(n).trim()); }
   function mergeStates(L, R){
     if(!R || typeof R !== "object" || !R.people) return L;
     var lNewer = String(L.savedAt||"") >= String(R.savedAt||"");
@@ -12765,6 +12769,17 @@
     })();
 
     m.people = unionById(base.people, other.people, {});
+    /* BUILD 219: Rae's fresh Home Screen install still had the placeholder names, saved
+       last, and the merge took the newest copy - so "Moody" and "Rae" became "Partner 1"
+       and "Partner 2" on both phones. A placeholder name now never beats a real one. */
+    (m.people || []).forEach(function(pn){
+      if(!isPlaceholderName(pn.name)) return;
+      [L, R].forEach(function(side){
+        (side.people || []).forEach(function(q){
+          if(q.id === pn.id && !isPlaceholderName(q.name)){ pn.name = q.name; pn.mtime = Math.max(pn.mtime || 0, q.mtime || 1); }
+        });
+      });
+    });
     m.lists = unionById(base.lists, other.lists, {});
     m.tasks = mergeTasks(base.tasks, other.tasks, tomb);
     m.rewards = unionById(base.rewards, other.rewards, tomb);
@@ -14305,7 +14320,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 218;
+  var BUILD_NUM = 220;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -24590,6 +24605,20 @@
   refreshRepeatingTasks();
   // before the first render, so Memories is populated on the very first open of this build
   if(backfillAlbum()) save();
+  /* BUILD 219: put back the two names the placeholder merge wiped (see mergeStates).
+     Only for Moody and Rae's own shared space, only while both still read as placeholders.
+     The fresh mtime makes these win on the other phone at the next sync. */
+  try{
+    if(gistIdFromUrl() === "14babeeed7c2cc54dd6e31e33c6961f4" && (state.people || []).length >= 2 &&
+       state.people.slice(0, 2).every(function(pn){ return isPlaceholderName(pn.name); })){
+      var nmT = Date.now();
+      state.people.forEach(function(pn){
+        if(pn.id === "p1"){ pn.name = "Moody"; pn.mtime = nmT; }
+        if(pn.id === "p2"){ pn.name = "Rae"; pn.mtime = nmT; }
+      });
+      save();
+    }
+  }catch(e){}
 
   renderAll();
   document.getElementById("healthGistInput").value = state.healthGistUrl || "";
@@ -25330,40 +25359,14 @@
     var owner = deviceOwner();
     if(!owner){ toast("Tell WeDO whose phone this is first"); return; }
     if(!state.onesignalAppId){ toast("Paste + save the OneSignal App ID first"); return; }
-    /* BUILD 218: OneSignal listed every iPhone sign-up as "never subscribed": permission
-       granted, no push token. iPhone only lets a page register for push in the moment
-       right after a tap, and this used to spend that moment waiting on OneSignal to load
-       and log in first. Now the tap goes straight to the permission/registration call;
-       logging in as p1/p2 happens after. OneSignal is started on launch, so it is normally
-       ready before anyone reaches this button. */
-    var OS = window.OneSignal;
-    if(!(window.__osReady && OS && OS.Notifications && OS.User)){
-      say("Getting push ready… tap Enable again in a few seconds.");
-      withOneSignal(async function(){ say("Ready. Tap Enable on this phone again."); });
-      return;
-    }
     say("requesting permission…");
-    var ask;
-    try{
-      ask = OS.Notifications.permission ? OS.User.PushSubscription.optIn() : OS.Notifications.requestPermission();
-    }catch(e){ ask = Promise.reject(e); }
-    Promise.resolve(ask).then(async function(){
-      var granted = !!OS.Notifications.permission;
+    withOneSignal(async function(OneSignal){
+      await OneSignal.login(owner); // tags this subscription "p1"/"p2" so pushes can target it later
+      await OneSignal.Notifications.requestPermission();
+      var granted = OneSignal.Notifications.permission;
       try{ localStorage.setItem("us-push-enabled-v1", granted ? "1" : "0"); }catch(e){}
-      if(!granted){ say("Permission not granted — check Settings > Notifications for WeDO"); renderSetupCard(); return; }
-      if(!OS.User.PushSubscription.optedIn){ try{ await OS.User.PushSubscription.optIn(); }catch(e){} }
-      try{ await OS.login(owner); }catch(e){}   // tags this phone "p1"/"p2" so pushes can find it
-      // the token arrives a moment after permission; wait for it before saying it worked
-      var token = null;
-      for(var i = 0; i < 16 && !token; i++){
-        try{ token = OS.User.PushSubscription.token; }catch(e){}
-        if(!token) await new Promise(function(r){ setTimeout(r, 500); });
-      }
-      say(token ? ("Enabled for " + personName(owner) + " ✅ — registered, try Test → this phone")
-                : "Permission is on, but iPhone hasn’t given WeDO a push token yet. Close WeDO fully, open it from the Home Screen icon, and tap Enable once more.");
+      say(granted ? ("Enabled for " + personName(owner) + " ✅") : "Permission not granted — check Settings > Notifications for WeDO");
       renderSetupCard();
-    }).catch(function(e){
-      say("Couldn’t turn on push: " + (e && e.message || e));
     });
   }
   function renderPushDiag(){
@@ -29590,6 +29593,23 @@
 
     try{ renderUsBar(); }catch(e){}
     try{ renderScoreDuo(); }catch(e){}
+
+    /* BUILD 219: Moody, "the menu is floating weird". iPhone Home Screen apps sometimes
+       leave a fixed bar where it was mid-scroll (after a big moment, a sheet, or a fast
+       flick) instead of at the bottom of the screen. When scrolling settles, the dock is
+       asked to lay itself out again, which puts it back. */
+    var dockT = null;
+    function redock(){
+      var d = document.getElementById("w2Dock"); if(!d) return;
+      d.style.display = "none"; void d.offsetHeight; d.style.display = "";
+    }
+    function redockSoon(){ clearTimeout(dockT); dockT = setTimeout(redock, 180); }
+    window.addEventListener("scroll", redockSoon, {passive: true});
+    window.addEventListener("pageshow", redockSoon);
+    window.addEventListener("orientationchange", redockSoon);
+    if(window.visualViewport) window.visualViewport.addEventListener("resize", redockSoon);
+    document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") redockSoon(); });
+    try{ new MutationObserver(redockSoon).observe(document.body, {attributes: true, attributeFilter: ["class"]}); }catch(e){}
   })();
 
 })();
