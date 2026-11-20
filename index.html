@@ -12206,7 +12206,31 @@
   function setOnesignalRestKey(v){
     try{ if(v) localStorage.setItem(ONESIGNAL_KEY_STORAGE, v); else localStorage.removeItem(ONESIGNAL_KEY_STORAGE); }catch(e){}
   }
-  function pushConfigured(){ return !!(state.onesignalAppId && onesignalRestKey()); }
+  /* BUILD 217: "Couldn't reach OneSignal - Load failed". iPhone Safari will not let a web
+     page call OneSignal's REST API, so every send now goes through WeDO's own relay
+     (wedo-push.vercel.app/api/os), which holds the OneSignal key server-side. The phone
+     proves it is one of the two by naming the shared sync space. A REST key pasted on the
+     phone is still used as a fallback, only if the relay says it isn't set up. */
+  var OS_RELAY = "https://wedo-push.vercel.app/api/os";
+  function pushRoom(){ try{ return gistIdFromUrl() || ""; }catch(e){ return ""; } }
+  function pushConfigured(){ return !!(state.onesignalAppId && (pushRoom() || onesignalRestKey())); }
+  function osDirect(op, payload, id){
+    var h = {"Authorization": "Key " + onesignalRestKey(), "Content-Type": "application/json"};
+    if(op === "cancel") return fetch("https://api.onesignal.com/notifications/" + encodeURIComponent(id) + "?app_id=" + encodeURIComponent(state.onesignalAppId), {method: "DELETE", headers: h});
+    return fetch("https://api.onesignal.com/notifications?c=push", {method: "POST", headers: h, body: JSON.stringify(payload)});
+  }
+  function osCall(op, payload, id){
+    var room = pushRoom();
+    if(!room) return osDirect(op, payload, id);
+    return fetch(OS_RELAY, {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({room: room, appId: state.onesignalAppId, op: op, payload: payload, id: id})})
+      .then(function(r){
+        if(r.status === 503 && onesignalRestKey()) return osDirect(op, payload, id);
+        return r;
+      });
+  }
+  function osSend(payload){ return osCall("send", payload); }
+  function osCancel(id){ return osCall("cancel", null, id); }
 
   // every phone keeps its own "I've seen activity up to here" marker — not synced,
   // so opening the app on one phone doesn't mark things read on the other
@@ -12457,19 +12481,12 @@
       if(done) done(false, "no partner");
       return;
     }
-    fetch("https://api.onesignal.com/notifications?c=push", {
-      method: "POST",
-      headers: {
-        "Authorization": "Key " + onesignalRestKey(),
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+    osSend({
         app_id: state.onesignalAppId,
         include_aliases: {external_id: [to]},
         target_channel: "push",
         headings: {en: "WeDO"},
         contents: {en: personName(owner) + " " + text}
-      })
     })
     .then(function(r){ return r.text().then(function(t){ return {status: r.status, body: t}; }); })
     .then(function(res){
@@ -12519,17 +12536,13 @@
       state.photoReminderDate = today;
       save();
       var ids = state.people.slice(0, 2).map(function(p){ return p.id; });
-      fetch("https://api.onesignal.com/notifications?c=push", {
-        method: "POST",
-        headers: {"Authorization": "Key " + onesignalRestKey(), "Content-Type": "application/json"},
-        body: JSON.stringify({
+      osSend({
           app_id: state.onesignalAppId,
           include_aliases: {external_id: ids},
           target_channel: "push",
           headings: {en: "WeDO · " + trip.title},
           contents: {en: "Day " + tripDayNumber(trip, today) + " — one photo of the two of you 📸"},
           send_after: at.toISOString()
-        })
       }).catch(function(){
         // let tomorrow's open try again rather than marking today done on a failed request
         if(state.photoReminderDate === today){ state.photoReminderDate = null; save(); }
@@ -14292,7 +14305,7 @@
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 216;
+  var BUILD_NUM = 217;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -20117,16 +20130,12 @@
 
   function sendPushToSelf(me, title, body){
     try{
-      fetch("https://api.onesignal.com/notifications?c=push", {
-        method: "POST",
-        headers: {"Authorization": "Key " + onesignalRestKey(), "Content-Type": "application/json"},
-        body: JSON.stringify({
+      osSend({
           app_id: state.onesignalAppId,
           include_aliases: {external_id: [me]},
           target_channel: "push",
           headings: {en: title},
           contents: {en: body}
-        })
       }).then(function(r){ return r.text(); })
         .then(function(t){ notePush({ok: true, to: me, reason: "reminder sent", detail: t.slice(0, 200)}); })
         .catch(function(e){ notePush({ok: false, reason: "reminder failed", detail: String(e && e.message || e)}); });
@@ -28608,8 +28617,7 @@
         var w = want[k];
         if(!w || (w.sig || "") !== (b[k].sig || "") || b[k].who !== m){
           if(b[k].id){
-            try{ fetch("https://api.onesignal.com/notifications/" + encodeURIComponent(b[k].id) + "?app_id=" + encodeURIComponent(state.onesignalAppId),
-                       {method: "DELETE", headers: auth()}).catch(function(){}); }catch(e){}
+            try{ osCancel(b[k].id).catch(function(){}); }catch(e){}
           }
           delete b[k]; changed = true;
         }
@@ -28620,10 +28628,10 @@
         b[k] = {at: w.at.getTime(), sig: w.sig || "", who: m, id: null}; changed = true;
         function drop(){ var bb = bookLoad(); if(bb[k] && !bb[k].id){ delete bb[k]; bookSave(bb); } }
         try{
-          fetch("https://api.onesignal.com/notifications?c=push", {method: "POST", headers: auth(), body: JSON.stringify({
+          osSend({
             app_id: state.onesignalAppId, include_aliases: {external_id: [m]}, target_channel: "push",
             headings: {en: w.title}, contents: {en: w.body}, send_after: w.at.toISOString()
-          })}).then(function(r){ return r.json(); })
+          }).then(function(r){ return r.json(); })
             .then(function(j){ if(j && j.id){ var bb = bookLoad(); if(bb[k]){ bb[k].id = j.id; bookSave(bb); } } else drop(); })
             .catch(drop);
         }catch(e){ drop(); }
