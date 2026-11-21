@@ -14593,7 +14593,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 232;
+  var BUILD_NUM = 234;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -28682,8 +28682,20 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       var B = rest.filter(function(t){ return t.assignedTo !== a && t.assignedTo !== b; });
       var line = mk("div", "w2-line");
       var heads = mk("div", "w2-heads");
+      /* BUILD 234: your photo sits in your name, ringed by how much of today you've done */
+      function avOf(pid){
+        try{
+          var today = todayISO(), d = (state.dailyPhotos || {})[pid], src = d && d.date === today ? photoSrc(d.photo) : null;
+          if(!src){ var days = Object.keys(state.album || {}).sort().reverse(); for(var i = 0; i < days.length && !src; i++){ var e = (state.album[days[i]] || {})[pid]; if(e && e.photo) src = photoSrc(e.photo); } }
+          var mine = (state.tasks || []).filter(function(t){ return t && t.assignedTo === pid; });
+          var done = mine.filter(function(t){ return t.status === "done" && String(t.completedAt || "").slice(0, 10) === today; }).length;
+          var due = mine.filter(function(t){ return t.status === "open" && t.dueDate && t.dueDate <= today; }).length;
+          var pct = (done + due) ? Math.round(done / (done + due) * 100) : 0;
+          return '<span class="w2-av" style="--p:' + pct + '" aria-label="' + done + ' of ' + (done + due) + ' done today"><i' + (src ? ' style="background-image:url(\'' + src + '\')"' : '') + '>' + (src ? '' : escapeHtml(String(personName(pid) || "?").charAt(0))) + '</i></span>';
+        }catch(e){ return ""; }
+      }
       [[a, L], [b, Rr]].forEach(function(x){
-        heads.appendChild(mk("div", "", '<div class="nm"><span>' + escapeHtml(personName(x[0])) + '</span><b class="ct" aria-label="' + x[1].length + ' open">' + x[1].length + '</b></div>'));
+        heads.appendChild(mk("div", "", '<div class="nm">' + avOf(x[0]) + '<span>' + escapeHtml(personName(x[0])) + '</span><b class="ct" aria-label="' + x[1].length + ' open">' + x[1].length + '</b></div>'));
       });
       line.appendChild(heads);
       var cols = mk("div", "w2-cols");
@@ -28695,12 +28707,27 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       });
       line.appendChild(cols);
       var both = mk("div", "w2-both"); both.setAttribute("data-zone", "both");
-      both.appendChild(mk("span", "w2-lbl", "on the line"));
+      /* BUILD 234: the line wears a photo of the two of you - a trophy or a trip photo, a different one each day */
+      (function(){
+        var lbl = mk("span", "w2-lbl"), pool = [];
+        try{
+          (state.tasks || []).forEach(function(t){ if(t && t.photo && photoSrc(t.photo)) pool.push({src: photoSrc(t.photo), what: t.title || "A trophy", when: String(t.completedAt || t.createdAt || "").slice(0, 10)}); });
+          Object.keys(state.tripPhotos || {}).sort().forEach(function(k){ var tp = state.tripPhotos[k]; var src = tp && photoSrc(tp.photo); if(src) pool.push({src: src, what: "Trip", when: tripDateOf(k)}); });
+        }catch(e){}
+        var pick = pool.length ? pool[Math.floor(Date.parse(todayISO() + "T12:00:00") / 864e5) % pool.length] : null;
+        var face = pick ? '<i style="background-image:url(\'' + pick.src + '\')"></i>' : '<i class="half"><b style="background:var(--moody)"></b><b style="background:var(--rae)"></b></i>';
+        lbl.innerHTML = '<span class="w2-tog">' + face + '</span>on the line';
+        if(pick){
+          lbl.classList.add("has-tog"); lbl.setAttribute("role", "button"); lbl.tabIndex = 0;
+          lbl.addEventListener("click", function(ev){ ev.stopPropagation(); var w = pick.when ? new Date(pick.when + "T12:00:00").toLocaleDateString(undefined, {month: "short", year: "numeric"}) : ""; toast(pick.what + (w ? " \u00b7 " + w : "")); });
+        }
+        both.appendChild(lbl);
+      })();
       B.forEach(function(t){ both.appendChild(chipFor(t)); });
       if(!B.length) both.appendChild(mk("div", "w2-empty", "Nothing shared yet"));
       line.appendChild(both);
       var handed = false; try{ handed = !!localStorage.getItem(HAND_KEY); }catch(e){}
-      if(!handed) line.appendChild(mk("p", "w2-hint", "Hold a task and slide it across the line to hand it over."));
+      if(!handed) line.appendChild(mk("p", "w2-hint", "Slide a task across the line to hand it over."));
       open.appendChild(line);
       dragInit(line);
     }
@@ -28744,7 +28771,12 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
         was.chip.classList.remove("gone"); line.classList.remove("dragging");
         [].forEach.call(line.querySelectorAll(".over"), function(el){ el.classList.remove("over"); });
         if(cancel) return;
-        var z = zoneAt(was.x);
+        var z = zoneAt(was.x), sdx = was.x - was.x0;
+        /* BUILD 233: swipe toward your own outside edge to finish it */
+        if(z === was.from && was.from !== "both" && ((was.from === pid(0) && sdx < -60) || (was.from === pid(1) && sdx > 60))){
+          var rg = was.chip.querySelector(".w2-ring"); if(rg){ setTimeout(function(){ rg.click(); }, 30); }
+          return;
+        }
         if(z !== was.from) handOver(was.id, z);
       }
       function begin(chip, x, y){
@@ -28761,7 +28793,10 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
         if(!s) return;
         var t = ev.touches[0];
         if(s.lifted){ ev.preventDefault(); move(t.clientX, t.clientY); return; }
-        if(Math.abs(t.clientX - s.x0) > 9 || Math.abs(t.clientY - s.y0) > 9){ clearTimeout(s.timer); s = null; }
+        /* BUILD 233: a sideways move picks the task up straight away - no hold needed */
+        var mdx = t.clientX - s.x0, mdy = t.clientY - s.y0;
+        if(Math.abs(mdx) > 10 && Math.abs(mdx) > Math.abs(mdy) * 1.2){ clearTimeout(s.timer); ev.preventDefault(); s.x = t.clientX; s.y = t.clientY; lift(); move(t.clientX, t.clientY); return; }
+        if(Math.abs(mdx) > 9 || Math.abs(mdy) > 9){ clearTimeout(s.timer); s = null; }
       }, {passive: false});
       line.addEventListener("touchend", function(){ end(false); });
       line.addEventListener("touchcancel", function(){ end(true); });
@@ -29898,6 +29933,49 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     try{ new MutationObserver(redockSoon).observe(document.body, {attributes: true, attributeFilter: ["class"]}); }catch(e){}
   })();
 /*B224JS*/
+  /* BUILD 233: date night after the date. A past pick with no photo asks for one (it goes
+     into that day in Memories, tagged Date night); with a photo, or once a new week opens,
+     the card stays out of the way. */
+  (function(){
+    function me(){ return deviceOwner() || state.currentUser || "p1"; }
+    function weekSun(){ var t = todayISO(), d = new Date(t + "T12:00:00"); return shiftISO(t, -d.getDay()); }
+    function esc(x){ try{ return escapeHtml(x); }catch(e){ return String(x || ""); } }
+    function fix(){
+      var card = document.getElementById("w2Date"); if(!card) return;
+      if(card.closest && card.closest(".w2-reset")) return;          /* inside the Sunday flow: leave it */
+      var k = weekSun(), e = (state.dateNight || {})[k];
+      card.hidden = false; card.classList.remove("w2-dn-after");
+      if(!e || !e.pick || !e.taskId) return;
+      var t = (state.tasks || []).filter(function(x){ return x.id === e.taskId; })[0];
+      var due = t && t.dueDate; if(!due || due >= todayISO()) return;
+      var day = (state.album || {})[due] || {};
+      if(day.p1 || day.p2 || e.photoDay === due){ card.hidden = true; return; }
+      var label = String(t.title || "").replace(/^Date night:\s*/, "");
+      card.classList.add("w2-dn-after");
+      card.innerHTML = '<h2>Date night</h2><p class="dn-sub">' + esc(new Date(due + "T12:00:00").toLocaleDateString(undefined, {weekday: "long", month: "short", day: "numeric"})) + '</p>' +
+        '<p class="dn-big" style="font-size:1.5rem">Add a photo from ' + esc(label) + '.</p>' +
+        '<button type="button" class="primary w2r-go">Add the photo</button>';
+      card.querySelector("button").addEventListener("click", function(){
+        try{
+          openFilePicker("image/*", function(f){
+            readAndCompress(f, function(dataUrl){
+              if(!dataUrl || dataUrl.length < 100){ toast("That photo didn\u2019t come through. Try another."); return; }
+              albumRecord(me(), dataUrl, due, new Date(due + "T21:00:00").toISOString());
+              var en = (state.dateNight || {})[k]; if(en) en.photoDay = due;
+              try{ save(); scheduleSync(); }catch(x){}
+              try{ sfx("photo"); }catch(x){}
+              toast("Saved to " + new Date(due + "T12:00:00").toLocaleDateString(undefined, {month: "short", day: "numeric"}) + " in Memories.");
+              renderAll();
+            });
+          });
+        }catch(err){ toast("Couldn\u2019t open your photos."); }
+      });
+    }
+    var _ra = renderAll;
+    renderAll = function(){ var r = _ra.apply(this, arguments); try{ fix(); }catch(e){} return r; };
+    try{ fix(); }catch(e){}
+  })();
+
   /* BUILD 231: get the next throwback ready while the app is open, so tomorrow's
      intro can show it before anything else has loaded; and open the day it showed. */
   (function(){
@@ -31786,6 +31864,39 @@ html[data-w2] #w2Over .w2-glass{
 /* 232: the seven evenings sit on one row instead of six and a lonely Saturday */
 html[data-w2] .w2-date .dn-days{ display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:6px; }
 html[data-w2] .w2-date .dn-days button{ min-width:0; padding:8px 0; font-size:.8125rem; }
+
+/* ---------- 233 ---------- */
+/* 1. the pulse rings stay invisible until their beat */
+@keyframes sp-ring3{ 0%{ opacity:0; transform:scale(.25); } 6%{ opacity:.95; } 100%{ opacity:0; transform:scale(5.5); } }
+@media (prefers-reduced-motion:no-preference){
+  .splash[data-y] .sp-ring{ animation-name:sp-ring3 !important; }
+}
+/* 2. sheets and dialogs: frosted-solid, no second glass layer (Safari drops nested backdrop blur) */
+html:root[data-w2][data-w2][data-w2] .sheet, html:root[data-w2][data-w2][data-w2] .tm-sheet, html:root[data-w2][data-w2][data-w2] .album-sheet, html:root[data-w2][data-w2][data-w2] .modal{
+  -webkit-backdrop-filter:none !important; backdrop-filter:none !important; background:var(--card) !important; }
+html:root[data-w2][data-w2][data-w2] .tmorph .card, html:root[data-w2][data-w2][data-w2] .modal-bg .card, html:root[data-w2][data-w2][data-w2] .sheet-bg .card{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+/* 4. tasks on the line can be swiped sideways without the page scrolling */
+html[data-w2] .w2-line .w2-chip{ touch-action:pan-y; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+.w2-lift{ transition:none !important; }
+/* 3. date night after the date */
+.w2-dn-after .dn-sub{ margin-top:6px; }
+.w2-dn-after .w2r-go{ margin-top:14px; }
+
+/* ---------- 234: Tasks puts the tasks first ---------- */
+html[data-w2] #view-tasks #w3Prog{ display:none !important; }
+html[data-w2] .w2-heads > div{ padding:0 6px !important; }
+html[data-w2] .w2-heads .nm{ padding:4px 5px 4px 4px !important; gap:6px !important; font-size:1.1875rem !important; }
+html[data-w2] .w2-heads .nm .ct{ flex:none; }
+html[data-w2] .w2-heads .nm > span:not(.w2-av){ overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.w2-av{ flex:none; width:32px; height:32px; border-radius:50%; padding:2.5px; background:conic-gradient(#fff calc(var(--p) * 1%), rgba(255,255,255,.35) 0); }
+.w2-av i{ display:grid; place-items:center; width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,.3) center/cover no-repeat; font:800 .875rem/1 var(--display); font-style:normal; color:#fff; }
+:root:not([data-mode="light"]) .w2-av{ background:conic-gradient(#1E1713 calc(var(--p) * 1%), rgba(30,23,19,.3) 0); }
+:root:not([data-mode="light"]) .w2-av i{ color:#1E1713; }
+.w2-lbl{ display:inline-flex !important; align-items:center; gap:6px; padding-left:3px !important; }
+.w2-tog{ flex:none; width:24px; height:24px; border-radius:50%; overflow:hidden; box-shadow:0 0 0 2px rgba(255,255,255,.85); }
+.w2-tog i{ display:flex; width:100%; height:100%; background:center/cover no-repeat; }
+.w2-tog i.half b{ flex:1; }
+.w2-lbl.has-tog{ cursor:pointer; }
 </style>
 </body>
 </html>
