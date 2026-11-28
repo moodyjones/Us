@@ -7925,9 +7925,11 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     /* BUILD 232: three openings in turn - A your numbers, B the split, C straight in -
        and every one then plays the full draw and the three-beat pulse. */
     var yi = parseInt(localStorage.getItem("us-w2-open-v1"), 10) || 0;
-    localStorage.setItem("us-w2-open-v1", String((yi + 1) % 3));
-    el.setAttribute("data-y", ["a", "b", "c"][yi % 3]);
-    if(DAY === "sun" && yi % 3 === 0) el.setAttribute("data-y", "b");   /* Sunday has its own numbers */
+    /* BUILD 245: four in turn. D is the liquid lens (HorizonX Liquid Lens Logo). */
+    localStorage.setItem("us-w2-open-v1", String((yi + 1) % 4));
+    el.setAttribute("data-y", ["a", "b", "c", "d"][yi % 4]);
+    if(DAY === "sun" && yi % 4 === 0) el.setAttribute("data-y", "b");   /* Sunday has its own numbers */
+    try{ if(el.getAttribute("data-y") === "d" && (DAY === "sun" || (window.matchMedia && matchMedia("(prefers-reduced-motion:reduce)").matches))) el.setAttribute("data-y", "c"); }catch(e){}
     var fx = document.createElement("div"); fx.className = "sp-fx";
     fx.innerHTML = '<i class="sp-pa"></i><i class="sp-pb"></i><i class="sp-ring r2"></i><i class="sp-ring r3"></i><i class="sp-ring"></i>';
     el.insertBefore(fx, el.firstChild);
@@ -8030,9 +8032,27 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     }
   }catch(e){}
 
+  /* BUILD 245: an achievement and a line, on a day with no throwback */
+  try{
+    if(!el.getAttribute("data-x") && new Date().getDay() !== 0){
+      var A5 = JSON.parse(localStorage.getItem("us-w2-ach-next") || "null"), al5 = localStorage.getItem("us-w2-ach-last") || "";
+      var ag5 = al5 ? Math.round((Date.parse(today0 + "T12:00:00") - Date.parse(al5 + "T12:00:00")) / 864e5) : 99;
+      if(A5 && A5.big && A5.title && ag5 >= 2){
+        var ac = document.createElement("div"); ac.className = "sp-throw sp-ach";
+        ac.innerHTML = '<span class="sp-ti sp-ab"><b></b><small></small></span><span class="sp-tc"><em>Achievement</em><strong></strong><i></i></span>';
+        ac.querySelector(".sp-ab b").textContent = A5.big; ac.querySelector(".sp-ab small").textContent = A5.title;
+        if(A5.quote){ ac.querySelector("strong").textContent = "\u201c" + A5.quote + "\u201d"; ac.querySelector(".sp-tc i").textContent = A5.by || ""; }
+        else { ac.querySelector("strong").textContent = A5.sub || ""; ac.querySelector(".sp-tc i").remove(); }
+        el.appendChild(ac); el.setAttribute("data-x", "throw"); el.setAttribute("data-ach", "1"); spLong = 13000;
+        localStorage.setItem("us-w2-ach-last", today0); localStorage.removeItem("us-w2-ach-next");
+      }
+    }
+  }catch(e){}
+  try{ if(el.getAttribute("data-x") && el.getAttribute("data-y") === "d") el.setAttribute("data-y", "c"); }catch(e){}
+  try{ sessionStorage.setItem("us-w2-opener", (el.getAttribute("data-y") || "") + (el.getAttribute("data-ach") ? "+ach" : (el.getAttribute("data-x") ? "+" + el.getAttribute("data-x") : ""))); }catch(e){}
   try{ if(el.getAttribute("data-y") === "a" && !el.getAttribute("data-counts")) el.setAttribute("data-y", "c"); }catch(e){}
   var spO = 0;
-  try{ var yy = el.getAttribute("data-y"); spO = yy === "a" ? .3 + Math.min(3, parseInt(el.style.getPropertyValue("--n"), 10) || 3) * .42 : (yy === "b" ? .85 : 0);
+  try{ var yy = el.getAttribute("data-y"); spO = yy === "a" ? .3 + Math.min(3, parseInt(el.style.getPropertyValue("--n"), 10) || 3) * .42 : (yy === "b" ? .85 : (yy === "d" ? 2.95 : 0));
        el.style.setProperty("--o", spO + "s"); }catch(e){}
   spLong = Math.max(spLong, (spO + 6.2) * 1000);
   try{ var sr = document.getElementById("splashReceipts"); if(sr && el.getAttribute("data-open") === "4" && sr.textContent) sr.hidden = false; }catch(e){}
@@ -8056,6 +8076,1645 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
   });
   setTimeout(end, spLong);
 })();</script>
+<script>/* BUILD 245 - opener D: the logo seen through a lens of oil.
+   HorizonX "Liquid Lens Logo", inlined as exported; it only runs on the launch
+   whose turn it is, and any failure drops straight to the still logo. */
+(function(){
+  var el = document.getElementById("splash");
+  if(!el || el.getAttribute("data-y") !== "d") return;
+  var done = false;
+  function out(ms){
+    if(done) return; done = true;
+    var w = document.getElementById("spLens"); if(!w) return;
+    w.style.transition = "opacity " + (ms || 420) + "ms ease"; w.style.opacity = "0";
+    setTimeout(function(){ try{ if(w.__stop) w.__stop(); }catch(e){} if(w.parentNode) w.parentNode.removeChild(w); }, (ms || 420) + 40);
+  }
+  try{
+    
+/* HorizonX code adapted from MIT-licensed work. HorizonX Tools License.
+The optical model, shot curves and grade constants are adapted from
+Travis Fischer's open-source recreation
+(https://github.com/transitive-bullshit/apple-music-effect), used under the MIT License:
+
+MIT License
+
+Copyright (c) 2026 Travis Fischer
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+/**
+ * Liquid Lens Logo: a short logo sting in which a dome of oil swells over a
+ * symbol, magnifies it, bends its edges into spectral colour and drains away,
+ * then a long low lens rolls across the wordmark, sends ripples off its rim and
+ * falls flat, leaving the wordmark on a dark stage.
+ *
+ * The oil is a closed-form height field (a superellipse dome, a travelling
+ * wave on its rim and ripples from its centre). Every pixel's view ray is
+ * refracted through it onto the logo once per wavelength (Cauchy dispersion,
+ * a CIE 1931 fit), the studio's Fresnel reflection is added, eight subframes
+ * across the shutter are averaged for motion blur, and a bloom chain and a
+ * grade finish the frame. Nothing is simulated step by step: a frame is a pure
+ * function of film time, so a paused frame never shimmers.
+ *
+ * HorizonX code. The optical model, its shot curves and its grade constants are
+ * adapted from Travis Fischer's open-source recreation (MIT License, Copyright
+ * (c) 2026 Travis Fischer; full notice in THIRD_PARTY_NOTICES.md and in every
+ * export). No marks, footage or artwork from it ship here.
+ * Returns an idempotent disposer with update(config); updates write uniforms or
+ * swap a texture and never rebuild the renderer.
+ */
+
+const DEFAULT_SYMBOL = "data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='UTF-8'?%3e%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='-2%20-2%20266%20266'%20width='266'%20height='266'%20fill='%23FFFFFF'%3e%3cpath%20d='M%2040.25,113.9%20L%200.0,113.68%20L%200.13,76.68%20C%200.27,35.7%2033.93,2.22%2075.04,0.17%20L%20118.30000000000001,0.0%20C%20118.61000000000001,13.38%20118.98000000000002,25.39%20118.43,38.6%20C%20116.72000000000001,80.06%2082.14000000000001,114.14000000000001%2040.24000000000001,113.91%20L%2040.25,113.9'%20transform='translate(0.000%200.000)%20scale(0.98136%201.02273)'%20fill='%23FFFFFF'/%3e%3cpath%20d='M%20267.84,113.75%20L%20226.53999999999996,113.75%20C%20183.60999999999996,111.89%20148.86999999999995,76.09%20149.01999999999998,33.47%20L%20149.14,0.10999999999999943%20L%20192.10999999999999,0.12999999999999942%20C%20233.67,1.3099999999999994%20266.94,34.89%20267.87,76.50999999999999%20L%20267.84000000000003,113.75%20L%20267.84,113.75'%20transform='translate(-0.572%20-0.113)%20scale(0.98022%201.02517)'%20fill='%23FFFFFF'/%3e%3cpath%20d='M%20118.46,256.06%20C%20102.69,256.16%2088.82,256.73%2074.06,255.83%20C%2032.63,253.32%200.0,218.77%200.04,177.56%20L%200.07,141.64%20L%2037.59,141.32%20C%2080.07,140.95999999999998%20116.49000000000001,173.62%20118.44,216.45%20L%20118.46,256.06'%20transform='translate(-0.039%202.356)%20scale(0.98379%201.01293)'%20fill='%23FFFFFF'/%3e%3cpath%20d='M%20152.96,256.42%20C%20150.64000000000001,256.44%20148.56,254.51000000000002%20148.59,252.57000000000002%20L%20149.14000000000001,218.10000000000002%20C%20149.75000000000003,180.36%20185.13000000000002,143.85000000000002%20224.46,141.75000000000003%20L%20267.72,141.54000000000002%20L%20267.92,178.58%20C%20268.14000000000004,220.49%20233.59000000000003,255.69%20191.5,256.07%20L%20152.96,256.42'%20transform='translate(0.436%201.964)%20scale(0.97627%201.01410)'%20fill='%23FFFFFF'/%3e%3c/svg%3e";
+const DEFAULT_WORDMARK = DEFAULT_SYMBOL;
+
+const DEFAULT_LIQUID_LENS_LOGO_CONFIG = {
+  viewportWidth: 1040,
+  viewportHeight: 585,
+  symbol: DEFAULT_SYMBOL,
+  wordmark: DEFAULT_WORDMARK,
+  logoColor: '#f7f9ff',
+  background: '#000000',
+  speed: 0.920001,
+  hold: 0.899999,
+  repeat: 'loop',
+  bulge: 1,
+  rainbow: 1,
+  gloss: 1,
+  glow: 1,
+  animate: true
+};
+
+/* ---- The film: two shots, every moving quantity a short curve of keys ---- */
+
+const FILM_DURATION = 4;
+const FPS = 24000 / 1001;
+// World units: the frame is 2 units tall, y up. A narrow stage widens the view
+// until this much of the scene's width still fits.
+const CONTENT_HALF_WIDTH = 0.820001;
+const MAX_PIXELS = 3840 * 2160;
+const BLOOM_LEVELS = 6;
+// Mark texels per world unit.
+const TEXELS_PER_UNIT = 1400;
+
+const BASE_LOOK = {
+  dome: 1,
+  ringWidth: 0.0500001,
+  ringWavelength: 0,
+  ringOffset: 0,
+  ringSpeed: 0,
+  rippleWavelength: 0.0550001,
+  rippleSpeed: 0.399999,
+  rippleReach: 0.900001,
+  depth: 1,
+  iorOil: 1.46999,
+  dispersion: 16,
+  dispersionKnee: 0,
+  maxSlope: 0,
+  wavelengths: 12,
+  defocus: 0.05,
+  blur: 0,
+  reflect: 1,
+  reveal: 1,
+  revealSoft: 0.06,
+  softbox: 20,
+  horizon: 6,
+  ringLight: 0,
+  ringLightWidth: 0.450001,
+  exposure: 1,
+  logoColor: [0.93, 0.95, 1],
+  floorColor: [0.00119999, 0.0014, 0.002],
+  bloom: 0.0300001,
+  bloomRadius: 1,
+  grain: 0,
+  vignette: 0.249999,
+  saturation: 1.49999,
+  black: 0.012,
+  glowTint: [0.549999, 0.750001, 1.34999],
+  balance: [0.970001, 1, 1.02999],
+  shutter: 0.5,
+  subframes: 8
+};
+
+const SYMBOL_DOME = {
+  center: [-0.01, 0],
+  exponent: 3.29999,
+  aspect: 1,
+  from: { crown: 0.459701, shoulder: 0.724499, flat: 45, edge: 0.199999 },
+  to: { crown: 0.100399, shoulder: 0.400799, flat: 45, edge: 0.2 },
+  radius: [[0.05, 0.1], [0.12, 0.290001], [0.209999, 0.415], [0.420001, 0.477999], [0.749999, 0.526001], [1.16999, 0.539999]],
+  height: [[0.0500001, 0], [0.119999, 0.100001], [0.21, 0.150699], [0.450001, 0.179599], [0.749999, 0.2432], [1.00001, 0.244999], [1.15, 0.219999], [1.30001, 0.0219999]],
+  morph: [[0.28, 0], [0.449999, 1]],
+  settle: [[0.210001, 0], [0.599999, 0.737899], [1.00001, 1]]
+};
+
+const WORDMARK_DOME = {
+  center: [0, 0],
+  exponent: 2,
+  aspect: 1,
+  from: { crown: 0, shoulder: 0, flat: 2, edge: 0.8 },
+  to: { crown: 0, shoulder: 0, flat: 11.67, edge: 2.83999 },
+  radius: [[0, 0.149999], [0.135, 0.24], [0.295, 0.349999], [0.374999, 0.4], [0.599999, 0.5], [0.940001, 0.66], [1.20001, 0.650001], [1.5, 0.620001], [1.8, 0.6]],
+  height: [[0, 0.0135999], [0.134999, 0.0409999], [0.295001, 0.0682001], [0.375, 0.0863999], [0.599999, 0.0384999], [0.939999, 0.0408999], [1.20001, 0.0120001], [1.59999, 0]],
+  morph: [[0, 0]],
+  settle: [[0.375001, 0], [0.58, 1]]
+};
+
+const SHOTS = [
+  {
+    // a bubble grows into a rounded square that magnifies the symbol, settles to
+    // a flat top with a steep rim that smears its edges, then drains away
+    name: 'symbol',
+    start: 0,
+    end: 1.465,
+    // where the mark's visible bounds sit: centre and the box they fit, units
+    slot: { center: [-0.0143001, -0.00380001], box: [0.559999, 0.624] },
+    dome: SYMBOL_DOME,
+    fade: [[0.0399999, 0], [0.250001, 1]],
+    colour: [[0.099999, 0.3], [0.210001, 1]],
+    ring: [[0.099999, 0], [0.200001, 0.0119999], [0.299999, 0.008], [0.420001, 0], [0.500001, 0], [0.620001, 0.0119999], [0.849999, 0.00800001], [0.99999, 0]],
+    ringReach: [[0.099999, 0.0500001], [0.420001, 0.0500001], [0.55, 0.0299999], [0.629999, 0.0700001], [0.800001, 0.159999], [0.99999, 0.26]],
+    // the symbol falls away into the dark, accelerating into the cut
+    recede: [[1.2, 1], [1.23999, 0.972999], [1.27299, 0.926001], [1.30699, 0.870001], [1.33999, 0.814], [1.373, 0.743001], [1.40701, 0.612001], [1.44, 0.425999], [1.465, 0.3]],
+    look: { dispersion: 100, dispersionKnee: 0.899999, maxSlope: 1.39999, softbox: 4, ringWidth: 0.0200001, dome: 0.9 }
+  },
+  {
+    // an orb around a chrome ball widens into a long low lens over the wordmark,
+    // bends its ends outward with colour, sends echoes off its rim and falls flat
+    name: 'wordmark',
+    start: 1.465,
+    end: FILM_DURATION,
+    slot: { center: [0, 0.0100001], box: [1.08999, 0.340001] },
+    dome: WORDMARK_DOME,
+    ring: [[0.699999, 0], [0.9, 0.00300001], [1.0, 0.003], [1.20001, 0.00349999], [1.45001, 0.00249999], [1.62, 0]],
+    ripple: { height: 0.005, decay: 0.499999 },
+    ball: { radius: 0.0649999, lift: [[0.249999, 0], [0.399999, -0.200001]] },
+    fade: [[0, 0.299999], [0.0349999, 1]],
+    colour: [[0.375001, 0.200001], [0.579999, 1]],
+    gloss: [[0.249999, 1], [0.420001, 0.1], [0.599999, 0]],
+    // ASCII type style only: the floor's dots go dark as the lens settles, then
+    // the glyphs decode cell by cell into the clean wordmark
+    dots: [[0.900001, 1], [1.20001, 0]],
+    resolve: [[1.24999, 0], [1.6, 1]],
+    look: {
+      bloom: 0.0119999, ringWavelength: 0.0600001, ringWidth: 0.0600001, ringSpeed: 0.08, softbox: 2,
+      horizon: 0.25, ringLight: 1.30001, rippleWavelength: 0.0799999, dispersion: 60, dispersionKnee: 0.300001
+    }
+  }
+];
+
+/* ---- Curves: monotone cubic Hermite (Fritsch–Carlson), held flat outside ---- */
+
+const slopeCache = new WeakMap();
+function slopesOf(curve) {
+  const cached = slopeCache.get(curve);
+  if (cached) return cached;
+  const n = curve.length;
+  const secant = new Float64Array(Math.max(0, n - 1));
+  for (let i = 0; i < n - 1; i++) secant[i] = (curve[i + 1][1] - curve[i][1]) / (curve[i + 1][0] - curve[i][0]);
+  // flat ends, so the hold outside the keys joins without a kink
+  const m = new Float64Array(n);
+  for (let i = 1; i < n - 1; i++) m[i] = (secant[i - 1] + secant[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    const s = secant[i];
+    if (s === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+    // a tangent against the secant is zeroed before the length test, or the
+    // rescale below would bring it back and the curve would overshoot a peak
+    const alpha = Math.max(0, m[i] / s);
+    const beta = Math.max(0, m[i + 1] / s);
+    if (alpha === 0) m[i] = 0;
+    if (beta === 0) m[i + 1] = 0;
+    const len = Math.hypot(alpha, beta);
+    if (len > 3) { m[i] = (3 * alpha * s) / len; m[i + 1] = (3 * beta * s) / len; }
+  }
+  slopeCache.set(curve, m);
+  return m;
+}
+
+/** Samples a curve of [seconds, value] keys at time t. */
+function sampleCurve(curve, t) {
+  const n = curve.length;
+  if (n === 0) return 0;
+  if (n === 1 || t <= curve[0][0]) return curve[0][1];
+  if (t >= curve[n - 1][0]) return curve[n - 1][1];
+  let i = 0;
+  while (t > curve[i + 1][0]) i++;
+  const m = slopesOf(curve);
+  const [ta, va] = curve[i];
+  const [tb, vb] = curve[i + 1];
+  const dt = tb - ta;
+  const u = (t - ta) / dt, u2 = u * u, u3 = u2 * u;
+  return (2 * u3 - 3 * u2 + 1) * va + (u3 - 2 * u2 + u) * dt * m[i] + (-2 * u3 + 3 * u2) * vb + (u3 - u2) * dt * m[i + 1];
+}
+
+/** Index of the shot showing at film time t (the last one from its end on). */
+function shotIndexAt(t) {
+  const i = SHOTS.findIndex((s) => t >= s.start && t < s.end);
+  return i < 0 ? SHOTS.length - 1 : i;
+}
+
+/** The dome at one instant of its shot: everything the optics pass needs. */
+function domeFrame(shot, look, t) {
+  const d = shot.dome;
+  const settle = sampleCurve(d.settle, t);
+  const morph = sampleCurve(d.morph, t);
+  const mix = (k) => d.from[k] + (d.to[k] - d.from[k]) * settle;
+  return {
+    radius: sampleCurve(d.radius, t),
+    height: Math.max(0, sampleCurve(d.height, t)) * look.dome,
+    exponent: 2 + (d.exponent - 2) * morph,
+    aspect: 1 + (d.aspect - 1) * morph,
+    settle,
+    crown: mix('crown'),
+    shoulder: mix('shoulder'),
+    flat: mix('flat'),
+    edge: mix('edge'),
+    ring: shot.ring ? sampleCurve(shot.ring, t) : 0,
+    ringReach: shot.ringReach ? sampleCurve(shot.ringReach, t) : look.ringOffset,
+    // the ripples decay from the shot's start and are gone once the dome settles
+    ripple: shot.ripple ? shot.ripple.height * Math.exp(-t / shot.ripple.decay) * (1 - settle) : 0
+  };
+}
+
+/** #rgb / #rrggbb to linear-light RGB. */
+function hexToLinear(hex) {
+  let h = String(hex ?? '').replace('#', '');
+  if (h.length === 3) h = [...h].map((c) => c + c).join('');
+  if (!/^[0-9a-f]{6}$/i.test(h)) return [0, 0, 0];
+  return [0, 2, 4].map((i) => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.0404499 ? c / 12.92 : ((c + 0.055) / 1.05499) ** 2.39999;
+  });
+}
+
+/** Each shot's look with the panel's settings applied. */
+function looksFor(config) {
+  const ink = hexToLinear(config.logoColor);
+  const floor = hexToLinear(config.background);
+  return SHOTS.map((shot) => {
+    const look = { ...BASE_LOOK, ...shot.look };
+    look.dome *= config.bulge;
+    look.dispersion *= config.rainbow;
+    look.reflect *= config.gloss;
+    look.bloom *= config.glow;
+    look.logoColor = ink;
+    // the faint blue lift of the original floor rides on top; the grade's black
+    // level crushes it, so a black background stays black
+    look.floorColor = floor.map((c, i) => c + BASE_LOOK.floorColor[i]);
+    return look;
+  });
+}
+
+/** Half the visible height in world units for a stage aspect (width / height). */
+function viewHalf(aspect) {
+  return Math.max(1, CONTENT_HALF_WIDTH / Math.max(aspect, 1e-3));
+}
+
+/**
+ * Playback. Film time runs at `speed`, the last frame holds for `hold` seconds
+ * and the film starts over (`repeat: 'loop'`) or stays on it (`'once'`).
+ * Integrated, not derived from a wall clock, so a speed edit never jumps.
+ */
+function advanceFilm(clock, dt, { speed, hold, repeat }) {
+  let { t, held } = clock;
+  if (t < FILM_DURATION) {
+    t += dt * speed;
+    if (t >= FILM_DURATION) { held = (t - FILM_DURATION) / Math.max(speed, 1e-3); t = FILM_DURATION; }
+  } else held += dt;
+  if (t >= FILM_DURATION && repeat === 'loop' && held >= hold) {
+    // carry the overshoot so a loop keeps its rhythm at any frame rate
+    t = Math.min(FILM_DURATION, (held - hold) * speed);
+    held = 0;
+  }
+  return { t, held };
+}
+
+/**
+ * Where a mark sits: the whole image's rect in world units, scaled so its
+ * visible bounds (`ink`: x, y, w, h as fractions, y down) fill the shot's slot.
+ */
+function fitMark(slot, aspect, ink) {
+  const [bx, by, bw, bh] = ink;
+  const inkAspect = (bw * aspect) / bh;
+  const inkW = Math.min(slot.box[0], slot.box[1] * inkAspect);
+  const width = inkW / bw;
+  const height = width / aspect;
+  const cx = slot.center[0] - (bx + bw / 2 - 0.500001) * width;
+  const cy = slot.center[1] + (by + bh / 2 - 0.500001) * height;
+  return [cx - width / 2, cy - height / 2, width, height];
+}
+
+// The editor stores a "Solid" slot as a 16 px SVG rect: a plain tile of light.
+function isSolidSource(src) {
+  if (typeof src !== 'string' || !/^data:image\/svg\+xml/i.test(src)) return false;
+  try { return /<rect width="16" height="16" fill="/.test(decodeURIComponent(src)); } catch { return false; }
+}
+
+/* ---- ASCII type: the logo drawn as a grid of glyphs that the oil refracts ---- */
+
+// Rows of glyphs across a 2-unit-tall frame, the global contrast exponent and
+// the brightness of the dots on the empty floor.
+const DEFAULT_ASCII = { rows: 90, contrast: 1.59999, dots: 0.0500001 };
+const ASCII_LIMITS = { rows: [30, 160], contrast: [1, 3], dots: [0, 0.3] };
+
+// Every printable ASCII character is drawn once into an atlas, and each gets a
+// shape vector: how much ink sits under six staggered circles in its cell
+// (after Alex Harri's "ASCII characters are not pixels"), so a cell takes the
+// glyph whose shape fits the logo under it, not only its average brightness.
+const GLYPH_COLS = 16;
+const GLYPH_W = 48;
+const GLYPH_H = 80;
+const GLYPH_FIRST = 32;
+const GLYPH_COUNT = 126 - GLYPH_FIRST + 1;
+const CIRCLES = [[0.3, 0.219999], [0.700001, 0.16], [0.299999, 0.519999], [0.699999, 0.460001], [0.300001, 0.819999], [0.699999, 0.76]];
+const CIRCLE_RADIUS = 0.199999;
+// Symbols only: letters and digits read as words inside a logo.
+const GLYPH_CHARSET = ' .\'`,:;-_~^"=+*<>!|/\\()[]{}#%@&$';
+const GLYPH_FONT = '700 64px "DejaVu Sans Mono", "JetBrains Mono", ui-monospace, monospace';
+
+function asciiOptions(config) {
+  if (config.style !== 'ascii') return null;
+  const pick = (key, value) => {
+    const [min, max] = ASCII_LIMITS[key];
+    return typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : DEFAULT_ASCII[key];
+  };
+  return { rows: pick('rows', config.asciiRows), contrast: pick('contrast', config.asciiContrast), dots: pick('dots', config.asciiDots) };
+}
+
+/** World size of one glyph cell and the atlas mip level that draws it `framePx` tall. */
+function typeCell(rows, framePx, half) {
+  const h = 2 / rows;
+  const px = framePx / rows / half;
+  return { cell: [(h * GLYPH_W) / GLYPH_H, h], lod: Math.max(0, Math.log2(GLYPH_H / px) - 0.5) };
+}
+
+function buildGlyphs(charset = GLYPH_CHARSET) {
+  const atlas = document.createElement('canvas');
+  atlas.width = GLYPH_COLS * GLYPH_W;
+  atlas.height = Math.ceil(GLYPH_COUNT / GLYPH_COLS) * GLYPH_H;
+  const ctx = atlas.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff';
+  ctx.font = GLYPH_FONT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < GLYPH_COUNT; i++) {
+    const x = (i % GLYPH_COLS) * GLYPH_W;
+    const y = Math.floor(i / GLYPH_COLS) * GLYPH_H;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, GLYPH_W, GLYPH_H);
+    ctx.clip();
+    ctx.fillText(String.fromCharCode(GLYPH_FIRST + i), x + GLYPH_W / 2, y + GLYPH_H / 2 + 3);
+    ctx.restore();
+  }
+  const pixels = ctx.getImageData(0, 0, atlas.width, atlas.height).data;
+  const r = CIRCLE_RADIUS * GLYPH_W;
+  const raw = [];
+  for (let i = 0; i < GLYPH_COUNT; i++) {
+    const ox = (i % GLYPH_COLS) * GLYPH_W;
+    const oy = Math.floor(i / GLYPH_COLS) * GLYPH_H;
+    raw.push(CIRCLES.map(([cx, cy]) => {
+      let ink = 0, n = 0;
+      const px = cx * GLYPH_W, py = cy * GLYPH_H;
+      for (let y = Math.floor(py - r); y <= Math.ceil(py + r); y++) {
+        for (let x = Math.floor(px - r); x <= Math.ceil(px + r); x++) {
+          if ((x - px) ** 2 + (y - py) ** 2 > r * r) continue;
+          ink += pixels[((oy + y) * atlas.width + ox + x) * 4 + 3] / 255;
+          n++;
+        }
+      }
+      return n ? ink / n : 0;
+    }));
+  }
+  // Only the charset competes, normalised per circle over it, so its densest
+  // glyph spans the full range on each one.
+  const picks = [...new Set(charset)].map((c) => c.charCodeAt(0) - GLYPH_FIRST).filter((i) => i >= 0 && i < GLYPH_COUNT);
+  const max = CIRCLES.map((_, k) => Math.max(1e-6, ...picks.map((i) => raw[i][k])));
+  // Three texels per candidate: RGB = shape components 0-2 and 3-5, then R = its atlas index.
+  const shapes = document.createElement('canvas');
+  shapes.width = 3;
+  shapes.height = picks.length;
+  const s = shapes.getContext('2d');
+  const img = s.createImageData(3, picks.length);
+  picks.forEach((g, row) => {
+    for (let k = 0; k < 6; k++) img.data[(row * 3 + Math.floor(k / 3)) * 4 + (k % 3)] = Math.round((raw[g][k] / max[k]) * 255);
+    img.data[(row * 3 + 2) * 4] = g;
+    // opaque, so the canvas never premultiplies the values
+    for (let t = 0; t < 3; t++) img.data[(row * 3 + t) * 4 + 3] = 255;
+  });
+  s.putImageData(img, 0, 0);
+  return { atlas, shapes, count: picks.length, dot: '.'.charCodeAt(0) - GLYPH_FIRST };
+}
+
+/* ---- Corner words: they scramble in on load and again while the type decodes ---- */
+
+const CORNER_NOISE = GLYPH_CHARSET.replace(/\s/g, '');
+const CORNER_LOAD_SECONDS = 0.599999;
+const CORNER_LIMIT = 16;
+// Film seconds in which the type decodes into the wordmark.
+const DECODE = (() => {
+  const shot = SHOTS.find((s) => s.resolve);
+  return [shot.start + shot.resolve[0][0], shot.start + shot.resolve.at(-1)[0]];
+})();
+// A stable 0..1 per letter, so each one settles at its own moment.
+const letterOrder = (word, letter) => {
+  const x = Math.sin(word * 127.1 + letter * 311.701) * 43758.54529;
+  return x - Math.floor(x);
+};
+
+/** Corner progress at film time t, `sinceLoad` seconds after mounting: 0 all noise, 1 the words. */
+function cornerProgress(t, sinceLoad) {
+  if (sinceLoad < CORNER_LOAD_SECONDS) return Math.max(0, sinceLoad / CORNER_LOAD_SECONDS);
+  const [a, b] = DECODE;
+  return t < a || t > b ? 1 : (t - a) / (b - a);
+}
+
+/** Word `w` at progress p; `tick` picks which noise glyphs stand in for unsettled letters. */
+function scrambleWord(word, w, p, tick) {
+  return [...word].map((c, i) => (c === ' ' || p >= 0.15 + 0.850001 * letterOrder(w, i)
+    ? c
+    : CORNER_NOISE[Math.floor(letterOrder(w + tick, i) * CORNER_NOISE.length)])).join('');
+}
+
+/** Up to four words, upper-cased and trimmed: top left, top right, bottom left, bottom right. */
+function cornerWords(list) {
+  return (Array.isArray(list) ? list : []).slice(0, 4)
+    .map((word) => (typeof word === 'string' ? word.trim().slice(0, CORNER_LIMIT).toUpperCase() : ''));
+}
+
+/* ---- Shaders ---- */
+
+const PRELUDE = `#version 300 es
+precision highp float;
+precision highp int;
+precision highp sampler2D;
+`;
+
+const VERTEX = `#version 300 es
+out vec2 vUv;
+void main() {
+  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+  vUv = p;
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+const NOISE = `
+float noise2(vec2 p) {
+  vec3 q = fract(vec3(p.xyx) * 0.1031);
+  q += dot(q, q.yzx + 33.33);
+  return fract((q.x + q.y) * q.z);
+}
+`;
+
+// Glyph lookups shared by the type passes; the atlas layout matches buildGlyphs.
+const GLYPH = `
+const float GLYPH_COLS = ${GLYPH_COLS}.0;
+const vec2 GLYPH_PX = vec2(${GLYPH_W}.0, ${GLYPH_H}.0);
+
+// coverage of glyph i at f (cell space, y down)
+float glyphInk(sampler2D atlas, float i, vec2 f, float lod) {
+  vec2 size = vec2(textureSize(atlas, 0));
+  vec2 cell = vec2(mod(i, GLYPH_COLS), floor(i / GLYPH_COLS));
+  // half a texel off the cell edge, so filtering never reaches the neighbour
+  vec2 inner = clamp(f * GLYPH_PX, vec2(0.5), GLYPH_PX - 0.5);
+  return textureLod(atlas, (cell * GLYPH_PX + inner) / size, lod).a;
+}
+
+// the atlas index of the glyph whose six-circle shape is nearest to (a, b)
+int nearestGlyph(sampler2D shapes, int count, vec3 a, vec3 b) {
+  int best = 0;
+  float bestD = 1e9;
+  for (int i = 0; i < 128; i++) {
+    if (i >= count) break;
+    vec3 da = texelFetch(shapes, ivec2(0, i), 0).rgb - a;
+    vec3 db = texelFetch(shapes, ivec2(1, i), 0).rgb - b;
+    float d = dot(da, da) + dot(db, db);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return int(texelFetch(shapes, ivec2(2, best), 0).r * 255.0 + 0.5);
+}
+`;
+
+// One texel per cell of the type floor: R = the glyph whose shape best matches
+// the logo under the cell, G = how bright it is drawn. Empty cells get a faint
+// dot so the lens has a grid to bend.
+const TYPEMAP_FS = `${PRELUDE}
+uniform sampler2D uMark;
+uniform vec4 uMarkRect;
+uniform vec2 uMarkSize;
+uniform vec2 uTypeOrigin;
+uniform vec2 uTypeCell;
+uniform sampler2D uShapes;
+uniform int uCount;
+uniform float uContrast;
+uniform float uDots;
+uniform float uDotGlyph;
+out vec4 outColor;
+${GLYPH}
+const vec2 CIRCLE[6] = vec2[6](${CIRCLES.map(([x, y]) => `vec2(${x.toFixed(3)}, ${y.toFixed(3)})`).join(', ')});
+const float CIRCLE_R = ${CIRCLE_RADIUS.toFixed(3)};
+
+// global contrast: normalise by the largest component, raise, scale back
+void enhance(inout vec3 a, inout vec3 b, float k) {
+  float m = max(max(max(a.x, a.y), max(a.z, b.x)), max(b.y, b.z));
+  if (m <= 0.0) return;
+  a = pow(a / m, vec3(k)) * m;
+  b = pow(b / m, vec3(k)) * m;
+}
+
+float coverage(vec2 q, float lod) {
+  vec2 uv = (q - uMarkRect.xy) / uMarkRect.zw;
+  if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) return 0.0;
+  return textureLod(uMark, vec2(uv.x, 1.0 - uv.y), lod).a;
+}
+
+void main() {
+  vec2 lo = uTypeOrigin + floor(gl_FragCoord.xy) * uTypeCell;
+  float texelsPerUnit = uMarkSize.x / uMarkRect.z;
+  float lod = log2(max(1.0, 2.0 * CIRCLE_R * uTypeCell.x * texelsPerUnit));
+  float v[6];
+  for (int k = 0; k < 6; k++) {
+    vec2 c = CIRCLE[k];
+    v[k] = coverage(lo + vec2(c.x, 1.0 - c.y) * uTypeCell, lod);
+  }
+  vec3 a = vec3(v[0], v[1], v[2]);
+  vec3 b = vec3(v[3], v[4], v[5]);
+  float mean = (a.x + a.y + a.z + b.x + b.y + b.z) / 6.0;
+  if (max(max(a.x, a.y), max(max(a.z, b.x), max(b.y, b.z))) < 0.04) {
+    outColor = vec4(uDotGlyph, uDots, 0.0, 1.0);
+    return;
+  }
+  enhance(a, b, uContrast);
+  outColor = vec4(float(nearestGlyph(uShapes, uCount, a, b)), 1.0, mean, 1.0);
+}
+`;
+
+const REFRACT_FS = `${PRELUDE}
+in vec2 vUv;
+uniform vec2 uCenter;
+uniform float uHalf;
+uniform float uAspect;
+uniform sampler2D uMark;
+uniform vec4 uMarkRect;
+uniform vec2 uMarkSize;
+uniform vec3 uInk;
+uniform vec3 uFloor;
+uniform float uDepth;
+uniform float uIor;
+uniform float uDispersion;
+uniform float uKnee;
+uniform float uSlopeCap;
+uniform int uSamples;
+uniform float uDefocus;
+uniform float uBlur;
+uniform float uReflect;
+uniform float uSoftbox;
+uniform float uWalls;
+uniform float uRingLight;
+uniform float uRingSpread;
+uniform vec4 uBall;
+uniform vec2 uDomeCenter;
+uniform vec3 uDome;
+uniform float uDomeAspect;
+uniform vec3 uShape;
+uniform float uEdge;
+uniform vec4 uWave;
+uniform float uWavePhase;
+uniform vec4 uRipple;
+uniform float uReveal;
+uniform float uRevealSoft;
+uniform float uSeed;
+// the type floor (ASCII style); uType 0 draws the logo itself
+uniform int uType;
+uniform sampler2D uTypeMap;
+uniform vec2 uTypeOrigin;
+uniform vec2 uTypeCell;
+uniform sampler2D uAtlas;
+uniform float uAtlasLod;
+uniform float uResolve;
+out vec4 outColor;
+${NOISE}
+${GLYPH}
+float footprint(vec2 o) {
+  vec2 d = abs(o) / (uDome.x * vec2(uDomeAspect, 1.0));
+  return pow(pow(d.x, uDome.z) + pow(d.y, uDome.z), 1.0 / uDome.z);
+}
+
+float domeHeight(vec2 p) {
+  if (uDome.x <= 0.0) return 0.0;
+  vec2 o = p - uDomeCenter;
+  vec2 d = abs(o) / (uDome.x * vec2(uDomeAspect, 1.0));
+  float rho = pow(pow(d.x, uDome.z) + pow(d.y, uDome.z), 1.0 / uDome.z);
+  float beyond = length(o) * (1.0 - 1.0 / max(rho, 1e-4));
+  float e = (beyond - uWave.w) / max(uWave.y, 1e-4);
+  float train = uWave.z > 0.0 ? cos(6.2831853 * (beyond - uWave.w) / uWave.z - uWavePhase) : 1.0;
+  float wave = uWave.x * exp(-e * e) * train;
+  if (rho >= 1.0 || uDome.y <= 0.0) return wave;
+  float r2 = dot(d, d);
+  float body = exp(-uShape.x * r2 - uShape.z * r2 * r2);
+  return wave + uDome.y * body * pow(1.0 - pow(rho, uShape.y), uEdge);
+}
+
+float rippleHeight(vec2 p) {
+  if (uRipple.x <= 0.0 || uDome.x <= 0.0) return 0.0;
+  float r = length(p - uDomeCenter);
+  float fade = 1.0 - smoothstep(0.0, uRipple.w * uDome.x, r);
+  return uRipple.x * fade * sin(6.2831853 * r / uRipple.y - uRipple.z);
+}
+
+float height(vec2 p) { return domeHeight(p) + rippleHeight(p); }
+
+float localDispersion = 0.0;
+
+float indexAt(float n589, float lambda) {
+  float B = 0.0044 * localDispersion;
+  return n589 + B * (1.0 / (lambda * lambda) - 1.0 / (0.5893 * 0.5893));
+}
+
+float gauss2(float x, float mu, float s1, float s2) {
+  float t = (x - mu) / (x < mu ? s1 : s2);
+  return exp(-0.5 * t * t);
+}
+
+vec3 response(float lambda) {
+  float l = lambda * 1000.0;
+  float X = 1.056 * gauss2(l, 599.8, 37.9, 31.0) + 0.362 * gauss2(l, 442.0, 16.0, 26.7) - 0.065 * gauss2(l, 501.1, 20.4, 26.2);
+  float Y = 0.821 * gauss2(l, 568.8, 46.9, 40.5) + 0.286 * gauss2(l, 530.9, 16.3, 31.1);
+  float Z = 1.217 * gauss2(l, 437.0, 11.8, 36.0) + 0.681 * gauss2(l, 459.0, 26.0, 13.8);
+  return mat3(3.2406, -0.9689, 0.0557, -1.5372, 1.8758, -0.2040, -0.4986, 0.0415, 1.0570) * vec3(X, Y, Z);
+}
+
+vec3 studio(vec3 r) {
+  if (r.z <= 0.0) return vec3(0.0);
+  vec2 s = r.xy / max(r.z, 0.05);
+  float key = 1.0 - smoothstep(0.0, 0.3, length(max(abs(s - vec2(-1.5, 0.1)) - vec2(0.25, 0.55), 0.0)));
+  float fill = 1.0 - smoothstep(0.0, 0.4, length(max(abs(s - vec2(1.8, -0.2)) - vec2(0.2, 0.7), 0.0)));
+  float walls = uWalls * smoothstep(1.2, 4.0, length(s));
+  float ring = exp(-pow((length(s) - 0.8) / uRingSpread, 2.0)) * smoothstep(0.15, 0.4, length(s));
+  return vec3(0.95, 0.97, 1.0) * (uSoftbox * (key + 0.25 * fill) + uRingLight * ring + walls);
+}
+
+float lit(vec2 q) {
+  if (uReveal < 0.5 || uDome.x <= 0.0) return 1.0;
+  float rho = footprint(q - uDomeCenter);
+  return 1.0 - smoothstep(1.0 - uRevealSoft, 1.0, rho);
+}
+
+vec4 markAt(vec2 q, float lod) {
+  vec2 uv = (q - uMarkRect.xy) / uMarkRect.zw;
+  if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) return vec4(0.0);
+  return textureLod(uMark, vec2(uv.x, 1.0 - uv.y), lod);
+}
+
+// the type floor's ink at q: the cell's glyph, weighted by the cell's brightness
+float typeAt(vec2 q) {
+  vec2 g = (q - uTypeOrigin) / uTypeCell;
+  ivec2 c = ivec2(floor(g));
+  ivec2 dims = textureSize(uTypeMap, 0);
+  if (any(lessThan(c, ivec2(0))) || any(greaterThanEqual(c, dims))) return 0.0;
+  vec4 t = texelFetch(uTypeMap, c, 0);
+  vec2 f = fract(g);
+  return t.g * glyphInk(uAtlas, t.r, vec2(f.x, 1.0 - f.y), uAtlasLod);
+}
+
+// the floor's ink at q; on the type floor each cell decodes into the logo at its own moment
+float floorInk(vec2 q, float lod) {
+  if (uType != 1) return markAt(q, lod).a;
+  float type = typeAt(q);
+  if (uResolve <= 0.0) return type;
+  float order = noise2(floor((q - uTypeOrigin) / uTypeCell));
+  return mix(type, markAt(q, lod).a, clamp((uResolve * 1.3 - order) / 0.3, 0.0, 1.0));
+}
+
+void main() {
+  vec2 p = uCenter + (vUv * 2.0 - 1.0) * vec2(uAspect, 1.0) * uHalf;
+  vec3 V = vec3(0.0, 0.0, -1.0);
+
+  if (uBall.w > 0.0) {
+    vec2 d = p - uBall.xy;
+    float r2 = uBall.w * uBall.w - dot(d, d);
+    if (r2 > 0.0) {
+      float zHit = uBall.z + sqrt(r2);
+      if (zHit > height(p)) {
+        vec3 N = normalize(vec3(d, zHit - uBall.z));
+        vec3 R = reflect(V, N);
+        vec2 s = R.xy / max(R.z, 0.05);
+        float rim = 0.12 * smoothstep(0.4, 3.0, length(s));
+        vec3 col = 0.5 * (studio(R) - vec3(uWalls * smoothstep(1.2, 4.0, length(s)))) + rim + 0.015;
+        col *= mix(1.0, 0.35, smoothstep(0.9, 0.995, R.z));
+        outColor = vec4(col, 1.0);
+        return;
+      }
+    }
+  }
+
+  const float h = 0.0015;
+  float z = height(p);
+  float zx1 = height(p + vec2(h, 0.0)), zx0 = height(p - vec2(h, 0.0));
+  float zy1 = height(p + vec2(0.0, h)), zy0 = height(p - vec2(0.0, h));
+  vec2 grad = vec2(zx1 - zx0, zy1 - zy0) / (2.0 * h);
+  if (uSlopeCap > 0.0) grad *= min(1.0, uSlopeCap / max(length(grad), 1e-6));
+  float curv = (zx1 + zx0 + zy1 + zy0 - 4.0 * z) / (h * h);
+  vec3 N = normalize(vec3(-grad, 1.0));
+
+  float g2 = dot(grad, grad);
+  float k2 = uKnee * uKnee;
+  localDispersion = uDispersion * (k2 > 0.0 ? g2 / (g2 + k2) : 1.0);
+
+  float texelsPerUnit = uMarkSize.x / uMarkRect.z;
+  float spread = uDefocus * uDepth * abs(curv) * 0.02 * texelsPerUnit;
+  float lod = uBlur + log2(1.0 + spread);
+
+  float jitter = noise2(gl_FragCoord.xy + uSeed * 17.0);
+  vec3 sum = vec3(0.0);
+  vec3 norm = vec3(0.0);
+  int count = max(uSamples, 1);
+  for (int i = 0; i < 64; i++) {
+    if (i >= count) break;
+    float lambda = mix(0.38, 0.72, (float(i) + jitter) / float(count));
+    vec3 w = response(lambda);
+    vec3 T = refract(V, N, 1.0 / indexAt(uIor, lambda));
+    vec2 q = p + T.xy * (z + uDepth) / max(-T.z, 1e-3);
+    sum += w * mix(uFloor, uInk, floorInk(q, lod) * lit(q));
+    norm += w;
+  }
+  vec3 col = sum / norm;
+  float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+  float lowest = min(col.r, min(col.g, col.b));
+  if (lowest < 0.0) col = lum > 0.0 ? mix(vec3(lum), col, lum / (lum - lowest)) : vec3(0.0);
+
+  float cosI = clamp(N.z, 0.0, 1.0);
+  float r0 = pow((uIor - 1.0) / (uIor + 1.0), 2.0);
+  float F = r0 + (1.0 - r0) * pow(1.0 - cosI, 5.0);
+  col = col * (1.0 - F) + uReflect * F * studio(reflect(V, N));
+  outColor = vec4(col, 1.0);
+}
+`;
+
+const ACCUMULATE_FS = `${PRELUDE}
+in vec2 vUv;
+uniform sampler2D uSrc;
+uniform float uWeight;
+out vec4 outColor;
+void main() { outColor = texture(uSrc, vUv) * uWeight; }
+`;
+
+const BLOOM_DOWN_FS = `${PRELUDE}
+in vec2 vUv;
+uniform sampler2D uSrc;
+uniform vec2 uTexel;
+out vec4 outColor;
+void main() {
+  vec4 c = texture(uSrc, vUv) * 4.0;
+  c += texture(uSrc, vUv + uTexel * vec2(-1.0, -1.0));
+  c += texture(uSrc, vUv + uTexel * vec2(1.0, -1.0));
+  c += texture(uSrc, vUv + uTexel * vec2(-1.0, 1.0));
+  c += texture(uSrc, vUv + uTexel * vec2(1.0, 1.0));
+  outColor = c / 8.0;
+}
+`;
+
+const BLOOM_UP_FS = `${PRELUDE}
+in vec2 vUv;
+uniform sampler2D uSrc;
+uniform sampler2D uBase;
+uniform vec2 uTexel;
+uniform float uRadius;
+out vec4 outColor;
+void main() {
+  vec2 o = uTexel * uRadius;
+  vec4 c = texture(uSrc, vUv + vec2(-o.x * 2.0, 0.0)) + texture(uSrc, vUv + vec2(o.x * 2.0, 0.0));
+  c += texture(uSrc, vUv + vec2(0.0, -o.y * 2.0)) + texture(uSrc, vUv + vec2(0.0, o.y * 2.0));
+  c += (texture(uSrc, vUv + vec2(-o.x, -o.y)) + texture(uSrc, vUv + vec2(o.x, -o.y)) + texture(uSrc, vUv + vec2(-o.x, o.y)) + texture(uSrc, vUv + vec2(o.x, o.y))) * 2.0;
+  outColor = texture(uBase, vUv) + c / 12.0;
+}
+`;
+
+const GRADE_FS = `${PRELUDE}
+in vec2 vUv;
+uniform sampler2D uSrc;
+uniform sampler2D uGlow;
+uniform float uGlowAmount;
+uniform vec3 uGlowTint;
+uniform vec3 uBalance;
+uniform float uVignette;
+uniform float uExposure;
+uniform float uFade;
+uniform float uSaturation;
+uniform float uBlack;
+uniform float uGrain;
+uniform float uSeed;
+uniform float uAspect;
+out vec4 outColor;
+${NOISE}
+vec3 encodeSrgb(vec3 c) {
+  return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+}
+void main() {
+  vec3 c = texture(uSrc, vUv).rgb;
+  c += uGlowAmount * uGlowTint * texture(uGlow, vUv).rgb;
+  c *= uBalance;
+  vec2 v = (vUv - 0.5) * vec2(uAspect, 1.0);
+  c *= 1.0 - uVignette * dot(v, v);
+  c *= uExposure * uFade;
+  float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  c = max(vec3(lum) + (c - vec3(lum)) * uSaturation, 0.0);
+  vec3 over = max(c - 0.8, 0.0);
+  c = min(c, 0.8) + over / (1.0 + over / 0.2);
+  vec3 s = encodeSrgb(clamp(c, 0.0, 1.0));
+  s = max(s - uBlack, 0.0) / (1.0 - uBlack);
+  s += uGrain * (noise2(gl_FragCoord.xy + uSeed * 31.0) - 0.5);
+  outColor = vec4(s, 1.0);
+}
+`;
+
+/* ---- WebGL 2 plumbing: fullscreen-triangle programs and float targets ---- */
+
+function compile(gl, kind, source) {
+  const s = gl.createShader(kind);
+  gl.shaderSource(s, source);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(`Shader failed to compile: ${gl.getShaderInfoLog(s) ?? ''}`);
+  return s;
+}
+
+function makeProgram(gl, fragment) {
+  const prog = gl.createProgram();
+  const vs = compile(gl, gl.VERTEX_SHADER, VERTEX);
+  const fs = compile(gl, gl.FRAGMENT_SHADER, fragment);
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(`Program failed to link: ${gl.getProgramInfoLog(prog) ?? ''}`);
+  gl.deleteShader(vs);
+  gl.deleteShader(fs);
+  const slots = new Map();
+  const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) {
+    const info = gl.getActiveUniform(prog, i);
+    const loc = gl.getUniformLocation(prog, info.name);
+    if (loc) slots.set(info.name.replace(/\[0\]$/, ''), { loc, type: info.type });
+  }
+  return {
+    run(into, uniforms) {
+      gl.useProgram(prog);
+      let unit = 0;
+      for (const name in uniforms) {
+        const slot = slots.get(name);
+        if (!slot) continue;
+        const v = uniforms[name];
+        const { loc, type } = slot;
+        if (typeof v === 'number') {
+          if (type === gl.INT || type === gl.BOOL) gl.uniform1i(loc, v);
+          else gl.uniform1f(loc, v);
+        } else if ('texture' in v) {
+          gl.activeTexture(gl.TEXTURE0 + unit);
+          gl.bindTexture(gl.TEXTURE_2D, v.texture);
+          gl.uniform1i(loc, unit++);
+        } else if (type === gl.FLOAT_VEC2) gl.uniform2f(loc, v[0], v[1]);
+        else if (type === gl.FLOAT_VEC3) gl.uniform3f(loc, v[0], v[1], v[2]);
+        else if (type === gl.FLOAT_VEC4) gl.uniform4f(loc, v[0], v[1], v[2], v[3]);
+        else gl.uniform1f(loc, v[0]);
+      }
+      if (into) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, into.fbo);
+        gl.viewport(0, 0, into.width, into.height);
+      } else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      }
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    },
+    dispose() { gl.deleteProgram(prog); }
+  };
+}
+
+function makeSurface(gl, width, height, format, linear) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  if (format === 'f32') gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, null);
+  else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  const filter = linear ? gl.LINEAR : gl.NEAREST;
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  if (status !== gl.FRAMEBUFFER_COMPLETE) throw new Error(`Render target incomplete (${format}): 0x${status.toString(16)}`);
+  return { fbo, tex, width, height };
+}
+
+function releaseSurface(gl, s) {
+  gl.deleteFramebuffer(s.fbo);
+  gl.deleteTexture(s.tex);
+}
+
+/* ---- Marks: an SVG or bitmap becomes a white coverage mask ---- */
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (!/^(data|blob):/i.test(src)) img.crossOrigin = 'anonymous';
+    img.decoding = 'async';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Could not load ${src.slice(0, 80)}`));
+    img.src = src;
+  });
+}
+
+function imageAspect(img) {
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  return w > 0 && h > 0 ? w / h : 1;
+}
+
+function readPixels(img, w, h) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, w, h);
+  return ctx.getImageData(0, 0, w, h).data;
+}
+
+const coverageOf = (px, i, mode) => {
+  const lum = 0.2126 * px[i] + 0.715199 * px[i + 1] + 0.0722001 * px[i + 2];
+  return mode === 'alpha' ? px[i + 3] : mode === 'luminance' ? lum * (px[i + 3] / 255) : 255 - lum * (px[i + 3] / 255);
+};
+
+// Transparent images use alpha; opaque ones whichever of light-on-dark or
+// dark-on-light fits.
+function guessMode(img) {
+  const w = 64;
+  const h = Math.max(1, Math.round(64 / imageAspect(img)));
+  const px = readPixels(img, w, h);
+  let clear = 0, lum = 0;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i + 3] < 250) clear++;
+    lum += (0.212601 * px[i] + 0.715201 * px[i + 1] + 0.0722001 * px[i + 2]) / 255;
+  }
+  const n = px.length / 4;
+  if (clear > n * 0.0199999) return 'alpha';
+  return lum / n > 0.500001 ? 'inverse' : 'luminance';
+}
+
+// Visible bounds as fractions of the image: x, y, w, h (y down).
+function inkBounds(img, mode) {
+  const aspect = imageAspect(img);
+  const w = aspect >= 1 ? 512 : Math.max(1, Math.round(512 * aspect));
+  const h = aspect >= 1 ? Math.max(1, Math.round(512 / aspect)) : 512;
+  const px = readPixels(img, w, h);
+  let minX = w, minY = h, maxX = -1, maxY = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (coverageOf(px, (y * w + x) * 4, mode) < 128) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return [0, 0, 1, 1];
+  return [minX / w, minY / h, (maxX + 1 - minX) / w, (maxY + 1 - minY) / h];
+}
+
+async function prepareMark(src, slot, texelScale) {
+  const img = await loadImage(src);
+  const solid = isSolidSource(src);
+  const mode = solid ? 'alpha' : guessMode(img);
+  const aspect = imageAspect(img);
+  const rect = fitMark(slot, aspect, solid ? [0, 0, 1, 1] : inkBounds(img, mode));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.min(4096, Math.round(rect[2] * TEXELS_PER_UNIT * texelScale)));
+  c.height = Math.max(1, Math.round(c.width / aspect));
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  const data = ctx.getImageData(0, 0, c.width, c.height);
+  const px = data.data;
+  for (let i = 0; i < px.length; i += 4) {
+    px[i + 3] = Math.round(solid ? 255 : coverageOf(px, i, mode));
+    px[i] = px[i + 1] = px[i + 2] = 255;
+  }
+  ctx.putImageData(data, 0, 0);
+  return { canvas: c, rect };
+}
+
+// Whether WebGL here is a software rasteriser (SwiftShader in headless Chromium,
+// llvmpipe under Mesa); it starts at the lowest quality and draws ~10 fps.
+function isSoftwareGL(gl) {
+  try {
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const name = String(info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    return /swiftshader|llvmpipe|softpipe|software/i.test(name);
+  } catch {
+    return false;
+  }
+}
+
+// Fewer subframes first, then fewer pixels.
+const QUALITY = [[1, undefined], [1, 4], [0.799999, 4], [0.650001, 4], [0.500001, 3], [0.4, 2]];
+
+/* ---- The renderer: one frame is a pure function of film time ---- */
+
+function createRenderer(gl, canvas, { software }) {
+  const floatLinear = !!gl.getExtension('OES_texture_float_linear');
+  const programs = {
+    refract: makeProgram(gl, REFRACT_FS),
+    accumulate: makeProgram(gl, ACCUMULATE_FS),
+    bloomDown: makeProgram(gl, BLOOM_DOWN_FS),
+    bloomUp: makeProgram(gl, BLOOM_UP_FS),
+    grade: makeProgram(gl, GRADE_FS)
+  };
+  let width = 0, height = 0;
+  let frame = null, accum = null, down = [], up = [];
+  const marks = [null, null];
+
+  function allocate(w, h) {
+    for (const s of [frame, accum, ...down, ...up]) if (s) releaseSurface(gl, s);
+    width = canvas.width = w;
+    height = canvas.height = h;
+    frame = makeSurface(gl, w, h, 'f32', false);
+    // a float target is only filterable with OES_texture_float_linear
+    accum = makeSurface(gl, w, h, floatLinear ? 'f32' : 'f16', true);
+    down = [];
+    up = [];
+    for (let i = 0; i < BLOOM_LEVELS; i++) {
+      w = Math.max(1, w >> 1);
+      h = Math.max(1, h >> 1);
+      down.push(makeSurface(gl, w, h, 'f16', true));
+      if (i < BLOOM_LEVELS - 1) up.push(makeSurface(gl, w, h, 'f16', true));
+    }
+  }
+
+  function resize(w, h) {
+    w = Math.max(1, Math.round(w));
+    h = Math.max(1, Math.round(h));
+    if (!frame) return allocate(w, h);
+    // reallocating is costly: skip size changes too small to see, but never
+    // let the aspect drift, which would stretch the picture
+    const sizeMoved = Math.abs(w - width) / width > 0.04 || Math.abs(h - height) / height > 0.0399999;
+    const aspectMoved = Math.abs(w / h - width / height) / (width / height) > 0.00500001;
+    if (sizeMoved || aspectMoved) allocate(w, h);
+  }
+
+  function imageTexture(source) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, source);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const aniso = gl.getExtension('EXT_texture_filter_anisotropic');
+    if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, 8);
+    return tex;
+  }
+
+  function setMark(index, prepared) {
+    const tex = imageTexture(prepared.canvas);
+    const prev = marks[index];
+    marks[index] = { tex, rect: prepared.rect, size: [prepared.canvas.width, prepared.canvas.height] };
+    if (prev) gl.deleteTexture(prev.tex);
+  }
+
+  /** The mark's rectangle at shot time t, shrunk by the shot's recede curve. */
+  function markRect(shot, mark, t) {
+    const k = shot.recede ? sampleCurve(shot.recede, t) : 1;
+    // without a mark the oil still moves over an empty floor
+    const [mx, my, mw, mh] = mark ? mark.rect : [0, 0, 1, 1];
+    return [mx + (mw * (1 - k)) / 2, my + (mh * (1 - k)) / 2, mw * k, mh * k];
+  }
+
+  /* The ASCII type floor, built on first use: glyph atlas, shape table and one map texel per cell. */
+  let type = null;
+  function typeKit() {
+    if (!type) {
+      const glyphs = buildGlyphs();
+      type = {
+        program: makeProgram(gl, TYPEMAP_FS),
+        atlas: imageTexture(glyphs.atlas),
+        shapes: imageTexture(glyphs.shapes),
+        count: glyphs.count,
+        dot: glyphs.dot,
+        map: null
+      };
+    }
+    return type;
+  }
+
+  /** Builds the type floor for shot time t: the glyph grid covering the view plus a margin. */
+  function typePass(shot, mark, t, aspect, ascii) {
+    const kit = typeKit();
+    const half = viewHalf(aspect);
+    const { cell, lod } = typeCell(ascii.rows, height, half);
+    // refraction pulls the floor in from outside the frame
+    const margin = 0.800001;
+    const hw = aspect * half + margin;
+    const hh = half + margin;
+    const origin = [Math.floor(-hw / cell[0]) * cell[0], Math.floor(-hh / cell[1]) * cell[1]];
+    const cols = Math.ceil((2 * hw) / cell[0]) + 2;
+    const rows = Math.ceil((2 * hh) / cell[1]) + 2;
+    if (!kit.map || kit.map.width !== cols || kit.map.height !== rows) {
+      if (kit.map) releaseSurface(gl, kit.map);
+      kit.map = makeSurface(gl, cols, rows, 'f16', false);
+    }
+    kit.program.run(kit.map, {
+      uMark: { texture: mark ? mark.tex : emptyTex },
+      uMarkRect: markRect(shot, mark, t),
+      uMarkSize: mark ? mark.size : [1, 1],
+      uTypeOrigin: origin,
+      uTypeCell: cell,
+      uShapes: { texture: kit.shapes },
+      uCount: kit.count,
+      uContrast: ascii.contrast,
+      uDots: ascii.dots * (shot.dots ? sampleCurve(shot.dots, t) : 1),
+      uDotGlyph: kit.dot
+    });
+    return { origin, cell, lod, map: kit.map.tex, atlas: kit.atlas };
+  }
+
+  function clearSurface(s) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, s.fbo);
+    gl.viewport(0, 0, s.width, s.height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  function refractPass(shot, look, mark, t, seed, aspect, typed) {
+    const d = domeFrame(shot, look, t);
+    const [cx, cy] = shot.dome.center;
+    const ball = shot.ball ? [cx, cy, d.height + sampleCurve(shot.ball.lift, t), shot.ball.radius] : [0, 0, 0, 0];
+    programs.refract.run(frame, {
+      uCenter: [0, 0],
+      uHalf: viewHalf(aspect),
+      uAspect: aspect,
+      uMark: { texture: mark ? mark.tex : emptyTex },
+      uMarkRect: markRect(shot, mark, t),
+      uMarkSize: mark ? mark.size : [1, 1],
+      uInk: look.logoColor,
+      uFloor: look.floorColor,
+      uDepth: look.depth,
+      uIor: look.iorOil,
+      uDispersion: look.dispersion * (shot.colour ? sampleCurve(shot.colour, t) : 1),
+      uKnee: look.dispersionKnee,
+      uSlopeCap: look.maxSlope,
+      uSamples: Math.round(software ? Math.min(6, look.wavelengths) : look.wavelengths),
+      uDefocus: look.defocus,
+      uBlur: look.blur,
+      uReflect: look.reflect * (shot.gloss ? sampleCurve(shot.gloss, t) : 1),
+      uSoftbox: look.softbox,
+      uWalls: look.horizon,
+      uRingLight: look.ringLight,
+      uRingSpread: look.ringLightWidth,
+      uBall: ball,
+      uDomeCenter: shot.dome.center,
+      uDome: [d.radius, d.height, d.exponent],
+      uDomeAspect: d.aspect,
+      uShape: [d.crown, d.flat, d.shoulder],
+      uEdge: d.edge,
+      uWave: [d.ring, look.ringWidth, look.ringWavelength, d.ringReach],
+      uWavePhase: look.ringWavelength > 0 ? (2 * Math.PI * look.ringSpeed * t) / look.ringWavelength : 0,
+      uRipple: [d.ripple, look.rippleWavelength, (2 * Math.PI * look.rippleSpeed * t) / look.rippleWavelength, look.rippleReach],
+      uReveal: look.reveal,
+      uRevealSoft: look.revealSoft,
+      uSeed: seed,
+      // glass: the type samplers still need a bound texture, never the frame being drawn
+      uType: typed ? 1 : 0,
+      uTypeMap: { texture: typed ? typed.map : emptyTex },
+      uTypeOrigin: typed ? typed.origin : [0, 0],
+      uTypeCell: typed ? typed.cell : [1, 1],
+      uAtlas: { texture: typed ? typed.atlas : emptyTex },
+      uAtlasLod: typed ? typed.lod : 0,
+      uResolve: typed && shot.resolve ? sampleCurve(shot.resolve, t) : 0
+    });
+  }
+
+  function finish(look, fade, aspect) {
+    let src = accum;
+    for (const level of down) {
+      programs.bloomDown.run(level, { uSrc: { texture: src.tex }, uTexel: [1 / src.width, 1 / src.height] });
+      src = level;
+    }
+    let lo = down[down.length - 1];
+    for (let i = down.length - 2; i >= 0; i--) {
+      const out = up[i];
+      programs.bloomUp.run(out, {
+        uSrc: { texture: lo.tex },
+        uBase: { texture: down[i].tex },
+        uTexel: [1 / lo.width, 1 / lo.height],
+        uRadius: look.bloomRadius
+      });
+      lo = out;
+    }
+    programs.grade.run(null, {
+      uSrc: { texture: accum.tex },
+      uGlow: { texture: up[0].tex },
+      uGlowAmount: look.bloom,
+      uGlowTint: look.glowTint,
+      uBalance: look.balance,
+      uVignette: look.vignette,
+      uExposure: look.exposure,
+      uFade: fade,
+      uSaturation: look.saturation,
+      uBlack: look.black,
+      uGrain: look.grain,
+      uSeed: 0,
+      uAspect: aspect
+    });
+  }
+
+  // a 1x1 transparent texture stands in for a mark that has not loaded
+  const emptyTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, emptyTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+
+  return {
+    resize,
+    setMark,
+    get width() { return width; },
+    get height() { return height; },
+    /** `ascii` (from asciiOptions) draws the logo as type; null keeps the glass. */
+    render(t, looks, subframes, ascii) {
+      if (!frame) return;
+      const index = shotIndexAt(t);
+      const shot = SHOTS[index];
+      const look = looks[index];
+      const aspect = width / height;
+      const K = Math.max(1, Math.round(subframes ?? look.subframes));
+      const open = look.shutter / FPS;
+      // one type floor per frame, at its centre time
+      const typed = ascii ? typePass(shot, marks[index], t - shot.start, aspect, ascii) : null;
+      clearSurface(accum);
+      for (let k = 0; k < K; k++) {
+        // subframes spread across the open shutter, centred on t; the dither is seeded by k only
+        const tk = Math.max(shot.start, t + open * ((k + 0.500001) / K - 0.499999));
+        refractPass(shot, look, marks[index], tk - shot.start, k, aspect, typed);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ONE);
+        programs.accumulate.run(accum, { uSrc: { texture: frame.tex }, uWeight: 1 / K });
+        gl.disable(gl.BLEND);
+      }
+      finish(look, sampleCurve(shot.fade, t - shot.start), aspect);
+    },
+    dispose() {
+      for (const s of [frame, accum, ...down, ...up]) if (s) releaseSurface(gl, s);
+      for (const m of marks) if (m) gl.deleteTexture(m.tex);
+      if (type) {
+        if (type.map) releaseSurface(gl, type.map);
+        gl.deleteTexture(type.atlas);
+        gl.deleteTexture(type.shapes);
+        type.program.dispose();
+      }
+      gl.deleteTexture(emptyTex);
+      for (const p of Object.values(programs)) p.dispose();
+    }
+  };
+}
+
+/**
+ * Mounts the sting into `root` (the element holding `.llg-stage` and
+ * `.llg-status`). Returns an idempotent disposer with update(config).
+ */
+function buildLiquidLensLogo(root, config) {
+  let disposed = false;
+  let values = { ...DEFAULT_LIQUID_LENS_LOGO_CONFIG, ...config };
+  let looks = looksFor(values);
+  const stage = root.querySelector('.llg-stage');
+  const status = root.querySelector('.llg-status');
+  root.removeAttribute('data-ready');
+  root.removeAttribute('data-fallback');
+  if (status) status.textContent = '';
+
+  const canvas = document.createElement('canvas');
+  // Inline styles survive Svelte scoping.
+  Object.assign(canvas.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', display: 'block' });
+  canvas.setAttribute('role', 'img');
+  const label = () => (asciiOptions(values)
+    ? 'A logo drawn in ASCII characters, seen through a swelling lens of oil, that decodes into the clean logo.'
+    : 'A logo seen through a swelling lens of oil that bends it into spectral colour.');
+  canvas.setAttribute('aria-label', label());
+  stage?.append(canvas);
+
+  /* ---- Corner words (ASCII style): plain text over the canvas ---- */
+  // insets and size follow the stage (.llg-viewport is a size container)
+  const INSET_X = 'clamp(12px, 3cqw, 36px)';
+  const INSET_Y = 'clamp(10px, 2.7cqw, 32px)';
+  const CORNERS = [
+    { top: INSET_Y, left: INSET_X },
+    { top: INSET_Y, right: INSET_X },
+    { bottom: INSET_Y, left: INSET_X },
+    { bottom: INSET_Y, right: INSET_X }
+  ];
+  let corners = [];
+  let cornerKey = '';
+  let mountedAt = 0;
+  const syncCorners = () => {
+    const words = asciiOptions(values) ? cornerWords(values.corners) : [];
+    const key = `${words.join('|')}|${values.logoColor}`;
+    if (key === cornerKey) return;
+    cornerKey = key;
+    for (const c of corners) c.el.remove();
+    corners = [];
+    if (!words.some(Boolean) || typeof root.append !== 'function') return;
+    mountedAt = typeof performance === 'object' ? performance.now() : 0;
+    corners = words.map((word, i) => {
+      const el = document.createElement('span');
+      el.setAttribute('aria-hidden', 'true');
+      el.className = 'llg-corner';
+      // Inline styles survive Svelte scoping and the standalone export.
+      Object.assign(el.style, {
+        position: 'absolute', zIndex: '1', pointerEvents: 'none', userSelect: 'none', whiteSpace: 'pre',
+        font: "500 clamp(8px, 1.1cqw, 13px)/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
+        letterSpacing: '0.24em', color: typeof values.logoColor === 'string' ? values.logoColor : '#ffffff', opacity: '0.55',
+        // the tracking after the last letter would push right-hand words off their inset
+        marginRight: i % 2 ? '-0.24em' : '0'
+      }, CORNERS[i]);
+      root.append(el);
+      // without a renderer (no WebGL) nothing animates them: show the words
+      if (!renderer) el.textContent = word;
+      return { el, word, shown: renderer ? '' : word };
+    });
+  };
+  /** Draws the corner words for film time t; true while the load scramble still needs frames. */
+  const drawCorners = (t) => {
+    if (!corners.length) return false;
+    const now = typeof performance === 'object' ? performance.now() : 0;
+    const sinceLoad = reducedMotion.matches ? Infinity : (now - mountedAt) / 1000;
+    const p = reducedMotion.matches ? 1 : cornerProgress(t, sinceLoad);
+    const tick = Math.floor(now / 50);
+    corners.forEach((c, w) => {
+      const text = scrambleWord(c.word, w, p, tick);
+      if (text !== c.shown) c.el.textContent = c.shown = text;
+    });
+    return sinceLoad < CORNER_LOAD_SECONDS;
+  };
+
+  const reducedMotion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+
+  let gl = null;
+  try {
+    gl = stage ? canvas.getContext('webgl2', {
+      alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false,
+      // kept so a screenshot or a paused still reads back what is on screen
+      preserveDrawingBuffer: true, powerPreference: 'high-performance'
+    }) : null;
+    if (gl && !gl.getExtension('EXT_color_buffer_float')) gl = null;
+  } catch {
+    gl = null;
+  }
+  const software = gl ? isSoftwareGL(gl) : false;
+
+  let renderer = null;
+  let poster = null;
+  const fail = () => {
+    canvas.style.display = 'none';
+    root.removeAttribute('data-ready');
+    root.setAttribute('data-fallback', '');
+    for (const c of corners) c.el.textContent = c.shown = c.word;
+    if (status) status.textContent = 'The liquid lens needs WebGL 2 with float render targets. Enable hardware acceleration and reload to see it.';
+    if (!poster && stage && typeof values.wordmark === 'string' && !isSolidSource(values.wordmark)) {
+      poster = document.createElement('img');
+      poster.alt = '';
+      poster.src = values.wordmark;
+      Object.assign(poster.style, { position: 'absolute', left: '50%', top: '50%', width: '52%', transform: 'translate(-50%, -50%)', opacity: '0.85' });
+      stage.append(poster);
+    }
+  };
+
+  /* ---- Marks load asynchronously; the previous one stays until the next is ready ---- */
+  const wanted = [null, null];
+  // The film waits on its first two marks, so a slow decode never plays the
+  // opening over an empty stage; a mark that cannot load at all releases it.
+  const settled = [false, false];
+  const loadMark = (index) => {
+    const key = index === 0 ? 'symbol' : 'wordmark';
+    // a sibling tool may name its own sample marks as the fallback
+    const own = values[index === 0 ? 'symbolFallback' : 'wordmarkFallback'];
+    const fallback = typeof own === 'string' && own ? own : index === 0 ? DEFAULT_SYMBOL : DEFAULT_WORDMARK;
+    const src = typeof values[key] === 'string' && values[key] ? values[key] : fallback;
+    if (wanted[index] === src) return;
+    wanted[index] = src;
+    prepareMark(src, SHOTS[index].slot, software ? 0.499999 : 1)
+      .catch((error) => {
+        // an unreadable upload (or one served without CORS) falls back to the default
+        if (src === fallback) throw error;
+        console.warn(error);
+        return prepareMark(fallback, SHOTS[index].slot, software ? 0.500001 : 1);
+      })
+      .then((prepared) => {
+        if (disposed || !renderer || wanted[index] !== src) return;
+        renderer.setMark(index, prepared);
+        settled[index] = true;
+        wake();
+      })
+      .catch((error) => {
+        console.warn(error);
+        settled[index] = true;
+        wake();
+      });
+  };
+
+  /* ---- Playback and adaptive quality ---- */
+  let clock = { t: 0, held: 0 };
+  let level = software ? QUALITY.length - 1 : 0;
+  let frameMs = 0, calm = 0, last = 0, raf = 0, visible = true;
+  const live = () => visible && !(typeof document === 'object' && document.hidden);
+  const moving = () => values.animate && !reducedMotion.matches &&
+    !(values.repeat === 'once' && clock.t >= FILM_DURATION);
+
+  const adapt = (dt) => {
+    if (software) return;
+    const ms = dt * 1000;
+    frameMs = frameMs ? frameMs * 0.850001 + ms * 0.149999 : ms;
+    const budget = 1000 / FPS;
+    if (frameMs > budget * 1.24999 && level < QUALITY.length - 1) { level++; frameMs = 0; calm = 0; }
+    else if (frameMs && frameMs < budget * 0.600001 && level > 0 && ++calm > 48) { level--; frameMs = 0; calm = 0; }
+  };
+
+  const fit = () => {
+    const box = root.getBoundingClientRect();
+    const dpr = (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1;
+    const scale = QUALITY[level][0];
+    let w = Math.max(1, (box.width || values.viewportWidth) * dpr * scale);
+    let h = Math.max(1, (box.height || values.viewportHeight) * dpr * scale);
+    const over = Math.sqrt((w * h) / MAX_PIXELS);
+    if (over > 1) { w /= over; h /= over; }
+    renderer.resize(w, h);
+  };
+
+  function draw() {
+    fit();
+    const t = reducedMotion.matches ? FILM_DURATION : clock.t;
+    // a still frame can afford the full shutter
+    renderer.render(t, looks, moving() ? QUALITY[level][1] : undefined, asciiOptions(values));
+    return drawCorners(t);
+  }
+
+  function frame(now) {
+    raf = 0;
+    if (disposed || !renderer) return;
+    if (software && last && now - last < 95) { raf = requestAnimationFrame(frame); return; }
+    // a hidden tab pauses rAF; that gap is not a slow frame
+    const dt = last && now - last < 500 ? (now - last) / 1000 : 0;
+    last = now;
+    if (moving() && settled[0] && settled[1]) {
+      if (dt) adapt(dt);
+      clock = advanceFilm(clock, dt, values);
+    }
+    const scrambling = draw();
+    root.setAttribute('data-ready', '');
+    if (live() && (moving() || scrambling)) raf = requestAnimationFrame(frame);
+    else last = 0;
+  }
+  const wake = () => { if (!disposed && renderer && !raf && live()) raf = requestAnimationFrame(frame); };
+
+  reducedMotion.addEventListener?.('change', wake);
+  if (typeof document === 'object') document.addEventListener('visibilitychange', wake);
+  const resize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => wake()) : null;
+  resize?.observe(root);
+  // Off-screen stings stop drawing.
+  const seen = typeof IntersectionObserver === 'function'
+    ? new IntersectionObserver((entries) => { visible = entries.some((e) => e.isIntersecting); wake(); })
+    : null;
+  seen?.observe(root);
+
+  const onLost = (e) => {
+    e.preventDefault();
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    renderer = null;
+    fail();
+  };
+  canvas.addEventListener('webglcontextlost', onLost);
+
+  syncCorners();
+  if (!gl) fail();
+  else {
+    try {
+      renderer = createRenderer(gl, canvas, { software });
+      loadMark(0);
+      loadMark(1);
+      wake();
+    } catch (error) {
+      console.warn(error);
+      renderer = null;
+      fail();
+    }
+  }
+
+  const cleanup = () => {
+    if (disposed) return;
+    disposed = true;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    canvas.removeEventListener('webglcontextlost', onLost);
+    reducedMotion.removeEventListener?.('change', wake);
+    if (typeof document === 'object') document.removeEventListener('visibilitychange', wake);
+    resize?.disconnect();
+    seen?.disconnect();
+    try { renderer?.dispose(); } catch { /* the context may already be gone */ }
+    renderer = null;
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    canvas.remove();
+    poster?.remove();
+    for (const c of corners) c.el.remove();
+    corners = [];
+    root.removeAttribute('data-ready');
+    root.removeAttribute('data-fallback');
+    if (status) status.textContent = '';
+  };
+  cleanup.update = (next) => {
+    if (disposed) return;
+    const wasRepeat = values.repeat;
+    values = { ...values, ...next };
+    looks = looksFor(values);
+    canvas.setAttribute('aria-label', label());
+    syncCorners();
+    // switching back to a loop from a finished single play starts it again
+    if (wasRepeat === 'once' && values.repeat === 'loop' && clock.t >= FILM_DURATION) clock = { t: FILM_DURATION, held: values.hold };
+    if (renderer) { loadMark(0); loadMark(1); }
+    wake();
+  };
+  // Starts the film over (the export's replay hook).
+  cleanup.replay = () => {
+    if (disposed) return;
+    clock = { t: 0, held: 0 };
+    last = 0;
+    wake();
+  };
+  return cleanup;
+}
+
+
+    var lock = el.querySelector("svg.splash-lockup"); if(!lock) return;
+    var XS = new XMLSerializer();
+    var CSSW = ".wm-i,.wm-a,.wm-b,.wm-c{fill:#fff}.wm-u{display:none}.dr{stroke-dasharray:none;stroke-dashoffset:0}";
+    function uri(svg){ return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(XS.serializeToString(svg)); }
+    function prep(svg, vb){
+      svg.setAttribute("xmlns", "http://www.w3.org/2000/svg"); svg.removeAttribute("class"); svg.removeAttribute("style");
+      if(vb) svg.setAttribute("viewBox", vb.join(" "));
+      var v = (svg.getAttribute("viewBox") || "0 0 100 100").split(/\s+/);
+      svg.setAttribute("width", Math.round(v[2])); svg.setAttribute("height", Math.round(v[3]));
+      var st = document.createElementNS("http://www.w3.org/2000/svg", "style"); st.textContent = CSSW; svg.insertBefore(st, svg.firstChild);
+      /* the two masks need their own names once there are two copies of the mark */
+      return svg;
+    }
+    var word = prep(lock.cloneNode(true));
+    /* the symbol alone: the two hearts and the tick, in the mark's own units */
+    var heart = lock.querySelector(".wm-r2 > g");
+    var sym = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    sym.setAttribute("fill", "none");
+    [].forEach.call(heart.childNodes, function(n){ sym.appendChild(n.cloneNode(true)); });
+    prep(sym, [-14, -14, 248, 196]);
+
+    var wrap = document.createElement("div"); wrap.id = "spLens"; wrap.className = "sp-lens";
+    wrap.innerHTML = '<div class="llg-viewport" style="--llg-width:100vw;--llg-height:100%;--llg-bg:#1E1713"><div class="llg-stage"></div><span class="llg-status" role="status"></span></div>';
+    el.appendChild(wrap);
+    var SPEED = 1.5;
+    var mount = function(){
+      if(done) return;
+      try{
+        var stop = buildLiquidLensLogo(wrap.querySelector(".llg-viewport"), {
+          symbol: uri(sym), wordmark: uri(word), logoColor: "#FFF3D1", background: "#1E1713",
+          speed: SPEED, hold: 0, repeat: "once", bulge: 1, rainbow: 1, gloss: 1, glow: 1, animate: true
+        });
+        wrap.__stop = typeof stop === "function" ? stop : null;
+      }catch(e){ out(1); return; }
+      /* the film is 4s of footage; hand back to the real logo as it ends */
+      setTimeout(function(){ out(420); }, Math.round(4000 / SPEED) + 60);
+      /* no WebGL, or it fell back to a poster: don't hold a dark screen */
+      setTimeout(function(){ try{ var vp = wrap.querySelector(".llg-viewport"); if(vp && (vp.hasAttribute("data-fallback") || !vp.querySelector("canvas"))) out(200); }catch(e){} }, 500);
+    };
+    /* paint the dark stage first, then compile the lens */
+    requestAnimationFrame(function(){ setTimeout(mount, 30); });
+    /* whatever happens, never outlast the curtain's own hold */
+    setTimeout(function(){ out(300); }, 3600);
+    el.addEventListener("pointerdown", function(){ out(120); });
+  }catch(e){ try{ console.warn("lens", e); }catch(_){} out(1); var w0 = document.getElementById("spLens"); if(w0 && w0.parentNode) w0.parentNode.removeChild(w0); }
+})();
+</script>
 <!-- BUILD 101 — pull down to sync.
 
      The most anxious thing in this app is "has what I just did reached the other phone?",
@@ -13492,6 +15151,9 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       var to = {};
       [L.todayOrder, R.todayOrder].forEach(function(o){ for(var k in (o || {})){ var v = o[k]; if(v && (!to[k] || String(v.at || "") > String(to[k].at || ""))) to[k] = v; } });
       if(Object.keys(to).length) m.todayOrder = to;
+      var hpf = {};
+      [L.healthPref, R.healthPref].forEach(function(o){ for(var k in (o || {})){ var v = o[k]; if(v && (!hpf[k] || String(v.at || "") > String(hpf[k].at || ""))) hpf[k] = v; } });
+      if(Object.keys(hpf).length) m.healthPref = hpf;
       var rcp = {};
       [L.recap, R.recap].forEach(function(o){ for(var k in (o || {})){ var v = o[k] || {}; if(!rcp[k]) rcp[k] = {ready: {}, seen: {}}; for(var p in (v.ready || {})){ if(!rcp[k].ready[p] || String(v.ready[p]) > String(rcp[k].ready[p])) rcp[k].ready[p] = v.ready[p]; } for(var q in (v.seen || {})){ if(!rcp[k].seen[q] || String(v.seen[q]) < String(rcp[k].seen[q])) rcp[k].seen[q] = v.seen[q]; } } });
       if(Object.keys(rcp).length) m.recap = rcp;
@@ -14635,7 +16297,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
   });
 
   // ---------- diagnostics: run on both phones, compare lines ----------
-  var BUILD_NUM = 244;
+  var BUILD_NUM = 245;
   function runDiagnostics(){
     var out = document.getElementById("diagOut");
     out.style.display = "block";
@@ -15530,7 +17192,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     function stale(){
       if(!d || !d.date) return "";
       if(d.date === todayISO()) return "";
-      return '<div class="health-stale">' + new Date(d.date + "T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}) + "</div>";
+      return '<div class="health-stale">' + (d.hxOld ? "last " : "") + new Date(d.date + "T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}) + "</div>";
     }
     return {
       steps: d && d.steps != null ? Math.round(d.steps).toLocaleString() : "—",
@@ -15562,14 +17224,22 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     var body = document.getElementById("healthBody");
     if(!body) return;
     var a = healthEff("p1"), b = healthEff("p2");
+    var hCard = document.getElementById("healthCard"), offA = healthOffFor("p1"), offB = healthOffFor("p2");
+    if(hCard) hCard.style.display = (offA && offB) ? "none" : "";
+    if(offA && offB){ body.innerHTML = ""; return; }
     if(!a && !b){
       body.innerHTML = '<div class="hx-empty"><p>Steps, calories and sleep for the two of you, side by side.</p>' +
         '<div class="row2"><button type="button" class="primary" id="hxSetup">Set up Health</button>' +
-        '<button type="button" class="ghost" id="hxSleepAdd">Add last night\u2019s sleep</button></div></div>' +
+        '<button type="button" class="ghost" id="hxSleepAdd">Add last night\u2019s sleep</button></div>' +
+        '<button type="button" class="hx-link hx-nohealth" id="hxNoHealth">Not for me. Hide my Health numbers</button></div>' +
         renderHealthDiag();
       wireHealthDiag(); wireHealthExtras();
+      try{ window.__w245.healthWire(); }catch(e){}
       return;
     }
+    var a0 = a, b0 = b;
+    function hxOld(d){ return (d && !healthFresh(d)) ? {date: d.date, steps: null, calories: null, sleepHours: null, updatedAt: d.updatedAt, hxOld: true} : d; }
+    a = hxOld(a); b = hxOld(b);
     var ca = healthCol(a), cb = healthCol(b);
     var winStep = (a && b && a.steps != null && b.steps != null) ? (a.steps > b.steps ? "l" : (b.steps > a.steps ? "r" : "")) : "";
     var winCal  = (a && b && a.calories != null && b.calories != null) ? (a.calories > b.calories ? "l" : (b.calories > a.calories ? "r" : "")) : "";
@@ -15589,7 +17259,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     }
     function cell(pid, side, win, shown, v, goal, d, kind){
       var inner = shown;
-      if(kind === "sleep" && pid === meId){
+      if(kind === "sleep" && pid === meId && !healthOffFor(pid)){
         inner = '<button type="button" class="hx-sleepbtn" id="hxSleepBtn" aria-label="' +
           (v == null ? "Add last night\u2019s sleep" : "Change last night\u2019s sleep") + '">' +
           (v == null ? '<span class="hx-add">+ Add</span>' : shown) + '</button>';
@@ -15603,8 +17273,8 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     }
     body.innerHTML =
       '<div class="health-grid hx">' +
-        '<div class="hx-names"><div class="health-name who-moody">' + escapeHtml(personName("p1")) + ca.stale + '</div>' +
-        '<div class="health-name who-rae">' + escapeHtml(personName("p2")) + cb.stale + '</div></div>' +
+        '<div class="hx-names"><div class="health-name who-moody">' + escapeHtml(personName("p1")) + (offA ? '<div class="health-stale hx-offl">Health off</div>' : ca.stale) + '</div>' +
+        '<div class="health-name who-rae">' + escapeHtml(personName("p2")) + (offB ? '<div class="health-stale hx-offl">Health off</div>' : cb.stale) + '</div></div>' +
         row("steps", "Steps", "goal 10,000",
             cell("p1", "l", winStep, ca.steps, a && a.steps, 10000, a), cell("p2", "r", winStep, cb.steps, b && b.steps, 10000, b)) +
         row("flame", "Active calories", "goal 600",
@@ -15612,9 +17282,10 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
         row("moon", "Sleep", "goal 8h",
             cell("p1", "l", winSlp, ca.sleep, a && a.sleepHours, 8, a, "sleep"), cell("p2", "r", winSlp, cb.sleep, b && b.sleepHours, 8, b, "sleep")) +
       '</div>' +
-      sleepWhyLine(meId, meId === "p1" ? a : b) +
-      healthStuckWarning(a, b) +
-      healthStaleWarning(a, b) +
+      (healthOffFor(meId) ? "" : sleepWhyLine(meId, meId === "p1" ? a : b)) +
+      (function(){ try{ return window.__w245.healthLines(); }catch(e){ return ""; } })() +
+      healthStuckWarning(a0, b0) +
+      healthStaleWarning(a0, b0) +
       healthDoubtLine() +
       // "Moody leads by 900 steps — game on" is a taunt about a race that finished nine days
       // ago. Nudges are only true of today's numbers, so they stay behind fresh data.
@@ -15625,6 +17296,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     wireHealthDiag();
     wireHealthClear();
     wireHealthExtras();
+    try{ window.__w245.healthWire(); }catch(e){}
   }
 
   /* ---- BUILD 206: sleep that always shows ----
@@ -15633,7 +17305,9 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
      the sanity gate throws out. Two answers: the card now SAYS which, with the
      fix one tap away; and last night can be typed in by hand, which a later
      Shortcut reading for the same day replaces. */
+  function healthOffFor(pid){ var p = (state.healthPref || {})[pid]; return !!(p && p.on === false); }
   function healthEff(pid){
+    if(healthOffFor(pid)) return null;
     var h = (state.healthCache || {})[pid] || null;
     var m = (state.sleepManual || {})[pid] || null;
     if(!m || m.hours == null) return h;
@@ -15654,7 +17328,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     }
     var d = healthDiag[pid], r = d && d.reading;
     var bad = ((d && d.implausible) || (r && r.implausible) || []).filter(function(x){ return x.field === "sleepHours"; })[0];
-    var why = bad ? "Sleep arrived as " + (Math.round(bad.value * 10) / 10) + "h, which isn\u2019t possible, so it was left out."
+    var why = bad ? "Sleep arrived as " + (Math.round(bad.value * 10) / 10) + "h, which isn\u2019t possible, so it was left out. In the Shortcut\u2019s sleep search, add: Source is one device, Value is not In Bed, Value is not Awake."
             : (d && d.ok) ? "Your Shortcut sent steps and calories but no sleep."
             : "No sleep figure has come through yet.";
     return '<div class="hx-why"><span>' + escapeHtml(why) + '</span>' +
@@ -16022,9 +17696,9 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     return '<div class="health-stale-warn">' +
       '<b>' + icon("warn", 14, "inline-warn") + ' ' + escapeHtml(who) + ' ' + days + ' days old.</b> ' +
       'Last written ' + escapeHtml(new Date(worst.d.date + "T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})) + '. ' +
-      'The Shortcut writes into the shared Gist on its own, so a gap this long means it has ' +
-      'stopped running — usually the daily Automation being switched off, or Low Power Mode ' +
-      'holding it back. Open the pipeline panel below to see exactly where it stops.' +
+      'Nothing has arrived from that phone since then, so its Shortcut has stopped running. ' +
+      'Usually the daily Automation is switched off or set to ask first, or Low Power Mode is ' +
+      'holding it back. Run the Shortcut once by hand on that phone, then open \u201cHealth pipeline\u201d below.' +
       '</div>';
   }
 
@@ -26559,7 +28233,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       acc("3 · Calories", '<ol><li>The same three actions with Type <b>Active Energy</b>, variable <b>calcount</b>.</li>' +
         '<li>Insert it right after <b>cal=</b>.</li></ol>') +
       acc("4 · Sleep", '<ol><li><b>Find Health Samples</b>: Type <b>Sleep</b>, Start Date <b>is in the last 1 day</b>, Source <b>is one device</b> (your watch or WHOOP), Limit off.</li>' +
-        '<li>If your iPhone offers a <b>Value</b> filter, leave out <b>In Bed</b> and <b>Awake</b>.</li>' +
+        '<li>Add two more filters: <b>Value is not In Bed</b> and <b>Value is not Awake</b>. Tap <b>is</b> and change it to <b>is not</b>. Without these, one night is counted several times.</li>' +
         '<li><b>Calculate Statistics</b>: Sum of <b>Duration</b>. Then <b>Set Variable</b> named <b>sleepsecs</b>.</li>' +
         '<li>Insert it right after <b>sleepsec=</b>. Shortcuts counts a duration in seconds, which is what that key expects.</li></ol>' +
         '<p>If sleep still comes out blank, tap <b>Check what arrived</b> below. It names the reason.</p>') +
@@ -29999,6 +31673,486 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     try{ new MutationObserver(redockSoon).observe(document.body, {attributes: true, attributeFilter: ["class"]}); }catch(e){}
   })();
 /*B224JS*/
+/* HorizonX Scattered Stack engine, inlined as exported (HorizonX Tools License). */
+try{ window.__hxSST = (function(){
+
+// Original HorizonX code. Default photos from the HorizonX stock library.
+// Headline font: Inter Tight, SIL Open Font License 1.1. HorizonX Tools License.
+/**
+ * Scattered Stack engine: twelve paper sheets float scattered across the stage,
+ * soft with depth of field, then gather into one tilted, centred pile in front
+ * of the headline, rest there riding a slow swell, and release again in a loop.
+ *
+ * Each sheet is three layers: a 2D card for position, stacking order and blur;
+ * a 3D tilt; and two chains of hinged strips (one per half sheet) that bend it
+ * like paper, with the shading of each bend on its own child so the image never
+ * repaints. Every sheet gets its own resting angle in the pile and its own wave,
+ * drawn once from a seeded random so the composition is the same on every load.
+ *
+ * The timeline is a pure function of time (`progressAt`) and every sheet's pose
+ * a pure function of progress and time (`cardPose`), so a frozen frame for a
+ * thumbnail is just a time. Everything is plain DOM and CSS transforms. This
+ * file is inlined verbatim into the HTML export, so it must stay free of imports.
+ */
+
+// Hero position of each sheet while scattered, as a fraction of the stage
+// (-0.5 to 0.5), listed from the top of the pile down. `shift` pushes a sheet
+// out of the pile along its own plane, in sheet widths.
+const LAYOUT = [
+  { scatter: [-0.4, -0.299999] },
+  { scatter: [0.340001, -0.340001] },
+  { scatter: [-0.139999, -0.399999], shift: [0.36, 0.0500001] },
+  { scatter: [0.440001, -0.0199999] },
+  { scatter: [-0.450001, 0.0599999] },
+  { scatter: [0.199999, 0.379999], shift: [-0.379999, 0.0399999] },
+  { scatter: [-0.26, 0.359999] },
+  { scatter: [0.43, 0.319999] },
+  { scatter: [0.159999, -0.430001], shift: [0.34, -0.0200001] },
+  { scatter: [-0.02, 0.419999] },
+  { scatter: [0.300001, 0.120001], shift: [-0.32, 0.0700001] },
+  { scatter: [-0.42, 0.400001] }
+];
+const CARD_COUNT = LAYOUT.length;
+const STACK = { rx: 56, rz: 28, gap: 0.14, perspective: 1300 };
+const HALF_STRIPS = 6;
+const SEED = 7;
+// Below this stage width the sheets grow and the pile spreads less.
+const WIDE_MIN = 900;
+const MAX_CARD = 290;
+
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+// Sine in-out: the gentlest start and landing, lowest peak speed.
+const ease = (t) => 0.499999 - 0.500001 * Math.cos(Math.PI * t);
+
+/** mulberry32: a small seeded random, `rand(a, b)` in [a, b). */
+function seededRandom(seed) {
+  let s = seed | 0;
+  return (a = 0, b = 1) => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return a + (b - a) * (((t ^ (t >>> 14)) >>> 0) / 4294967296);
+  };
+}
+
+/** Per-sheet constants: arrival delay, scattered pose, curl, pile angle, wave. */
+function planCards(layout = LAYOUT, seed = SEED) {
+  const rand = seededRandom(seed);
+  const n = layout.length;
+  // Arrival order is shuffled so the pile does not build top to bottom.
+  const order = layout.map((_, i) => i).sort(() => rand() - 0.5);
+  return layout.map((cfg, i) => {
+    const depth = n > 1 ? i / (n - 1) : 0;
+    // Resting curl per hinge: same signs arch or cup the sheet, opposite signs
+    // give an S.
+    const shape = rand();
+    const sR = shape < 0.400001 ? 1 : shape < 0.700001 ? -1 : 1;
+    const sL = shape < 0.399999 ? 1 : shape < 0.700001 ? -1 : -1;
+    return {
+      scatterAt: cfg.scatter,
+      shift: cfg.shift || [0, 0],
+      delay: order.indexOf(i) / n,
+      scatter: { rx: rand(-14, 14), ry: rand(-20, 20), rz: rand(-24, 24), s: 1 - depth * 0.420001, blur: depth * 7 },
+      curlR: sR * rand(1.20001, 3.59999),
+      curlL: sL * rand(1.20001, 3.6),
+      stack: { rx: rand(-9, 9), ry: rand(-8, 8), rz: rand(-17, 17) },
+      wave: { phase: i * 0.499999 + rand(0, 1.6), drift: rand(0, Math.PI * 2), speed: rand(0.799999, 1.2), lift: rand(0.0300001, 0.0500001), flex: rand(1.10001, 1.89999) },
+      phase: rand(0, Math.PI * 2),
+      speed: rand(0.750001, 1.05001)
+    };
+  });
+}
+
+/**
+ * Progress of the gather at `sec` seconds: 0 scattered, 1 stacked. Holds
+ * scattered, gathers, rests in the pile, releases, and repeats when `loop`.
+ */
+function progressAt(sec, timeline) {
+  const { hold, gather, rest, release, loop } = timeline;
+  const total = hold + gather + rest + release;
+  let s = loop && total > 0 ? sec % total : sec;
+  if (s < hold) return 0;
+  s -= hold;
+  if (s < gather) return gather > 0 ? s / gather : 1;
+  s -= gather;
+  if (!loop || s < rest) return 1;
+  return release > 0 ? clamp01(1 - (s - rest) / release) : 0;
+}
+
+/** Sheet size from the stage size: `size` scales the authored fit (1 = 100%). */
+function sheetBox(width, height, size = 1) {
+  const wide = width >= WIDE_MIN;
+  const w = Math.max(0, Math.min(width * (wide ? 0.219999 : 0.46), height / 3, MAX_CARD) * size);
+  return { width, height, wide, w, strip: w / (HALF_STRIPS * 2) };
+}
+
+/**
+ * Pose of sheet `i` at progress `p` and time `tsec`. `motion` is 0 for a still
+ * frame and 1 while animating; `wave` and `blur` scale the swell and the depth
+ * of field (1 = authored).
+ */
+function cardPose(card, i, n, p, tsec, box, { motion = 1, wave = 1, blur = 1 } = {}) {
+  const t = ease(clamp01((p - card.delay * 0.350001) / 0.649999));
+  const idle = (1 - t) * motion;
+  const W = box.w;
+  const sc = card.scatter;
+  const [fx, fy] = card.scatterAt;
+  const [shx, shy] = card.shift;
+  const stackShift = box.wide ? 1 : 0.700001;
+
+  // In the pile every sheet floats on its own slow swell: the tilt follows the
+  // rise, like paper riding a wave, so the motion reads as one gesture.
+  const w = card.wave;
+  const live = t * motion * wave;
+  const arg = tsec * 0.9 * w.speed + w.phase;
+  const arg2 = tsec * 0.549999 * w.speed + w.drift;
+
+  // On narrow stages the sheets that share the headline band spread further out.
+  const spread = !box.wide && Math.abs(fy) < 0.2 ? 1.24999 : 1;
+  return {
+    t,
+    x: lerp(fx * box.width * spread, 0, t) + Math.sin(arg2) * W * 0.0150001 * live + Math.sin(tsec * 0.449999 + card.phase) * 10 * idle,
+    y:
+      lerp(fy * box.height, (i - (n - 1) / 2) * W * STACK.gap, t) +
+      Math.sin(arg) * W * w.lift * live -
+      Math.sin(Math.PI * t) * W * 0.140001 +
+      Math.cos(tsec * 0.380001 + card.phase) * 12 * idle,
+    rx: lerp(sc.rx, STACK.rx + card.stack.rx, t) + Math.cos(arg) * 2.39999 * live,
+    ry: lerp(sc.ry, card.stack.ry, t) + Math.cos(arg2) * 1.80001 * live,
+    rz: lerp(sc.rz, STACK.rz + card.stack.rz, t) + Math.sin(arg2 + 1) * 2.2 * live + Math.sin(tsec * 0.500001 + card.phase) * 2.49999 * idle,
+    s: lerp(sc.s, 1, t),
+    sx: shx * W * stackShift * t,
+    sy: shy * W * stackShift * t,
+    // Paper flexes a little more while it travels and keeps rippling in the pile.
+    amp: motion * wave * (lerp(1.3, w.flex, t) + Math.sin(Math.PI * t) * 2),
+    // Depth-of-field blur while floating, sharp once stacked.
+    blur: sc.blur * blur * (1 - t)
+  };
+}
+
+// Bend shading: darker where the sheet curls away from the light, lifted
+// where it faces it.
+const alpha = (total) => Math.round(Math.min(0.3, Math.abs(total) / 100) * 200) / 200;
+const shadeTone = (total) =>
+  total > 0 ? `rgba(0,0,0,${(alpha(total) * 1.3).toFixed(3)})` : `rgba(255,255,255,${(alpha(total) * 0.7).toFixed(3)})`;
+
+/** Hinge angles of one half sheet: a resting curl plus a travelling ripple. */
+function bendAngles(curl, amp, card, tsec, offset, count = HALF_STRIPS) {
+  return Array.from({ length: count }, (_, k) => curl + amp * Math.sin(tsec * 1.10001 * card.speed + card.phase + offset + k * 0.5));
+}
+
+const cssUrl = (src) => `url(${JSON.stringify(String(src))})`;
+
+/**
+ * Builds the sheets inside `root` (`.sst-stage`, `.sst-theme`, `.sst-pause`)
+ * and runs them. Config: images, size, corner, timeline, wave, blur, theme,
+ * still, phase, preview, fontUrl, persistKey.
+ */
+function createScatteredStack(root, initial) {
+  const win = root.ownerDocument.defaultView || globalThis;
+  const doc = root.ownerDocument;
+  const stage = root.querySelector('.sst-stage');
+  const toggle = root.querySelector('.sst-theme');
+  const pauseButton = root.querySelector('.sst-pause');
+  let config = { ...initial };
+  const plan = planCards();
+  const n = plan.length;
+  const reduce = typeof win.matchMedia === 'function' ? win.matchMedia('(prefers-reduced-motion: reduce)') : null;
+
+  // Font: registered once per document under its own family name, so a page
+  // that defines "Inter Tight" differently keeps its own.
+  if (config.fontUrl && typeof win.FontFace === 'function' && doc.fonts && !doc.fonts.__sstFont) {
+    const face = new win.FontFace('SST Inter Tight', `url(${JSON.stringify(config.fontUrl)}) format("woff2")`, { weight: '600', display: 'swap' });
+    doc.fonts.__sstFont = face.load().then((loaded) => doc.fonts.add(loaded)).catch(() => {});
+  }
+
+  let theme = config.theme === 'light' ? 'light' : 'dark';
+  if (config.persistKey) {
+    try {
+      const saved = win.localStorage?.getItem(config.persistKey);
+      if (saved === 'light' || saved === 'dark') theme = saved;
+    } catch {}
+  }
+  function applyTheme() {
+    root.setAttribute('data-sst-theme', theme);
+    if (toggle) {
+      const label = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+      toggle.setAttribute('aria-label', label);
+      toggle.setAttribute('title', label);
+    }
+  }
+  applyTheme();
+
+  const ground = doc.createElement('div');
+  ground.className = 'sst-ground';
+  stage.replaceChildren(ground);
+
+  function chain(tilt, side) {
+    const strips = [];
+    let parent = tilt;
+    for (let k = 0; k < HALF_STRIPS; k++) {
+      const el = doc.createElement('div');
+      el.className = `sst-strip sst-strip--${side}${k === HALF_STRIPS - 1 ? ' sst-end' : ''}`;
+      const shade = doc.createElement('i');
+      shade.className = 'sst-shade';
+      el.appendChild(shade);
+      parent.appendChild(el);
+      strips.push({ el, shade, bg: '', tf: '' });
+      parent = el;
+    }
+    return strips;
+  }
+
+  const cards = plan.map((card, i) => {
+    const el = doc.createElement('div');
+    el.className = 'sst-card';
+    el.style.zIndex = String(n - i);
+    const tilt = doc.createElement('div');
+    tilt.className = 'sst-tilt';
+    el.appendChild(tilt);
+    const right = chain(tilt, 'r');
+    const left = chain(tilt, 'l');
+    stage.appendChild(el);
+    return { card, el, tilt, right, left, blur: '', src: '' };
+  });
+
+  let ready = false;
+  let decoding = null;
+  let decodingTimer = 0;
+  function applyImages() {
+    const images = Array.isArray(config.images) && config.images.length ? config.images : [];
+    const used = new Set();
+    cards.forEach((c, i) => {
+      const src = images.length ? images[i % images.length] : '';
+      if (src === c.src) return;
+      c.src = src;
+      c.el.style.setProperty('--sst-img', src ? cssUrl(src) : 'none');
+      if (src) used.add(src);
+    });
+    if (!used.size && decoding) return;
+    win.clearTimeout(decodingTimer);
+    // Decode every image before the choreography starts, so no sheet arrives
+    // blank; a slow connection starts anyway after 2.5 s.
+    const loads = [...used].map((src) => {
+      if (typeof win.Image !== 'function') return Promise.resolve();
+      const img = new win.Image();
+      img.src = src;
+      return typeof img.decode === 'function' ? img.decode().catch(() => {}) : Promise.resolve();
+    });
+    const pending = Promise.race([Promise.all(loads), new Promise((r) => { decodingTimer = win.setTimeout(r, 2500); })]);
+    decoding = pending;
+    pending.then(() => {
+      if (decoding !== pending || destroyed) return;
+      win.clearTimeout(decodingTimer);
+      decodingTimer = 0;
+      ready = true;
+      root.setAttribute('data-ready', '');
+      wake();
+    });
+  }
+
+  let box = sheetBox(0, 0, 1);
+  function layout() {
+    const size = typeof config.size === 'number' ? config.size : 1;
+    box = sheetBox(root.clientWidth, root.clientHeight, size);
+    const W = box.w;
+    const corner = typeof config.corner === 'number' ? config.corner : 0.0450001;
+    root.style.setProperty('--sst-cw', `${W}px`);
+    root.style.setProperty('--sst-ch', `${W}px`);
+    root.style.setProperty('--sst-sw', `${box.strip}px`);
+    root.style.setProperty('--sst-r', `${W * corner}px`);
+    cards.forEach((c) => {
+      c.right.forEach((s, k) => { s.el.style.backgroundPosition = `${-(W / 2 + k * box.strip)}px 0`; });
+      c.left.forEach((s, k) => { s.el.style.backgroundPosition = `${-(W / 2 - (k + 1) * box.strip)}px 0`; });
+    });
+  }
+
+  const reduced = () => !!reduce?.matches;
+  const frozen = () => config.still === true;
+  const timeline = () => ({
+    hold: config.hold ?? 1.8,
+    gather: config.gather ?? 5,
+    rest: config.rest ?? 7,
+    release: config.release ?? 3.40001,
+    loop: config.loop !== false
+  });
+
+  function bend(strips, curl, sign, c, tsec, amp, offset) {
+    let total = 0;
+    const dir = sign > 0 ? 'to right' : 'to left';
+    bendAngles(curl, amp, c.card, tsec, offset).forEach((a, k) => {
+      const s = strips[k];
+      const before = total;
+      total += a;
+      const tf = `rotateY(${(sign * a).toFixed(3)}deg)`;
+      if (tf !== s.tf) { s.el.style.transform = tf; s.tf = tf; }
+      // Written only on change: most frames move the angle, not the tone.
+      const bg = `linear-gradient(${dir}, ${shadeTone(before)}, ${shadeTone(total)})`;
+      if (bg !== s.bg) { s.shade.style.background = bg; s.bg = bg; }
+    });
+  }
+
+  function render(tsec) {
+    const p = reduced() ? 1 : progressAt(tsec, timeline());
+    const motion = reduced() ? 0 : 1;
+    const opts = { motion, wave: config.wave ?? 1, blur: config.blur ?? 1 };
+    let settled = 0;
+    cards.forEach((c, i) => {
+      const pose = cardPose(c.card, i, n, p, tsec, box, opts);
+      settled += pose.t;
+      c.el.style.transform = `translate3d(${pose.x.toFixed(2)}px, ${pose.y.toFixed(2)}px, 0)`;
+      c.tilt.style.transform =
+        `perspective(${STACK.perspective}px) ` +
+        `rotateX(${pose.rx.toFixed(3)}deg) rotateY(${pose.ry.toFixed(3)}deg) rotateZ(${pose.rz.toFixed(3)}deg) ` +
+        `translate(${pose.sx.toFixed(2)}px, ${pose.sy.toFixed(2)}px) scale(${pose.s.toFixed(4)})`;
+      bend(c.right, c.card.curlR, 1, c, tsec, pose.amp, 0);
+      bend(c.left, c.card.curlL, -1, c, tsec, pose.amp, 1.29999);
+      const blur = pose.blur > 0.0499999 ? `blur(${pose.blur.toFixed(1)}px)` : 'none';
+      if (blur !== c.blur) { c.el.style.filter = blur; c.blur = blur; }
+    });
+    const g = settled / n;
+    ground.style.opacity = String(g * g);
+    ground.style.transform = `translate(0px, ${((n / 2) * box.w * STACK.gap + box.w * 0.2).toFixed(2)}px)`;
+  }
+
+  // Own clock: it stops while the stack is off screen, paused or hidden, so the
+  // choreography never jumps ahead.
+  let clock = frozen() ? config.phase ?? 0 : 0;
+  let last = 0;
+  let raf = 0;
+  let visible = true;
+  let paused = false;
+  let destroyed = false;
+  const running = () => ready && visible && !paused && !frozen() && !reduced() && !destroyed;
+
+  function frame(time) {
+    raf = 0;
+    clock += last ? Math.min(50, time - last) / 1000 : 0;
+    last = time;
+    render(clock);
+    if (running()) raf = win.requestAnimationFrame(frame);
+  }
+  function wake() {
+    if (frozen()) clock = config.phase ?? 0;
+    render(clock);
+    if (running() && !raf) {
+      last = 0;
+      raf = win.requestAnimationFrame(frame);
+    }
+  }
+  function sleep() {
+    if (raf) win.cancelAnimationFrame(raf);
+    raf = 0;
+  }
+
+  function setPaused(next) {
+    paused = next;
+    pauseButton?.setAttribute('aria-pressed', String(paused));
+    pauseButton?.setAttribute('aria-label', paused ? 'Play motion' : 'Pause motion');
+    root.toggleAttribute('data-paused', paused);
+    if (paused) sleep();
+    else wake();
+  }
+
+  const onToggle = (event) => {
+    event.stopPropagation();
+    theme = theme === 'light' ? 'dark' : 'light';
+    if (config.persistKey) {
+      try { win.localStorage?.setItem(config.persistKey, theme); } catch {}
+    }
+    applyTheme();
+  };
+  const onPause = (event) => {
+    event.stopPropagation();
+    setPaused(!paused);
+  };
+  // A click or tap anywhere on the stage pauses too: touch screens have no
+  // hover to reveal the button.
+  const onStageClick = (event) => {
+    if (config.preview || event.target.closest?.('button')) return;
+    setPaused(!paused);
+  };
+  const onKey = (event) => {
+    if (event.target !== root || config.preview) return;
+    if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      setPaused(!paused);
+    }
+  };
+  toggle?.addEventListener('click', onToggle);
+  pauseButton?.addEventListener('click', onPause);
+  root.addEventListener('click', onStageClick);
+  root.addEventListener('keydown', onKey);
+
+  const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { layout(); render(clock); }) : null;
+  resize?.observe(root);
+  const io = typeof win.IntersectionObserver === 'function'
+    ? new win.IntersectionObserver((entries) => {
+        visible = entries.some((entry) => entry.isIntersecting) && !doc.hidden;
+        if (visible) wake();
+        else sleep();
+      })
+    : null;
+  io?.observe(root);
+  const onVisibility = () => {
+    visible = !doc.hidden;
+    if (visible) wake();
+    else sleep();
+  };
+  doc.addEventListener('visibilitychange', onVisibility);
+  const onMotion = () => {
+    sleep();
+    wake();
+  };
+  reduce?.addEventListener?.('change', onMotion);
+
+  layout();
+  applyImages();
+  render(clock);
+
+  return {
+    setConfig(next) {
+      const previousTheme = config.theme;
+      config = { ...config, ...next };
+      // The authored theme wins only when it changes, so an edit elsewhere
+      // never undoes the visitor's own switch.
+      if (config.theme !== previousTheme) {
+        theme = config.theme === 'light' ? 'light' : 'dark';
+        applyTheme();
+      }
+      layout();
+      applyImages();
+      sleep();
+      wake();
+    },
+    get theme() {
+      return theme;
+    },
+    get paused() {
+      return paused;
+    },
+    destroy() {
+      destroyed = true;
+      win.clearTimeout(decodingTimer);
+      sleep();
+      visible = false;
+      resize?.disconnect();
+      io?.disconnect();
+      doc.removeEventListener('visibilitychange', onVisibility);
+      reduce?.removeEventListener?.('change', onMotion);
+      toggle?.removeEventListener('click', onToggle);
+      pauseButton?.removeEventListener('click', onPause);
+      root.removeEventListener('click', onStageClick);
+      root.removeEventListener('keydown', onKey);
+      stage.replaceChildren();
+    }
+  };
+}
+
+
+return createScatteredStack; })(); }catch(e){ try{ console.warn("sst", e); }catch(_){} }
+
 /* ---------- BUILD 239 ---------- */
   /* ===========================================================================
      BUILD 239
@@ -30938,8 +33092,9 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
     function rcChapters(d){
       var ch = [], A = d.a, B = d.b;
       ch.push({key: "cover", tag: "Cover", html:
-        '<div class="rc-logo">' + rcLogo() + '</div><p class="rc-eye">Your month, together</p><h1>' + d.name + '.<br><em>All of it.</em></h1>' +
-        '<div class="rc-cover"' + (d.cover ? ' style="background-image:url(&quot;' + d.cover + '&quot;)"' : '') + '><div class="rc-cv"><span>' + d.days + ' days · ' + d.photos.length + ' photo' + (d.photos.length === 1 ? "" : "s") + ' · ' + d.total + ' done</span><b>' + esc(d.an) + ' + ' + esc(d.bn) + '</b></div></div>'});
+        '<div class="rc-logo">' + rcLogo() + '</div><p class="rc-eye">Your month, together</p><h1><span class="apt-hero">' + d.name + '.</span><br><em>All of it.</em></h1>' +
+        '<div class="rc-cover"' + (d.cover ? ' style="background-image:url(&quot;' + d.cover + '&quot;)"' : '') + '><div class="rc-cv"><span>' + d.days + ' days · ' + d.photos.length + ' photo' + (d.photos.length === 1 ? "" : "s") + ' · ' + d.total + ' done</span><b>' + esc(d.an) + ' + ' + esc(d.bn) + '</b></div></div>',
+        after: function(el){ try{ W245.cover(el); }catch(e){ el.classList.add("apt-done"); } }});
       if(d.ch){
         var c = d.ch, special = c.dry && c.full && d.mk === "2026-11" && /^rae$/i.test(d.bn);
         ch.push({key: "challenge", tag: c.title, hint: "Drag across the days", html:
@@ -30960,11 +33115,11 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
         '<div class="rc-split"><div class="a"><b>' + d.per[A].done + '</b><span>' + esc(d.an) + '</span></div><div class="t"><b>' + d.bothDone + '</b><span>Together</span></div><div class="b"><b>' + d.per[B].done + '</b><span>' + esc(d.bn) + '</span></div></div>' +
         '<div class="rc-rows">' + bigRows.map(function(r){ return '<div><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join("") + '</div>'});
       if(d.photos.length){
-        var show = d.photos.slice(-28).reverse();
+        var show = d.photos.slice(-12).reverse();
         ch.push({key: "photos", tag: "In photos", hint: "Tap a photo to open it", html:
-          '<p class="rc-eye">' + d.photos.length + ' photo' + (d.photos.length === 1 ? "" : "s") + (d.bothDays ? ", " + d.bothDays + " day" + (d.bothDays === 1 ? "" : "s") + " you both posted" : "") + '</p><h1 class="rc-h3">You showed up.</h1>' +
-          '<div class="rc-wall">' + show.map(function(p, i){ return '<button type="button" class="' + (i === 0 ? "big" : "") + '" data-p="' + i + '" style="--d:' + Math.min(i, 30) + ';background-image:url(&quot;' + p.src + '&quot;)" aria-label="Photo from ' + rcDate(p.day) + '"></button>'; }).join("") + '</div>',
-          after: function(el){ el.querySelectorAll(".rc-wall button").forEach(function(b2){ b2.addEventListener("click", function(ev){ ev.stopPropagation(); var p = show[parseInt(b2.getAttribute("data-p"), 10)]; try{ openPhotoView(p.src, nm(p.by) + " · " + rcDate(p.day)); }catch(e){} }); }); }});
+          '<p class="rc-eye">' + d.photos.length + ' photo' + (d.photos.length === 1 ? "" : "s") + (d.bothDays ? ", " + d.bothDays + " day" + (d.bothDays === 1 ? "" : "s") + " you both posted" : "") + '</p><h1 class="rc-h3">You showed up.</h1><div class="rc-sst"></div>' +
+          '<div class="rc-wall sm">' + show.map(function(p, i){ return '<button type="button" class="' + "" + '" data-p="' + i + '" style="--d:' + Math.min(i, 30) + ';background-image:url(&quot;' + p.src + '&quot;)" aria-label="Photo from ' + rcDate(p.day) + '"></button>'; }).join("") + '</div>',
+          after: function(el){ try{ W245.stack(el, show); }catch(e){} el.querySelectorAll(".rc-wall button").forEach(function(b2){ b2.addEventListener("click", function(ev){ ev.stopPropagation(); var p = show[parseInt(b2.getAttribute("data-p"), 10)]; try{ openPhotoView(p.src, nm(p.by) + " · " + rcDate(p.day)); }catch(e){} }); }); }});
       }
       if(d.songs.length){
         var top = d.songs.slice().sort(function(x, y){ return y.rating - x.rating || String(y.day).localeCompare(String(x.day)); }).slice(0, 5);
@@ -31029,7 +33184,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       grid.addEventListener("touchmove", function(ev){ at(ev); ev.preventDefault(); }, {passive: false});
       grid.addEventListener("click", function(ev){ ev.stopPropagation(); });
       var n = d.ch.list.filter(function(x){ return x.st === "both"; }).length;
-      if(!motionOff()) setTimeout(function(){ if(document.body.contains(grid)){ try{ chime(); }catch(e){} buzz(12); } }, Math.min(2400, 260 + n * 55));
+      if(!motionOff()) setTimeout(function(){ if(document.body.contains(grid)){ try{ if(!(d.ch.full && W245.powerUp())) chime(); }catch(e){} buzz(12); if(d.ch.full){ try{ var gr = grid.getBoundingClientRect(); W245.firework(gr.left + gr.width / 2, gr.top + gr.height / 2, 1.6); }catch(e){} } } }, Math.min(2400, 260 + n * 55));
     }
     function rcEnd(el, d){
       var sh = el.querySelector(".rc-share");
@@ -31093,6 +33248,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
         ov.querySelector(".rc-hint").textContent = c.hint || (i === chs.length - 1 ? "" : "Tap to go on");
         ov.querySelector(".rc-n").textContent = (i + 1) + " / " + chs.length;
         ov.querySelector(".rc-prev").disabled = i === 0; ov.querySelector(".rc-next").disabled = i === chs.length - 1;
+        try{ W245.stackStop(body); }catch(e){}
         body.className = "rc-body rcb-" + c.key + (dir < 0 ? " back" : ""); body.innerHTML = c.html; body.scrollTop = 0;
         ov.setAttribute("data-ch", c.key);
         void body.offsetWidth; body.classList.add("in");
@@ -31109,7 +33265,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
           if(!state.recap[d.mk].seen[me()]){ state.recap[d.mk].seen[me()] = new Date().toISOString(); persist(); track("recap_finished", {month: d.mk}); try{ rcCard(); }catch(e){} }
         }
       }
-      function close(){ ov.classList.add("bye"); rcOpen = false; setTimeout(function(){ ov.remove(); }, motionOff() ? 0 : 260); try{ rcCard(); }catch(e){} }
+      function close(){ try{ W245.stackStop(body); }catch(e){} ov.classList.add("bye"); rcOpen = false; setTimeout(function(){ ov.remove(); }, motionOff() ? 0 : 260); try{ rcCard(); }catch(e){} }
       ov.addEventListener("click", function(ev){ if(ev.target.closest && ev.target.closest("button, input, a, .rc-grid, .rc-year, .rc-tip")) return; go(ev.clientX < window.innerWidth * .3 ? i - 1 : i + 1); });
       ov.querySelector(".rc-next").addEventListener("click", function(){ go(i + 1); });
       ov.querySelector(".rc-prev").addEventListener("click", function(){ go(i - 1); });
@@ -31164,6 +33320,325 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       var t2 = todayISO(), late2 = parseInt(t2.slice(8, 10), 10) >= 20; b.querySelector("span").textContent = (late2 ? "Preview " : "Watch ") + rcName(late2 ? t2.slice(0, 7) : rcPrevMk()) + "’s recap";
     }
 
+    /* =====================================================================
+       BUILD 245 - MOTION FROM HORIZONX, AND HEALTH AS A CHOICE
+       Each block names the HorizonX part its mechanism comes from.
+       ===================================================================== */
+    var W245 = window.__w245 = {};
+    function hpOn(pid){ var p = (state.healthPref || {})[pid]; return !(p && p.on === false); }
+    function hpSet(on, how){
+      var m = me(); if(!state.healthPref) state.healthPref = {};
+      state.healthPref[m] = {on: !!on, at: new Date().toISOString()};
+      persist(); track("health_choice", {on: !!on, how: how || ""});
+      try{ renderHealth(); }catch(e){} try{ renderDailyPhotos(); }catch(e){} hpSettings();
+    }
+
+    /* ---------- Power Up (day done, the 30th tick). Synthesised: the HorizonX file
+       could not be fetched from this workspace, so this stands in for it. ---------- */
+    W245.powerUp = function(){
+      try{
+        if(!sfxOn()) return true;
+        var ctx = sfxCtx(); if(!ctx) return false;
+        var go = function(){
+          var out = sfxOut(ctx), t0 = ctx.currentTime + .01, notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+          notes.forEach(function(f, i){
+            var o = ctx.createOscillator(), g = ctx.createGain(), t = t0 + i * .075;
+            o.type = i === notes.length - 1 ? "sine" : "triangle"; o.frequency.setValueAtTime(f, t);
+            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .012); g.gain.exponentialRampToValueAtTime(.0008, t + (i === notes.length - 1 ? .6 : .2));
+            o.connect(g); g.connect(out); o.start(t); o.stop(t + .7);
+          });
+        };
+        if(ctx.state === "suspended") ctx.resume().then(go).catch(function(){}); else go();
+        return true;
+      }catch(e){ return false; }
+    };
+    /* ---------- Firework Todo Checkbox: six rays, twice, in the win colour ---------- */
+    W245.firework = function(x, y, scale){
+      if(motionOff()) return;
+      var k = scale || 1;
+      for(var ring = 0; ring < 2; ring++){
+        for(var i = 0; i < 6; i++){
+          var a = (Math.PI / 3) * i + (ring ? Math.PI / 6 : 0), r = (ring ? 84 : 52) * k;
+          var d = mk("i", "fw245"); d.style.left = x + "px"; d.style.top = y + "px"; document.body.appendChild(d);
+          d.animate([{transform: "translate(-50%,-50%) scale(.4)", opacity: 1}, {opacity: 1, offset: .3},
+                     {transform: "translate(calc(-50% + " + Math.cos(a) * r + "px), calc(-50% + " + Math.sin(a) * r + "px)) scale(1)", opacity: 0}],
+                    {duration: 520 + ring * 160, delay: 100 + ring * 90, easing: "cubic-bezier(.2,.8,.2,1)", fill: "both"});
+          (function(n){ setTimeout(function(){ n.remove(); }, 900); })(d);
+        }
+      }
+    };
+
+    /* ---------- Stepper (first run): circles joined by a line that fills ---------- */
+    W245.stepper = function(d){
+      var h = '<nav class="fr-stp" aria-label="Step ' + Math.min(4, d + 1) + ' of 4">';
+      for(var i = 0; i < 4; i++){
+        var st = i < d ? "ok" : (i === d ? "now" : "");
+        h += '<span class="fr-stp-c ' + st + '">' + (i < d ? tick("") : (i === d ? "<i></i>" : (i + 1))) + '</span>';
+        if(i < 3) h += '<span class="fr-stp-l' + (i < d ? " on" : "") + (i === d - 1 ? " new" : "") + '"><i></i></span>';
+      }
+      return h + '</nav>';
+    };
+    W245.healthAsk = function(){
+      var p = (state.healthPref || {})[me()], on = p ? p.on !== false : null;
+      return '<div class="fr-hq"><b>One choice before you start</b><p>Show Health on Today? Steps, calories and sleep for the two of you, side by side. You can change this in Settings.</p>' +
+        '<div class="fr-hq-b"><button type="button" data-h="1" class="' + (on === true ? "on" : "") + '">Yes, include it</button><button type="button" data-h="0" class="' + (on === false ? "on" : "") + '">Not now</button></div></div>';
+    };
+    /* Type Reveal: a slot opens inside the line and the last word settles out of a lean */
+    W245.frWire = function(fr, d){
+      try{
+        [].forEach.call(fr.querySelectorAll(".fr-hq-b button"), function(b){
+          b.addEventListener("click", function(){
+            hpSet(b.getAttribute("data-h") === "1", "first_run");
+            [].forEach.call(fr.querySelectorAll(".fr-hq-b button"), function(x){ x.classList.toggle("on", x === b); });
+            buzz(6);
+          });
+        });
+        var h2 = fr.querySelector("h2");
+        if(h2 && !motionOff() && !h2.querySelector(".tr245")){
+          var words = h2.textContent.trim().split(/\s+/), last = words.pop();
+          h2.innerHTML = (words.length ? esc(words.join(" ")) + " " : "") + '<span class="tr245"><i></i><b>' + esc(last) + '</b></span>';
+        }
+      }catch(e){}
+    };
+
+    /* ---------- Health: the lines under the numbers, and the switches ---------- */
+    W245.healthLines = function(){
+      var m = me(), c = (state.healthCache || {})[m];
+      if(c && c.src === "cleared" && c.ignoreDate === todayISO())
+        return '<div class="hx-why"><span>You cleared today’s numbers, so today’s readings are being held back.</span><button type="button" class="hx-link" id="hxUnclear">Bring them back</button></div>';
+      return "";
+    };
+    W245.healthWire = function(){
+      var u = document.getElementById("hxUnclear");
+      if(u) u.addEventListener("click", function(){
+        var m = me(), c = (state.healthCache || {})[m]; if(!c) return;
+        c.ignoreDate = null; c.ignoreAbove = null; c.updatedAt = new Date().toISOString();
+        persist(); track("health_unclear"); try{ toast("Checking for today’s numbers…"); }catch(e){}
+        try{ fetchHealth(function(){ try{ renderHealth(); }catch(e){} }); }catch(e){ try{ renderHealth(); }catch(_){} }
+      });
+      var n = document.getElementById("hxNoHealth");
+      if(n) n.addEventListener("click", function(){ hpSet(false, "card"); try{ toast("Health hidden for you. Turn it back on in Settings."); }catch(e){} });
+    };
+    function hpSettings(){
+      var anchor = document.getElementById("healthLinkBtn"); if(!anchor || !anchor.parentNode) return;
+      var row = document.getElementById("hxPrefRow");
+      if(!row){
+        row = mk("label", "wk-tog hx-pref", '<input type="checkbox" id="hxPref"><span class="wk-box" aria-hidden="true">' + tick("") + '</span><span>Include my Health numbers <small>Steps, calories and sleep on Today. Off hides yours; if you’re both off, the card goes.</small></span>');
+        row.id = "hxPrefRow"; anchor.parentNode.insertBefore(row, anchor);
+        row.querySelector("input").addEventListener("change", function(ev){ hpSet(ev.target.checked, "settings"); });
+      }
+      var on = hpOn(me()); row.querySelector("input").checked = on;
+      anchor.style.display = on ? "" : "none";
+    }
+
+    /* ---------- Liquid Reveal (daily photos): theirs stays soft until yours is in,
+       then you rub it clear. A tap clears it too. Photos pair on Today only. ---------- */
+    function lqKey(o){ return "us-w2-lq-" + todayISO() + "-" + o; }
+    function lqSeen(o){ try{ return localStorage.getItem(lqKey(o)) === "1"; }catch(e){ return true; } }
+    function lqDone(frame, o, how){
+      try{ localStorage.setItem(lqKey(o), "1"); }catch(e){}
+      var cv = frame.querySelector(".lq-cv"), bd = frame.querySelector(".lq-badge");
+      frame.classList.add("lq-out"); frame.classList.remove("lq-rub", "lq-lock");
+      if(bd) bd.remove();
+      if(cv){ cv.style.pointerEvents = "none"; setTimeout(function(){ cv.remove(); frame.classList.remove("lq-out"); }, 520); } else frame.classList.remove("lq-out");
+      track("photo_revealed", {how: how}); buzz(8);
+    }
+    function lq(){
+      var row = document.getElementById("duoRow"); if(!row) return;
+      var m = me(), o = otherPerson(m), t = todayISO(), dp = state.dailyPhotos || {};
+      var slot = row.querySelector('.duo-slot[data-pid="' + o + '"]'); if(!slot) return;
+      var frame = slot.querySelector(".duo-frame"), im = frame && frame.querySelector("img");
+      if(!frame || !im || !dp[o] || dp[o].date !== t || lqSeen(o) || !hasTwo()){ if(frame){ frame.classList.remove("lq-lock", "lq-rub"); var x = frame.querySelector(".lq-cv"), y = frame.querySelector(".lq-badge"); if(x) x.remove(); if(y) y.remove(); } return; }
+      var mine = !!(dp[m] && dp[m].date === t && dp[m].photo);
+      var badge = frame.querySelector(".lq-badge"); if(!badge){ badge = mk("span", "lq-badge"); frame.appendChild(badge); }
+      if(!mine){
+        frame.classList.add("lq-lock"); frame.classList.remove("lq-rub");
+        badge.innerHTML = icon("lock", 14) + "<span>Post yours to see " + esc(nm(o)) + "’s</span>";
+        var c0 = frame.querySelector(".lq-cv"); if(c0) c0.remove();
+        if(!slot.__lq){ slot.__lq = true; slot.addEventListener("click", function(ev){ if(frame.classList.contains("lq-lock")){ ev.stopImmediatePropagation(); ev.preventDefault(); try{ toast("Post your photo first, then " + nm(o) + "’s is yours to reveal."); }catch(e){} } }, true); }
+        return;
+      }
+      frame.classList.remove("lq-lock"); frame.classList.add("lq-rub");
+      badge.innerHTML = icon("spark", 14) + "<span>Rub to reveal</span>";
+      if(frame.querySelector(".lq-cv")) return;
+      var cv = mk("canvas", "lq-cv"); cv.setAttribute("aria-label", "Rub or tap to reveal " + nm(o) + "’s photo"); cv.setAttribute("role", "button"); cv.tabIndex = 0;
+      frame.appendChild(cv);
+      var W = frame.clientWidth, H = frame.clientHeight; if(!W || !H){ cv.remove(); return; }
+      var dpr = Math.min(window.devicePixelRatio || 1, 1.5); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      var ctx = cv.getContext("2d"), cover = document.createElement("canvas"), cc = cover.getContext("2d"), brush = document.createElement("canvas"), bc = brush.getContext("2d");
+      cover.width = cv.width; cover.height = cv.height;
+      var R = Math.max(30, Math.min(W, H) * .2) * dpr, D = Math.ceil(R * 2); brush.width = brush.height = D;
+      var src = new Image(), ready = false, last = null, start = null, moved = 0, cells = {}, GX = 6, GY = 8, finished = false;
+      src.onload = function(){ var fit = Math.max(cv.width / src.naturalWidth, cv.height / src.naturalHeight), w = src.naturalWidth * fit, h = src.naturalHeight * fit; cc.drawImage(src, (cv.width - w) / 2, (cv.height - h) / 2, w, h); ready = true; };
+      src.src = im.currentSrc || im.src;
+      function stamp(x, y){
+        bc.globalCompositeOperation = "source-over"; bc.clearRect(0, 0, D, D);
+        var g = bc.createRadialGradient(R, R, 0, R, R, R); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(.55, "rgba(255,255,255,.82)"); g.addColorStop(1, "rgba(255,255,255,0)");
+        bc.fillStyle = g; bc.fillRect(0, 0, D, D);
+        bc.globalCompositeOperation = "source-in"; bc.drawImage(cover, x - R, y - R, D, D, 0, 0, D, D);
+        ctx.drawImage(brush, x - R, y - R);
+        cells[Math.floor(x / cv.width * GX) + "," + Math.floor(y / cv.height * GY)] = 1;
+      }
+      function at(ev){ var b = cv.getBoundingClientRect(); return {x: (ev.clientX - b.left) / b.width * cv.width, y: (ev.clientY - b.top) / b.height * cv.height}; }
+      function finish(how){ if(finished) return; finished = true; if(ready){ ctx.globalAlpha = 1; ctx.drawImage(cover, 0, 0); } lqDone(frame, o, how); }
+      cv.addEventListener("pointerdown", function(ev){ ev.stopPropagation(); ev.preventDefault(); try{ cv.setPointerCapture(ev.pointerId); }catch(e){} var p = at(ev); last = p; start = p; moved = 0; if(ready) stamp(p.x, p.y); });
+      cv.addEventListener("pointermove", function(ev){
+        if(!last || !ready) return; var p = at(ev), dx = p.x - last.x, dy = p.y - last.y, dist = Math.hypot(dx, dy), n = Math.min(40, Math.ceil(dist / (R * .3)));
+        for(var i = 1; i <= n; i++) stamp(last.x + dx * i / n, last.y + dy * i / n);
+        moved += dist; last = p;
+        if(Object.keys(cells).length >= GX * GY * .45) finish("rub");
+      });
+      function up(ev){ if(!last) return; last = null; if(moved < 10 * dpr) finish("tap"); else if(Object.keys(cells).length >= GX * GY * .45) finish("rub"); }
+      cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", function(){ last = null; });
+      cv.addEventListener("click", function(ev){ ev.stopPropagation(); ev.preventDefault(); });
+      cv.addEventListener("keydown", function(ev){ if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); finish("key"); } });
+    }
+    function hasTwo(){ return (state.people || []).length >= 2; }
+    try{ var _rdp245 = renderDailyPhotos; renderDailyPhotos = function(){ var r = _rdp245.apply(this, arguments); try{ lq(); }catch(e){ try{ console.warn("lq", e); }catch(_){} } return r; }; }catch(e){}
+
+    /* ---------- Cinema Ticket (Experiences): each one is a ticket, and doing it tears the stub ---------- */
+    function tkDress(){
+      var box = document.getElementById("openTasks"); if(!box) return;
+      var cards = box.querySelectorAll(".exp-card:not(.tk245)"); if(!cards.length) return;
+      var MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      [].forEach.call(cards, function(c){
+        c.classList.add("tk245");
+        var title = (c.querySelector(".exp-title") || {}).textContent || "", t = null;
+        (state.tasks || []).forEach(function(x){ if(!t && x && x.status !== "done" && x.title === title && (listById(x.listId) || {}).experienceBased) t = x; });
+        var stub = mk("div", "tk-stub");
+        if(t && t.dueDate){ var dt = new Date(t.dueDate + "T12:00:00"); stub.innerHTML = '<small>' + dt.toLocaleDateString(undefined, {weekday: "short"}).toUpperCase() + '</small><b>' + dt.getDate() + '</b><span>' + MON[dt.getMonth()] + '</span>'; }
+        else stub.innerHTML = '<small>OPEN</small><b class="o">' + tick("") + '</b><span>DATE</span>';
+        stub.setAttribute("aria-hidden", "true");
+        c.appendChild(stub);
+        var bits = [];
+        if(t && t.venue) bits.push(esc(t.venue));
+        if(t && t.unitPrice > 0){ try{ bits.push(new Intl.NumberFormat(undefined, {style: "currency", currency: t.currency || "USD", maximumFractionDigits: 0}).format(t.unitPrice * (t.quantity || 1))); }catch(e){} }
+        if(bits.length){ var mrow = mk("div", "tk-meta", bits.join(" · ")); var sub = c.querySelector(".exp-sub"); if(sub) sub.parentNode.insertBefore(mrow, sub); }
+        var em = c.querySelector(".exp-emoji"); if(em && em.textContent.trim() === "•") em.innerHTML = icon("ticket", 20);
+        var go = c.querySelector(".exp-actions .go");
+        if(go) go.addEventListener("click", function(){ try{ tkTear(c); }catch(e){} }, true);
+      });
+    }
+    function tkTear(card){
+      track("ticket_torn"); if(motionOff()) return;
+      var r = card.getBoundingClientRect(), st = card.querySelector(".tk-stub"); if(!st) return;
+      var sr = st.getBoundingClientRect(), ghost = st.cloneNode(true);
+      ghost.className = "tk-stub tk-fly"; ghost.style.cssText = "position:fixed;left:" + sr.left + "px;top:" + sr.top + "px;width:" + sr.width + "px;height:" + sr.height + "px;margin:0;z-index:2147483600";
+      document.body.appendChild(ghost); buzz(10);
+      ghost.animate([{transform: "none", opacity: 1}, {transform: "translate(6px,-4px) rotate(7deg)", opacity: 1, offset: .25},
+                     {transform: "translate(34px," + Math.min(260, innerHeight - sr.top) + "px) rotate(38deg)", opacity: 0}],
+                    {duration: 820, easing: "cubic-bezier(.4,.05,.7,.4)", fill: "forwards"});
+      setTimeout(function(){ ghost.remove(); }, 860);
+    }
+    try{ var _ot245 = document.getElementById("openTasks"); if(_ot245) new MutationObserver(function(){ try{ tkDress(); }catch(e){} }).observe(_ot245, {childList: true}); }catch(e){}
+
+    /* ---------- Halo Drift Button (Ripple): light travels the edge of the big buttons,
+       and a ripple leaves from where you press. Lighter than the original, which
+       ships a 690 KB light engine. ---------- */
+    function haloDress(){
+      var list = [].slice.call(document.querySelectorAll("#w2Dock .w2-add, #w244Card .rc-go, .rc .rc-share"));
+      list.forEach(function(b){
+        if(b.__halo) return; b.__halo = true; b.classList.add("hx-halo");
+        b.addEventListener("pointerdown", function(ev){
+          if(motionOff()) return;
+          var r = b.getBoundingClientRect(), s = mk("i", "hx-rip"), d = Math.max(r.width, r.height) * 2.2;
+          s.style.cssText = "left:" + (ev.clientX - r.left) + "px;top:" + (ev.clientY - r.top) + "px;width:" + d + "px;height:" + d + "px";
+          b.appendChild(s); setTimeout(function(){ s.remove(); }, 720);
+        });
+      });
+    }
+
+    /* ---------- Appear Text (recap cover): a wall of the month's name is wiped away
+       until one is left, and that one is the headline. Timeline as exported. ---------- */
+    function aptRun(hero, text, done){
+      var ROWS = 5, COLS = 5, EXP = .78, GAPX = 18, DRIFT = 64, REST = .4, cr = 2, cw = 2;
+      var ease = function(x){ x = Math.min(1, Math.max(0, x)); return x * x * x * (x * (x * 6 - 15) + 10); };
+      var seg = function(t, a, b){ return Math.min(1, Math.max(0, (t - a) / Math.max(b - a, 1e-6))); };
+      var w = hero.offsetWidth, h = hero.offsetHeight; if(!w || !h){ done(); return; }
+      var grid = mk("span", "apt-grid"); grid.setAttribute("aria-hidden", "true");
+      var rows = [];
+      for(var r = 0; r < ROWS; r++){
+        var dist = Math.abs(r - cr), mag = DRIFT * (.7 + .9 * (dist / cr)), dir = r % 2 === 0 ? 1 : -1, full = dir * mag;
+        var rn = mk("span", "apt-row"); rn.style.top = ((r - cr) * h) + "px"; rn.style.left = (-(cw) * (w + GAPX)) + "px";
+        var ws = [];
+        for(var c = 0; c < COLS; c++){
+          var sp = mk("span", "apt-w"); sp.textContent = text; sp.style.marginRight = GAPX + "px";
+          if(r === cr && c === cw) sp.style.visibility = "hidden";
+          rn.appendChild(sp); ws.push({n: sp, sweep: dir > 0 ? c / (COLS - 1) : 1 - c / (COLS - 1), hero: r === cr && c === cw});
+        }
+        grid.appendChild(rn); rows.push({n: rn, full: full, home: full * REST, hero: r === cr, ltr: dir > 0, ws: ws});
+      }
+      hero.appendChild(grid);
+      var tS = EXP, tW = EXP * 2, t0 = performance.now(), CUT = .5;
+      (function frame(now){
+        var t = (now - t0) / 1000, alive = document.body.contains(hero);
+        rows.forEach(function(row){
+          var x = t <= tS ? row.home + (row.full - row.home) * ease(seg(t, 0, tS)) : (row.hero ? row.full * (1 - ease(seg(t, tS, tW))) : row.full);
+          row.n.style.transform = "translate3d(" + x.toFixed(2) + "px,0,0)";
+          if(row.hero) hero.style.setProperty("--aptx", x.toFixed(2) + "px");
+          row.ws.forEach(function(wd){
+            if(wd.hero) return;
+            var cut = (tW - tS) * CUT, a = tS + wd.sweep * (tW - tS - cut), cov = t <= a ? 0 : ease(seg(t, a, a + cut));
+            var pc = (cov * 100).toFixed(2);
+            wd.n.style.clipPath = cov <= .0005 ? "none" : (row.ltr ? "inset(0 0 0 " + pc + "%)" : "inset(0 " + pc + "% 0 0)");
+          });
+        });
+        if(t < tW && alive) requestAnimationFrame(frame);
+        else { grid.remove(); hero.style.removeProperty("--aptx"); done(); }
+      })(t0);
+    }
+    W245.cover = function(body){
+      var hero = body.querySelector(".apt-hero"); if(!hero) return;
+      if(motionOff()){ body.classList.add("apt-done"); return; }
+      body.classList.add("apt-on");
+      aptRun(hero, hero.textContent, function(){ body.classList.remove("apt-on"); body.classList.add("apt-done"); });
+    };
+    /* ---------- Scattered Stack (recap, In photos): the month's photos float, then
+       gather into one pile. The engine is HorizonX's own, inlined. ---------- */
+    W245.stack = function(body, photos){
+      var host = body.querySelector(".rc-sst"); if(!host || !window.__hxSST || photos.length < 3) { if(host) host.remove(); return; }
+      var imgs = []; for(var i = 0; i < 12; i++) imgs.push(photos[i % photos.length].src);
+      host.innerHTML = '<div class="sst-frame" style="--sst-w:' + host.clientWidth + 'px;--sst-h:' + host.clientHeight + 'px;--sst-dark-bg:#1E1713;--sst-dark-ink:#FFF3D1;--sst-light-bg:#1E1713;--sst-light-ink:#FFF3D1">' +
+        '<div class="sst-root" data-sst-theme="dark" data-sst-no-switch aria-hidden="true"><div class="sst-stage"></div></div></div>';
+      try{
+        var eng = window.__hxSST(host.querySelector(".sst-root"), {images: imgs, size: 1.12, corner: .06, hold: .35, gather: 2.6, rest: 600, release: 3, loop: false, wave: .8, blur: .8, theme: "dark", still: motionOff(), preview: false});
+        host.__eng = eng;
+      }catch(e){ try{ console.warn("sst", e); }catch(_){} host.remove(); }
+    };
+    W245.stackStop = function(body){ try{ var h = body.querySelector(".rc-sst"); if(h && h.__eng) h.__eng.destroy(); }catch(e){} };
+
+    /* ---------- the achievement card for a later opening ---------- */
+    function achPrep(){
+      try{
+        if(localStorage.getItem("us-w2-ach-next")) return;
+        var seen = []; try{ seen = JSON.parse(localStorage.getItem("us-w2-ach-seen") || "[]"); }catch(e){}
+        var cands = [], t = todayISO();
+        var cs = 0; try{ cs = coupleStreak().days || 0; }catch(e){}
+        [7, 14, 21, 30, 50, 75, 100, 150, 200, 300, 365].forEach(function(n){ if(cs >= n && cs < n + 3) cands.push({k: "streak" + n, big: String(n), title: "days in a row, both of you", sub: "Longest things start small."}); });
+        var done = (state.tasks || []).filter(function(x){ return x && x.status === "done"; }).length;
+        var dm = Math.floor(done / 50) * 50; if(dm >= 50 && done < dm + 8) cands.push({k: "done" + dm, big: String(dm), title: "things crossed off together", sub: "That’s a lot of small wins."});
+        var ph = 0; Object.keys(state.album || {}).forEach(function(d){ var a = state.album[d] || {}; (state.people || []).slice(0, 2).forEach(function(p){ if(a[p.id] && a[p.id].photo) ph++; }); });
+        var pm = Math.floor(ph / 50) * 50; if(pm >= 50 && ph < pm + 6) cands.push({k: "photos" + pm, big: String(pm), title: "photos of your days", sub: "Every one is a day you showed up."});
+        var c = state.challenge;
+        if(c && c.startDate && c.days){
+          var P = (state.people || []).slice(0, 2), both = 0;
+          for(var i = 0; i < c.days; i++){ var iso = shiftISO(c.startDate, i); if(iso > t) break; if(P.every(function(p){ return ((c.checkins || {})[p.id] || {})[iso]; })) both++; }
+          [10, 20, 30, 60, 90].forEach(function(n){ if(both >= n && both < n + 3 && n <= c.days) cands.push({k: "ch" + (c.id || "") + n, big: String(n), title: "days of " + (c.title || "your challenge"), sub: "Both of you, every day."}); });
+        }
+        cands = cands.filter(function(x){ return seen.indexOf(x.k) < 0; });
+        if(!cands.length) return;
+        var a = cands[cands.length - 1], q = null;
+        try{ var pool = QUOTES.filter(function(x){ return x.q && x.q.length <= 90; }); q = pool[(Date.parse(t) / 864e5 | 0) % pool.length]; }catch(e){}
+        if(q){ a.quote = q.q; a.by = q.a || ""; }
+        localStorage.setItem("us-w2-ach-next", JSON.stringify(a));
+        seen.push(a.k); localStorage.setItem("us-w2-ach-seen", JSON.stringify(seen.slice(-40)));
+      }catch(e){}
+    }
+    function openerSeen(){
+      try{ var o = sessionStorage.getItem("us-w2-opener"); if(o){ sessionStorage.removeItem("us-w2-opener"); track("opener_played", {opener: o}); } }catch(e){}
+    }
+    function boot245(){ try{ hpSettings(); haloDress(); tkDress(); lq(); }catch(e){ try{ console.warn("w245", e); }catch(_){} } }
+
     /* ---------- COUNTS: what gets used ---------- */
     var lastTab = null;
     function tabSeen(){ var t = R240.getAttribute("data-view") || "today"; if(t === lastTab) return; lastTab = t; try{ tabSlide(); }catch(e){} track("tab_view", {tab: t}); clearTimeout(thT); thT = setTimeout(threadLay, 60); }
@@ -31203,10 +33678,11 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       try{ counts(); }catch(e){}
       try{ milestones(); }catch(e){}
       try{ rcCard(); rcYear(); }catch(e){}
+      try{ haloDress(); tkDress(); hpSettings(); }catch(e){}
       return r;
     };
-    function boot(){ try{ scoreWrap(); applyOrder(); arrangeLink(); tellMoody(); workToggleAdd(); dupSetup(); hearts(); counts(); threadBuild(); tabSeen(); usage(); countLine(); rcCard(); rcYear(); rcSettings(); }catch(e){ try{ console.warn("w240 boot", e); }catch(_){} } }
-    setTimeout(function(){ try{ scoreWrap(); renderAll(); }catch(e){} boot(); }, 350); setTimeout(boot, 1600);
+    function boot(){ try{ scoreWrap(); applyOrder(); arrangeLink(); tellMoody(); workToggleAdd(); dupSetup(); hearts(); counts(); threadBuild(); tabSeen(); usage(); countLine(); rcCard(); rcYear(); rcSettings(); }catch(e){ try{ console.warn("w240 boot", e); }catch(_){} } try{ boot245(); }catch(e){ try{ console.warn("w240 boot", e); }catch(_){} } }
+    setTimeout(function(){ try{ scoreWrap(); renderAll(); }catch(e){} boot(); }, 350); setTimeout(boot, 1600); setTimeout(function(){ try{ openerSeen(); achPrep(); }catch(e){} }, 2600);
     window.__wedoArrange = openArrange; window.__wedoWeek = showWeek;
   })();
 
@@ -31260,7 +33736,8 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       document.body.appendChild(ov);
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ var lw = ov.querySelector(".dd-lw"); if(lw) lw.style.setProperty("--c", "0"); }); });
       setTimeout(function(){
-        try{ sfx("epic"); }catch(e){}
+        try{ if(!(window.__w245 && window.__w245.powerUp())) sfx("epic"); }catch(e){}
+        try{ window.__w245.firework(innerWidth / 2, innerHeight * .4); }catch(e){}
         var cols = ["#7ED321", "#7B4FD6", "#F2684A", "#F5B400"], cx = innerWidth / 2, cy = innerHeight * .4;
         for(var k = 0; k < 28; k++){
           var d = mk("i", "w2-spark"); d.style.left = cx + "px"; d.style.top = cy + "px"; d.style.background = cols[k % 4]; d.style.width = d.style.height = (5 + (k % 3) * 2) + "px"; document.body.appendChild(d);
@@ -31497,17 +33974,19 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
       if(d >= 4){
         var linked = false; try{ linked = autoSyncOn(); }catch(e){}
         fr.className = "fr end";
-        fr.innerHTML = '<div class="fr-top"><span class="fr-step">4 OF 4</span><span></span></div>' +
+        fr.innerHTML = '<div class="fr-top"><span class="fr-step">4 OF 4</span><span></span></div>' + (window.__w245 ? window.__w245.stepper(4) : "") +
           '<div class="fr-stage"><div class="fr-glow"></div><div class="fr-lw" style="' + v + '">' + LOGO + '</div></div>' +
           '<div class="fr-slog"><b>Plan.</b> <b>Do.</b> <b>Grow.</b></div><div class="fr-tagl">Together, to get there.</div>' +
           '<p class="fr-sun"><span class="fr-sun-i"></span>Every Sunday: 5 minutes to lock in your week.</p>' +
+          (window.__w245 ? window.__w245.healthAsk() : "") +
           '<div class="fr-foot"><button type="button" class="fr-btn">Go to Today<span class="arr">' + ARROW + '</span></button>' +
           '<p class="fr-note">' + (linked ? esc(o) + " sees all of it on their phone." : "Next: connect " + esc(o) + "’s phone in Settings.") + '</p></div>';
         fr.querySelector(".fr-btn").addEventListener("click", function(){ try{ sfx("epic"); }catch(e){} finishFR(); });
+        try{ window.__w245.frWire(fr, 4); }catch(e){}
       } else {
         var chaps = ["PLAN", "DO", "GROW"], cur = STEPS[d][0];
         fr.className = "fr";
-        fr.innerHTML = '<div class="fr-top"><span class="fr-step">' + (d + 1) + ' OF 4</span><button type="button" class="fr-skip">Skip</button></div>' +
+        fr.innerHTML = '<div class="fr-top"><span class="fr-step">' + (d + 1) + ' OF 4</span><button type="button" class="fr-skip">Skip</button></div>' + (window.__w245 ? window.__w245.stepper(d) : "") +
           '<div class="fr-stage"><div class="fr-lw" style="' + v + '">' + LOGO + '</div></div>' +
           '<div class="fr-chap">' + chaps.map(function(c){ var i = chaps.indexOf(c), ci = chaps.indexOf(cur); return '<span class="' + (c === cur ? "on" : (i < ci ? "ok" : "")) + '">' + c + '</span>'; }).join("") + '</div>' +
           '<h2>' + HEAD[d][0] + '</h2><p class="fr-lead">' + sub(HEAD[d][1]) + '</p>' +
@@ -31527,6 +34006,7 @@ html:not([data-mode="light"]) .sp-throw[data-who="p1"] .sp-tc em{ color:#A98BF2;
           else if(sm && roomMode && roomMode() && !inv) sm.textContent = "Your private space is ready. Send the link.";
         }
         fr.querySelector(".fr-btn").addEventListener("click", function(){ act(d); });
+        try{ window.__w245.frWire(fr, d); }catch(e){}
       }
       fr.classList.remove("min");
       if(animateFrom != null){ requestAnimationFrame(function(){ requestAnimationFrame(function(){ var lw = fr && fr.querySelector(".fr-lw"); if(lw) lw.setAttribute("style", logoVars(d)); }); }); }
@@ -34466,6 +36946,193 @@ main.pt-back, #w2Over .w2-shot.pt-back{ transition:transform .5s cubic-bezier(.2
 .rc-yr b{display:block;font:700 1rem/1.2 var(--ui)}
 .rc-yr small{display:block;font:500 .8125rem/1.3 var(--ui);color:var(--muted);margin-top:2px}
 .rc-yr>i{position:absolute;left:0;bottom:0;height:4px;width:calc(var(--p) * 100%);background:#7ED321;border-radius:0 4px 4px 0;transition:width .5s ease}
+
+/* ===== BUILD 245 ===== */
+/* --- opener D: the lens sits over the still logo and fades away --- */
+.splash > .sp-lens{ position:absolute !important; inset:0 !important; z-index:6 !important; background:#1E1713; }
+.sp-lens .llg-viewport{ width:100% !important; height:100% !important; max-height:none; }
+.splash[data-y="d"]{ animation:splash-out .45s cubic-bezier(.4,0,.6,1) calc(var(--o, 0s) + 1.25s) both !important; }
+.splash[data-y="d"] *:not(.sp-lens):not(.sp-lens *){ animation-duration:.01s !important; animation-delay:0s !important; }
+.splash[data-y="d"] .sp-fx{ display:none !important; }
+/* --- the achievement card rides the throwback's slot --- */
+.sp-ach{ cursor:default; }
+.sp-ach .sp-ab{ display:grid !important; place-content:center; text-align:center; gap:6px; background:radial-gradient(120% 90% at 50% 0%, #2F3F14, #15100D 70%) !important; color:#9BFF3D; min-height:150px; padding:18px 14px; }
+.sp-ach .sp-ab b{ font:800 4.5rem/.85 var(--display); letter-spacing:-.04em; text-shadow:0 0 28px rgba(126,211,33,.55); }
+.sp-ach .sp-ab small{ font:700 .6875rem/1.3 var(--mono); letter-spacing:.14em; text-transform:uppercase; color:#FFF3D1; opacity:.85; }
+.sp-ach .sp-tc em{ color:#5C9A12 !important; } html:not([data-mode="light"]) .sp-ach .sp-tc em{ color:#9BFF3D !important; }
+.sp-ach .sp-tc i{ font-style:normal; }
+
+/* --- Task Checkbox: the overshoot, the filled ripple, the strike that sweeps --- */
+.w2-fin .w2-ring{ animation:b245pop .5s cubic-bezier(.68,-.55,.265,1.55) both, b239ripple .6s ease-out both !important; position:relative; }
+.w2-fin .w2-ring::after{ content:""; position:absolute; left:50%; top:50%; width:0; height:0; border-radius:50%; background:rgba(126,211,33,.4); transform:translate(-50%,-50%); pointer-events:none; animation:b245disc .6s ease-out both; }
+.w2-fin .w2-chip-b .t, .w2-fin .w2-rt .t{ transition:background-size .4s ease, opacity .3s ease !important; }
+@keyframes b245pop{ 0%{ transform:scale(.3) rotate(20deg); } 60%{ transform:scale(1.2) rotate(-5deg); } 100%{ transform:none; } }
+@keyframes b245disc{ 0%{ width:0; height:0; opacity:.6; } 70%{ width:190%; height:190%; opacity:.3; } 100%{ width:230%; height:230%; opacity:0; } }
+.fw245{ position:fixed; z-index:2147483600; width:7px; height:7px; border-radius:50%; background:#7ED321; box-shadow:0 0 8px rgba(126,211,33,.8); pointer-events:none; }
+
+/* --- Stepper + Type Reveal on first run --- */
+.fr-stp{ display:flex; align-items:center; gap:0; margin:10px 2px 2px; }
+.fr .fr-top .fr-step{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.fr-stp-c{ flex:none; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font:700 .8125rem/1 var(--mono); background:rgba(128,128,128,.18); color:var(--muted); transition:background .3s, color .3s; }
+.fr-stp-c.now{ background:var(--text); color:var(--bg); }
+.fr-stp-c.now i{ width:10px; height:10px; border-radius:50%; background:currentColor; display:block; }
+.fr-stp-c.ok{ background:radial-gradient(circle at 35% 25%, #3A2A1F, #15100D); color:#9BFF3D; box-shadow:0 0 0 1.5px rgba(126,211,33,.5), 0 0 10px rgba(126,211,33,.4); }
+.fr-stp-c.ok svg{ width:52%; height:auto; }
+.fr-stp-l{ flex:1; height:2px; margin:0 4px; border-radius:2px; background:rgba(128,128,128,.3); overflow:hidden; }
+.fr-stp-l i{ display:block; height:100%; width:0; background:#7ED321; }
+.fr-stp-l.on i{ width:100%; }
+.fr-stp-l.new i{ animation:b245line .4s ease both; }
+@keyframes b245line{ from{ width:0; } to{ width:100%; } }
+.tr245{ display:inline-flex; align-items:center; gap:0; white-space:nowrap; vertical-align:baseline; }
+.tr245 i{ display:inline-block; height:.62em; width:0; border-radius:999px; background:linear-gradient(118deg,#7B4FD6,#F2684A); animation:b245slot 1.15s cubic-bezier(.45,0,.55,1) .15s both; }
+.tr245 b{ display:inline-block; font-weight:inherit; transform-origin:0 100%; animation:b245lean .7s cubic-bezier(.45,0,.55,1) .15s both; }
+@keyframes b245slot{ 0%{ width:0; margin-right:0; } 42%, 58%{ width:1.1em; margin-right:.18em; } 100%{ width:0; margin-right:0; } }
+@keyframes b245lean{ from{ transform:skewX(-20deg); opacity:.4; } to{ transform:none; opacity:1; } }
+.fr-hq{ margin:14px 0 0; padding:14px 16px; border-radius:20px; border:1px solid rgba(128,128,128,.28); text-align:left; background:rgba(128,128,128,.08); }
+.fr-hq b{ display:block; font:700 .6875rem/1.3 var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.fr-hq p{ margin:6px 0 12px; font:500 .9375rem/1.4 var(--ui); }
+.fr-hq-b{ display:flex; gap:8px; }
+.fr-hq-b button{ flex:1; min-height:46px; border-radius:999px; border:1.5px solid rgba(128,128,128,.45); background:transparent; color:inherit; font:700 .9375rem var(--ui); cursor:pointer; }
+.fr-hq-b button.on{ background:var(--text); color:var(--bg); border-color:var(--text); }
+
+/* --- Health --- */
+.hx-nohealth{ display:block; margin:12px auto 0; min-height:44px; }
+.hx-offl{ opacity:.8; }
+.hx-pref{ margin:10px 0 4px; }
+
+/* --- Liquid Reveal on the Photos pair --- */
+.duo-frame.lq-lock, .duo-frame.lq-rub, .duo-frame.lq-out{ position:relative; overflow:hidden; clip-path:inset(0 round 18px); }
+.duo-frame.lq-lock > img, .duo-frame.lq-rub > img{ filter:blur(20px) saturate(1.1); transform:scale(1.18); }
+.duo-frame.lq-out > img{ transition:filter .5s ease, transform .5s ease; }
+.lq-cv{ position:absolute; inset:0; width:100%; height:100%; z-index:2; touch-action:none; cursor:pointer; border-radius:inherit; }
+.duo-frame.lq-out .lq-cv{ opacity:0; transition:opacity .5s ease; }
+.lq-cv:focus-visible{ outline:2px solid #fff; outline-offset:-4px; }
+.lq-badge{ position:absolute; left:50%; bottom:10px; transform:translateX(-50%); z-index:3; display:inline-flex; align-items:center; gap:6px; width:max-content; max-width:calc(100% - 10px); padding:6px 9px; border-radius:14px; background:rgba(20,14,10,.72); color:#FFF3D1; font:700 .6875rem/1.2 var(--ui); pointer-events:none; text-align:left; }
+.lq-badge span{ min-width:0; }
+
+/* --- Cinema Ticket on Experiences --- */
+.exp-card.tk245{ position:relative; overflow:visible; padding-right:92px !important; border-radius:22px !important; min-height:104px;
+  -webkit-mask:radial-gradient(circle 9px at calc(100% - 78px) 0, #0000 98%, #000) top/100% 51% no-repeat, radial-gradient(circle 9px at calc(100% - 78px) 100%, #0000 98%, #000) bottom/100% 51% no-repeat;
+          mask:radial-gradient(circle 9px at calc(100% - 78px) 0, #0000 98%, #000) top/100% 51% no-repeat, radial-gradient(circle 9px at calc(100% - 78px) 100%, #0000 98%, #000) bottom/100% 51% no-repeat; }
+.tk-stub{ position:absolute; top:0; right:0; bottom:0; width:78px; display:grid; place-content:center; justify-items:center; gap:2px; text-align:center; color:#fff;
+  background:linear-gradient(160deg,#7B4FD6,#C8452D); border-radius:0 22px 22px 0; border-left:2px dashed rgba(255,255,255,.55); }
+.tk-stub small, .tk-stub span{ font:700 .625rem/1 var(--mono); letter-spacing:.14em; }
+.tk-stub b{ font:800 1.875rem/1 var(--display); letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.tk-stub b.o{ width:26px; height:26px; display:grid; place-items:center; } .tk-stub b.o svg{ width:100%; height:auto; opacity:.9; }
+.tk-fly{ border-radius:8px 22px 22px 8px !important; box-shadow:0 18px 30px -12px rgba(0,0,0,.6); pointer-events:none; }
+.tk-meta{ font:600 .75rem/1.3 var(--mono); letter-spacing:.04em; color:var(--muted); margin:2px 0 2px; }
+.exp-card.tk245 .exp-emoji{ display:grid; place-items:center; }
+
+/* --- Halo Drift Button (Ripple) --- */
+@property --hxa{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
+.hx-halo{ position:relative; overflow:hidden; isolation:isolate; }
+.hx-halo::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:2px; pointer-events:none; z-index:1;
+  background:conic-gradient(from var(--hxa), rgba(255,255,255,0) 0 62%, rgba(255,255,255,.95) 78%, rgba(255,214,107,.9) 84%, rgba(255,255,255,0) 96%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation:b245halo 5.2s linear infinite; }
+@keyframes b245halo{ to{ --hxa:360deg; } }
+.hx-rip{ position:absolute; z-index:1; border-radius:50%; transform:translate(-50%,-50%) scale(0); background:radial-gradient(circle, rgba(255,255,255,.55), rgba(255,255,255,0) 62%); pointer-events:none; animation:b245rip .7s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes b245rip{ to{ transform:translate(-50%,-50%) scale(1); opacity:0; } }
+.hx-halo:active{ transform:scale(.97); }
+
+/* --- memories flip book: the page bends as it turns (after Scattered Stack's paper shading) --- */
+.w2-pg.turn{ transition:none !important; animation:b245turn .62s cubic-bezier(.5,.05,.3,1) both; }
+.w2-pg.turn::after, .w2-pg.back.settle::after{ content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:linear-gradient(100deg, rgba(35,27,34,0) 30%, rgba(35,27,34,.22) 52%, rgba(255,255,255,.35) 60%, rgba(35,27,34,0) 78%); background-size:260% 100%; animation:b245sheen .62s ease both; }
+@keyframes b245turn{ 0%{ transform:none; } 30%{ transform:rotateY(-32deg) skewY(-2.6deg) scaleX(.985); } 68%{ transform:rotateY(-88deg) skewY(1.6deg); } 100%{ transform:rotateY(-118deg); } }
+@keyframes b245sheen{ from{ background-position:120% 0; opacity:0; } 30%{ opacity:1; } to{ background-position:-40% 0; opacity:0; } }
+
+/* --- recap: Appear Text cover, Scattered Stack photos --- */
+.rcb-cover{ overflow:hidden !important; }
+.apt-hero{ position:relative; display:inline-block; transform:translate3d(var(--aptx, 0px),0,0); white-space:nowrap; }
+.apt-grid{ position:absolute; left:0; top:0; pointer-events:none; }
+.apt-row{ position:absolute; display:flex; white-space:nowrap; will-change:transform; }
+.apt-w{ display:inline-block; opacity:.5; will-change:clip-path; }
+.rcb-cover.apt-on h1 em, .rcb-cover.apt-on .rc-cover, .rcb-cover.apt-on .rc-logo, .rcb-cover.apt-on .rc-eye{ opacity:0 !important; animation:none !important; }
+.rcb-cover.apt-on h1, .rcb-cover.apt-done h1{ animation:none !important; }
+.rcb-cover.apt-done h1 em, .rcb-cover.apt-done .rc-cover, .rcb-cover.apt-done .rc-logo, .rcb-cover.apt-done .rc-eye{ animation:rcUp .5s cubic-bezier(.2,.8,.2,1) both !important; }
+.rcb-cover.apt-done .rc-cover{ animation-delay:.12s !important; }
+.rc-sst{ position:relative; height:min(42vh, 340px); margin:6px -22px 0; flex:none; pointer-events:none; }
+.rc-sst .sst-frame, .rc-sst .sst-root{ width:100%; height:100%; }
+.rc-sst .sst-root{ background:none !important; overflow:visible; }
+.rc-sst .sst-ground{ display:none; }
+@media (prefers-reduced-motion:reduce){ .w2-fin .w2-ring, .w2-fin .w2-ring::after, .hx-halo::before, .tr245 i, .tr245 b, .fr-stp-l.new i, .w2-pg.turn, .w2-pg.turn::after{ animation:none !important; } .tr245 i{ width:0; } .w2-pg.turn{ transform:rotateY(-118deg); } .w2-fin .w2-ring::after{ display:none; } }
+
+.rc-wall.sm{ margin-top:8px; }
+.rc-wall.sm button{ aspect-ratio:1; }
+
+
+
+.sst-export{width:100%;height:100vh;height:100dvh}
+.sst-export .sst-root{width:100%;height:100%}
+.sst-export .sst-theme{top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right))}
+
+@property --sst-bg{syntax:"<color>";inherits:true;initial-value:#0b0b0e}
+@property --sst-ink{syntax:"<color>";inherits:true;initial-value:#f1efe9}
+.sst-host,.sst-frame{width:100%;height:100%}.sst-frame{display:grid;place-items:center}
+.sst-root{--sst-bg:var(--sst-dark-bg);--sst-ink:var(--sst-dark-ink);--sst-glow:color-mix(in srgb,var(--sst-bg) 93%,#fff);--sst-paper:color-mix(in srgb,var(--sst-bg) 95%,#fff);--sst-ground:rgb(0 0 0/.75);--sst-btn:color-mix(in srgb,var(--sst-bg) 78%,transparent);--sst-btn-line:rgb(255 255 255/.16);
+position:relative;width:min(100%,var(--sst-w));height:min(100%,var(--sst-h));overflow:hidden;isolation:isolate;container:sst-stage/size;color-scheme:dark;
+background:radial-gradient(90% 70% at 50% 50%,var(--sst-glow) 0%,var(--sst-bg) 70%);color:var(--sst-ink);outline:none;user-select:none;
+font-family:'SST Inter Tight','Inter Tight',Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;transition:--sst-bg .5s ease,--sst-ink .5s ease}
+.sst-root[data-sst-theme="light"]{--sst-bg:var(--sst-light-bg);--sst-ink:var(--sst-light-ink);--sst-glow:color-mix(in srgb,var(--sst-bg) 25%,#fff);--sst-paper:color-mix(in srgb,var(--sst-bg) 95%,#000);--sst-ground:rgb(40 36 30/.32);--sst-btn-line:rgb(0 0 0/.14);color-scheme:light}
+.sst-root:focus-visible{outline:2px solid var(--sst-ink);outline-offset:-3px}
+.sst-intro{position:absolute;inset:0;z-index:0;display:grid;place-content:center;text-align:center;padding:0 4cqw}
+.sst-title{margin:0;font-weight:600;font-size:clamp(2rem,.5rem + 8cqw,10rem);line-height:.92;letter-spacing:-.055em;text-wrap:balance}
+@container sst-stage (max-width:599px){.sst-title{font-size:clamp(2rem,1.5rem + 9cqw,4.75rem)}}
+.sst-stage{position:absolute;inset:0;z-index:1;pointer-events:none}
+.sst-card{position:absolute;left:50%;top:50%;width:var(--sst-cw);height:var(--sst-ch);margin:calc(var(--sst-ch)/-2) 0 0 calc(var(--sst-cw)/-2);will-change:transform,filter}
+.sst-tilt{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
+.sst-strip{position:absolute;top:0;width:calc(var(--sst-sw) + 2px);height:var(--sst-ch);transform-style:preserve-3d;
+background-image:linear-gradient(118deg,rgb(255 255 255/.2),rgb(255 255 255/0) 42%),var(--sst-img);background-size:var(--sst-cw) var(--sst-ch);background-repeat:no-repeat;background-color:var(--sst-paper)}
+.sst-shade{position:absolute;inset:0;border-radius:inherit}
+.sst-strip--r{transform-origin:0 50%}.sst-tilt>.sst-strip--r{left:calc(var(--sst-cw)/2)}.sst-strip--r .sst-strip--r{left:var(--sst-sw)}
+.sst-strip--l{transform-origin:100% 50%}.sst-tilt>.sst-strip--l{left:calc(var(--sst-cw)/2 - var(--sst-sw))}.sst-strip--l .sst-strip--l{left:calc(var(--sst-sw) * -1)}
+.sst-strip--r.sst-end{border-radius:0 var(--sst-r) var(--sst-r) 0}.sst-strip--l.sst-end{border-radius:var(--sst-r) 0 0 var(--sst-r)}
+.sst-ground{position:absolute;left:50%;top:50%;width:calc(var(--sst-cw) * 1.7);height:calc(var(--sst-cw) * .34);margin-left:calc(var(--sst-cw) * -.85);border-radius:50%;background:radial-gradient(closest-side,var(--sst-ground),transparent);filter:blur(10px);opacity:0}
+.sst-theme,.sst-pause{position:absolute;z-index:2;display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--sst-btn-line);border-radius:50%;background:var(--sst-btn);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--sst-ink);cursor:pointer;transition:background-color .2s ease,transform .2s ease,opacity .15s}
+.sst-theme{top:16px;right:16px}.sst-pause{right:16px;bottom:16px;font:11px/1 system-ui,sans-serif;opacity:0}
+.sst-theme:hover,.sst-pause:hover{background:color-mix(in srgb,var(--sst-bg) 86%,var(--sst-ink))}.sst-theme:active,.sst-pause:active{transform:scale(.94)}
+.sst-theme:focus-visible,.sst-pause:focus-visible{outline:2px solid var(--sst-ink);outline-offset:3px}
+.sst-theme svg{width:20px;height:20px}.sst-theme .sst-moon,.sst-root[data-sst-theme="light"] .sst-sun{display:none}.sst-root[data-sst-theme="light"] .sst-moon{display:block}
+.sst-root:hover .sst-pause,.sst-pause:focus-visible,.sst-root:focus-visible .sst-pause,.sst-root[data-paused] .sst-pause{opacity:1}
+.sst-root[data-sst-corner-control] .sst-theme{right:max(16px,68px)}.sst-root[data-sst-corner-control] .sst-pause{bottom:max(16px,96px)}
+.sst-root[data-sst-no-switch] .sst-theme,.sst-root[data-preview] .sst-theme,.sst-root[data-preview] .sst-pause{display:none}
+@media(hover:none){.sst-pause{opacity:1}}
+@media(prefers-reduced-motion:reduce){.sst-root,.sst-theme,.sst-pause{transition:none}.sst-pause{display:none}}
+
+
+
+.llg-host{display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-width:0;min-height:0}
+.llg-viewport {
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 1 auto;
+  width: min(100%, var(--llg-width, 1040px));
+  height: var(--llg-height, 585px);
+  max-height: 100%;
+  background: var(--llg-bg, #000000);
+  overflow: hidden;
+  isolation: isolate;
+  container-type: size;
+}
+
+.llg-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.llg-status {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 24px;
+  color: #b4b4bc;
+  font: 13px/1.5 system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+
+.llg-status:empty { display: none; }
 
 </style>
 </body>
